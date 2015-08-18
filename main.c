@@ -69,26 +69,30 @@ struct ball {
     float           last_hit;
 };
 
+struct shader {
+    GLuint  program;
+    GLint   uniform_time;
+    GLint   uniform_transform;
+    GLint   uniform_projection;
+    GLint   uniform_is_ball;
+    GLint   uniform_ball_last_hit;
+};
+
 struct game {
     double          time;                       /* Time since start. */
     GLuint          vbo;                        /* Vertex Buffer Object. */
     GLuint          vao;                        /* Vertex Array Object. */
-    GLuint          shader;
-    mat4            projection;
-    mat4            translate;
-    mat4            rotate;
-    mat4            scale;
-    GLint           uniform_time;
-    GLint           uniform_transform;
-    GLint           uniform_projection;
-    GLint           uniform_is_ball;
-    GLint           uniform_ball_last_hit;
-    struct player   player1;
-    struct player   player2;
+    struct shader   shader;                     /* Shader program information. */
+    mat4            projection;                 /* Projection matrix. */
+    mat4            translate;                  /* Global translation matrix. */
+    mat4            rotate;                     /* Global rotation matrix. */
+    mat4            scale;                      /* Global scale matrix. */
+    struct player   player1;                    /* Left player. */
+    struct player   player2;                    /* Right player. */
     struct ball     ball;
     struct stats    total_stats;
-    int             keys[GLFW_KEY_LAST];
-    int             last_keys[GLFW_KEY_LAST];
+    int             keys[GLFW_KEY_LAST];        /* Key status of current frame. */
+    int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
 
 const char *vertex_shader =
@@ -130,7 +134,7 @@ const char *fragment_shader =
     "   frag_color = vec4(1, 1, 1, 1);"
     "}";
 
-void sprite_render(struct sprite *pSprite, struct game *pGame)
+void sprite_render(struct sprite *sprite, struct game *game)
 {
     glEnableVertexAttribArray(0);
 
@@ -138,17 +142,17 @@ void sprite_render(struct sprite *pSprite, struct game *pGame)
 
     // Position and scale
     mat4 transform_position;
-    translate(transform_position, pSprite->pos[0], pSprite->pos[1], pSprite->pos[2]);
+    translate(transform_position, sprite->pos[0], sprite->pos[1], sprite->pos[2]);
     
     mat4 transform_scale;
-    scale(transform_scale, pSprite->scale[0], pSprite->scale[1], pSprite->scale[2]);
+    scale(transform_scale, sprite->scale[0], sprite->scale[1], sprite->scale[2]);
     
     mat4 transform_final;
     mult(transform_final, transform_position, transform_scale);
     
     // Upload matrices
-    glUniformMatrix4fv(pGame->uniform_transform, 1, GL_TRUE, transform_final);
-    glUniformMatrix4fv(pGame->uniform_projection, 1, GL_TRUE, pGame->projection);
+    glUniformMatrix4fv(game->shader.uniform_transform, 1, GL_TRUE, transform_final);
+    glUniformMatrix4fv(game->shader.uniform_projection, 1, GL_TRUE, game->projection);
 
     // Render it!
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -318,26 +322,25 @@ void game_think(float dt)
 void shader_think(float delta_time)
 {
     /* Upload uniforms. */
-    glUniform1f(game.uniform_time, (GLfloat) game.time);
+    glUniform1f(game.shader.uniform_time, (GLfloat) game.time);
 
     /* Transform. */
     mat4 transform;
     copym(transform, game.translate);
     mult(transform, transform, game.scale);
     mult(transform, transform, game.rotate);
-    glUniformMatrix4fv(game.uniform_transform, 1, GL_TRUE, transform);
+    glUniformMatrix4fv(game.shader.uniform_transform, 1, GL_TRUE, transform);
 
     /* Projection. */
-    glUniformMatrix4fv(game.uniform_projection, 1, GL_TRUE, game.projection);
+    glUniformMatrix4fv(game.shader.uniform_projection, 1, GL_TRUE, game.projection);
 
     /* Ball stuff */
-    glUniform1f(game.uniform_ball_last_hit, game.ball.last_hit);
+    glUniform1f(game.shader.uniform_ball_last_hit, game.ball.last_hit);
 }
 
 void think(float delta_time)
 {
     shader_think(delta_time);
-    // TODO: player->think() ?
     game_think(delta_time);
 
     /* Remember what keys were pressed the last frame. */
@@ -350,13 +353,13 @@ void render(GLFWwindow *window)
     glEnableVertexAttribArray(0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(game.shader);
+    glUseProgram(game.shader.program);
 
-    glUniform1i(game.uniform_is_ball, 0);
+    glUniform1i(game.shader.uniform_is_ball, 0);
     sprite_render(&game.player1.sprite, &game);
     sprite_render(&game.player2.sprite, &game);
     
-    glUniform1i(game.uniform_is_ball, 1);
+    glUniform1i(game.shader.uniform_is_ball, 1);
     sprite_render(&game.ball.sprite, &game);
 }
 
@@ -416,7 +419,7 @@ void resize(GLFWwindow *window, int width, int height)
 {
 }
 
-void init_shaders()
+void init_shaders(struct shader *s)
 {
     /* Vertex shader. */
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -431,25 +434,71 @@ void init_shaders()
     shader_log(fs, "fragment shader");
 
     /* Compile shader. */
-    game.shader = glCreateProgram();
-    glAttachShader(game.shader, fs);
-    glAttachShader(game.shader, vs);
-    glLinkProgram(game.shader);
+    s->program = glCreateProgram();
+    glAttachShader(s->program, fs);
+    glAttachShader(s->program, vs);
+    glLinkProgram(s->program);
     glDeleteShader(vs);
     glDeleteShader(fs);
-    shader_program_log(game.shader, "program");
+    shader_program_log(s->program, "program");
 
     /* Set up uniforms. */
-    game.uniform_time = glGetUniformLocation(game.shader, "time");
-    game.uniform_transform = glGetUniformLocation(game.shader, "transform");
-    game.uniform_projection = glGetUniformLocation(game.shader, "projection");
-    game.uniform_is_ball = glGetUniformLocation(game.shader, "is_ball");
-    game.uniform_ball_last_hit = glGetUniformLocation(game.shader, "ball_last_hit");
-    printf("game.uniform_time=%d\n", game.uniform_time);
-    printf("game.uniform_transform=%d\n", game.uniform_transform);
-    printf("game.uniform_projection=%d\n", game.uniform_projection);
-    printf("game.uniform_is_ball=%d\n", game.uniform_is_ball);
-    printf("game.uniform_ball_last_hit=%d\n", game.uniform_ball_last_hit);
+    s->uniform_time = glGetUniformLocation(s->program, "time");
+    s->uniform_transform = glGetUniformLocation(s->program, "transform");
+    s->uniform_projection = glGetUniformLocation(s->program, "projection");
+    s->uniform_is_ball = glGetUniformLocation(s->program, "is_ball");
+    s->uniform_ball_last_hit = glGetUniformLocation(s->program, "ball_last_hit");
+    printf("uniform_time=%d\n", s->uniform_time);
+    printf("uniform_transform=%d\n", s->uniform_transform);
+    printf("uniform_projection=%d\n", s->uniform_projection);
+    printf("uniform_is_ball=%d\n", s->uniform_is_ball);
+    printf("uniform_ball_last_hit=%d\n", s->uniform_ball_last_hit);
+}
+
+void init_player1(struct player *p)
+{
+    p.sprite.pos[0] = 32.0f;
+    p.sprite.pos[1] = 50.0f;
+    p.sprite.pos[2] = 0.0f;
+    p.sprite.pos[3] = 1.0f;
+    
+    p.sprite.scale[0] = PLAYER_WIDTH;
+    p.sprite.scale[1] = PLAYER_HEIGHT;
+    p.sprite.scale[2] = 1.0f;
+    p.sprite.scale[3] = 1.0f;
+}
+
+void init_player2(struct player *p)
+{
+    p.sprite.pos[0] = 608.0f;
+    p.sprite.pos[1] = 50.0f;
+    p.sprite.pos[2] = 0.0f;
+    p.sprite.pos[3] = 1.0f;
+   
+    p.sprite.scale[0] = PLAYER_WIDTH;
+    p.sprite.scale[1] = PLAYER_HEIGHT;
+    p.sprite.scale[2] = 1.0f;
+    p.sprite.scale[3] = 1.0f;
+}
+
+void init_ball(struct ball *ball)
+{
+    ball->speed = 0.6f;
+    float random_angle = ((float)(((int)rand())%(int)((int)2*M_PI)*1000))/1000.0f;
+    ball->vy = ball.speed * sin(random_angle) / 4.0f;
+    ball->vx = ball.speed * cos(random_angle) / 4.0f;
+
+    ball->sprite.pos[0] = VIEW_WIDTH/2;
+    ball->sprite.pos[1] = VIEW_HEIGHT/2;
+    ball->sprite.pos[2] = 0.0f;
+    ball->sprite.pos[3] = 1.0f;
+    
+    ball->sprite.scale[0] = BALL_WIDTH;
+    ball->sprite.scale[1] = BALL_HEIGHT;
+    ball->sprite.scale[2] = 1.0f;
+    ball->sprite.scale[3] = 1.0f;
+
+    ball->last_hit = 10.0f;
 }
 
 void init()
@@ -459,41 +508,11 @@ void init()
     scale(game.scale, 10.0f, 10.0f, 1);
     rotate(game.rotate, 0);
     ortho(game.projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
-    printm(game.projection);
-   
-//    game.ball.vx = 0.423f;
-    game.ball.speed = 0.6f;
-    float random_angle = ((float)(((int)rand())%(int)((int)2*M_PI)*1000))/1000.0f;
-    game.ball.vy = game.ball.speed * sin(random_angle) / 4.0f;
-    game.ball.vx = game.ball.speed * cos(random_angle) / 4.0f;
 
-    game.player1.sprite.pos[0] = 32.0f;
-    game.player1.sprite.pos[1] = 50.0f;
-    game.player1.sprite.pos[2] = 0.0f;
-    game.player1.sprite.pos[3] = 1.0f;
-    game.player1.sprite.scale[0] = PLAYER_WIDTH;
-    game.player1.sprite.scale[1] = PLAYER_HEIGHT;
-    game.player1.sprite.scale[2] = 1.0f;
-    game.player1.sprite.scale[3] = 1.0f;
-
-    game.player2.sprite.pos[0] = 608.0f;
-    game.player2.sprite.pos[1] = 50.0f;
-    game.player2.sprite.pos[2] = 0.0f;
-    game.player2.sprite.pos[3] = 1.0f;
-    game.player2.sprite.scale[0] = PLAYER_WIDTH;
-    game.player2.sprite.scale[1] = PLAYER_HEIGHT;
-    game.player2.sprite.scale[2] = 1.0f;
-    game.player2.sprite.scale[3] = 1.0f;
-
-    game.ball.sprite.pos[0] = VIEW_WIDTH/2;
-    game.ball.sprite.pos[1] = VIEW_HEIGHT/2;
-    game.ball.sprite.pos[2] = 0.0f;
-    game.ball.sprite.pos[3] = 1.0f;
-    game.ball.sprite.scale[0] = BALL_WIDTH;
-    game.ball.sprite.scale[1] = BALL_HEIGHT;
-    game.ball.sprite.scale[2] = 1.0f;
-    game.ball.sprite.scale[3] = 1.0f;
-    game.ball.last_hit = 10.0f;
+    /* Entities. */
+    init_player1(&game.player1);
+    init_player2(&game.player2);
+    init_ball(&game.ball);
 
     /* Set up OpenGL. */
     glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
@@ -513,7 +532,7 @@ void init()
     glBindBuffer(GL_ARRAY_BUFFER, game.vbo);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-    init_shaders();
+    init_shaders(&game.shader);
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -524,6 +543,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
         return;
     }
 
+    /* Only care about 'up'/'down', regard 'repeat' as 'down'. */
     game.keys[key] = !(action == 0);
 
     if(action == GLFW_RELEASE) {
@@ -535,60 +555,17 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
     }
 }
 
-void test()
-{
-    mat4 min_matris;
-
-    printf("\nIdentity\n-------------\n");
-    identity( min_matris );
-    printm( min_matris );
-    
-    printf("\nTranslate\n-------------\n");
-    translate( min_matris, 10, 20, 30 );
-    printm( min_matris );
-
-    printf("\nTranslatev\n-------------\n");
-    vec4 min_vektor = { 10, 20, 30 };
-    printv(min_vektor);
-    translatev( min_matris, min_vektor );
-    printm( min_matris );
-
-    printf("\nScale\n-------------\n");
-    scale( min_matris, 40, 50, 60 );
-    printm( min_matris );
-
-    printf("\nRotate 3.14\n-------------\n");
-    rotate( min_matris, 3.14 );
-    printm( min_matris );
-
-    printf("\nOrtho\n-------------\n");
-    ortho(min_matris, 0, 640, 0, 480, 0.0f, 10.0f);
-    printm(min_matris);
-
-    mat4 ida;
-    mat4 idb;
-    mat4 id;
-    identity(ida);
-    identity(idb);
-    mult(id, ida, idb);
-    printf("\nMult identity\n-------------\n");
-    printm(id);
-}
-
 void clean_up()
 {
     glDeleteVertexArrays(1, &game.vao);
     glDeleteBuffers(1, &game.vbo);
-    glDeleteProgram(game.shader);
+    glDeleteProgram(game.shader.program);
     glfwTerminate();
 }
 
 int main(int argc, char **argv)
 {
     srand(time(0));
-    for(int i=0; i<=16; i++) {
-        printf("joystick %d=%d\n", i, glfwJoystickPresent(i));
-    }
 
     GLFWwindow *window;
 
