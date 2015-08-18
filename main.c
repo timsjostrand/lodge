@@ -138,7 +138,7 @@ void sprite_render(struct sprite *sprite, struct game *game)
 {
     glEnableVertexAttribArray(0);
 
-    glBindVertexArray(game.vao);
+    glBindVertexArray(game->vao);
 
     // Position and scale
     mat4 transform_position;
@@ -457,36 +457,36 @@ void init_shaders(struct shader *s)
 
 void init_player1(struct player *p)
 {
-    p.sprite.pos[0] = 32.0f;
-    p.sprite.pos[1] = 50.0f;
-    p.sprite.pos[2] = 0.0f;
-    p.sprite.pos[3] = 1.0f;
+    p->sprite.pos[0] = 32.0f;
+    p->sprite.pos[1] = 50.0f;
+    p->sprite.pos[2] = 0.0f;
+    p->sprite.pos[3] = 1.0f;
     
-    p.sprite.scale[0] = PLAYER_WIDTH;
-    p.sprite.scale[1] = PLAYER_HEIGHT;
-    p.sprite.scale[2] = 1.0f;
-    p.sprite.scale[3] = 1.0f;
+    p->sprite.scale[0] = PLAYER_WIDTH;
+    p->sprite.scale[1] = PLAYER_HEIGHT;
+    p->sprite.scale[2] = 1.0f;
+    p->sprite.scale[3] = 1.0f;
 }
 
 void init_player2(struct player *p)
 {
-    p.sprite.pos[0] = 608.0f;
-    p.sprite.pos[1] = 50.0f;
-    p.sprite.pos[2] = 0.0f;
-    p.sprite.pos[3] = 1.0f;
+    p->sprite.pos[0] = 608.0f;
+    p->sprite.pos[1] = 50.0f;
+    p->sprite.pos[2] = 0.0f;
+    p->sprite.pos[3] = 1.0f;
    
-    p.sprite.scale[0] = PLAYER_WIDTH;
-    p.sprite.scale[1] = PLAYER_HEIGHT;
-    p.sprite.scale[2] = 1.0f;
-    p.sprite.scale[3] = 1.0f;
+    p->sprite.scale[0] = PLAYER_WIDTH;
+    p->sprite.scale[1] = PLAYER_HEIGHT;
+    p->sprite.scale[2] = 1.0f;
+    p->sprite.scale[3] = 1.0f;
 }
 
 void init_ball(struct ball *ball)
 {
     ball->speed = 0.6f;
     float random_angle = ((float)(((int)rand())%(int)((int)2*M_PI)*1000))/1000.0f;
-    ball->vy = ball.speed * sin(random_angle) / 4.0f;
-    ball->vx = ball.speed * cos(random_angle) / 4.0f;
+    ball->vy = ball->speed * sin(random_angle) / 4.0f;
+    ball->vx = ball->speed * cos(random_angle) / 4.0f;
 
     ball->sprite.pos[0] = VIEW_WIDTH/2;
     ball->sprite.pos[1] = VIEW_HEIGHT/2;
