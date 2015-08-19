@@ -19,7 +19,7 @@ void scalev(mat4 m, vec4 v);
 void rotate(mat4 m, float angle);
 void transpose(mat4 m, mat4 a);
 void copym(mat4 m, mat4 a);
-int max(int a, int b);
+int imax(int a, int b);
 float clamp(float f, float min, float max);
 
 #endif

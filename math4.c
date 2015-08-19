@@ -150,7 +150,7 @@ void copym(mat4 m, mat4 a)
     memcpy(m, a, sizeof(float) * 16);
 }
 
-int max(int a, int b)
+int imax(int a, int b)
 {
     return a > b ? a : b;
 }

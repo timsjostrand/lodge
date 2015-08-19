@@ -10,7 +10,15 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
+
+#ifndef _WIN32
 #define GLFW_INCLUDE_GLCOREARB
+#endif 
+
+#ifdef _WIN32
+#include <GL/glew.h>
+#endif
+
 #include <GLFW/glfw3.h>
 
 #include "math4.h"
@@ -243,18 +251,18 @@ void game_think(float dt)
     // Paddles
     if(game.keys[GLFW_KEY_W]) {
         game.player1.sprite.pos[1] += dt*0.6f;
-        game.player1.charge = game.player1.charge - 8.0f * dt * PLAYER_CHARGE;
+        game.player1.charge = game.player1.charge - 16.0f * dt * PLAYER_CHARGE;
     } else if(game.keys[GLFW_KEY_S]) {
         game.player1.sprite.pos[1] -= dt*0.6f;
-        game.player1.charge = game.player1.charge - 8.0f * dt * PLAYER_CHARGE;
+        game.player1.charge = game.player1.charge - 16.0f * dt * PLAYER_CHARGE;
     }
 
     if(game.keys[GLFW_KEY_UP]) {
         game.player2.sprite.pos[1] += dt*0.6f;
-        game.player2.charge = game.player2.charge - 8.0f * dt * PLAYER_CHARGE;
+        game.player2.charge = game.player2.charge - 16.0f * dt * PLAYER_CHARGE;
     } else if(game.keys[GLFW_KEY_DOWN]) {
         game.player2.sprite.pos[1] -= dt*0.6f;
-        game.player2.charge = game.player2.charge - 8.0f * dt * PLAYER_CHARGE;
+        game.player2.charge = game.player2.charge - 16.0f * dt * PLAYER_CHARGE;
     }
 
     // Cap charge
@@ -282,9 +290,11 @@ void game_think(float dt)
         float diff = (game.ball.sprite.pos[1] - game.player1.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle = M_PI/2.0f - acos(diff);
-        float force = 0.5f + game.player1.charge/32.0f;
-        game.ball.vx = cos(angle) * game.ball.speed * force;
-        game.ball.vy = sin(angle) * game.ball.speed * force;
+        float force = 0.5f + game.player1.charge/16.0f;
+        float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
+        current_speed = max(0.25f, current_speed);
+        game.ball.vx = cos(angle) * current_speed * force;
+        game.ball.vy = sin(angle) * current_speed * force;
         game.ball.last_hit = 0.0f;
 
         game.player1.charge = 0.0f;
@@ -305,9 +315,11 @@ void game_think(float dt)
         float diff = (game.ball.sprite.pos[1] - game.player2.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle =  M_PI/2.0f + acos(diff);
-        float force = 0.5f + game.player1.charge/32.0f;
-        game.ball.vx = cos(angle) * game.ball.speed * force;
-        game.ball.vy = sin(angle) * game.ball.speed * force;
+        float force = 0.5f + game.player1.charge/16.0f;
+        float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
+        current_speed = max(0.25f, current_speed); // So much code duplication!!
+        game.ball.vx = cos(angle) * current_speed * force;
+        game.ball.vy = sin(angle) * current_speed * force;
         game.ball.last_hit = 0.0f;
     
         game.player2.charge = 0.0f;
@@ -527,7 +539,7 @@ void init()
     glGenBuffers(1, &game.vbo);
     glBindBuffer(GL_ARRAY_BUFFER, game.vbo);
     glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices_rect, GL_STATIC_DRAW);
-
+    
     glGenVertexArrays(1, &game.vao);
     glBindVertexArray(game.vao);
     glEnableVertexAttribArray(0);
@@ -594,8 +606,8 @@ int main(int argc, char **argv)
     const GLFWvidmode *pVideomode = glfwGetVideoMode(pMonitor); // TODO: Use to set resolution?
 
     /* Create a windowed mode window and its OpenGL context */
-    //window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "Hello World", NULL, NULL);
-    window = glfwCreateWindow(pVideomode->width, pVideomode->height, "Hello World", pMonitor, NULL);
+    //window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "glpong", NULL, NULL);
+    window = glfwCreateWindow(pVideomode->width, pVideomode->height, "glpong", pMonitor, NULL);
     if(!window) {
         glfwTerminate();
         return -1;
@@ -603,6 +615,15 @@ int main(int argc, char **argv)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+#ifdef _WIN32
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if(GLEW_OK != err){
+        printf("glewInit() failed\n");
+        return -1;
+    }
+#endif
 
     /* Init OpenGL. */
     init();
