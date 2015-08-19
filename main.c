@@ -80,6 +80,7 @@ struct shader {
 
 struct game {
     double          time;                       /* Time since start. */
+    float           time_mod;                   /* Time delta factor. */
     GLuint          vbo;                        /* Vertex Buffer Object. */
     GLuint          vao;                        /* Vertex Array Object. */
     struct shader   shader;                     /* Shader program information. */
@@ -504,6 +505,7 @@ void init_ball(struct ball *ball)
 void init()
 {
     /* Game setup. */
+    game.time_mod = 1.0f;
     translate(game.translate, 0.0f, 0.0f, 0.0f);
     scale(game.scale, 10.0f, 10.0f, 1);
     rotate(game.rotate, 0);
@@ -548,6 +550,14 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
     if(action == GLFW_RELEASE) {
         switch(key) {
+            case GLFW_KEY_O:
+                game.time_mod *= 2.0f;
+                printf("game.time_mod=%f\n", game.time_mod);
+                break;
+            case GLFW_KEY_P:
+                game.time_mod /= 2.0f;
+                printf("game.time_mod=%f\n", game.time_mod);
+                break;
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, 1);
                 break;
@@ -606,7 +616,7 @@ int main(int argc, char **argv)
         /* Delta-time. */
         float delta_time = 0;
         if(game.time != 0) {
-            delta_time = (glfwGetTime() - game.time) * 1000.0f;
+            delta_time = (glfwGetTime() - game.time) * 1000.0f * game.time_mod;
         }
         game.time = glfwGetTime();
 
