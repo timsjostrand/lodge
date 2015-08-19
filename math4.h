@@ -14,6 +14,7 @@ void mult(mat4 m, mat4 a, mat4 b);
 void identity(mat4 m);
 void translate(mat4 m, float x, float y, float z);
 void translatev(mat4 m, vec4 v);
+void rotate_z(mat4 m, float angle);
 void scale(mat4 m, float x, float y, float z);
 void scalev(mat4 m, vec4 v);
 void rotate(mat4 m, float angle);

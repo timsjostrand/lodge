@@ -73,6 +73,14 @@ void scale(mat4 m, float x, float y, float z)
     m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
 }
 
+void rotate_z(mat4 m, float v)
+{
+    m[0]  = cos(v); m[1]  = -sin(v); m[2]  = 0; m[3]  = 0;
+    m[4]  = sin(v); m[5]  = cos(v);  m[6]  = 0; m[7]  = 0;
+    m[8]  = 0;      m[9]  = 0;       m[10] = 1; m[11] = 0;
+    m[12] = 0;      m[13] = 0;       m[14] = 0; m[15] = 1;
+}
+
 void scalev(mat4 m, vec4 v)
 {
     scale(m, xyz(v));

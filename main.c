@@ -54,6 +54,8 @@ const float vertices_rect[] =
 struct sprite {
     vec4 pos;
     vec4 scale;
+    vec4 color;
+    float rotation;
 };
 
 struct stats {
@@ -82,6 +84,7 @@ struct shader {
     GLint   uniform_time;
     GLint   uniform_transform;
     GLint   uniform_projection;
+    GLint   uniform_color;
     GLint   uniform_is_ball;
     GLint   uniform_ball_last_hit;
 };
@@ -138,9 +141,10 @@ const char *vertex_shader =
 const char *fragment_shader =
     "#version 400\n"
     "uniform float time;"
+    "uniform vec4 color;"
     "out vec4 frag_color;"
     "void main() {"
-    "   frag_color = vec4(1, 1, 1, 1);"
+    "   frag_color = color;"
     "}";
 
 void sprite_render(struct sprite *sprite, struct game *game)
@@ -149,19 +153,24 @@ void sprite_render(struct sprite *sprite, struct game *game)
 
     glBindVertexArray(game->vao);
 
-    // Position and scale
+    // Position, rotation and scale
     mat4 transform_position;
     translate(transform_position, sprite->pos[0], sprite->pos[1], sprite->pos[2]);
     
     mat4 transform_scale;
     scale(transform_scale, sprite->scale[0], sprite->scale[1], sprite->scale[2]);
     
+    mat4 transform_rotation;
+    rotate(transform_rotation, sprite->rotation);
+
     mat4 transform_final;
-    mult(transform_final, transform_position, transform_scale);
+    mult(transform_final, transform_position, transform_rotation);
+    mult(transform_final, transform_final, transform_scale);
     
-    // Upload matrices
+    // Upload matrices and color
     glUniformMatrix4fv(game->shader.uniform_transform, 1, GL_TRUE, transform_final);
     glUniformMatrix4fv(game->shader.uniform_projection, 1, GL_TRUE, game->projection);
+    glUniform4fv(game->shader.uniform_color, 1, sprite->color);
 
     // Render it!
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -325,11 +334,11 @@ void game_think(float dt)
         game.player2.charge = 0.0f;
     }
 
-    // Offset player sprites
-    float p1offs = PLAYER1_HIT - fmin(32.0f, game.player1.charge);
-    float p2offs = PLAYER2_HIT + fmin(32.0f, game.player2.charge);
-    game.player1.sprite.pos[0] = p1offs;
-    game.player2.sprite.pos[0] = p2offs;
+    // Set player color
+    game.player1.sprite.color[1] = 1.0f - game.player1.charge/32.0f;
+    game.player1.sprite.color[2] = 1.0f - game.player1.charge/32.0f;
+    game.player2.sprite.color[1] = 1.0f - game.player2.charge/32.0f;
+    game.player2.sprite.color[2] = 1.0f - game.player2.charge/32.0f;
 }
 
 void shader_think(float delta_time)
@@ -459,11 +468,13 @@ void init_shaders(struct shader *s)
     s->uniform_time = glGetUniformLocation(s->program, "time");
     s->uniform_transform = glGetUniformLocation(s->program, "transform");
     s->uniform_projection = glGetUniformLocation(s->program, "projection");
+    s->uniform_color = glGetUniformLocation(s->program, "color");
     s->uniform_is_ball = glGetUniformLocation(s->program, "is_ball");
     s->uniform_ball_last_hit = glGetUniformLocation(s->program, "ball_last_hit");
     printf("uniform_time=%d\n", s->uniform_time);
     printf("uniform_transform=%d\n", s->uniform_transform);
     printf("uniform_projection=%d\n", s->uniform_projection);
+    printf("uniform_color=%d\n", s->uniform_color);
     printf("uniform_is_ball=%d\n", s->uniform_is_ball);
     printf("uniform_ball_last_hit=%d\n", s->uniform_ball_last_hit);
 }
@@ -474,7 +485,12 @@ void init_player1(struct player *p)
     p->sprite.pos[1] = 50.0f;
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
-    
+   
+    p->sprite.color[0] = 1.0f;
+    p->sprite.color[1] = 1.0f;
+    p->sprite.color[2] = 1.0f;
+    p->sprite.color[3] = 1.0f;
+
     p->sprite.scale[0] = PLAYER_WIDTH;
     p->sprite.scale[1] = PLAYER_HEIGHT;
     p->sprite.scale[2] = 1.0f;
@@ -487,7 +503,12 @@ void init_player2(struct player *p)
     p->sprite.pos[1] = 50.0f;
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
-   
+    
+    p->sprite.color[0] = 1.0f;
+    p->sprite.color[1] = 1.0f;
+    p->sprite.color[2] = 1.0f;
+    p->sprite.color[3] = 1.0f;
+  
     p->sprite.scale[0] = PLAYER_WIDTH;
     p->sprite.scale[1] = PLAYER_HEIGHT;
     p->sprite.scale[2] = 1.0f;
@@ -510,7 +531,12 @@ void init_ball(struct ball *ball)
     ball->sprite.scale[1] = BALL_HEIGHT;
     ball->sprite.scale[2] = 1.0f;
     ball->sprite.scale[3] = 1.0f;
-
+    
+    ball->sprite.color[0] = 1.0f;
+    ball->sprite.color[1] = 1.0f;
+    ball->sprite.color[2] = 1.0f;
+    ball->sprite.color[3] = 1.0f;
+  
     ball->last_hit = 10.0f;
 }
 
