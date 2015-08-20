@@ -10,15 +10,10 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
-
+#include <GL/glew.h>
 #ifndef _WIN32
 #define GLFW_INCLUDE_GLCOREARB
 #endif 
-
-#ifdef _WIN32
-#include <GL/glew.h>
-#endif
-
 #include <GLFW/glfw3.h>
 
 #include "math4.h"
@@ -642,14 +637,13 @@ int main(int argc, char **argv)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-#ifdef _WIN32
+    /* Init GLEW. */
     glewExperimental = GL_TRUE;
     GLenum err = glewInit();
-    if(GLEW_OK != err){
+    if(err != GLEW_OK) {
         printf("glewInit() failed\n");
         return -1;
     }
-#endif
 
     /* Init OpenGL. */
     init();
