@@ -1,3 +1,4 @@
 main
+build*
 *.swp
 *.exe
