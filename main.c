@@ -287,16 +287,16 @@ void game_think(float dt)
         printf("collides with player 1\n");
         game.player1.stats.hits ++;
         game.player1.stats.current_streak ++;
-        game.player1.stats.streak = max(game.player1.stats.streak, game.player1.stats.current_streak);
+        game.player1.stats.streak = imax(game.player1.stats.streak, game.player1.stats.current_streak);
         game.total_stats.current_streak ++;
-        game.total_stats.streak = max(game.total_stats.streak, game.total_stats.current_streak);
+        game.total_stats.streak = imax(game.total_stats.streak, game.total_stats.current_streak);
 
         float diff = (game.ball.sprite.pos[1] - game.player1.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle = M_PI/2.0f - acos(diff);
         float force = 0.5f + game.player1.charge/16.0f;
         float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
-        current_speed = max(0.25f, current_speed);
+        current_speed = fmax(0.25f, current_speed);
         game.ball.vx = cos(angle) * current_speed * force;
         game.ball.vy = sin(angle) * current_speed * force;
         game.ball.last_hit = 0.0f;
@@ -312,16 +312,16 @@ void game_think(float dt)
         printf("collides with player 2\n");
         game.player2.stats.hits ++;
         game.player2.stats.current_streak ++;
-        game.player2.stats.streak = max(game.player2.stats.streak, game.player2.stats.current_streak);
+        game.player2.stats.streak = imax(game.player2.stats.streak, game.player2.stats.current_streak);
         game.total_stats.current_streak ++;
-        game.total_stats.streak = max(game.total_stats.streak, game.total_stats.current_streak);
+        game.total_stats.streak = imax(game.total_stats.streak, game.total_stats.current_streak);
 
         float diff = (game.ball.sprite.pos[1] - game.player2.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle =  M_PI/2.0f + acos(diff);
         float force = 0.5f + game.player1.charge/16.0f;
         float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
-        current_speed = max(0.25f, current_speed); // So much code duplication!!
+        current_speed = fmax(0.25f, current_speed); // So much code duplication!!
         game.ball.vx = cos(angle) * current_speed * force;
         game.ball.vy = sin(angle) * current_speed * force;
         game.ball.last_hit = 0.0f;
