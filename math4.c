@@ -150,6 +150,16 @@ void transpose(mat4 m, mat4 a)
     m[12] = a[ 3]; m[13] = a[ 7]; m[14] = a[11]; m[15] = a[15];
 }
 
+/**
+ * Store the cross product of 'a x b' in 'm'.
+ */
+void cross(vec4 v, vec4 a, vec4 b)
+{
+	v[0] = a[1]*b[2] - a[2]*b[1];
+	v[1] = a[2]*b[0] - a[0]*b[2];
+	v[2] = a[0]*b[1] - a[1]*b[0];
+}
+
 int imax(int a, int b)
 {
     return a > b ? a : b;
