@@ -1,6 +1,10 @@
 #ifndef _MATH_H
 #define _MATH_H
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846264338327950288
+#endif
+
 #define xyz(v) v[0], v[1], v[2]
 
 typedef float mat4[16];
