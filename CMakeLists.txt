@@ -1,11 +1,12 @@
 project(glpong)
 
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.1)
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
 
-add_definitions(-D_USE_MATH_DEFINES) 
+# QUIRK: Define M_PI on Windows.
+add_definitions(-D_USE_MATH_DEFINES)
 
 # Build GLFW.
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
@@ -24,6 +25,9 @@ add_definitions(-DGLEW_STATIC)
 # Main executable.
 include_directories(${PROJECT_SOURCE_DIR})
 add_executable(glpong main.c math4.c)
+
+# Build glpong using the C99 standard.
+set_property(TARGET glpong PROPERTY C_STANDARD 99)
 
 # Link.
 target_link_libraries(glpong libglew_static ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES} glfw ${GLFW_LIBRARIES})
