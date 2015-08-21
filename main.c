@@ -10,7 +10,6 @@
 #include <math.h>
 #include <string.h>
 #include <time.h>
-#include <stdarg.h>
 #include <GL/glew.h>
 #ifndef _WIN32
 #define GLFW_INCLUDE_GLCOREARB
@@ -55,6 +54,15 @@ enum uniforms {
     IS_BALL,
     BALL_LAST_HIT,
     UNIFORM_LAST
+};
+
+const char *uniform_names[] = {
+	"time",
+	"transform",
+	"projection",
+	"color",
+	"is_ball",
+	"ball_last_hit",
 };
 
 struct sprite {
@@ -441,7 +449,8 @@ void resize(GLFWwindow *window, int width, int height)
 {
 }
 
-void shader_init(struct shader *s, int uniforms_count, ...)
+void shader_init(struct shader *s, const char **uniform_names,
+		int uniforms_count)
 {
     /* Vertex shader. */
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -466,14 +475,11 @@ void shader_init(struct shader *s, int uniforms_count, ...)
 
     /* Set up uniforms. */
     s->uniforms = (GLint *) malloc(uniforms_count * sizeof(GLint));
-    va_list args;
-    va_start(args, uniforms_count);
     for(int i=0; i<uniforms_count; i++) {
-        char *name = va_arg(args, char *);
+        const char *name = uniform_names[i];
         s->uniforms[i] = glGetUniformLocation(s->program, name);
         printf("uniform: %s=%d\n", name, s->uniforms[i]);
     }
-    va_end(args);
 }
 
 void shader_free(struct shader *s)
@@ -574,8 +580,7 @@ void init()
     glBindBuffer(GL_ARRAY_BUFFER, game.vbo);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-    shader_init(&game.shader, UNIFORM_LAST, "time", "transform", "projection", "color",
-            "is_ball", "ball_last_hit");
+    shader_init(&game.shader, uniform_names, UNIFORM_LAST);
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
