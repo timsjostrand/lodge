@@ -342,8 +342,8 @@ void shader_think(float delta_time)
     glUniform1f(game.shader.uniform_time, (GLfloat) game.time);
 
     /* Transform. */
-    mat4 transform = game.translate;
-    mult(transform, transform, game.scale);
+    mat4 transform;
+	mult(transform, game.translate, game.scale);
     mult(transform, transform, game.rotate);
     glUniformMatrix4fv(game.shader.uniform_transform, 1, GL_TRUE, transform);
 
