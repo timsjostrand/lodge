@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "math4.h"
 
@@ -176,4 +177,9 @@ int imax(int a, int b)
 float clamp(float f, float min, float max)
 {
     return f < min ? min : (f > max ? max : f);
+}
+
+float randr(float min, float max)
+{
+    return min + (((float) rand()) / (float) RAND_MAX) * (max - min);
 }

@@ -27,5 +27,6 @@ void cross(vec4 v, vec4 a, vec4 b);
 void copym(mat4 m, mat4 a);
 int imax(int a, int b);
 float clamp(float f, float min, float max);
+float randr(float min, float max);
 
 #endif
