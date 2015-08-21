@@ -46,6 +46,9 @@ const float vertices_rect[] =
 
 #define PLAYER_CHARGE   0.01f
 
+#define PARTICLES_MAX   100
+#define PARTICLE_ALPHA  0.5f
+
 enum uniforms {
     TIME,
     TRANSFORM,
@@ -83,6 +86,7 @@ struct player {
     struct sprite   sprite;
     struct stats    stats;
     float           charge;
+    float           last_emit;
 };
 
 struct ball {
@@ -108,6 +112,15 @@ struct graphics {
     struct shader   shader;                     /* Shader program information. */
 };
 
+struct particle {
+    struct sprite   sprite;
+    int             dead;
+    float           age;
+    float           age_max;
+    float           vx;
+    float           vy;
+};
+
 struct game {
     double          time;                       /* Time since start. */
     float           time_mod;                   /* Time delta factor. */
@@ -116,6 +129,8 @@ struct game {
     struct player   player2;                    /* Right player. */
     struct ball     ball;
     struct stats    total_stats;
+    struct particle particles[PARTICLES_MAX];
+    int             particles_count;
     int             keys[GLFW_KEY_LAST];        /* Key status of current frame. */
     int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
@@ -215,6 +230,64 @@ void print_stats()
             game.player2.stats.hits,
             game.player2.stats.streak);
     printf("Longest total streak: %-2d\n", game.total_stats.streak);
+}
+
+void particle_init(struct particle *p, float x, float y, float w, float h,
+        float vx, float vy, float age_max)
+{
+    p->dead = 0;
+    p->age = 0.0f;
+    p->age_max = age_max;
+    p->vx = vx;
+    p->vy = vy;
+
+    p->sprite.pos[0] = x;
+    p->sprite.pos[1] = y;
+    p->sprite.pos[2] = 0.0f;
+    p->sprite.pos[3] = 1.0f;
+
+    p->sprite.color[0] = 1.0f;
+    p->sprite.color[1] = 1.0f;
+    p->sprite.color[2] = 1.0f;
+    p->sprite.color[3] = PARTICLE_ALPHA;
+
+    p->sprite.scale[0] = w;
+    p->sprite.scale[1] = h;
+    p->sprite.scale[2] = 1.0f;
+    p->sprite.scale[3] = 1.0f;
+}
+
+void particle_new(float x, float y, float w, float h, float vx, float vy,
+        float age_max)
+{
+    if(game.particles_count >= PARTICLES_MAX) {
+        printf("max particle count reached\n");
+        return;
+    }
+    particle_init(&game.particles[game.particles_count], x, y, w, h, vx, vy,
+            age_max);
+    game.particles_count ++;
+}
+
+int player_is_charged(struct player *p)
+{
+    return p->charge >= 32.0f;
+}
+
+void think_player_charged(struct player *p, float dt)
+{
+    if(player_is_charged(p) && p->last_emit >= 16.0f) {
+        float size = randr(8.0f, 16.0f);
+        particle_new(p->sprite.pos[0],                                          // x
+                p->sprite.pos[1] + randr(-PLAYER_HEIGHT/2, PLAYER_HEIGHT/2),    // y
+                size, size,                                                     // w, h
+                randr(-0.10f, 0.10f),                                           // vx
+                randr(-0.10f, 0.10f),                                           // vy
+                randr(100.0f, 500.0f)                                           // time_max
+        );
+        p->last_emit = 0;
+    }
+    p->last_emit += dt;
 }
 
 void game_think(float dt)
@@ -352,6 +425,10 @@ void game_think(float dt)
     game.player1.sprite.color[2] = 1.0f - game.player1.charge/32.0f;
     game.player2.sprite.color[1] = 1.0f - game.player2.charge/32.0f;
     game.player2.sprite.color[2] = 1.0f - game.player2.charge/32.0f;
+
+    // Emit player charge particles
+    think_player_charged(&game.player1, dt);
+    think_player_charged(&game.player2, dt);
 }
 
 void shader_think(struct graphics *g, float delta_time)
@@ -372,10 +449,39 @@ void shader_think(struct graphics *g, float delta_time)
     glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
 }
 
+void particles_think(float dt)
+{
+    /* Think for each particle. */
+    for(int i=0; i<game.particles_count; i++) {
+        struct particle *p = &game.particles[i];
+
+        p->age += dt;
+        p->sprite.pos[0] += p->vx * dt;
+        p->sprite.pos[1] += p->vy * dt;
+        p->sprite.color[3] = PARTICLE_ALPHA - clamp(p->age / p->age_max, 0.0f, 1.0f) * PARTICLE_ALPHA;
+
+        if(p->age >= p->age_max) {
+            p->dead = 1;
+        }
+    }
+
+    /* Remove dead particles. */
+    for(int i=0; i<game.particles_count; i++) {
+        if(game.particles[i].dead) {
+            for(int n=i+1; n<game.particles_count; n++) {
+                game.particles[i] = game.particles[n];
+            }
+            game.particles_count --;
+            printf("game.particles_count=%d\n", game.particles_count);
+        }
+    }
+}
+
 void think(float delta_time)
 {
     shader_think(&game.graphics, delta_time);
     game_think(delta_time);
+    particles_think(delta_time);
 
     /* Remember what keys were pressed the last frame. */
     memcpy(game.last_keys, game.keys, GLFW_KEY_LAST);
@@ -386,15 +492,26 @@ void render(GLFWwindow *window, struct graphics *g)
     //glEnableClientState(0);
     glEnableVertexAttribArray(0);
 
+    /* Clear. */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(g->shader.program);
 
+    /* Sprites. */
     glUniform1i(g->shader.uniforms[IS_BALL], 0);
     sprite_render(&game.player1.sprite, &game.graphics);
     sprite_render(&game.player2.sprite, &game.graphics);
-    
+
+    /* Ball. */
     glUniform1i(g->shader.uniforms[IS_BALL], 1);
     sprite_render(&game.ball.sprite, &game.graphics);
+
+    /* Particles. */
+    glUniform1i(g->shader.uniforms[IS_BALL], 0);
+    for(int i=0; i<game.particles_count; i++) {
+        if(!game.particles[i].dead) {
+            sprite_render(&game.particles[i].sprite, &game.graphics);
+        }
+    }
 }
 
 void shader_program_log(GLuint program, const char *name)
@@ -489,6 +606,7 @@ void shader_init(struct shader *s, const char **uniform_names,
 void shader_free(struct shader *s)
 {
     free(s->uniforms);
+    glDeleteProgram(s->program);
 }
 
 void init_player1(struct player *p)
@@ -572,6 +690,8 @@ void init()
     glDepthFunc(GL_LESS);
     glEnable(GL_CULL_FACE);
 //    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /* Create vertex buffer. */
     glGenBuffers(1, &game.graphics.vbo_rect);
@@ -617,10 +737,9 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void clean_up()
 {
-    shader_free(&game.graphics.shader);
     glDeleteVertexArrays(1, &game.graphics.vao_rect);
     glDeleteBuffers(1, &game.graphics.vbo_rect);
-    glDeleteProgram(game.graphics.shader.program);
+    shader_free(&game.graphics.shader);
     glfwTerminate();
 }
 
