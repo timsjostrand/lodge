@@ -494,7 +494,7 @@ void shader_free(struct shader *s)
 void init_player1(struct player *p)
 {
     p->sprite.pos[0] = 32.0f;
-    p->sprite.pos[1] = 50.0f;
+    p->sprite.pos[1] = VIEW_HEIGHT/2;
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
    
@@ -512,7 +512,7 @@ void init_player1(struct player *p)
 void init_player2(struct player *p)
 {
     p->sprite.pos[0] = 608.0f;
-    p->sprite.pos[1] = 50.0f;
+    p->sprite.pos[1] = VIEW_HEIGHT/2;
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
     
