@@ -645,8 +645,12 @@ int main(int argc, char **argv)
     const GLFWvidmode *pVideomode = glfwGetVideoMode(pMonitor); // TODO: Use to set resolution?
 
     /* Create a windowed mode window and its OpenGL context */
-    //window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "glpong", NULL, NULL);
-    window = glfwCreateWindow(pVideomode->width, pVideomode->height, "glpong", pMonitor, NULL);
+    if(argc >= 2 && strncmp(argv[1], "windowed", 8) == 0) {
+        window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "glpong", NULL, NULL);
+    } else {
+        window = glfwCreateWindow(pVideomode->width, pVideomode->height, "glpong", pMonitor, NULL);
+    }
+
     if(!window) {
         glfwTerminate();
         return -1;
