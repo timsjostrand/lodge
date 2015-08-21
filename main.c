@@ -337,7 +337,7 @@ void game_think(float dt)
         float diff = (game.ball.sprite.pos[1] - game.player2.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle =  M_PI/2.0f + acos(diff);
-        float force = 0.5f + game.player1.charge/16.0f;
+        float force = 0.5f + game.player2.charge/16.0f;
         float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
         current_speed = fmax(0.25f, current_speed); // So much code duplication!!
         game.ball.vx = cos(angle) * current_speed * force;
