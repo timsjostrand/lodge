@@ -57,12 +57,12 @@ enum uniforms {
 };
 
 const char *uniform_names[] = {
-	"time",
-	"transform",
-	"projection",
-	"color",
-	"is_ball",
-	"ball_last_hit",
+    "time",
+    "transform",
+    "projection",
+    "color",
+    "is_ball",
+    "ball_last_hit",
 };
 
 struct sprite {
@@ -95,19 +95,23 @@ struct ball {
 
 struct shader {
     GLuint  program;
-    GLint    *uniforms;
+    GLint   *uniforms;
+};
+
+struct graphics {
+    GLuint          vbo_rect;                   /* Vertex Buffer Object. */
+    GLuint          vao_rect;                   /* Vertex Array Object. */
+    mat4            projection;                 /* Projection matrix. */
+    mat4            translate;                  /* Global translation matrix. */
+    mat4            rotate;                     /* Global rotation matrix. */
+    mat4            scale;                      /* Global scale matrix. */
+    struct shader   shader;                     /* Shader program information. */
 };
 
 struct game {
     double          time;                       /* Time since start. */
     float           time_mod;                   /* Time delta factor. */
-    GLuint          vbo;                        /* Vertex Buffer Object. */
-    GLuint          vao;                        /* Vertex Array Object. */
-    struct shader   shader;                     /* Shader program information. */
-    mat4            projection;                 /* Projection matrix. */
-    mat4            translate;                  /* Global translation matrix. */
-    mat4            rotate;                     /* Global rotation matrix. */
-    mat4            scale;                      /* Global scale matrix. */
+    struct graphics graphics;                   /* Graphics state. */
     struct player   player1;                    /* Left player. */
     struct player   player2;                    /* Right player. */
     struct ball     ball;
@@ -156,11 +160,11 @@ const char *fragment_shader =
     "   frag_color = color;"
     "}";
 
-void sprite_render(struct sprite *sprite, struct game *game)
+void sprite_render(struct sprite *sprite, struct graphics *g)
 {
     glEnableVertexAttribArray(0);
 
-    glBindVertexArray(game->vao);
+    glBindVertexArray(g->vao_rect);
 
     // Position, rotation and scale
     mat4 transform_position;
@@ -177,9 +181,9 @@ void sprite_render(struct sprite *sprite, struct game *game)
     mult(transform_final, transform_final, transform_scale);
     
     // Upload matrices and color
-    glUniformMatrix4fv(game->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform_final);
-    glUniformMatrix4fv(game->shader.uniforms[PROJECTION], 1, GL_TRUE, game->projection);
-    glUniform4fv(game->shader.uniforms[COLOR], 1, sprite->color);
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform_final);
+    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_TRUE, g->projection);
+    glUniform4fv(g->shader.uniforms[COLOR], 1, sprite->color);
 
     // Render it!
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -350,47 +354,47 @@ void game_think(float dt)
     game.player2.sprite.color[2] = 1.0f - game.player2.charge/32.0f;
 }
 
-void shader_think(struct shader *s, float delta_time)
+void shader_think(struct graphics *g, float delta_time)
 {
     /* Upload uniforms. */
-    glUniform1f(s->uniforms[TIME], (GLfloat) game.time);
+    glUniform1f(g->shader.uniforms[TIME], (GLfloat) game.time);
 
     /* Transform. */
     mat4 transform;
-    mult(transform, game.translate, game.scale);
-    mult(transform, transform, game.rotate);
-    glUniformMatrix4fv(s->uniforms[TRANSFORM], 1, GL_TRUE, transform);
+    mult(transform, g->translate, g->scale);
+    mult(transform, transform, g->rotate);
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform);
 
     /* Projection. */
-    glUniformMatrix4fv(s->uniforms[PROJECTION], 1, GL_TRUE, game.projection);
+    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_TRUE, g->projection);
 
     /* Ball stuff */
-    glUniform1f(s->uniforms[BALL_LAST_HIT], game.ball.last_hit);
+    glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
 }
 
 void think(float delta_time)
 {
-    shader_think(&game.shader, delta_time);
+    shader_think(&game.graphics, delta_time);
     game_think(delta_time);
 
     /* Remember what keys were pressed the last frame. */
     memcpy(game.last_keys, game.keys, GLFW_KEY_LAST);
 }
 
-void render(GLFWwindow *window)
+void render(GLFWwindow *window, struct graphics *g)
 {
     //glEnableClientState(0);
     glEnableVertexAttribArray(0);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(game.shader.program);
+    glUseProgram(g->shader.program);
 
-    glUniform1i(game.shader.uniforms[IS_BALL], 0);
-    sprite_render(&game.player1.sprite, &game);
-    sprite_render(&game.player2.sprite, &game);
+    glUniform1i(g->shader.uniforms[IS_BALL], 0);
+    sprite_render(&game.player1.sprite, &game.graphics);
+    sprite_render(&game.player2.sprite, &game.graphics);
     
-    glUniform1i(game.shader.uniforms[IS_BALL], 1);
-    sprite_render(&game.ball.sprite, &game);
+    glUniform1i(g->shader.uniforms[IS_BALL], 1);
+    sprite_render(&game.ball.sprite, &game.graphics);
 }
 
 void shader_program_log(GLuint program, const char *name)
@@ -450,7 +454,7 @@ void resize(GLFWwindow *window, int width, int height)
 }
 
 void shader_init(struct shader *s, const char **uniform_names,
-		int uniforms_count)
+        int uniforms_count)
 {
     /* Vertex shader. */
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
@@ -552,10 +556,10 @@ void init()
 {
     /* Game setup. */
     game.time_mod = 1.0f;
-    translate(game.translate, 0.0f, 0.0f, 0.0f);
-    scale(game.scale, 10.0f, 10.0f, 1);
-    rotate(game.rotate, 0);
-    ortho(game.projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
+    translate(game.graphics.translate, 0.0f, 0.0f, 0.0f);
+    scale(game.graphics.scale, 10.0f, 10.0f, 1);
+    rotate(game.graphics.rotate, 0);
+    ortho(game.graphics.projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
 
     /* Entities. */
     init_player1(&game.player1);
@@ -570,17 +574,17 @@ void init()
 //    glDisable(GL_CULL_FACE);
 
     /* Create vertex buffer. */
-    glGenBuffers(1, &game.vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, game.vbo);
+    glGenBuffers(1, &game.graphics.vbo_rect);
+    glBindBuffer(GL_ARRAY_BUFFER, game.graphics.vbo_rect);
     glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices_rect, GL_STATIC_DRAW);
     
-    glGenVertexArrays(1, &game.vao);
-    glBindVertexArray(game.vao);
+    glGenVertexArrays(1, &game.graphics.vao_rect);
+    glBindVertexArray(game.graphics.vao_rect);
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, game.vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, game.graphics.vbo_rect);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-    shader_init(&game.shader, uniform_names, UNIFORM_LAST);
+    shader_init(&game.graphics.shader, uniform_names, UNIFORM_LAST);
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -613,10 +617,10 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void clean_up()
 {
-    shader_free(&game.shader);
-    glDeleteVertexArrays(1, &game.vao);
-    glDeleteBuffers(1, &game.vbo);
-    glDeleteProgram(game.shader.program);
+    shader_free(&game.graphics.shader);
+    glDeleteVertexArrays(1, &game.graphics.vao_rect);
+    glDeleteBuffers(1, &game.graphics.vbo_rect);
+    glDeleteProgram(game.graphics.shader.program);
     glfwTerminate();
 }
 
@@ -677,7 +681,7 @@ int main(int argc, char **argv)
 
         /* Game loop. */
         think(delta_time);
-        render(window);
+        render(window, &game.graphics);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
