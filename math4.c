@@ -150,14 +150,6 @@ void transpose(mat4 m, mat4 a)
     m[12] = a[ 3]; m[13] = a[ 7]; m[14] = a[11]; m[15] = a[15];
 }
 
-/**
- * Copy the contents of matrix 'a' into 'm'.
- */
-void copym(mat4 m, mat4 a)
-{
-    memcpy(m, a, sizeof(float) * 16);
-}
-
 int imax(int a, int b)
 {
     return a > b ? a : b;
