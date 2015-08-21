@@ -590,7 +590,7 @@ void init()
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     /* Sanity check */
-    if(key < 0 || key > GLFW_KEY_LAST) {
+    if(key < 0 || key >= GLFW_KEY_LAST) {
         printf("Invalid key: %d (scancode=%d)\n", key, scancode);
         return;
     }
