@@ -5,6 +5,8 @@ cmake_minimum_required(VERSION 2.6)
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
 
+add_definitions(-D_USE_MATH_DEFINES) 
+
 # Build GLFW.
 add_subdirectory(lib/glfw)
 include_directories(lib/glfw/include)
