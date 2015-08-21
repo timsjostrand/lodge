@@ -132,6 +132,8 @@ struct game {
     struct stats    total_stats;
     struct particle particles[PARTICLES_MAX];
     int             particles_count;
+    int             frames;
+    double          last_fps_print;
     int             keys[GLFW_KEY_LAST];        /* Key status of current frame. */
     int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
@@ -808,6 +810,13 @@ int main(int argc, char **argv)
 
         /* Poll for and process events */
         glfwPollEvents();
+
+        game.frames ++;
+        if(glfwGetTime()*1000.0  - game.last_fps_print >= 1000.0) {
+            printf("%d FPS\n", game.frames);
+            game.last_fps_print = glfwGetTime()*1000.0f;
+            game.frames = 0;
+        }
     }
 
     clean_up();
