@@ -160,6 +160,14 @@ void cross(vec4 v, vec4 a, vec4 b)
 	v[2] = a[0]*b[1] - a[1]*b[0];
 }
 
+/**
+ * Copy the contents of matrix 'a' into 'm'.
+ */
+void copym(mat4 m, mat4 a)
+{
+    memcpy(m, a, sizeof(float) * 16);
+}
+
 int imax(int a, int b)
 {
     return a > b ? a : b;
