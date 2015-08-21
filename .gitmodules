@@ -3,4 +3,4 @@
 	url = https://github.com/glfw/glfw.git
 [submodule "lib/glew"]
 	path = lib/glew
-	url = https://github.com/nigels-com/glew.git
+	url = https://github.com/Perlmint/glew-cmake.git
