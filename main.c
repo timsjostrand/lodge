@@ -808,10 +808,10 @@ int main(int argc, char **argv)
         glfwTerminate();
         return -1;
     }
+#endif
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
-#endif
 
     /* Init GLEW. */
     glewExperimental = GL_TRUE;
