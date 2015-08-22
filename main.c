@@ -44,8 +44,6 @@ const float vertices_rect[] =
 #define PLAYER1_HIT     32.0f
 #define PLAYER2_HIT     608.0f
 
-#define PLAYER_CHARGE   0.01f
-
 #define PARTICLES_MAX   100
 #define PARTICLE_ALPHA  0.5f
 
@@ -277,7 +275,8 @@ void particle_new(float x, float y, float w, float h, float angle, float vx,
 
 int player_is_charged(struct player *p)
 {
-    return p->charge >= 32.0f;
+    /* p->charge is idle time in ms. */
+    return p->charge >= 3200.0f;
 }
 
 void think_player_charged(struct player *p, float dt)
@@ -348,29 +347,25 @@ void game_think(float dt)
     game.ball.sprite.pos[1] += dt*game.ball.vy;
     game.ball.last_hit += dt;
 
-    game.player1.charge += dt * PLAYER_CHARGE;
-    game.player2.charge += dt * PLAYER_CHARGE;
+    game.player1.charge += dt;
+    game.player2.charge += dt;
 
     // Paddles
     if(game.keys[GLFW_KEY_W]) {
         game.player1.sprite.pos[1] += dt*0.6f;
-        game.player1.charge = game.player1.charge - 16.0f * dt * PLAYER_CHARGE;
+        game.player1.charge = 0;
     } else if(game.keys[GLFW_KEY_S]) {
         game.player1.sprite.pos[1] -= dt*0.6f;
-        game.player1.charge = game.player1.charge - 16.0f * dt * PLAYER_CHARGE;
+        game.player1.charge = 0;
     }
 
     if(game.keys[GLFW_KEY_UP]) {
         game.player2.sprite.pos[1] += dt*0.6f;
-        game.player2.charge = game.player2.charge - 16.0f * dt * PLAYER_CHARGE;
+        game.player2.charge = 0;
     } else if(game.keys[GLFW_KEY_DOWN]) {
         game.player2.sprite.pos[1] -= dt*0.6f;
-        game.player2.charge = game.player2.charge - 16.0f * dt * PLAYER_CHARGE;
+        game.player2.charge = 0;
     }
-
-    // Cap charge
-    game.player1.charge = clamp(game.player1.charge, 0.0f, 32.0f);
-    game.player2.charge = clamp(game.player2.charge, 0.0f, 32.0f);
 
     // If paddle is outside board
     game.player1.sprite.pos[1] = clamp(game.player1.sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
@@ -393,8 +388,9 @@ void game_think(float dt)
         float diff = (game.ball.sprite.pos[1] - game.player1.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle = M_PI/2.0f - acos(diff);
-        float force = 0.5f + game.player1.charge/16.0f;
+        float force = 1.0f + (1.5f * player_is_charged(&game.player1));
         float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
+        printf("force=%6f, current_speed=%6f\n", force, current_speed);
         current_speed = fmax(0.25f, current_speed);
         game.ball.vx = cos(angle) * current_speed * force;
         game.ball.vy = sin(angle) * current_speed * force;
@@ -418,8 +414,9 @@ void game_think(float dt)
         float diff = (game.ball.sprite.pos[1] - game.player2.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
         diff = clamp(diff, -0.8f, 0.8f);
         float angle =  M_PI/2.0f + acos(diff);
-        float force = 0.5f + game.player2.charge/16.0f;
+        float force = 1.0f + (1.5f * player_is_charged(&game.player2));
         float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
+        printf("force=%6f, current_speed=%6f\n", force, current_speed);
         current_speed = fmax(0.25f, current_speed); // So much code duplication!!
         game.ball.vx = cos(angle) * current_speed * force;
         game.ball.vy = sin(angle) * current_speed * force;
