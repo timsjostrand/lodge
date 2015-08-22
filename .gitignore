@@ -1,4 +1,4 @@
 main
-build*
+build/**/
 *.swp
 *.exe

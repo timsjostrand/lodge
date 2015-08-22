@@ -1,5 +1,5 @@
-mkdir build_emscripten
-cd build_emscripten
+mkdir emscripten
+cd emscripten
 
 @echo off
 
@@ -7,7 +7,7 @@ cd build_emscripten
 set EMSCRIPTEN_TOOLCHAIN="C:/Program Files/Emscripten/emscripten/tag-1.34.6/cmake/Modules/Platform/Emscripten.cmake"
 set MINGW_MAKE="C:/MinGW/bin/mingw32-make.exe"
 
-cmake -DTHREADS_PTHREAD_ARG=0 -DEMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=%EMSCRIPTEN_TOOLCHAIN% -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" ../
+cmake -DTHREADS_PTHREAD_ARG=0 -DEMSCRIPTEN=1 -DCMAKE_TOOLCHAIN_FILE=%EMSCRIPTEN_TOOLCHAIN% -DCMAKE_BUILD_TYPE=Release -G "MinGW Makefiles" ../../
 
 ::"C:/MinGW/bin/mingw32-make.exe"
 cd ..
