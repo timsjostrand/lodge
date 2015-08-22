@@ -244,7 +244,7 @@ void print_stats()
 }
 
 void particle_init(struct particle *p, float x, float y, float w, float h,
-        float vx, float vy, float va, float age_max)
+        float angle, float vx, float vy, float va, float age_max)
 {
     p->dead = 0;
     p->age = 0.0f;
@@ -252,6 +252,8 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->vx = vx;
     p->vy = vy;
     p->va = va;
+
+    p->sprite.rotation = angle;
 
     p->sprite.pos[0] = x;
     p->sprite.pos[1] = y;
@@ -269,15 +271,15 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->sprite.scale[3] = 1.0f;
 }
 
-void particle_new(float x, float y, float w, float h, float vx, float vy,
-        float va, float age_max)
+void particle_new(float x, float y, float w, float h, float angle, float vx,
+        float vy, float va, float age_max)
 {
     if(game.particles_count >= PARTICLES_MAX) {
         printf("max particle count reached\n");
         return;
     }
-    particle_init(&game.particles[game.particles_count], x, y, w, h, vx, vy,
-            va, age_max);
+    particle_init(&game.particles[game.particles_count], x, y, w, h, angle,
+            vx, vy, va, age_max);
     game.particles_count ++;
 }
 
@@ -293,10 +295,11 @@ void think_player_charged(struct player *p, float dt)
         particle_new(p->sprite.pos[0],                                          // x
                 p->sprite.pos[1] + randr(-PLAYER_HEIGHT/2, PLAYER_HEIGHT/2),    // y
                 size, size,                                                     // w, h
-                randr(-0.08f, 0.08f),                                           // vx
-                randr(-0.08f, 0.08f),                                           // vy
+                randr(0, 2 * M_PI),                                             // angle
+                randr(-0.05f, 0.05f),                                           // vx
+                randr(-0.05f, 0.05f),                                           // vy
                 randr(-(2 * M_PI) * 0.0001f, (2 * M_PI) * 0.0001f),             // va
-                randr(100.0f, 500.0f)                                           // time_max
+                randr(200.0f, 600.0f)                                           // time_max
         );
         p->last_emit = 0;
     }
