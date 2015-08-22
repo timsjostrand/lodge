@@ -11,20 +11,12 @@
 #include <string.h>
 #include <time.h>
 #include <GL/glew.h>
-#ifndef _WIN32
-    #ifndef EMSCRIPTEN
-        #define GLFW_INCLUDE_GLCOREARB
-    #endif
-#endif 
-
 #include <GLFW/glfw3.h>
-
 #ifdef EMSCRIPTEN
     #include <emscripten/emscripten.h>
 #endif
 
 #include "math4.h"
-
 
 const float vertices_rect[] = 
 {  
