@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OpenGL Pong!
  *
  * Authors: Tim Sjöstrand <tim.sjostrand@gmail.com>
@@ -127,6 +127,7 @@ struct particle {
     float           age_max;
     float           vx;
     float           vy;
+    float           va;
 };
 
 struct game {
@@ -139,6 +140,8 @@ struct game {
     struct stats    total_stats;
     struct particle particles[PARTICLES_MAX];
     int             particles_count;
+    int             frames;
+    double          last_fps_print;
     int             keys[GLFW_KEY_LAST];        /* Key status of current frame. */
     int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
@@ -241,13 +244,14 @@ void print_stats()
 }
 
 void particle_init(struct particle *p, float x, float y, float w, float h,
-        float vx, float vy, float age_max)
+        float vx, float vy, float va, float age_max)
 {
     p->dead = 0;
     p->age = 0.0f;
     p->age_max = age_max;
     p->vx = vx;
     p->vy = vy;
+    p->va = va;
 
     p->sprite.pos[0] = x;
     p->sprite.pos[1] = y;
@@ -266,14 +270,14 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
 }
 
 void particle_new(float x, float y, float w, float h, float vx, float vy,
-        float age_max)
+        float va, float age_max)
 {
     if(game.particles_count >= PARTICLES_MAX) {
         printf("max particle count reached\n");
         return;
     }
     particle_init(&game.particles[game.particles_count], x, y, w, h, vx, vy,
-            age_max);
+            va, age_max);
     game.particles_count ++;
 }
 
@@ -289,8 +293,9 @@ void think_player_charged(struct player *p, float dt)
         particle_new(p->sprite.pos[0],                                          // x
                 p->sprite.pos[1] + randr(-PLAYER_HEIGHT/2, PLAYER_HEIGHT/2),    // y
                 size, size,                                                     // w, h
-                randr(-0.10f, 0.10f),                                           // vx
-                randr(-0.10f, 0.10f),                                           // vy
+                randr(-0.08f, 0.08f),                                           // vx
+                randr(-0.08f, 0.08f),                                           // vy
+                randr(-(2 * M_PI) * 0.0001f, (2 * M_PI) * 0.0001f),             // va
                 randr(100.0f, 500.0f)                                           // time_max
         );
         p->last_emit = 0;
@@ -428,12 +433,6 @@ void game_think(float dt)
         game.player2.charge = 0.0f;
     }
 
-    // Set player color
-    game.player1.sprite.color[1] = 1.0f - game.player1.charge/32.0f;
-    game.player1.sprite.color[2] = 1.0f - game.player1.charge/32.0f;
-    game.player2.sprite.color[1] = 1.0f - game.player2.charge/32.0f;
-    game.player2.sprite.color[2] = 1.0f - game.player2.charge/32.0f;
-
     // Emit player charge particles
     think_player_charged(&game.player1, dt);
     think_player_charged(&game.player2, dt);
@@ -467,6 +466,7 @@ void particles_think(float dt)
         p->sprite.pos[0] += p->vx * dt;
         p->sprite.pos[1] += p->vy * dt;
         p->sprite.color[3] = PARTICLE_ALPHA - clamp(p->age / p->age_max, 0.0f, 1.0f) * PARTICLE_ALPHA;
+        p->sprite.rotation += p->va * dt;
 
         if(p->age >= p->age_max) {
             p->dead = 1;
@@ -480,7 +480,6 @@ void particles_think(float dt)
                 game.particles[i] = game.particles[n];
             }
             game.particles_count --;
-            printf("game.particles_count=%d\n", game.particles_count);
         }
     }
 }
@@ -762,7 +761,6 @@ void do_frame()
     if(game.time != 0) {
         delta_time = (glfwGetTime() - game.time) * 1000.0f * game.time_mod;
     }
-    
     game.time = glfwGetTime();
 
     /* Game loop. */
@@ -774,6 +772,13 @@ void do_frame()
 
     /* Poll for and process events */
     glfwPollEvents();
+
+    game.frames ++;
+    if(glfwGetTime()*1000.0  - game.last_fps_print >= 1000.0) {
+        printf("%d FPS\n", game.frames);
+        game.last_fps_print = glfwGetTime()*1000.0f;
+        game.frames = 0;
+    }
 }
 
 int main(int argc, char **argv)
