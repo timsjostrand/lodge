@@ -5,7 +5,8 @@ GLPONG
 COMPILING
 
   To build on Unix platforms:
-  # mkdir build
   # cd build
+  # mkdir unix
+  # cd unix
   # cmake -G "Unix Makefiles" ../
   # make
