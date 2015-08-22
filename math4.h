@@ -1,5 +1,5 @@
-#ifndef _MATH_H
-#define _MATH_H
+#ifndef _MATH4_H
+#define _MATH4_H
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288

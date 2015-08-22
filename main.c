@@ -12,11 +12,19 @@
 #include <time.h>
 #include <GL/glew.h>
 #ifndef _WIN32
-#define GLFW_INCLUDE_GLCOREARB
+    #ifndef EMSCRIPTEN
+        #define GLFW_INCLUDE_GLCOREARB
+    #endif
 #endif 
+
 #include <GLFW/glfw3.h>
 
+#ifdef EMSCRIPTEN
+    #include <emscripten/emscripten.h>
+#endif
+
 #include "math4.h"
+
 
 const float vertices_rect[] = 
 {  
@@ -728,9 +736,11 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
                 game.time_mod /= 2.0f;
                 printf("game.time_mod=%f\n", game.time_mod);
                 break;
+#ifndef EMSCRIPTEN
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, 1);
                 break;
+#endif
         }
     }
 }
@@ -743,17 +753,41 @@ void clean_up()
     glfwTerminate();
 }
 
+GLFWwindow *window;
+
+void do_frame()
+{     
+    /* Delta-time. */
+    float delta_time = 0;
+    if(game.time != 0) {
+        delta_time = (glfwGetTime() - game.time) * 1000.0f * game.time_mod;
+    }
+    
+    game.time = glfwGetTime();
+
+    /* Game loop. */
+    think(delta_time);
+    render(window, &game.graphics);
+
+    /* Swap front and back buffers */
+    glfwSwapBuffers(window);
+
+    /* Poll for and process events */
+    glfwPollEvents();
+}
+
 int main(int argc, char **argv)
 {
     srand(time(0));
-
-    GLFWwindow *window;
 
     /* Initialize the library */
     if(!glfwInit()) {
         return -1;
     }
 
+#ifdef EMSCRIPTEN
+    window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "glpong", NULL, NULL);
+#else
     /* QUIRK: Mac OSX */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -777,6 +811,7 @@ int main(int argc, char **argv)
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+#endif
 
     /* Init GLEW. */
     glewExperimental = GL_TRUE;
@@ -794,25 +829,13 @@ int main(int argc, char **argv)
     glfwSetWindowSizeCallback(window, &resize);
 
     /* Loop until the user closes the window */
+#ifdef EMSCRIPTEN
+    emscripten_set_main_loop( do_frame, 60, 1 );
+#else
     while(!glfwWindowShouldClose(window)) { 
-        /* Delta-time. */
-        float delta_time = 0;
-        if(game.time != 0) {
-            delta_time = (glfwGetTime() - game.time) * 1000.0f * game.time_mod;
-        }
-        game.time = glfwGetTime();
-
-        /* Game loop. */
-        think(delta_time);
-        render(window, &game.graphics);
-
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
+        do_frame();
     }
-
+#endif
     clean_up();
     return 0;
 }
