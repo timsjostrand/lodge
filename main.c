@@ -465,8 +465,9 @@ void shader_think(struct graphics *g, float delta_time)
     mat4 transform;
     mult(transform, g->translate, g->scale);
     mult(transform, transform, g->rotate);
-    transpose( transform, transform );
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, transform);
+    mat4 tmp;
+    transpose( tmp, transform );
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, tmp);
 
     /* Projection. */
     glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
