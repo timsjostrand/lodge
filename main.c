@@ -216,12 +216,14 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     rotate(transform_rotation, sprite->rotation);
 
     mat4 transform_final;
-    mult(transform_final, transform_position, transform_rotation);
+	mult(transform_final, transform_position, transform_rotation);
     mult(transform_final, transform_final, transform_scale);
     
     // Upload matrices and color
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform_final);
-    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_TRUE, g->projection);
+	mat4 tmp;
+    transpose( tmp, transform_final );
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, tmp);
+    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
     glUniform4fv(g->shader.uniforms[COLOR], 1, sprite->color);
 
     // Render it!
@@ -463,10 +465,11 @@ void shader_think(struct graphics *g, float delta_time)
     mat4 transform;
     mult(transform, g->translate, g->scale);
     mult(transform, transform, g->rotate);
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform);
+    transpose( transform, transform );
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, transform);
 
     /* Projection. */
-    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_TRUE, g->projection);
+    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
 
     /* Ball stuff */
     glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
@@ -701,6 +704,9 @@ void init()
     scale(game.graphics.scale, 10.0f, 10.0f, 1);
     rotate(game.graphics.rotate, 0);
     ortho(game.graphics.projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
+	mat4 tmp;
+    transpose( tmp, game.graphics.projection );
+	copym( game.graphics.projection, tmp );
 
     /* Entities. */
     init_player1(&game.player1);
