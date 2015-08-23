@@ -859,7 +859,7 @@ int main(int argc, char **argv)
 
     /* Loop until the user closes the window */
 #ifdef EMSCRIPTEN
-    emscripten_set_main_loop( do_frame, 60, 1 );
+    emscripten_set_main_loop( do_frame, 0, 1 );
 #else
     while(!glfwWindowShouldClose(window)) { 
         do_frame();
