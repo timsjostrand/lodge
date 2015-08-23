@@ -639,7 +639,9 @@ void init_player2(struct player *p)
 void init_ball(struct ball *ball)
 {
     ball->speed = 0.6f;
-    float random_angle = ((float)(((int)rand())%(int)((int)2*M_PI)*1000))/1000.0f;
+    rand(); rand(); rand();
+    float random_angle = randr(0.0f, 2.0f * M_PI);
+    printf("random_angle=%6f\n", random_angle);
     ball->vy = ball->speed * sin(random_angle) / 4.0f;
     ball->vx = ball->speed * cos(random_angle) / 4.0f;
 
@@ -775,7 +777,8 @@ void do_frame()
 
 int main(int argc, char **argv)
 {
-    srand(time(0));
+    /* Seed random number generator. */
+    srand(time(NULL));
 
     /* Initialize the library */
     if(!glfwInit()) {
