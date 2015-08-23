@@ -152,7 +152,7 @@ void transpose(mat4 m, mat4 a)
 }
 
 /**
- * Store the cross product of 'a x b' in 'm'.
+ * Store the cross product of 'a x b' in 'v'.
  */
 void cross(vec4 v, vec4 a, vec4 b)
 {

@@ -137,14 +137,43 @@ struct game {
     int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
 
-const char *vertex_shader =
+#ifdef EMSCRIPTEN
+const char *fragment_shader =
+    "#version 100\n"
+    "precision mediump float;"
+    "uniform float time;"
+    "uniform vec4 color;"
+    "void main() {"
+    "   gl_FragColor = color;"
+    "}";
+
+    const char *vertex_shader =
+    "#version 100\n"
+    "uniform mat4 transform;"
+    "uniform mat4 projection;"
+    "attribute vec3 vp;"
+    "void main() {"
+    "   gl_Position = projection * transform * vec4(vp, 1.0);"
+    "}";
+#else
+    const char *fragment_shader =
     "#version 400\n"
+    "uniform float time;"
+    "uniform vec4 color;"
+    "out vec4 frag_color;"
+    "void main() {"
+    "   frag_color = color;"
+    "}";
+
+    const char *vertex_shader =
+    "#version 400 core\n"
+    "precision highp float;"
     "uniform mat4 transform;"
     "uniform mat4 projection;"
     "uniform float time;"
     "uniform int is_ball;"
     "uniform float ball_last_hit;"
-    "const vec4 oposes[6] = vec4[6] ("
+    "const vec4 oposes[6] = vec4[6]("
     "   vec4( 0.25,  0.5, 0.0, 0.0),"
     "   vec4( 0.25, -0.5, 0.0, 0.0),"
     "   vec4(-0.25,  0.5, 0.0, 0.0),"
@@ -167,15 +196,7 @@ const char *vertex_shader =
     "       + 0.0*opos*is_ball*cos(time*8.0f)/6.0"
     "   );"
     "}";
-
-const char *fragment_shader =
-    "#version 400\n"
-    "uniform float time;"
-    "uniform vec4 color;"
-    "out vec4 frag_color;"
-    "void main() {"
-    "   frag_color = color;"
-    "}";
+#endif
 
 void sprite_render(struct sprite *sprite, struct graphics *g)
 {
@@ -194,12 +215,14 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     rotate(transform_rotation, sprite->rotation);
 
     mat4 transform_final;
-    mult(transform_final, transform_position, transform_rotation);
+	mult(transform_final, transform_position, transform_rotation);
     mult(transform_final, transform_final, transform_scale);
     
     // Upload matrices and color
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform_final);
-    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_TRUE, g->projection);
+	mat4 tmp;
+    transpose( tmp, transform_final );
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, tmp);
+    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
     glUniform4fv(g->shader.uniforms[COLOR], 1, sprite->color);
 
     // Render it!
@@ -437,10 +460,12 @@ void shader_think(struct graphics *g, float delta_time)
     mat4 transform;
     mult(transform, g->translate, g->scale);
     mult(transform, transform, g->rotate);
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_TRUE, transform);
+    mat4 tmp;
+    transpose( tmp, transform );
+    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, tmp);
 
     /* Projection. */
-    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_TRUE, g->projection);
+    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
 
     /* Ball stuff */
     glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
@@ -668,8 +693,12 @@ void graphics_init(struct graphics *g, const char **uniform_names,
     scale(g->scale, 10.0f, 10.0f, 1);
     rotate(g->rotate, 0);
     ortho(g->projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
+	mat4 tmp;
+    transpose( tmp, game.graphics.projection );
+	copym( game.graphics.projection, tmp );
 
     /* OpenGL. */
+    // glViewport( 0, 0, VIEW_WIDTH, VIEW_HEIGHT );
     glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
