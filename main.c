@@ -138,14 +138,43 @@ struct game {
     int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
 
-const char *vertex_shader =
+#ifdef EMSCRIPTEN
+const char *fragment_shader =
+    "#version 100\n"
+    "precision mediump float;"
+    "uniform float time;"
+    "uniform vec4 color;"
+    "void main() {"
+    "   gl_FragColor = color;"
+    "}";
+
+    const char *vertex_shader =
+    "#version 100\n"
+    "uniform mat4 transform;"
+    "uniform mat4 projection;"
+    "attribute vec3 vp;"
+    "void main() {"
+    "   gl_Position = projection * transform * vec4(vp, 1.0);"
+    "}";
+#else
+    const char *fragment_shader =
     "#version 400\n"
+    "uniform float time;"
+    "uniform vec4 color;"
+    "out vec4 frag_color;"
+    "void main() {"
+    "   frag_color = color;"
+    "}";
+
+    const char *vertex_shader =
+    "#version 400 core\n"
+    "precision highp float;"
     "uniform mat4 transform;"
     "uniform mat4 projection;"
     "uniform float time;"
     "uniform int is_ball;"
     "uniform float ball_last_hit;"
-    "const vec4 oposes[6] = vec4[6] ("
+    "const vec4 oposes[6] = vec4[6]("
     "   vec4( 0.25,  0.5, 0.0, 0.0),"
     "   vec4( 0.25, -0.5, 0.0, 0.0),"
     "   vec4(-0.25,  0.5, 0.0, 0.0),"
@@ -168,15 +197,7 @@ const char *vertex_shader =
     "       + 0.0*opos*is_ball*cos(time*8.0f)/6.0"
     "   );"
     "}";
-
-const char *fragment_shader =
-    "#version 400\n"
-    "uniform float time;"
-    "uniform vec4 color;"
-    "out vec4 frag_color;"
-    "void main() {"
-    "   frag_color = color;"
-    "}";
+#endif
 
 void sprite_render(struct sprite *sprite, struct graphics *g)
 {
@@ -687,6 +708,7 @@ void init()
     init_ball(&game.ball);
 
     /* Set up OpenGL. */
+    // glViewport( 0, 0, VIEW_WIDTH, VIEW_HEIGHT );
     glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
