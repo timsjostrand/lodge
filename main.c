@@ -17,6 +17,7 @@
 #endif
 
 #include "math4.h"
+#include "color.h"
 
 const float vertices_rect[] = 
 {  
@@ -250,10 +251,7 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
 
-    p->sprite.color[0] = 1.0f;
-    p->sprite.color[1] = 1.0f;
-    p->sprite.color[2] = 1.0f;
-    p->sprite.color[3] = PARTICLE_ALPHA;
+    setv(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
 
     p->sprite.scale[0] = w;
     p->sprite.scale[1] = h;
@@ -614,16 +612,13 @@ void init_player1(struct player *p)
     p->sprite.pos[1] = VIEW_HEIGHT/2;
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
-   
-    p->sprite.color[0] = 1.0f;
-    p->sprite.color[1] = 1.0f;
-    p->sprite.color[2] = 1.0f;
-    p->sprite.color[3] = 1.0f;
 
     p->sprite.scale[0] = PLAYER_WIDTH;
     p->sprite.scale[1] = PLAYER_HEIGHT;
     p->sprite.scale[2] = 1.0f;
     p->sprite.scale[3] = 1.0f;
+
+    copyv(p->sprite.color, COLOR_WHITE);
 }
 
 void init_player2(struct player *p)
@@ -632,16 +627,13 @@ void init_player2(struct player *p)
     p->sprite.pos[1] = VIEW_HEIGHT/2;
     p->sprite.pos[2] = 0.0f;
     p->sprite.pos[3] = 1.0f;
-    
-    p->sprite.color[0] = 1.0f;
-    p->sprite.color[1] = 1.0f;
-    p->sprite.color[2] = 1.0f;
-    p->sprite.color[3] = 1.0f;
-  
+
     p->sprite.scale[0] = PLAYER_WIDTH;
     p->sprite.scale[1] = PLAYER_HEIGHT;
     p->sprite.scale[2] = 1.0f;
     p->sprite.scale[3] = 1.0f;
+
+    copyv(p->sprite.color, COLOR_WHITE);
 }
 
 void init_ball(struct ball *ball)
@@ -661,29 +653,21 @@ void init_ball(struct ball *ball)
     ball->sprite.scale[2] = 1.0f;
     ball->sprite.scale[3] = 1.0f;
     
-    ball->sprite.color[0] = 1.0f;
-    ball->sprite.color[1] = 1.0f;
-    ball->sprite.color[2] = 1.0f;
-    ball->sprite.color[3] = 1.0f;
+    copyv(ball->sprite.color, COLOR_WHITE);
   
     ball->last_hit = 10.0f;
 }
 
-void init()
+void graphics_init(struct graphics *g, const char **uniform_names,
+        int uniforms_count)
 {
-    /* Game setup. */
-    game.time_mod = 1.0f;
-    translate(game.graphics.translate, 0.0f, 0.0f, 0.0f);
-    scale(game.graphics.scale, 10.0f, 10.0f, 1);
-    rotate(game.graphics.rotate, 0);
-    ortho(game.graphics.projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
+    /* Global transforms. */
+    translate(g->translate, 0.0f, 0.0f, 0.0f);
+    scale(g->scale, 10.0f, 10.0f, 1);
+    rotate(g->rotate, 0);
+    ortho(g->projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
 
-    /* Entities. */
-    init_player1(&game.player1);
-    init_player2(&game.player2);
-    init_ball(&game.ball);
-
-    /* Set up OpenGL. */
+    /* OpenGL. */
     glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -692,18 +676,34 @@ void init()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    /* Create vertex buffer. */
-    glGenBuffers(1, &game.graphics.vbo_rect);
-    glBindBuffer(GL_ARRAY_BUFFER, game.graphics.vbo_rect);
+    /* Vertex buffer. */
+    glGenBuffers(1, &g->vbo_rect);
+    glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
     glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices_rect, GL_STATIC_DRAW);
-    
-    glGenVertexArrays(1, &game.graphics.vao_rect);
-    glBindVertexArray(game.graphics.vao_rect);
+
+    /* Vertex array. */
+    glGenVertexArrays(1, &g->vao_rect);
+    glBindVertexArray(g->vao_rect);
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, game.graphics.vbo_rect);
+    glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-    shader_init(&game.graphics.shader, uniform_names, UNIFORM_LAST);
+    /* Set up shader. */
+    shader_init(&g->shader, uniform_names, uniforms_count);
+}
+
+void init()
+{
+    /* Graphics. */
+    graphics_init(&game.graphics, uniform_names, UNIFORM_LAST);
+
+    /* Game setup. */
+    game.time_mod = 1.0f;
+
+    /* Entities. */
+    init_player1(&game.player1);
+    init_player2(&game.player2);
+    init_ball(&game.ball);
 }
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)

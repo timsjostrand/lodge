@@ -6,12 +6,10 @@
 #endif
 
 #define xyz(v) v[0], v[1], v[2]
+#define xyzw(v) v[0], v[1], v[2], v[3]
 
 typedef float mat4[16];
 typedef float vec4[4];
-
-void printm(mat4 m);
-void printv(vec4 v);
 
 void ortho(mat4 m, float left, float right, float top, float bottom, float near, float far);
 void mult(mat4 m, mat4 a, mat4 b);
@@ -24,9 +22,15 @@ void scalev(mat4 m, vec4 v);
 void rotate(mat4 m, float angle);
 void transpose(mat4 m, mat4 a);
 void cross(vec4 v, vec4 a, vec4 b);
-void copym(mat4 m, mat4 a);
 int imax(int a, int b);
 float clamp(float f, float min, float max);
 float randr(float min, float max);
+
+void printm(mat4 m);
+void printv(vec4 v);
+
+void copym(mat4 m, const mat4 a);
+void copyv(vec4 v, const vec4 a);
+void setv(vec4 v, float x, float y, float z, float w);
 
 #endif

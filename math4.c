@@ -164,9 +164,17 @@ void cross(vec4 v, vec4 a, vec4 b)
 /**
  * Copy the contents of matrix 'a' into 'm'.
  */
-void copym(mat4 m, mat4 a)
+void copym(mat4 m, const mat4 a)
 {
     memcpy(m, a, sizeof(float) * 16);
+}
+
+/**
+ * Copy the contents of vector 'a' into 'm'.
+ */
+void copyv(vec4 v, const vec4 a)
+{
+    memcpy(v, a, sizeof(float) * 4);
 }
 
 int imax(int a, int b)
@@ -182,4 +190,9 @@ float clamp(float f, float min, float max)
 float randr(float min, float max)
 {
     return min + (((float) rand()) / (float) RAND_MAX) * (max - min);
+}
+
+void setv(vec4 v, float x, float y, float z, float w)
+{
+    v[0] = x; v[1] = y; v[2] = z; v[3] = w;
 }
