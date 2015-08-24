@@ -20,7 +20,9 @@ void rotate_z(mat4 m, float angle);
 void scale(mat4 m, float x, float y, float z);
 void scalev(mat4 m, vec4 v);
 void transpose(mat4 m, mat4 a);
+void transpose_same(mat4 m);
 void cross(vec4 v, vec4 a, vec4 b);
+
 int imax(int a, int b);
 float clamp(float f, float min, float max);
 float randr(float min, float max);

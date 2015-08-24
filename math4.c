@@ -143,6 +143,16 @@ void transpose(mat4 m, mat4 a)
 }
 
 /**
+ * Transposes the matrix 'm'.
+ */
+void transpose_same(mat4 m)
+{
+    mat4 tmp;
+    transpose(tmp, m);
+    copym(m, tmp);
+}
+
+/**
  * Store the cross product of 'a x b' in 'v'.
  */
 void cross(vec4 v, vec4 a, vec4 b)
