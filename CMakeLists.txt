@@ -29,7 +29,7 @@ else()
 endif()
 
 # Main executable.
-add_executable(glpong main.c math4.c graphics.c)
+add_executable(glpong main.c math4.c graphics.c input.c)
 
 # Link.
 if(NOT EMSCRIPTEN)

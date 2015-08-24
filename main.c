@@ -19,6 +19,7 @@
 #include "math4.h"
 #include "color.h"
 #include "graphics.h"
+#include "input.h"
 
 #define VIEW_WIDTH      640
 #define VIEW_HEIGHT     360     /* 16:9 aspect ratio */
@@ -94,8 +95,7 @@ struct game {
     struct stats    total_stats;
     struct particle particles[PARTICLES_MAX];
     int             particles_count;
-    int             keys[GLFW_KEY_LAST];        /* Key status of current frame. */
-    int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
+    struct input    input;
 } game = { 0 };
 
 #ifdef EMSCRIPTEN
@@ -158,21 +158,6 @@ const char *vertex_shader =
     "   );"
     "}";
 #endif
-
-int key_down(int key)
-{
-    return game.keys[key];
-}
-
-int key_pressed(int key)
-{
-    return game.keys[key] && !game.last_keys[key];
-}
-
-int key_released(int key)
-{
-    return !game.keys[key] && game.last_keys[key];
-}
 
 void print_stats()
 {
@@ -322,18 +307,18 @@ void game_think(float dt)
     game.player2.charge += dt;
 
     // Paddles
-    if(game.keys[GLFW_KEY_W]) {
+    if(key_down(GLFW_KEY_W)) {
         game.player1.sprite.pos[1] += dt*0.6f;
         game.player1.charge = 0;
-    } else if(game.keys[GLFW_KEY_S]) {
+    } else if(key_down(GLFW_KEY_S)) {
         game.player1.sprite.pos[1] -= dt*0.6f;
         game.player1.charge = 0;
     }
 
-    if(game.keys[GLFW_KEY_UP]) {
+    if(key_down(GLFW_KEY_UP)) {
         game.player2.sprite.pos[1] += dt*0.6f;
         game.player2.charge = 0;
-    } else if(game.keys[GLFW_KEY_DOWN]) {
+    } else if(key_down(GLFW_KEY_DOWN)) {
         game.player2.sprite.pos[1] -= dt*0.6f;
         game.player2.charge = 0;
     }
@@ -417,9 +402,7 @@ void think(float delta_time)
     game_think(delta_time);
     particles_think(delta_time);
     shader_think(&game.graphics, delta_time);
-
-    /* Remember what keys were pressed the last frame. */
-    memcpy(game.last_keys, game.keys, GLFW_KEY_LAST);
+    input_think(&game.input, delta_time);
 }
 
 void render(GLFWwindow *window, struct graphics *g)
@@ -497,36 +480,6 @@ void init()
     init_ball(&game.ball);
 }
 
-void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-{
-    /* Sanity check */
-    if(key < 0 || key >= GLFW_KEY_LAST) {
-        printf("Invalid key: %d (scancode=%d)\n", key, scancode);
-        return;
-    }
-
-    /* Only care about 'up'/'down', regard 'repeat' as 'down'. */
-    game.keys[key] = !(action == 0);
-
-    if(action == GLFW_RELEASE) {
-        switch(key) {
-            case GLFW_KEY_O:
-                game.time_mod *= 2.0f;
-                printf("game.time_mod=%f\n", game.time_mod);
-                break;
-            case GLFW_KEY_P:
-                game.time_mod /= 2.0f;
-                printf("game.time_mod=%f\n", game.time_mod);
-                break;
-#ifndef EMSCRIPTEN
-            case GLFW_KEY_ESCAPE:
-                glfwSetWindowShouldClose(window, 1);
-                break;
-#endif
-        }
-    }
-}
-
 void clean_up()
 {
     graphics_free(&game.graphics);
@@ -556,6 +509,28 @@ void do_frame()
 
     /* Register that a frame has been drawn. */
     graphics_count_frame(&game.graphics);
+}
+
+void key_callback(struct input *input, GLFWwindow *window, int key,
+        int scancode, int action, int mods)
+{
+    if(action == GLFW_RELEASE) {
+        switch(key) {
+            case GLFW_KEY_O:
+                game.time_mod *= 2.0f;
+                printf("game.time_mod=%f\n", game.time_mod);
+                break;
+            case GLFW_KEY_P:
+                game.time_mod /= 2.0f;
+                printf("game.time_mod=%f\n", game.time_mod);
+                break;
+#ifndef EMSCRIPTEN
+            case GLFW_KEY_ESCAPE:
+                glfwSetWindowShouldClose(window, 1);
+                break;
+#endif
+        }
+    }
 }
 
 int main(int argc, char **argv)
@@ -608,7 +583,8 @@ int main(int argc, char **argv)
     init();
 
     /* Get input events. */
-    glfwSetKeyCallback(window, &key_callback);
+    game.input.callback = key_callback;
+    input_init(&game.input, window);
     glfwSetWindowSizeCallback(window, &resize);
 
     /* Loop until the user closes the window */
