@@ -25,7 +25,7 @@ if(NOT EMSCRIPTEN)
 else()
     # glfw and glew is provided by emscripten
     option(USE_GLFW_3 "Use glfw3" ON)
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3")
+    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1")
 endif()
 
 # Main executable.
