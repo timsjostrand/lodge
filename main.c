@@ -18,16 +18,7 @@
 
 #include "math4.h"
 #include "color.h"
-
-const float vertices_rect[] = 
-{  
-    -0.5f,  0.5f,  0.0f,
-    -0.5f, -0.5f,  0.0f,
-     0.5f,  0.5f,  0.0f,
-     0.5f,  0.5f,  0.0f,
-    -0.5f, -0.5f,  0.0f,
-     0.5f, -0.5f,  0.0f
-};
+#include "graphics.h"
 
 #define VIEW_WIDTH      640
 #define VIEW_HEIGHT     360     /* 16:9 aspect ratio */
@@ -50,9 +41,6 @@ const float vertices_rect[] =
 
 enum uniforms {
     TIME,
-    TRANSFORM,
-    PROJECTION,
-    COLOR,
     IS_BALL,
     BALL_LAST_HIT,
     UNIFORM_LAST
@@ -60,18 +48,8 @@ enum uniforms {
 
 const char *uniform_names[] = {
     "time",
-    "transform",
-    "projection",
-    "color",
     "is_ball",
     "ball_last_hit",
-};
-
-struct sprite {
-    vec4 pos;
-    vec4 scale;
-    vec4 color;
-    float rotation;
 };
 
 struct stats {
@@ -94,21 +72,6 @@ struct ball {
     float           vy;
     float           speed;
     float           last_hit;
-};
-
-struct shader {
-    GLuint  program;
-    GLint   *uniforms;
-};
-
-struct graphics {
-    GLuint          vbo_rect;                   /* Vertex Buffer Object. */
-    GLuint          vao_rect;                   /* Vertex Array Object. */
-    mat4            projection;                 /* Projection matrix. */
-    mat4            translate;                  /* Global translation matrix. */
-    mat4            rotate;                     /* Global rotation matrix. */
-    mat4            scale;                      /* Global scale matrix. */
-    struct shader   shader;                     /* Shader program information. */
 };
 
 struct particle {
@@ -147,7 +110,7 @@ const char *fragment_shader =
     "   gl_FragColor = color;"
     "}";
 
-    const char *vertex_shader =
+const char *vertex_shader =
     "#version 100\n"
     "uniform mat4 transform;"
     "uniform mat4 projection;"
@@ -156,7 +119,7 @@ const char *fragment_shader =
     "   gl_Position = projection * transform * vec4(vp, 1.0);"
     "}";
 #else
-    const char *fragment_shader =
+const char *fragment_shader =
     "#version 400\n"
     "uniform float time;"
     "uniform vec4 color;"
@@ -165,7 +128,7 @@ const char *fragment_shader =
     "   frag_color = color;"
     "}";
 
-    const char *vertex_shader =
+const char *vertex_shader =
     "#version 400 core\n"
     "precision highp float;"
     "uniform mat4 transform;"
@@ -197,37 +160,6 @@ const char *fragment_shader =
     "   );"
     "}";
 #endif
-
-void sprite_render(struct sprite *sprite, struct graphics *g)
-{
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(g->vao_rect);
-
-    // Position, rotation and scale
-    mat4 transform_position;
-    translate(transform_position, sprite->pos[0], sprite->pos[1], sprite->pos[2]);
-    
-    mat4 transform_scale;
-    scale(transform_scale, sprite->scale[0], sprite->scale[1], sprite->scale[2]);
-    
-    mat4 transform_rotation;
-    rotate(transform_rotation, sprite->rotation);
-
-    mat4 transform_final;
-	mult(transform_final, transform_position, transform_rotation);
-    mult(transform_final, transform_final, transform_scale);
-    
-    // Upload matrices and color
-	mat4 tmp;
-    transpose( tmp, transform_final );
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, tmp);
-    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
-    glUniform4fv(g->shader.uniforms[COLOR], 1, sprite->color);
-
-    // Render it!
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-}
 
 int key_down(int key)
 {
@@ -451,26 +383,6 @@ void game_think(float dt)
     think_player_charged(&game.player2, dt);
 }
 
-void shader_think(struct graphics *g, float delta_time)
-{
-    /* Upload uniforms. */
-    glUniform1f(g->shader.uniforms[TIME], (GLfloat) game.time);
-
-    /* Transform. */
-    mat4 transform;
-    mult(transform, g->translate, g->scale);
-    mult(transform, transform, g->rotate);
-    mat4 tmp;
-    transpose( tmp, transform );
-    glUniformMatrix4fv(g->shader.uniforms[TRANSFORM], 1, GL_FALSE, tmp);
-
-    /* Projection. */
-    glUniformMatrix4fv(g->shader.uniforms[PROJECTION], 1, GL_FALSE, g->projection);
-
-    /* Ball stuff */
-    glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
-}
-
 void particles_think(float dt)
 {
     /* Think for each particle. */
@@ -499,10 +411,29 @@ void particles_think(float dt)
     }
 }
 
+void shader_think(struct graphics *g, float delta_time)
+{
+    /* Upload uniforms. */
+    glUniform1f(g->shader.uniforms[TIME], (GLfloat) game.time);
+
+    /* Transform. */
+    mat4 transform;
+    mult(transform, g->translate, g->scale);
+    mult(transform, transform, g->rotate);
+    transpose_same(transform);
+    glUniformMatrix4fv(g->shader.uniform_transform, 1, GL_FALSE, transform);
+
+    /* Projection. */
+    glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
+
+    /* Ball stuff */
+    glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
+}
+
 void think(float delta_time)
 {
-    shader_think(&game.graphics, delta_time);
     game_think(delta_time);
+    shader_think(&game.graphics, delta_time);
     particles_think(delta_time);
 
     /* Remember what keys were pressed the last frame. */
@@ -536,99 +467,8 @@ void render(GLFWwindow *window, struct graphics *g)
     }
 }
 
-void shader_program_log(GLuint program, const char *name)
-{
-    printf("=== %s ===\n", name);
-
-    GLint success = 0;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-
-    if(success == GL_FALSE) {
-        printf("FAILED\n");
-    }
-
-    GLint len = 0;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
-
-    if(len > 0) {
-        GLchar *msg = (GLchar *) malloc(len);
-        glGetProgramInfoLog(program, len, &len, msg);
-        printf("%s", msg);
-        free(msg);
-    }
-
-    GLint uniforms = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniforms);
-    printf("%d active uniforms\n", uniforms);
-}
-
-void shader_log(GLuint shader, const char *name)
-{
-    printf("=== %s ===\n", name);
-
-    GLint success = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if(success == GL_FALSE) {
-        printf("FAILED\n");
-    }
-
-    GLint len = 0;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-
-    if(len > 0) {
-        GLchar *msg = (GLchar *) malloc(len);
-        glGetShaderInfoLog(shader, len, &len, msg);
-        printf("%s", msg);
-        free(msg);
-    }
-
-    if(success == GL_FALSE) {
-        glDeleteShader(shader);
-    }
-}
-
 void resize(GLFWwindow *window, int width, int height)
 {
-}
-
-void shader_init(struct shader *s, const char **uniform_names,
-        int uniforms_count)
-{
-    /* Vertex shader. */
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertex_shader, NULL);
-    glCompileShader(vs);
-    shader_log(vs, "vertex shader");
-
-    /* Fragment shader. */
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragment_shader, NULL);
-    glCompileShader(fs);
-    shader_log(fs, "fragment shader");
-
-    /* Compile shader. */
-    s->program = glCreateProgram();
-    glAttachShader(s->program, fs);
-    glAttachShader(s->program, vs);
-    glLinkProgram(s->program);
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-    shader_program_log(s->program, "program");
-
-    /* Set up uniforms. */
-    s->uniforms = (GLint *) malloc(uniforms_count * sizeof(GLint));
-    for(int i=0; i<uniforms_count; i++) {
-        const char *name = uniform_names[i];
-        s->uniforms[i] = glGetUniformLocation(s->program, name);
-        printf("uniform: %s=%d\n", name, s->uniforms[i]);
-    }
-}
-
-void shader_free(struct shader *s)
-{
-    free(s->uniforms);
-    glDeleteProgram(s->program);
 }
 
 void init_player1(struct player *p)
@@ -669,64 +509,18 @@ void init_ball(struct ball *ball)
     printf("random_angle=%6f\n", random_angle);
     ball->vy = ball->speed * sin(random_angle) / 4.0f;
     ball->vx = ball->speed * cos(random_angle) / 4.0f;
-
-    ball->sprite.pos[0] = VIEW_WIDTH/2;
-    ball->sprite.pos[1] = VIEW_HEIGHT/2;
-    ball->sprite.pos[2] = 0.0f;
-    ball->sprite.pos[3] = 1.0f;
-    
-    ball->sprite.scale[0] = BALL_WIDTH;
-    ball->sprite.scale[1] = BALL_HEIGHT;
-    ball->sprite.scale[2] = 1.0f;
-    ball->sprite.scale[3] = 1.0f;
-    
-    copyv(ball->sprite.color, COLOR_WHITE);
-  
     ball->last_hit = 10.0f;
-}
 
-void graphics_init(struct graphics *g, const char **uniform_names,
-        int uniforms_count)
-{
-    /* Global transforms. */
-    translate(g->translate, 0.0f, 0.0f, 0.0f);
-    scale(g->scale, 10.0f, 10.0f, 1);
-    rotate(g->rotate, 0);
-    ortho(g->projection, 0, VIEW_WIDTH, VIEW_HEIGHT, 0, -1.0f, 1.0f);
-	mat4 tmp;
-    transpose( tmp, game.graphics.projection );
-	copym( game.graphics.projection, tmp );
-
-    /* OpenGL. */
-    // glViewport( 0, 0, VIEW_WIDTH, VIEW_HEIGHT );
-    glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
-//    glDisable(GL_CULL_FACE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    /* Vertex buffer. */
-    glGenBuffers(1, &g->vbo_rect);
-    glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-    glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices_rect, GL_STATIC_DRAW);
-
-    /* Vertex array. */
-    glGenVertexArrays(1, &g->vao_rect);
-    glBindVertexArray(g->vao_rect);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-
-    /* Set up shader. */
-    shader_init(&g->shader, uniform_names, uniforms_count);
+    setv(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.0f, 1.0f);
+    setv(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
+    copyv(ball->sprite.color, COLOR_WHITE);
 }
 
 void init()
 {
     /* Graphics. */
-    graphics_init(&game.graphics, uniform_names, UNIFORM_LAST);
+    graphics_init(&game.graphics, VIEW_WIDTH, VIEW_HEIGHT, &vertex_shader,
+            &fragment_shader, uniform_names, UNIFORM_LAST);
 
     /* Game setup. */
     game.time_mod = 1.0f;
@@ -769,9 +563,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void clean_up()
 {
-    glDeleteVertexArrays(1, &game.graphics.vao_rect);
-    glDeleteBuffers(1, &game.graphics.vbo_rect);
-    shader_free(&game.graphics.shader);
+    graphics_free(&game.graphics);
     glfwTerminate();
 }
 
@@ -796,12 +588,8 @@ void do_frame()
     /* Poll for and process events */
     glfwPollEvents();
 
-    game.frames ++;
-    if(glfwGetTime()*1000.0  - game.last_fps_print >= 1000.0) {
-        printf("%d FPS\n", game.frames);
-        game.last_fps_print = glfwGetTime()*1000.0f;
-        game.frames = 0;
-    }
+    /* Register that a frame has been drawn. */
+    graphics_count_frame(&game.graphics);
 }
 
 int main(int argc, char **argv)
