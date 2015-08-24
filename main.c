@@ -198,20 +198,11 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->vx = vx;
     p->vy = vy;
     p->va = va;
-
     p->sprite.rotation = angle;
 
-    p->sprite.pos[0] = x;
-    p->sprite.pos[1] = y;
-    p->sprite.pos[2] = 0.0f;
-    p->sprite.pos[3] = 1.0f;
-
+    setv(p->sprite.pos, x, y, 0.0f, 1.0f);
     setv(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
-
-    p->sprite.scale[0] = w;
-    p->sprite.scale[1] = h;
-    p->sprite.scale[2] = 1.0f;
-    p->sprite.scale[3] = 1.0f;
+    setv(p->sprite.scale, w, h, 1.0f, 1.0f);
 }
 
 void particle_new(float x, float y, float w, float h, float angle, float vx,
@@ -473,31 +464,15 @@ void resize(GLFWwindow *window, int width, int height)
 
 void init_player1(struct player *p)
 {
-    p->sprite.pos[0] = 32.0f;
-    p->sprite.pos[1] = VIEW_HEIGHT/2;
-    p->sprite.pos[2] = 0.0f;
-    p->sprite.pos[3] = 1.0f;
-
-    p->sprite.scale[0] = PLAYER_WIDTH;
-    p->sprite.scale[1] = PLAYER_HEIGHT;
-    p->sprite.scale[2] = 1.0f;
-    p->sprite.scale[3] = 1.0f;
-
+    setv(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
+    setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
 }
 
 void init_player2(struct player *p)
 {
-    p->sprite.pos[0] = 608.0f;
-    p->sprite.pos[1] = VIEW_HEIGHT/2;
-    p->sprite.pos[2] = 0.0f;
-    p->sprite.pos[3] = 1.0f;
-
-    p->sprite.scale[0] = PLAYER_WIDTH;
-    p->sprite.scale[1] = PLAYER_HEIGHT;
-    p->sprite.scale[2] = 1.0f;
-    p->sprite.scale[3] = 1.0f;
-
+    setv(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
+    setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
 }
 
