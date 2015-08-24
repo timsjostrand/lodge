@@ -255,7 +255,7 @@ void ball_player_bounce(struct ball *ball, struct player *p)
     p->charge = 0.0f;
 }
 
-void game_think(float dt)
+void ball_think(float dt)
 {
     // Ball: left/right hit detection
     int ball_reset = 0;
@@ -303,11 +303,13 @@ void game_think(float dt)
     game.ball.sprite.pos[0] += dt*game.ball.vx;
     game.ball.sprite.pos[1] += dt*game.ball.vy;
     game.ball.last_hit += dt;
+}
 
+void player1_think(float dt)
+{
     game.player1.charge += dt;
-    game.player2.charge += dt;
 
-    // Paddles
+    // Move?
     if(key_down(GLFW_KEY_W)) {
         game.player1.sprite.pos[1] += dt*0.6f;
         game.player1.charge = 0;
@@ -316,6 +318,15 @@ void game_think(float dt)
         game.player1.charge = 0;
     }
 
+    // Outside board?
+    game.player1.sprite.pos[1] = clamp(game.player1.sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
+}
+
+void player2_think(float dt)
+{
+    game.player2.charge += dt;
+
+    // Move?
     if(key_down(GLFW_KEY_UP)) {
         game.player2.sprite.pos[1] += dt*0.6f;
         game.player2.charge = 0;
@@ -324,11 +335,15 @@ void game_think(float dt)
         game.player2.charge = 0;
     }
 
-    // If paddle is outside board
-    game.player1.sprite.pos[1] = clamp(game.player1.sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
+    // Outside board?
     game.player2.sprite.pos[1] = clamp(game.player2.sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
+}
 
-    // Game logic
+void game_think(float dt)
+{
+    ball_think(dt);
+    player1_think(dt);
+    player2_think(dt);
 
     // Ball collides with Player 1?
     if(game.ball.vx < 0
