@@ -12,9 +12,6 @@
 #include <time.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#ifdef EMSCRIPTEN
-    #include <emscripten/emscripten.h>
-#endif
 
 #include "math4.h"
 #include "color.h"
@@ -498,11 +495,9 @@ void key_callback(struct input *input, GLFWwindow *window, int key,
                 game.graphics.delta_time_factor /= 2.0f;
                 printf("time_mod=%f\n", game.graphics.delta_time_factor);
                 break;
-#ifndef EMSCRIPTEN
             case GLFW_KEY_ESCAPE:
                 glfwSetWindowShouldClose(window, 1);
                 break;
-#endif
         }
     }
 }
