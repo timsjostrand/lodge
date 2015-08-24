@@ -8,6 +8,10 @@
 #define xyz(v) v[0], v[1], v[2]
 #define xyzw(v) v[0], v[1], v[2], v[3]
 
+#define swapf(t,a,b) t = a;\
+    a = b; \
+    b = t;
+
 typedef float mat4[16];
 typedef float vec4[4];
 
@@ -21,6 +25,7 @@ void scale(mat4 m, float x, float y, float z);
 void scalev(mat4 m, vec4 v);
 void transpose(mat4 m, mat4 a);
 void transpose_same(mat4 m);
+void transpose_same_swap(mat4 m);
 void cross(vec4 v, vec4 a, vec4 b);
 
 int imax(int a, int b);

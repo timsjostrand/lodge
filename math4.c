@@ -153,6 +153,27 @@ void transpose_same(mat4 m)
 }
 
 /**
+ * Assuming an NxN matrix 'A':
+ *
+ * for n = 0 to N - 2
+ *  for m = n + 1 to N - 1
+ *   swap A(n,m) with A(m,n)
+ */
+void transpose_same_swap(mat4 a)
+{
+    float tmp;
+    // n=0, m=[1,3]
+    swapf(tmp, a[0*4 + 1], a[1*4 + 0]);
+    swapf(tmp, a[0*4 + 2], a[2*4 + 0]);
+    swapf(tmp, a[0*4 + 3], a[3*4 + 0]);
+    // n=1, m=[2,3]
+    swapf(tmp, a[1*4 + 2], a[2*4 + 1]);
+    swapf(tmp, a[1*4 + 3], a[3*4 + 1]);
+    // n=2, m=[3,3]
+    swapf(tmp, a[2*4 + 3], a[3*4 + 2]);
+}
+
+/**
  * Store the cross product of 'a x b' in 'v'.
  */
 void cross(vec4 v, vec4 a, vec4 b)
