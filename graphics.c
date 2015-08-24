@@ -45,7 +45,7 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     rotate_z(transform_rotation, sprite->rotation);
 
     mat4 transform_final;
-	mult(transform_final, transform_position, transform_rotation);
+    mult(transform_final, transform_position, transform_rotation);
     mult(transform_final, transform_final, transform_scale);
     
     // Upload matrices and color

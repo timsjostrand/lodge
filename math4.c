@@ -157,9 +157,9 @@ void transpose_same(mat4 m)
  */
 void cross(vec4 v, vec4 a, vec4 b)
 {
-	v[0] = a[1]*b[2] - a[2]*b[1];
-	v[1] = a[2]*b[0] - a[0]*b[2];
-	v[2] = a[0]*b[1] - a[1]*b[0];
+    v[0] = a[1]*b[2] - a[2]*b[1];
+    v[1] = a[2]*b[0] - a[0]*b[2];
+    v[2] = a[0]*b[1] - a[1]*b[0];
 }
 
 /**
