@@ -145,7 +145,7 @@ void transpose(mat4 m, mat4 a)
 /**
  * Transposes the matrix 'm'.
  */
-void transpose_same(mat4 m)
+void transpose_same_copy(mat4 m)
 {
     mat4 tmp;
     transpose(tmp, m);
@@ -153,13 +153,14 @@ void transpose_same(mat4 m)
 }
 
 /**
- * Assuming an NxN matrix 'A':
+ * Transposes the matrix 'a'.
  *
+ * Assuming an NxN matrix 'A':
  * for n = 0 to N - 2
  *  for m = n + 1 to N - 1
  *   swap A(n,m) with A(m,n)
  */
-void transpose_same_swap(mat4 a)
+void transpose_same(mat4 a)
 {
     float tmp;
     // n=0, m=[1,3]
