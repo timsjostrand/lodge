@@ -5,6 +5,7 @@
  *          Johan Yngman <johan.yngman@gmail.com>
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <GLFW/glfw3.h>
 

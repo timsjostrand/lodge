@@ -91,7 +91,6 @@ struct particle {
 
 struct game {
     double          time;                       /* Time since start. */
-    float           time_mod;                   /* Time delta factor. */
     struct graphics graphics;                   /* Graphics state. */
     struct player   player1;                    /* Left player. */
     struct player   player2;                    /* Right player. */
@@ -409,29 +408,20 @@ void shader_think(struct graphics *g, float delta_time)
     /* Upload uniforms. */
     glUniform1f(g->shader.uniforms[TIME], (GLfloat) game.time);
 
-    /* Transform. */
-    mat4 transform;
-    mult(transform, g->translate, g->scale);
-    mult(transform, transform, g->rotate);
-    transpose_same(transform);
-    glUniformMatrix4fv(g->shader.uniform_transform, 1, GL_FALSE, transform);
-
-    /* Projection. */
-    glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
-
     /* Ball stuff */
     glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
 }
 
-void think(float delta_time)
+void think(struct graphics *g, float delta_time)
 {
+    game.time = glfwGetTime();
     game_think(delta_time);
     particles_think(delta_time);
-    shader_think(&game.graphics, delta_time);
+    shader_think(g, delta_time);
     input_think(&game.input, delta_time);
 }
 
-void render(GLFWwindow *window, struct graphics *g)
+void render(struct graphics *g, float delta_time)
 {
     //glEnableClientState(0);
     glEnableVertexAttribArray(0);
@@ -453,10 +443,6 @@ void render(GLFWwindow *window, struct graphics *g)
             sprite_render(&game.particles[i].sprite, &game.graphics);
         }
     }
-}
-
-void resize(GLFWwindow *window, int width, int height)
-{
 }
 
 void init_player1(struct player *p)
@@ -491,50 +477,12 @@ void init_ball(struct ball *ball)
     copyv(ball->sprite.color, COLOR_WHITE);
 }
 
-void init()
+void init_game()
 {
-    /* Graphics. */
-    graphics_init(&game.graphics, VIEW_WIDTH, VIEW_HEIGHT, &vertex_shader,
-            &fragment_shader, uniform_names, UNIFORM_LAST);
-
-    /* Game setup. */
-    game.time_mod = 1.0f;
-
     /* Entities. */
     init_player1(&game.player1);
     init_player2(&game.player2);
     init_ball(&game.ball);
-}
-
-void clean_up()
-{
-    graphics_free(&game.graphics);
-    glfwTerminate();
-}
-
-GLFWwindow *window;
-
-void do_frame()
-{     
-    /* Delta-time. */
-    float delta_time = 0;
-    if(game.time != 0) {
-        delta_time = (glfwGetTime() - game.time) * 1000.0f * game.time_mod;
-    }
-    game.time = glfwGetTime();
-
-    /* Game loop. */
-    think(delta_time);
-    render(window, &game.graphics);
-
-    /* Swap front and back buffers */
-    glfwSwapBuffers(window);
-
-    /* Poll for and process events */
-    glfwPollEvents();
-
-    /* Register that a frame has been drawn. */
-    graphics_count_frame(&game.graphics);
 }
 
 void key_callback(struct input *input, GLFWwindow *window, int key,
@@ -543,12 +491,12 @@ void key_callback(struct input *input, GLFWwindow *window, int key,
     if(action == GLFW_RELEASE) {
         switch(key) {
             case GLFW_KEY_O:
-                game.time_mod *= 2.0f;
-                printf("game.time_mod=%f\n", game.time_mod);
+                game.graphics.delta_time_factor *= 2.0f;
+                printf("time_mod=%f\n", game.graphics.delta_time_factor);
                 break;
             case GLFW_KEY_P:
-                game.time_mod /= 2.0f;
-                printf("game.time_mod=%f\n", game.time_mod);
+                game.graphics.delta_time_factor /= 2.0f;
+                printf("time_mod=%f\n", game.graphics.delta_time_factor);
                 break;
 #ifndef EMSCRIPTEN
             case GLFW_KEY_ESCAPE:
@@ -564,63 +512,24 @@ int main(int argc, char **argv)
     /* Seed random number generator. */
     srand(time(NULL));
 
-    /* Initialize the library */
-    if(!glfwInit()) {
-        return -1;
-    }
-
-#ifdef EMSCRIPTEN
-    window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "glpong", NULL, NULL);
-#else
-    /* QUIRK: Mac OSX */
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    GLFWmonitor *pMonitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *pVideomode = glfwGetVideoMode(pMonitor); // TODO: Use to set resolution?
-
-    /* Create a windowed mode window and its OpenGL context */
-    if(argc >= 2 && strncmp(argv[1], "windowed", 8) == 0) {
-        window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "glpong", NULL, NULL);
-    } else {
-        window = glfwCreateWindow(pVideomode->width, pVideomode->height, "glpong", pMonitor, NULL);
-    }
-
-    if(!window) {
-        glfwTerminate();
-        return -1;
-    }
-#endif
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-
-    /* Init GLEW. */
-    glewExperimental = GL_TRUE;
-    GLenum err = glewInit();
-    if(err != GLEW_OK) {
-        printf("glewInit() failed\n");
-        return -1;
-    }
-
-    /* Init OpenGL. */
-    init();
+    /* Set up graphics. */
+    int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
+    graphics_init(&game.graphics, &think, &render, VIEW_WIDTH, VIEW_HEIGHT,
+            windowed, &vertex_shader, &fragment_shader, uniform_names,
+            UNIFORM_LAST);
 
     /* Get input events. */
     game.input.callback = key_callback;
-    input_init(&game.input, window);
-    glfwSetWindowSizeCallback(window, &resize);
+    input_init(&game.input, game.graphics.window);
+
+    /* Set up game. */
+    init_game();
 
     /* Loop until the user closes the window */
-#ifdef EMSCRIPTEN
-    emscripten_set_main_loop( do_frame, 0, 1 );
-#else
-    while(!glfwWindowShouldClose(window)) { 
-        do_frame();
-    }
-#endif
-    clean_up();
+    graphics_loop(&game.graphics);
+
+    /* If we reach here, quit the game. */
+    graphics_free(&game.graphics);
+
     return 0;
 }
