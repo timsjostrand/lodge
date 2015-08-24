@@ -47,12 +47,13 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     mat4 transform_final;
     mult(transform_final, transform_position, transform_rotation);
     mult(transform_final, transform_final, transform_scale);
+    transpose_same(transform_final);
     
     // Upload matrices and color
-    transpose_same(transform_final);
     glUniformMatrix4fv(g->shader.uniform_transform, 1, GL_FALSE, transform_final);
     glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
     glUniform4fv(g->shader.uniform_color, 1, sprite->color);
+    glUniform1i(g->shader.uniform_sprite_type, sprite->type);
 
     // Render it!
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -142,6 +143,8 @@ void shader_init(struct shader *s, const char **vertex_shader_src,
     printf("uniform: %s=%d\n", UNIFORM_PROJECTION_NAME, s->uniform_projection);
     s->uniform_color = glGetUniformLocation(s->program, UNIFORM_COLOR_NAME);
     printf("uniform: %s=%d\n", UNIFORM_COLOR_NAME, s->uniform_color);
+    s->uniform_sprite_type = glGetUniformLocation(s->program, UNIFORM_SPRITE_TYPE_NAME);
+    printf("uniform: %s=%d\n", UNIFORM_SPRITE_TYPE_NAME, s->uniform_sprite_type);
 
     /* Set up user uniforms. */
     s->uniforms = (GLint *) malloc(uniforms_count * sizeof(GLint));

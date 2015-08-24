@@ -41,16 +41,19 @@
 #define PARTICLES_MAX   100
 #define PARTICLE_ALPHA  0.5f
 
+#define SPRITE_TYPE_UNKNOWN     0
+#define SPRITE_TYPE_BALL        1
+#define SPRITE_TYPE_PLAYER      2
+#define SPRITE_TYPE_PARTICLE    3
+
 enum uniforms {
     TIME,
-    IS_BALL,
     BALL_LAST_HIT,
     UNIFORM_LAST
 };
 
 const char *uniform_names[] = {
     "time",
-    "is_ball",
     "ball_last_hit",
 };
 
@@ -130,10 +133,16 @@ const char *fragment_shader =
 const char *vertex_shader =
     "#version 400 core\n"
     "precision highp float;"
+    ""
+    "const int TYPE_UNKNOWN     = 0;"
+    "const int TYPE_BALL        = 1;"
+    "const int TYPE_PLAYER      = 2;"
+    "const int TYPE_PARTICLE    = 3;"
+    ""
     "uniform mat4 transform;"
     "uniform mat4 projection;"
     "uniform float time;"
-    "uniform int is_ball;"
+    "uniform int sprite_type;"
     "uniform float ball_last_hit;"
     "const vec4 oposes[6] = vec4[6]("
     "   vec4( 0.25,  0.5, 0.0, 0.0),"
@@ -154,8 +163,8 @@ const char *vertex_shader =
     "   float hit_wobble = abs(cos(bh/80.0)) * decay;"
     "   gl_Position = projection * transform * ("
     "       vec4(vp, 1.0)"
-    "       + opos*is_ball*hit_wobble"
-    "       + 0.0*opos*is_ball*cos(time*8.0f)/6.0"
+    "       + opos*float(sprite_type == TYPE_BALL)*hit_wobble"
+    "       + 0.0*opos*float(sprite_type == TYPE_BALL)*cos(time*8.0f)/6.0"
     "   );"
     "}";
 #endif
@@ -182,6 +191,7 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->vx = vx;
     p->vy = vy;
     p->va = va;
+    p->sprite.type = SPRITE_TYPE_PARTICLE;
     p->sprite.rotation = angle;
 
     setv(p->sprite.pos, x, y, 0.0f, 1.0f);
@@ -431,16 +441,13 @@ void render(GLFWwindow *window, struct graphics *g)
     glUseProgram(g->shader.program);
 
     /* Sprites. */
-    glUniform1i(g->shader.uniforms[IS_BALL], 0);
     sprite_render(&game.player1.sprite, &game.graphics);
     sprite_render(&game.player2.sprite, &game.graphics);
 
     /* Ball. */
-    glUniform1i(g->shader.uniforms[IS_BALL], 1);
     sprite_render(&game.ball.sprite, &game.graphics);
 
     /* Particles. */
-    glUniform1i(g->shader.uniforms[IS_BALL], 0);
     for(int i=0; i<game.particles_count; i++) {
         if(!game.particles[i].dead) {
             sprite_render(&game.particles[i].sprite, &game.graphics);
@@ -454,6 +461,7 @@ void resize(GLFWwindow *window, int width, int height)
 
 void init_player1(struct player *p)
 {
+    p->sprite.type = SPRITE_TYPE_PLAYER;
     setv(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -461,6 +469,7 @@ void init_player1(struct player *p)
 
 void init_player2(struct player *p)
 {
+    p->sprite.type = SPRITE_TYPE_PLAYER;
     setv(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -468,6 +477,7 @@ void init_player2(struct player *p)
 
 void init_ball(struct ball *ball)
 {
+    ball->sprite.type = SPRITE_TYPE_BALL;
     ball->speed = 0.6f;
     rand(); rand(); rand();
     float random_angle = randr(0.0f, 2.0f * M_PI);

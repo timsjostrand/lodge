@@ -4,21 +4,24 @@
 #include "math4.h"
 
 struct sprite {
+    int     type;
     vec4    pos;
     vec4    scale;
     vec4    color;
     float   rotation;
 };
 
-#define UNIFORM_TRANSFORM_NAME  "transform"
-#define UNIFORM_PROJECTION_NAME "projection"
-#define UNIFORM_COLOR_NAME      "color"
+#define UNIFORM_TRANSFORM_NAME      "transform"
+#define UNIFORM_PROJECTION_NAME     "projection"
+#define UNIFORM_COLOR_NAME          "color"
+#define UNIFORM_SPRITE_TYPE_NAME    "sprite_type"
 
 struct shader {
     GLuint  program;
     GLint   uniform_transform;
     GLint   uniform_projection;
     GLint   uniform_color;
+    GLint   uniform_sprite_type;
     GLint   *uniforms;
 };
 
