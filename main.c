@@ -31,6 +31,7 @@
 
 #define BALL_WIDTH      16
 #define BALL_HEIGHT     16
+#define BALL_SPEED_MAX  0.5f
 
 #define PLAYER_WIDTH    16
 #define PLAYER_HEIGHT   64
@@ -246,7 +247,7 @@ void ball_player_bounce(struct ball *ball, struct player *p)
     float force = 1.0f + (1.5f * player_is_charged(p));
     float current_speed = sqrt(ball->vx*ball->vx + ball->vy*ball->vy);
     printf("force=%6f, current_speed=%6f\n", force, current_speed);
-    current_speed = fmax(0.25f, current_speed);
+    current_speed = fmax(BALL_SPEED_MAX, current_speed);
     ball->vx = cos(angle) * current_speed * force;
     ball->vy = sin(angle) * current_speed * force;
     ball->last_hit = 0.0f;
