@@ -241,6 +241,36 @@ void think_player_charged(struct player *p, float dt)
     p->last_emit += dt;
 }
 
+void ball_player_bounce(struct ball *ball, struct player *p)
+{
+    /* 0 on player1, 1 on player2. */
+    int player_no = (p == &game.player2);
+    printf("collides with player %d\n", player_no + 1);
+
+    p->stats.hits ++;
+    p->stats.current_streak ++;
+    p->stats.streak = imax(p->stats.streak, p->stats.current_streak);
+
+    game.total_stats.current_streak ++;
+    game.total_stats.streak = imax(game.total_stats.streak, game.total_stats.current_streak);
+
+    float diff = (ball->sprite.pos[1] - p->sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
+    diff = clamp(diff, -0.8f, 0.8f);
+    /* angle table:
+     * player1: angle = M_PI/2.0f - acos(diff)
+     * player2: angle = M_PI/2.0f + acos(diff) */
+    float angle = M_PI/2.0f + (player_no == 0 ? -1 : +1) * acos(diff);
+    float force = 1.0f + (1.5f * player_is_charged(p));
+    float current_speed = sqrt(ball->vx*ball->vx + ball->vy*ball->vy);
+    printf("force=%6f, current_speed=%6f\n", force, current_speed);
+    current_speed = fmax(0.25f, current_speed);
+    ball->vx = cos(angle) * current_speed * force;
+    ball->vy = sin(angle) * current_speed * force;
+    ball->last_hit = 0.0f;
+
+    p->charge = 0.0f;
+}
+
 void game_think(float dt)
 {
     // Ball: left/right hit detection
@@ -269,7 +299,6 @@ void game_think(float dt)
         game.ball.vy = clamp(game.ball.vy / 4.0f,
                 -game.ball.speed / 8.0f,
                 game.ball.speed / 8.0f);
-        printf("game.ball.vy=%6f\n", game.ball.vy);
         /* Restart at center of view. */
         game.ball.sprite.pos[0] = VIEW_WIDTH/2;
         game.ball.sprite.pos[1] = VIEW_HEIGHT/2;
@@ -322,25 +351,7 @@ void game_think(float dt)
             && game.ball.sprite.pos[1] >= (game.player1.sprite.pos[1] - PLAYER_HEIGHT/2 - BALL_HEIGHT/2)
             && game.ball.sprite.pos[1] <= (game.player1.sprite.pos[1] + PLAYER_HEIGHT/2 + BALL_HEIGHT/2)
             && game.ball.sprite.pos[0] <= (PLAYER1_HIT + PLAYER_WIDTH/2 + BALL_WIDTH/2)) {
-        printf("collides with player 1\n");
-        game.player1.stats.hits ++;
-        game.player1.stats.current_streak ++;
-        game.player1.stats.streak = imax(game.player1.stats.streak, game.player1.stats.current_streak);
-        game.total_stats.current_streak ++;
-        game.total_stats.streak = imax(game.total_stats.streak, game.total_stats.current_streak);
-
-        float diff = (game.ball.sprite.pos[1] - game.player1.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
-        diff = clamp(diff, -0.8f, 0.8f);
-        float angle = M_PI/2.0f - acos(diff);
-        float force = 1.0f + (1.5f * player_is_charged(&game.player1));
-        float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
-        printf("force=%6f, current_speed=%6f\n", force, current_speed);
-        current_speed = fmax(0.25f, current_speed);
-        game.ball.vx = cos(angle) * current_speed * force;
-        game.ball.vy = sin(angle) * current_speed * force;
-        game.ball.last_hit = 0.0f;
-
-        game.player1.charge = 0.0f;
+        ball_player_bounce(&game.ball, &game.player1);
     }
 
     // Ball collides with Player 2?
@@ -348,25 +359,7 @@ void game_think(float dt)
             && game.ball.sprite.pos[1] >= (game.player2.sprite.pos[1] - PLAYER_HEIGHT/2 - BALL_HEIGHT/2)
             && game.ball.sprite.pos[1] <= (game.player2.sprite.pos[1] + PLAYER_HEIGHT/2 + BALL_HEIGHT/2)
             && game.ball.sprite.pos[0] >= (PLAYER2_HIT - PLAYER_WIDTH/2 - BALL_WIDTH/2)) {
-        printf("collides with player 2\n");
-        game.player2.stats.hits ++;
-        game.player2.stats.current_streak ++;
-        game.player2.stats.streak = imax(game.player2.stats.streak, game.player2.stats.current_streak);
-        game.total_stats.current_streak ++;
-        game.total_stats.streak = imax(game.total_stats.streak, game.total_stats.current_streak);
-
-        float diff = (game.ball.sprite.pos[1] - game.player2.sprite.pos[1]) / (PLAYER_HEIGHT/2.0f);
-        diff = clamp(diff, -0.8f, 0.8f);
-        float angle =  M_PI/2.0f + acos(diff);
-        float force = 1.0f + (1.5f * player_is_charged(&game.player2));
-        float current_speed = sqrt( game.ball.vx*game.ball.vx + game.ball.vy*game.ball.vy);
-        printf("force=%6f, current_speed=%6f\n", force, current_speed);
-        current_speed = fmax(0.25f, current_speed); // So much code duplication!!
-        game.ball.vx = cos(angle) * current_speed * force;
-        game.ball.vy = sin(angle) * current_speed * force;
-        game.ball.last_hit = 0.0f;
-    
-        game.player2.charge = 0.0f;
+        ball_player_bounce(&game.ball, &game.player2);
     }
 
     // Emit player charge particles
