@@ -94,8 +94,6 @@ struct game {
     struct stats    total_stats;
     struct particle particles[PARTICLES_MAX];
     int             particles_count;
-    int             frames;
-    double          last_fps_print;
     int             keys[GLFW_KEY_LAST];        /* Key status of current frame. */
     int             last_keys[GLFW_KEY_LAST];   /* Key status of last frame. */
 } game = { 0 };
