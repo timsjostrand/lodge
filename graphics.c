@@ -154,7 +154,7 @@ int shader_init(struct shader *s, const char **vertex_shader_src,
         printf("uniform: %s=%d\n", name, s->uniforms[i]);
     }
 
-    return 1;
+    return 0;
 }
 
 void shader_free(struct shader *s)
@@ -251,6 +251,8 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
         printf("glewInit() failed\n");
         return -1;
     }
+
+	return 0;
 }
 
 /**
@@ -286,7 +288,7 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
     shader_init(&g->shader, vertex_shader_src, fragment_shader_src,
             uniform_names, uniforms_count);
 
-    return 1;
+    return 0;
 }
 
 void graphics_free(struct graphics *g)
@@ -349,6 +351,14 @@ void graphics_do_frame(struct graphics *g)
     graphics_count_frame(g);
 }
 
+#ifdef EMSCRIPTEN
+struct graphics* em_graphics;
+void graphics_do_frame_emscripten()
+{
+	graphics_do_frame(em_graphics);
+}
+#endif
+
 void graphics_loop(struct graphics *g)
 {
     /* Sanity check. */
@@ -358,7 +368,8 @@ void graphics_loop(struct graphics *g)
     }
 
 #ifdef EMSCRIPTEN
-    emscripten_set_main_loop(graphics_do_frame, 0, 1);
+	em_graphics = g;
+	emscripten_set_main_loop(graphics_do_frame_emscripten, 0, 1);
 #else
     while(!glfwWindowShouldClose(g->window)) {
         graphics_do_frame(g);
