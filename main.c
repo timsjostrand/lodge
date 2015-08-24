@@ -315,45 +315,45 @@ void ball_think(float dt)
     game.ball.last_hit += dt;
 }
 
-void player1_think(float dt)
+void player1_think(struct player *p, float dt)
 {
-    game.player1.charge += dt;
+    p->charge += dt;
 
     // Move?
     if(key_down(GLFW_KEY_W)) {
-        game.player1.sprite.pos[1] += dt*0.6f;
-        game.player1.charge = 0;
+        p->sprite.pos[1] += dt*0.6f;
+        p->charge = 0;
     } else if(key_down(GLFW_KEY_S)) {
-        game.player1.sprite.pos[1] -= dt*0.6f;
-        game.player1.charge = 0;
+        p->sprite.pos[1] -= dt*0.6f;
+        p->charge = 0;
     }
 
     // Outside board?
-    game.player1.sprite.pos[1] = clamp(game.player1.sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
+    p->sprite.pos[1] = clamp(p->sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
 }
 
-void player2_think(float dt)
+void player2_think(struct player *p, float dt)
 {
-    game.player2.charge += dt;
+    p->charge += dt;
 
     // Move?
     if(key_down(GLFW_KEY_UP)) {
-        game.player2.sprite.pos[1] += dt*0.6f;
-        game.player2.charge = 0;
+        p->sprite.pos[1] += dt*0.6f;
+        p->charge = 0;
     } else if(key_down(GLFW_KEY_DOWN)) {
-        game.player2.sprite.pos[1] -= dt*0.6f;
-        game.player2.charge = 0;
+        p->sprite.pos[1] -= dt*0.6f;
+        p->charge = 0;
     }
 
     // Outside board?
-    game.player2.sprite.pos[1] = clamp(game.player2.sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
+    p->sprite.pos[1] = clamp(p->sprite.pos[1], BOARD_BOTTOM, BOARD_TOP);
 }
 
 void game_think(float dt)
 {
     ball_think(dt);
-    player1_think(dt);
-    player2_think(dt);
+    player1_think(&game.player1, dt);
+    player2_think(&game.player2, dt);
 
     // Ball collides with Player 1?
     if(game.ball.vx < 0
