@@ -415,8 +415,8 @@ void shader_think(struct graphics *g, float delta_time)
 void think(float delta_time)
 {
     game_think(delta_time);
-    shader_think(&game.graphics, delta_time);
     particles_think(delta_time);
+    shader_think(&game.graphics, delta_time);
 
     /* Remember what keys were pressed the last frame. */
     memcpy(game.last_keys, game.keys, GLFW_KEY_LAST);
