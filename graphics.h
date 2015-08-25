@@ -25,9 +25,19 @@ struct shader {
     GLint   *uniforms;
 };
 
+struct graphics;
+
+typedef void (*think_func_t)(struct graphics *g, float delta_time);
+typedef void (*render_func_t)(struct graphics *g, float delta_time);
+
 struct graphics {
+    GLFWwindow      *window;                    /* The window handle created by GLFW. */
+    think_func_t    think;                      /* This function does thinking. */
+    render_func_t   render;                     /* This function does rendering. */
     int             frames;                     /* Number of frames drawn since last_frame_report. */
     double          last_frame_report;          /* When frames were last summed up. */
+    double          last_frame;                 /* When the last frame was drawn. */
+    float           delta_time_factor;          /* Delta-time is multiplied with this factor. */
     GLuint          vbo_rect;                   /* Vertex Buffer Object. */
     GLuint          vao_rect;                   /* Vertex Array Object. */
     mat4            projection;                 /* Projection matrix. */
@@ -37,13 +47,15 @@ struct graphics {
     struct shader   shader;                     /* Shader program information. */
 };
 
-void graphics_init(struct graphics *g, int view_width, int view_height,
+int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
+        int view_width, int view_height, int windowed,
         const char **vertex_shader_src, const char **fragment_shader_src,
         const char **uniform_names, int uniforms_count);
 void graphics_free(struct graphics *g);
 void graphics_count_frame(struct graphics *g);
+void graphics_loop();
 
-void shader_init(struct shader *s, const char **vertex_shader_src,
+int shader_init(struct shader *s, const char **vertex_shader_src,
         const char **fragment_shader_src, const char **uniform_names,
         int uniforms_count);
 void shader_free(struct shader *s);

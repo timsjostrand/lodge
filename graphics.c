@@ -111,7 +111,7 @@ void shader_log(GLuint shader, const char *name)
     }
 }
 
-void shader_init(struct shader *s, const char **vertex_shader_src,
+int shader_init(struct shader *s, const char **vertex_shader_src,
         const char **fragment_shader_src, const char **uniform_names,
         int uniforms_count)
 {
@@ -153,6 +153,8 @@ void shader_init(struct shader *s, const char **vertex_shader_src,
         s->uniforms[i] = glGetUniformLocation(s->program, name);
         printf("uniform: %s=%d\n", name, s->uniforms[i]);
     }
+
+    return 0;
 }
 
 void shader_free(struct shader *s)
@@ -161,18 +163,7 @@ void shader_free(struct shader *s)
     glDeleteProgram(s->program);
 }
 
-/**
- *
- * @param g                     A graphics struct to fill in.
- * @param view_width            The width of the view, used for ortho().
- * @param view_height           The height of the view, used for ortho().
- * @param vertex_shader_src     Vertex shader source.
- * @param fragment_shader_src   Fragment shader source.
- * @param uniform_names         A list of uniform names in the shader,
- *                              excluding 'transform', 'projection' and 'color'.
- * @param uniforms_count        Number of elements in the uniform name list.
- */
-void graphics_init(struct graphics *g, int view_width, int view_height,
+void graphics_opengl_init(struct graphics *g, int view_width, int view_height,
         const char **vertex_shader_src, const char **fragment_shader_src,
         const char **uniform_names, int uniforms_count)
 {
@@ -204,17 +195,113 @@ void graphics_init(struct graphics *g, int view_width, int view_height,
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+}
+
+void graphics_glfw_resize_callback(GLFWwindow *window, int width, int height)
+{
+   printf("TODO: resize callback\n");
+}
+
+int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
+        int windowed)
+{
+    /* Initialize the library */
+    if(!glfwInit()) {
+        return -1;
+    }
+
+#ifdef EMSCRIPTEN
+    g->window = glfwCreateWindow(view_width, view_height, "glpong", NULL, NULL);
+    if(!g->window) {
+        glfwTerminate();
+        return -1;
+    }
+#else
+    /* QUIRK: Mac OSX */
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
+
+    /* Create a windowed mode window and its OpenGL context */
+    if(windowed) {
+        g->window = glfwCreateWindow(view_width, view_height, "glpong", NULL, NULL);
+    } else {
+        g->window = glfwCreateWindow(video_mode->width, video_mode->height, "glpong", monitor, NULL);
+    }
+    if(!g->window) {
+        glfwTerminate();
+        return -1;
+    }
+#endif
+
+    /* Be notified when window size changes. */
+    glfwSetWindowSizeCallback(g->window, &graphics_glfw_resize_callback);
+
+    /* Select the current OpenGL context. */
+    glfwMakeContextCurrent(g->window);
+
+    /* Init GLEW. */
+    glewExperimental = GL_TRUE;
+    GLenum err = glewInit();
+    if(err != GLEW_OK) {
+        printf("glewInit() failed\n");
+        return -1;
+    }
+
+	return 0;
+}
+
+/**
+ *
+ * @param g                     A graphics struct to fill in.
+ * @param view_width            The width of the view, used for ortho().
+ * @param view_height           The height of the view, used for ortho().
+ * @param windowed              If applicable, whether to start in windowed mode.
+ * @param vertex_shader_src     Vertex shader source.
+ * @param fragment_shader_src   Fragment shader source.
+ * @param uniform_names         A list of uniform names in the shader,
+ *                              excluding 'transform', 'projection' and 'color'.
+ * @param uniforms_count        Number of elements in the uniform name list.
+ */
+int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
+        int view_width, int view_height, int windowed,
+        const char **vertex_shader_src, const char **fragment_shader_src,
+        const char **uniform_names, int uniforms_count)
+{
+    /* Set up the graphics struct properly. */
+    g->delta_time_factor = 1.0f;
+    g->think = think;
+    g->render = render;
+
+    /* Set up GLEW and glfw. */
+    graphics_libraries_init(g, view_width, view_height, windowed);
+
+    /* Set up OpenGL. */
+    graphics_opengl_init(g, view_width, view_height, vertex_shader_src,
+            fragment_shader_src, uniform_names, uniforms_count);
 
     /* Set up shader. */
     shader_init(&g->shader, vertex_shader_src, fragment_shader_src,
             uniform_names, uniforms_count);
+
+    return 0;
 }
 
 void graphics_free(struct graphics *g)
 {
+    /* Free resources. */
     glDeleteVertexArrays(1, &g->vao_rect);
     glDeleteBuffers(1, &g->vbo_rect);
+
+    /* Free shader. */
     shader_free(&g->shader);
+
+    /* Shut down glfw. */
+    glfwTerminate();
 }
 
 void graphics_count_frame(struct graphics *g)
@@ -225,4 +312,67 @@ void graphics_count_frame(struct graphics *g)
         g->last_frame_report = glfwGetTime()*1000.0f;
         g->frames = 0;
     }
+}
+
+static void shader_think(struct graphics *g, float delta_time)
+{
+    /* Upload transform uniform. */
+    mat4 transform;
+    mult(transform, g->translate, g->scale);
+    mult(transform, transform, g->rotate);
+    transpose_same(transform);
+    glUniformMatrix4fv(g->shader.uniform_transform, 1, GL_FALSE, transform);
+
+    /* Upload projection uniform. */
+    glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
+}
+
+void graphics_do_frame(struct graphics *g)
+{     
+    /* Delta-time. */
+    float delta_time = 0;
+    if(g->last_frame != 0) {
+        delta_time = (glfwGetTime() - g->last_frame) * 1000.0f * g->delta_time_factor;
+    }
+    g->last_frame = glfwGetTime();
+
+    /* Game loop. */
+    g->think(g, delta_time);
+    shader_think(g, delta_time);
+    g->render(g, delta_time);
+
+    /* Swap front and back buffers */
+    glfwSwapBuffers(g->window);
+
+    /* Poll for and process events */
+    glfwPollEvents();
+
+    /* Register that a frame has been drawn. */
+    graphics_count_frame(g);
+}
+
+#ifdef EMSCRIPTEN
+struct graphics* em_graphics;
+void graphics_do_frame_emscripten()
+{
+	graphics_do_frame(em_graphics);
+}
+#endif
+
+void graphics_loop(struct graphics *g)
+{
+    /* Sanity check. */
+    if(!g->render || !g->think) {
+        printf("ERROR: g->render() or g->think() not set!\n");
+        return;
+    }
+
+#ifdef EMSCRIPTEN
+	em_graphics = g;
+	emscripten_set_main_loop(graphics_do_frame_emscripten, 0, 1);
+#else
+    while(!glfwWindowShouldClose(g->window)) {
+        graphics_do_frame(g);
+    }
+#endif
 }
