@@ -504,18 +504,32 @@ void key_callback(struct input *input, GLFWwindow *window, int key,
 
 int main(int argc, char **argv)
 {
+    int ret = 0;
+
     /* Seed random number generator. */
     srand(time(NULL));
 
     /* Set up graphics. */
     int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
-    graphics_init(&game.graphics, &think, &render, VIEW_WIDTH, VIEW_HEIGHT,
+    ret = graphics_init(&game.graphics, &think, &render, VIEW_WIDTH, VIEW_HEIGHT,
             windowed, &vertex_shader, &fragment_shader, uniform_names,
             UNIFORM_LAST);
 
+    if(ret != GRAPHICS_OK) {
+        fprintf(stderr, "ERROR: Graphics initialization failed (%d)\n", ret);
+        graphics_free(&game.graphics);
+        exit(ret);
+    }
+
     /* Get input events. */
     game.input.callback = key_callback;
-    input_init(&game.input, game.graphics.window);
+    ret = input_init(&game.input, game.graphics.window);
+
+    if(ret != GRAPHICS_OK) {
+        fprintf(stderr, "ERROR: Input initialization failed (%d)\n", ret);
+        graphics_free(&game.graphics);
+        exit(ret);
+    }
 
     /* Set up game. */
     init_game();

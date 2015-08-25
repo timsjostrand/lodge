@@ -3,6 +3,12 @@
 
 #include "math4.h"
 
+#define GRAPHICS_OK              0
+#define GRAPHICS_ERROR          -1
+#define GRAPHICS_SHADER_ERROR   -2
+#define GRAPHICS_GLFW_ERROR     -3
+#define GRAPHICS_GLEW_ERROR     -4
+
 struct sprite {
     int     type;
     vec4    pos;
@@ -47,7 +53,7 @@ struct graphics {
     struct shader   shader;                     /* Shader program information. */
 };
 
-int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
+int  graphics_init(struct graphics *g, think_func_t think, render_func_t render,
         int view_width, int view_height, int windowed,
         const char **vertex_shader_src, const char **fragment_shader_src,
         const char **uniform_names, int uniforms_count);
@@ -55,12 +61,12 @@ void graphics_free(struct graphics *g);
 void graphics_count_frame(struct graphics *g);
 void graphics_loop();
 
-int shader_init(struct shader *s, const char **vertex_shader_src,
+int  shader_init(struct shader *s, const char **vertex_shader_src,
         const char **fragment_shader_src, const char **uniform_names,
         int uniforms_count);
 void shader_free(struct shader *s);
-void shader_program_log(GLuint program, const char *name);
-void shader_log(GLuint shader, const char *name);
+int  shader_program_log(GLuint program, const char *name);
+int  shader_log(GLuint shader, const char *name);
 
 void sprite_render(struct sprite *sprite, struct graphics *g);
 

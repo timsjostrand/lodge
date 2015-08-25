@@ -9,6 +9,7 @@
 #include <string.h>
 #include <GLFW/glfw3.h>
 
+#include "graphics.h"
 #include "input.h"
 
 struct input *input_global = NULL;
@@ -19,6 +20,7 @@ int input_init(struct input *input, GLFWwindow *window)
 {
     input_global = input;
     glfwSetKeyCallback(window, &input_glfw_callback);
+    return GRAPHICS_OK;
 }
 
 int key_down(int key)
