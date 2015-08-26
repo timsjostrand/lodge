@@ -61,13 +61,13 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
 
 int shader_program_log(GLuint program, const char *name)
 {
-    printf("=== %s ===\n", name);
+    graphics_debug("=== %s ===\n", name);
 
     GLint status = 0;
     glGetProgramiv(program, GL_LINK_STATUS, &status);
 
     if(status == GL_FALSE) {
-        printf("FAILED\n");
+        graphics_error("Link failed\n");
     }
 
     GLint len = 0;
@@ -76,13 +76,18 @@ int shader_program_log(GLuint program, const char *name)
     if(len > 0) {
         GLchar *msg = (GLchar *) malloc(len);
         glGetProgramInfoLog(program, len, &len, msg);
-        printf("%s", msg);
+        /* TODO: readline() and output for each line */
+        if(status == GL_FALSE) {
+            graphics_error("%s", msg);
+        } else {
+            graphics_debug("%s", msg);
+        }
         free(msg);
     }
 
     GLint uniforms = 0;
     glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniforms);
-    printf("%d active uniforms\n", uniforms);
+    graphics_debug("%d active uniforms\n", uniforms);
 
     if(status == GL_FALSE) {
         return GRAPHICS_SHADER_ERROR;
@@ -93,13 +98,13 @@ int shader_program_log(GLuint program, const char *name)
 
 int shader_log(GLuint shader, const char *name)
 {
-    printf("=== %s ===\n", name);
+    graphics_debug("=== %s ===\n", name);
 
     GLint status = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
     if(status == GL_FALSE) {
-        printf("FAILED\n");
+        graphics_error("Compilation of %s failed\n", name);
     }
 
     GLint len = 0;
@@ -108,7 +113,12 @@ int shader_log(GLuint shader, const char *name)
     if(len > 0) {
         GLchar *msg = (GLchar *) malloc(len);
         glGetShaderInfoLog(shader, len, &len, msg);
-        printf("%s", msg);
+        /* TODO: readline() and output for each line */
+        if(status == GL_FALSE) {
+            graphics_error("%s", msg);
+        } else {
+            graphics_debug("%s", msg);
+        }
         free(msg);
     }
 
@@ -161,13 +171,13 @@ int shader_init(struct shader *s, const char **vertex_shader_src,
 
     /* Set up global uniforms. */
     s->uniform_transform = glGetUniformLocation(s->program, UNIFORM_TRANSFORM_NAME);
-    printf("uniform: %s=%d\n", UNIFORM_TRANSFORM_NAME, s->uniform_transform);
+    graphics_debug("uniform: %s=%d\n", UNIFORM_TRANSFORM_NAME, s->uniform_transform);
     s->uniform_projection = glGetUniformLocation(s->program, UNIFORM_PROJECTION_NAME);
-    printf("uniform: %s=%d\n", UNIFORM_PROJECTION_NAME, s->uniform_projection);
+    graphics_debug("uniform: %s=%d\n", UNIFORM_PROJECTION_NAME, s->uniform_projection);
     s->uniform_color = glGetUniformLocation(s->program, UNIFORM_COLOR_NAME);
-    printf("uniform: %s=%d\n", UNIFORM_COLOR_NAME, s->uniform_color);
+    graphics_debug("uniform: %s=%d\n", UNIFORM_COLOR_NAME, s->uniform_color);
     s->uniform_sprite_type = glGetUniformLocation(s->program, UNIFORM_SPRITE_TYPE_NAME);
-    printf("uniform: %s=%d\n", UNIFORM_SPRITE_TYPE_NAME, s->uniform_sprite_type);
+    graphics_debug("uniform: %s=%d\n", UNIFORM_SPRITE_TYPE_NAME, s->uniform_sprite_type);
 
     /* Set up user uniforms. */
     /* NOTE: non-existing uniforms do not result in an error being returned. */
@@ -175,7 +185,7 @@ int shader_init(struct shader *s, const char **vertex_shader_src,
     for(int i=0; i<uniforms_count; i++) {
         const char *name = uniform_names[i];
         s->uniforms[i] = glGetUniformLocation(s->program, name);
-        printf("uniform: %s=%d\n", name, s->uniforms[i]);
+        graphics_debug("uniform: %s=%d\n", name, s->uniforms[i]);
     }
 
     return GRAPHICS_OK;
@@ -347,7 +357,7 @@ void graphics_count_frame(struct graphics *g)
 {
     g->frames ++;
     if(glfwGetTime()*1000.0  - g->last_frame_report >= 1000.0) {
-        printf("%d FPS\n", g->frames);
+        graphics_debug("%d FPS\n", g->frames);
         g->last_frame_report = glfwGetTime()*1000.0f;
         g->frames = 0;
     }
@@ -402,7 +412,7 @@ void graphics_loop(struct graphics *g)
 {
     /* Sanity check. */
     if(!g->render || !g->think) {
-        printf("ERROR: g->render() or g->think() not set!\n");
+        graphics_error("g->render() or g->think() not set!\n");
         return;
     }
 

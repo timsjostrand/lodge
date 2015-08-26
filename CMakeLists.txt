@@ -8,6 +8,9 @@ set(CMAKE_MACOSX_RPATH 1)
 # QUIRK: Define M_PI on Windows.
 add_definitions(-D_USE_MATH_DEFINES)
 
+# Add debug statements.
+add_definitions(-DDEBUG)
+
 if(NOT EMSCRIPTEN)
     # Build GLFW.
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")

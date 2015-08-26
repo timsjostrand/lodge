@@ -3,6 +3,14 @@
 
 #include "math4.h"
 
+#ifdef DEBUG
+#define graphics_debug(...) fprintf(stderr, "DEBUG: " __VA_ARGS__)
+#else
+#define graphics_debug(...) do {} while (0)
+#endif
+
+#define graphics_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__)
+
 #define GRAPHICS_OK              0
 #define GRAPHICS_ERROR          -1
 #define GRAPHICS_SHADER_ERROR   -2
