@@ -516,7 +516,7 @@ int main(int argc, char **argv)
             UNIFORM_LAST);
 
     if(ret != GRAPHICS_OK) {
-        fprintf(stderr, "ERROR: Graphics initialization failed (%d)\n", ret);
+        graphics_error("Graphics initialization failed (%d)\n", ret);
         graphics_free(&game.graphics);
         exit(ret);
     }
@@ -526,7 +526,7 @@ int main(int argc, char **argv)
     ret = input_init(&game.input, game.graphics.window);
 
     if(ret != GRAPHICS_OK) {
-        fprintf(stderr, "ERROR: Input initialization failed (%d)\n", ret);
+        graphics_error("Input initialization failed (%d)\n", ret);
         graphics_free(&game.graphics);
         exit(ret);
     }
