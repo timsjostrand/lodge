@@ -19,13 +19,16 @@
 #include "graphics.h"
 #include "math4.h"
 
+#define VERTICES_RECT_LEN 30
+
 const float vertices_rect[] = {  
-    -0.5f,  0.5f,  0.0f,
-    -0.5f, -0.5f,  0.0f,
-     0.5f,  0.5f,  0.0f,
-     0.5f,  0.5f,  0.0f,
-    -0.5f, -0.5f,  0.0f,
-     0.5f, -0.5f,  0.0f
+    // Vertex            // Texcoord
+    -0.5f,  0.5f,  0.0f, 0.0f, 0.0f, // Top-left?
+    -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left ?
+     0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // Top-right ?
+     0.5f,  0.5f,  0.0f, 1.0f, 0.0f, // Top-right ?
+    -0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left ?
+     0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right ?
 };
 
 void sprite_render(struct sprite *sprite, struct graphics *g)
@@ -54,6 +57,7 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
     glUniform4fv(g->shader.uniform_color, 1, sprite->color);
     glUniform1i(g->shader.uniform_sprite_type, sprite->type);
+    glUniform1i(g->shader.uniform_tex, 0);
 
     // Render it!
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -178,6 +182,8 @@ int shader_init(struct shader *s, const char **vertex_shader_src,
     graphics_debug("uniform: %s=%d\n", UNIFORM_COLOR_NAME, s->uniform_color);
     s->uniform_sprite_type = glGetUniformLocation(s->program, UNIFORM_SPRITE_TYPE_NAME);
     graphics_debug("uniform: %s=%d\n", UNIFORM_SPRITE_TYPE_NAME, s->uniform_sprite_type);
+    s->uniform_tex = glGetUniformLocation(s->program, UNIFORM_TEX_NAME);
+    graphics_debug("uniform: %s=%d\n", UNIFORM_TEX_NAME, s->uniform_tex);
 
     /* Set up user uniforms. */
     /* NOTE: non-existing uniforms do not result in an error being returned. */
@@ -197,9 +203,7 @@ void shader_free(struct shader *s)
     glDeleteProgram(s->program);
 }
 
-static int graphics_opengl_init(struct graphics *g, int view_width, int view_height,
-        const char **vertex_shader_src, const char **fragment_shader_src,
-        const char **uniform_names, int uniforms_count)
+static int graphics_opengl_init(struct graphics *g, int view_width, int view_height)
 {
     /* Global transforms. */
     translate(g->translate, 0.0f, 0.0f, 0.0f);
@@ -221,14 +225,25 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
     /* Vertex buffer. */
     glGenBuffers(1, &g->vbo_rect);
     glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-    glBufferData(GL_ARRAY_BUFFER, 18 * sizeof(float), vertices_rect, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, VERTICES_RECT_LEN * sizeof(float),
+            vertices_rect, GL_STATIC_DRAW);
 
     /* Vertex array. */
     glGenVertexArrays(1, &g->vao_rect);
     glBindVertexArray(g->vao_rect);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+    /* Position stream. */
+    GLint posAttrib = glGetAttribLocation(g->shader.program, "vp");
+    graphics_debug("attrib: vp=%d\n", posAttrib);
+    glEnableVertexAttribArray(posAttrib);
+    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+
+    /* Texcoord stream. */
+    GLint texcoordAttrib = glGetAttribLocation(g->shader.program, "texcoord_in");
+    graphics_debug("attrib: texcoord_in=%d\n", texcoordAttrib);
+    glEnableVertexAttribArray(texcoordAttrib);
+    glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+            (void*) (3 * sizeof(float)));
 
     return GRAPHICS_OK;
 }
@@ -321,17 +336,16 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
         return ret;
     }
 
-    /* Set up OpenGL. */
-    ret = graphics_opengl_init(g, view_width, view_height, vertex_shader_src,
-            fragment_shader_src, uniform_names, uniforms_count);
+    /* Set up shader. */
+    ret = shader_init(&g->shader, vertex_shader_src, fragment_shader_src,
+            uniform_names, uniforms_count);
 
     if(ret != GRAPHICS_OK) {
         return ret;
     }
 
-    /* Set up shader. */
-    ret = shader_init(&g->shader, vertex_shader_src, fragment_shader_src,
-            uniform_names, uniforms_count);
+    /* Set up OpenGL. */
+    ret = graphics_opengl_init(g, view_width, view_height);
 
     if(ret != GRAPHICS_OK) {
         return ret;

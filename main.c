@@ -17,6 +17,7 @@
 #include "color.h"
 #include "graphics.h"
 #include "input.h"
+#include "texture.h"
 
 #define VIEW_WIDTH      640
 #define VIEW_HEIGHT     360     /* 16:9 aspect ratio */
@@ -119,11 +120,13 @@ const char *vertex_shader =
 #else
 const char *fragment_shader =
     "#version 400\n"
+    "in vec2 texcoord;"
+    "out vec4 frag_color;"
     "uniform float time;"
     "uniform vec4 color;"
-    "out vec4 frag_color;"
+    "uniform sampler2D tex;"
     "void main() {"
-    "   frag_color = color;"
+    "   frag_color = texture(tex, texcoord) * color;"
     "}";
 
 const char *vertex_shader =
@@ -149,7 +152,10 @@ const char *vertex_shader =
     "   vec4(-0.25, -0.5, 0.0, 0.0)"
     ");"
     "in vec3 vp;"
+    "in vec2 texcoord_in;"
+    "out vec2 texcoord;"
     "void main() {"
+    "   texcoord = texcoord_in;"
     "   vec4 opos = oposes[gl_VertexID];"
     "   float bh = ball_last_hit;"
     "   if(bh <= 0.016)"

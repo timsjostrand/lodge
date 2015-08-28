@@ -25,6 +25,9 @@ if(NOT EMSCRIPTEN)
     add_subdirectory(lib/glew)
     include_directories(lib/glew/include)
     add_definitions(-DGLEW_STATIC)
+
+    # Include stb.
+    include_directories(lib/)
 else()
     # glfw and glew is provided by emscripten
     option(USE_GLFW_3 "Use glfw3" ON)
@@ -32,7 +35,7 @@ else()
 endif()
 
 # Main executable.
-add_executable(glpong main.c math4.c graphics.c input.c)
+add_executable(glpong main.c math4.c graphics.c input.c texture.c)
 
 # Link.
 if(NOT EMSCRIPTEN)

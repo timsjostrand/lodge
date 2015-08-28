@@ -11,11 +11,13 @@
 
 #define graphics_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__)
 
-#define GRAPHICS_OK              0
-#define GRAPHICS_ERROR          -1
-#define GRAPHICS_SHADER_ERROR   -2
-#define GRAPHICS_GLFW_ERROR     -3
-#define GRAPHICS_GLEW_ERROR     -4
+#define GRAPHICS_OK                  0
+#define GRAPHICS_ERROR              -1
+#define GRAPHICS_SHADER_ERROR       -2
+#define GRAPHICS_GLFW_ERROR         -3
+#define GRAPHICS_GLEW_ERROR         -4
+#define GRAPHICS_IMAGE_LOAD_ERROR   -5
+#define GRAPHICS_TEXTURE_LOAD_ERROR -6
 
 struct sprite {
     int     type;
@@ -29,6 +31,7 @@ struct sprite {
 #define UNIFORM_PROJECTION_NAME     "projection"
 #define UNIFORM_COLOR_NAME          "color"
 #define UNIFORM_SPRITE_TYPE_NAME    "sprite_type"
+#define UNIFORM_TEX_NAME            "tex"
 
 struct shader {
     GLuint  program;
@@ -36,6 +39,7 @@ struct shader {
     GLint   uniform_projection;
     GLint   uniform_color;
     GLint   uniform_sprite_type;
+    GLint   uniform_tex;
     GLint   *uniforms;
 };
 
