@@ -87,6 +87,11 @@ struct particle {
     float           va;
 };
 
+struct textures {
+    GLuint  none;
+    GLuint  test;
+};
+
 struct game {
     double          time;                       /* Time since start. */
     struct graphics graphics;                   /* Graphics state. */
@@ -97,6 +102,7 @@ struct game {
     struct particle particles[PARTICLES_MAX];
     int             particles_count;
     struct input    input;
+    struct textures textures;
 } game = { 0 };
 
 #ifdef EMSCRIPTEN
@@ -195,6 +201,7 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->va = va;
     p->sprite.type = SPRITE_TYPE_PARTICLE;
     p->sprite.rotation = angle;
+    p->sprite.texture = game.textures.none;
 
     setv(p->sprite.pos, x, y, 0.0f, 1.0f);
     setv(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
@@ -451,6 +458,7 @@ void render(struct graphics *g, float delta_time)
 void init_player1(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
+    p->sprite.texture = game.textures.none;
     setv(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -459,6 +467,7 @@ void init_player1(struct player *p)
 void init_player2(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
+    p->sprite.texture = game.textures.none;
     setv(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -467,6 +476,7 @@ void init_player2(struct player *p)
 void init_ball(struct ball *ball)
 {
     ball->sprite.type = SPRITE_TYPE_BALL;
+    ball->sprite.texture = game.textures.test;
     ball->speed = 0.6f;
     rand(); rand(); rand();
     float random_angle = randr(0.0f, 2.0f * M_PI);
@@ -526,6 +536,17 @@ int main(int argc, char **argv)
         graphics_free(&game.graphics);
         exit(ret);
     }
+
+    /* Create a square white texture for texturing empty sprites with. */
+    texture_white(&game.textures.none);
+    printf("game.textures.none=%d\n", game.textures.none);
+
+    /* Load textures. */
+    ret = texture_load(&game.textures.test, "test.png");
+    if(ret != GRAPHICS_OK) {
+        graphics_error("Texture load failed\n");
+    }
+    printf("game.textures.test=%d\n", game.textures.test);
 
     /* Get input events. */
     game.input.callback = key_callback;

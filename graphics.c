@@ -18,6 +18,7 @@
 
 #include "graphics.h"
 #include "math4.h"
+#include "texture.h"
 
 #define VERTICES_RECT_LEN 30
 
@@ -60,6 +61,8 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     glUniform1i(g->shader.uniform_tex, 0);
 
     // Render it!
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, sprite->texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
