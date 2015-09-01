@@ -17,6 +17,8 @@ typedef float vec4[4];
 
 void ortho(mat4 m, float left, float right, float top, float bottom, float near, float far);
 void mult(mat4 m, mat4 a, mat4 b);
+void mult_scalar(mat4 m, const mat4 a, const float s);
+void mult_scalar_same(mat4 m, const float s);
 void identity(mat4 m);
 void translate(mat4 m, float x, float y, float z);
 void translatev(mat4 m, vec4 v);
@@ -27,6 +29,9 @@ void transpose(mat4 m, mat4 a);
 void transpose_same(mat4 m);
 void transpose_same_copy(mat4 m);
 void cross(vec4 v, vec4 a, vec4 b);
+int inverse(mat4 m, const mat4 a);
+float determinant(const mat4 m);
+void adjugate(mat4 m, const mat4 a);
 
 int imax(int a, int b);
 float clamp(float f, float min, float max);
