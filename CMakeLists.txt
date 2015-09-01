@@ -11,6 +11,11 @@ add_definitions(-D_USE_MATH_DEFINES)
 # Add debug statements.
 add_definitions(-DDEBUG)
 
+# GCC: More compiler warnings.
+if(CMAKE_COMPILER_IS_GNUCC)
+    add_definitions(-Wall)
+endif()
+
 if(NOT EMSCRIPTEN)
     # Build GLFW.
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
