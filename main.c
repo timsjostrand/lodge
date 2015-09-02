@@ -47,13 +47,15 @@
 
 enum uniforms {
     TIME,
-    BALL_LAST_HIT,
+    BALL_LAST_HIT_X,
+    BALL_LAST_HIT_Y,
     UNIFORM_LAST
 };
 
 const char *uniform_names[] = {
     "time",
-    "ball_last_hit",
+    "ball_last_hit_x",
+    "ball_last_hit_y",
 };
 
 struct stats {
@@ -75,7 +77,8 @@ struct ball {
     float           vx;
     float           vy;
     float           speed;
-    float           last_hit;
+    float           last_hit_x;
+    float           last_hit_y;
 };
 
 struct particle {
@@ -151,8 +154,10 @@ const char *vertex_shader =
     "uniform mat4 projection;"
     "uniform float time;"
     "uniform int sprite_type;"
-    "uniform float ball_last_hit;"
-    "const vec4 oposes[6] = vec4[6]("
+    "uniform float ball_last_hit_x;"
+    "uniform float ball_last_hit_y;"
+    ""
+    "const vec4 wobble_x_offsets[6] = vec4[6]("
     "   vec4( 0.25,  0.5, 0.0, 0.0),"
     "   vec4( 0.25, -0.5, 0.0, 0.0),"
     "   vec4(-0.25,  0.5, 0.0, 0.0),"
@@ -160,13 +165,23 @@ const char *vertex_shader =
     "   vec4( 0.25, -0.5, 0.0, 0.0),"
     "   vec4(-0.25, -0.5, 0.0, 0.0)"
     ");"
+    ""
+    "const vec4 wobble_y_offsets[6] = vec4[6]("
+    "   vec4(-0.25, -0.25, 0.0, 0.0),"
+    "   vec4(-0.25,  0.25, 0.0, 0.0),"
+    "   vec4( 0.25, -0.25, 0.0, 0.0),"
+    "   vec4( 0.25, -0.25, 0.0, 0.0),"
+    "   vec4(-0.25,  0.25, 0.0, 0.0),"
+    "   vec4( 0.25,  0.25, 0.0, 0.0)"
+    ");"
+    ""
     "in vec3 vp;"
     "in vec2 texcoord_in;"
     "out vec2 texcoord;"
     "void main() {"
     "   texcoord = texcoord_in;"
-    "   vec4 opos = oposes[gl_VertexID];"
-    "   float bh = ball_last_hit;"
+    "   vec4 offset = (ball_last_hit_x < ball_last_hit_y) ? wobble_x_offsets[gl_VertexID] : wobble_y_offsets[gl_VertexID];"
+    "   float bh = min(ball_last_hit_x, ball_last_hit_y);"
     "   if(bh <= 0.016)"
     "       bh = 0.016;"
     "   float decay = 0.016 / (bh*0.0001);"
@@ -174,8 +189,8 @@ const char *vertex_shader =
     "   float hit_wobble = abs(cos(bh/80.0)) * decay;"
     "   gl_Position = projection * transform * ("
     "       vec4(vp, 1.0)"
-    "       + opos*float(sprite_type == TYPE_BALL)*hit_wobble"
-    "       + 0.0*opos*float(sprite_type == TYPE_BALL)*cos(time*8.0f)/6.0"
+    "       + offset*float(sprite_type == TYPE_BALL)*hit_wobble"
+    "       + 0.0*offset*float(sprite_type == TYPE_BALL)*cos(time*8.0f)/6.0"
     "   );"
     "}";
 #endif
@@ -272,7 +287,7 @@ void ball_player_bounce(struct ball *ball, struct player *p)
     current_speed = fmax(BALL_SPEED_MAX, current_speed);
     ball->vx = cos(angle) * current_speed * force;
     ball->vy = sin(angle) * current_speed * force;
-    ball->last_hit = 0.0f;
+    ball->last_hit_x = 0.0f;
 
     p->charge = 0.0f;
 }
@@ -314,17 +329,18 @@ void ball_think(float dt)
     if(game.ball.sprite.pos[1] > BOARD_TOP - BALL_HEIGHT/2) {
         game.ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT/2;
         game.ball.vy *= -1.0f;
-        game.ball.last_hit = 0.0f;
+        game.ball.last_hit_y = 0.0f;
     } else if(game.ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT/2) {
         game.ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT/2;
         game.ball.vy *= -1.0f;
-        game.ball.last_hit = 0.0f;
+        game.ball.last_hit_y = 0.0f;
     }
 
     // Ball: move
     game.ball.sprite.pos[0] += dt*game.ball.vx;
     game.ball.sprite.pos[1] += dt*game.ball.vy;
-    game.ball.last_hit += dt;
+    game.ball.last_hit_x += dt;
+    game.ball.last_hit_y += dt;
 }
 
 void player1_think(struct player *p, float dt)
@@ -422,7 +438,8 @@ void shader_think(struct graphics *g, float delta_time)
     glUniform1f(g->shader.uniforms[TIME], (GLfloat) game.time);
 
     /* Ball stuff */
-    glUniform1f(g->shader.uniforms[BALL_LAST_HIT], game.ball.last_hit);
+    glUniform1f(g->shader.uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
+    glUniform1f(g->shader.uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
 }
 
 void think(struct graphics *g, float delta_time)
@@ -486,7 +503,8 @@ void init_ball(struct ball *ball)
     printf("random_angle=%6f\n", random_angle);
     ball->vy = ball->speed * sin(random_angle) / 4.0f;
     ball->vx = ball->speed * cos(random_angle) / 4.0f;
-    ball->last_hit = 10.0f;
+    ball->last_hit_x = 10.0f;
+    ball->last_hit_y = 0.0f;
 
     setv(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.0f, 1.0f);
     setv(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
