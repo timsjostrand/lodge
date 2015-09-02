@@ -75,12 +75,40 @@ void scale(mat4 m, float x, float y, float z)
 }
 
 /**
+ * Rotate along X axis.
+ *
+ * param m
+ * param a Angle in radians.
+ */
+void rotate_x(mat4 m, const float a)
+{
+    m[ 0] = 1; m[ 1] =       0; m[ 2] =       0; m[ 3] = 0;
+    m[ 4] = 0; m[ 5] =  cos(a); m[ 6] = -sin(a); m[ 7] = 0;
+    m[ 8] = 0; m[ 9] =  sin(a); m[10] =  cos(a); m[11] = 0;
+    m[12] = 0; m[13] =       0; m[14] =       0; m[15] = 1;
+}
+
+/**
+ * Rotate along Y axis.
+ *
+ * param m
+ * param a Angle in radians.
+ */
+void rotate_y(mat4 m, const float a)
+{
+    m[ 0] =  cos(a); m[ 1] = 0; m[ 2] = sin(a); m[ 3] = 0;
+    m[ 4] =       0; m[ 5] = 1; m[ 6] =      0; m[ 7] = 0;
+    m[ 8] = -sin(a); m[ 9] = 0; m[10] = cos(a); m[11] = 0;
+    m[12] =       0; m[13] = 0; m[14] =      0; m[15] = 1;
+}
+
+/**
  * Rotate along Z axis.
  *
  * param m
  * param a Angle in radians.
  */
-void rotate_z(mat4 m, float a)
+void rotate_z(mat4 m, const float a)
 {
     m[ 0] = cos(a); m[ 1] = -sin(a); m[ 2] = 0; m[ 3] = 0;
     m[ 4] = sin(a); m[ 5] =  cos(a); m[ 6] = 0; m[ 7] = 0;
@@ -103,7 +131,7 @@ void scalev(mat4 m, vec4 v)
  * param a Input
  * param b Input
  */
-void mult(mat4 m, mat4 a, mat4 b)
+void mult(mat4 m, const mat4 a, const mat4 b)
 {
     // Column 0
     m[0]  = a[ 0]*b[ 0] + a[ 1]*b[ 4] + a[ 2]*b[ 8] + a[ 3]*b[12];
@@ -125,6 +153,11 @@ void mult(mat4 m, mat4 a, mat4 b)
     m[7]  = a[ 4]*b[ 3] + a[ 5]*b[ 7] + a[ 6]*b[11] + a[ 7]*b[15];
     m[11] = a[ 8]*b[ 3] + a[ 9]*b[ 7] + a[10]*b[11] + a[11]*b[15];
     m[15] = a[12]*b[ 3] + a[13]*b[ 7] + a[14]*b[11] + a[15]*b[15];
+}
+
+void mult_same(mat4 a, const mat4 b)
+{
+    mult(a, a, b);
 }
 
 /**
@@ -245,6 +278,14 @@ void mult_scalar_same(mat4 m, const float s)
     mult_scalar(m, m, s);
 }
 
+void add(mat4 a, const mat4 b)
+{
+    a[ 0] += b[ 0]; a[ 1] += b[ 1]; a[ 2] += b[ 2]; a[ 3] += b[ 3];
+    a[ 4] += b[ 4]; a[ 5] += b[ 5]; a[ 6] += b[ 6]; a[ 7] += b[ 7];
+    a[ 8] += b[ 8]; a[ 9] += b[ 9]; a[10] += b[10]; a[11] += b[11];
+    a[12] += b[12]; a[13] += b[13]; a[14] += b[14]; a[15] += b[15];
+}
+
 /**
  * If one exists, stores the inverse of matrix 'a' in 'm'.
  *
@@ -299,4 +340,9 @@ float randr(float min, float max)
 void setv(vec4 v, float x, float y, float z, float w)
 {
     v[0] = x; v[1] = y; v[2] = z; v[3] = w;
+}
+
+void set3f(vec3 v, float x, float y, float z)
+{
+    v[0] = x; v[1] = y; v[2] = z;
 }

@@ -14,15 +14,20 @@
 
 typedef float mat4[16];
 typedef float vec4[4];
+typedef float vec3[3];
 
 void ortho(mat4 m, float left, float right, float top, float bottom, float near, float far);
-void mult(mat4 m, mat4 a, mat4 b);
+void mult(mat4 m, const mat4 a, const mat4 b);
+void mult_same(mat4 a, const mat4 b);
 void mult_scalar(mat4 m, const mat4 a, const float s);
 void mult_scalar_same(mat4 m, const float s);
+void add(mat4 a, const mat4 b);
 void identity(mat4 m);
 void translate(mat4 m, float x, float y, float z);
 void translatev(mat4 m, vec4 v);
-void rotate_z(mat4 m, float angle);
+void rotate_x(mat4 m, const float angle);
+void rotate_y(mat4 m, const float angle);
+void rotate_z(mat4 m, const float angle);
 void scale(mat4 m, float x, float y, float z);
 void scalev(mat4 m, vec4 v);
 void transpose(mat4 m, mat4 a);
@@ -43,5 +48,6 @@ void printv(vec4 v);
 void copym(mat4 m, const mat4 a);
 void copyv(vec4 v, const vec4 a);
 void setv(vec4 v, float x, float y, float z, float w);
+void set3f(vec3 v, float x, float y, float z);
 
 #endif
