@@ -30,6 +30,17 @@ if(NOT EMSCRIPTEN)
     add_subdirectory(lib/glew)
     include_directories(lib/glew/include)
     add_definitions(-DGLEW_STATIC)
+
+    # Build OpenAL-Soft.
+    set(LIBTYPE "STATIC" CACHE STRING "Build static library")
+    set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs")
+    set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility")
+    set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs")
+    set(ALSOFT_CONFIG OFF CACHE BOOL "Install alsoft.conf sample configuration file")
+    set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files")
+    set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries")
+    add_subdirectory(lib/openal)
+    include_directories(lib/openal/include)
 else()
     # glfw and glew is provided by emscripten
     option(USE_GLFW_3 "Use glfw3" ON)
@@ -43,11 +54,22 @@ include_directories(lib/)
 # Main executable.
 add_executable(glpong main.c math4.c graphics.c input.c texture.c color.c)
 
+# OpenAL has different names on different platforms.
+if(WIN32)
+    set(OPENAL OpenAL32)
+else()
+    set(OPENAL openal)
+endif()
+
 # Link.
 if(NOT EMSCRIPTEN)
     # Build glpong using the C99 standard.
     set_property(TARGET glpong PROPERTY C_STANDARD 99)
-    target_link_libraries(glpong libglew_static ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES} glfw ${GLFW_LIBRARIES})
+    target_link_libraries(glpong libglew_static
+        ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES}
+        glfw ${GLFW_LIBRARIES}
+        ${OPENAL}
+    )
 else()
     target_link_libraries(glpong)
 endif()
