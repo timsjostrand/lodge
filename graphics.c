@@ -32,6 +32,10 @@ const float vertices_rect[] = {
      0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right ?
 };
 
+#ifdef EMSCRIPTEN
+struct graphics* graphics_global;
+#endif
+
 void sprite_render(struct sprite *sprite, struct graphics *g)
 {
     glEnableVertexAttribArray(0);
@@ -253,7 +257,7 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
 
 void graphics_glfw_resize_callback(GLFWwindow *window, int width, int height)
 {
-   printf("TODO: resize callback\n");
+    glViewport(0, 0, width, height);
 }
 
 int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
@@ -293,7 +297,7 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
 #endif
 
     /* Be notified when window size changes. */
-    glfwSetWindowSizeCallback(g->window, &graphics_glfw_resize_callback);
+    glfwSetFramebufferSizeCallback(g->window, &graphics_glfw_resize_callback);
 
     /* Select the current OpenGL context. */
     glfwMakeContextCurrent(g->window);
@@ -326,6 +330,11 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
         const char **uniform_names, int uniforms_count)
 {
     int ret = 0;
+
+#ifdef EMSCRIPTEN
+    /* HACK: Need to store reference for emscripten. */
+    graphics_global = g;
+#endif
 
     /* Set up the graphics struct properly. */
     g->delta_time_factor = 1.0f;
@@ -418,10 +427,9 @@ void graphics_do_frame(struct graphics *g)
 }
 
 #ifdef EMSCRIPTEN
-struct graphics* em_graphics;
 void graphics_do_frame_emscripten()
 {
-	graphics_do_frame(em_graphics);
+	graphics_do_frame(graphics_global);
 }
 #endif
 
@@ -434,7 +442,6 @@ void graphics_loop(struct graphics *g)
     }
 
 #ifdef EMSCRIPTEN
-	em_graphics = g;
 	emscripten_set_main_loop(graphics_do_frame_emscripten, 0, 1);
 #else
     while(!glfwWindowShouldClose(g->window)) {

@@ -1,6 +1,8 @@
 #ifndef _TEXTURE_H
 #define _TEXTURE_H
 
+#include <stdint.h>
+
 int  image_load(uint8_t **data, int *width, int *height, const char *path);
 void image_free(uint8_t *data);
 

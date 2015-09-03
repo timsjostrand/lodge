@@ -18,6 +18,7 @@
 #include "graphics.h"
 #include "input.h"
 #include "texture.h"
+#include "sound.c"
 
 #define VIEW_WIDTH      640
 #define VIEW_HEIGHT     360     /* 16:9 aspect ratio */
@@ -103,6 +104,8 @@ struct game {
     int             particles_count;
     struct input    input;
     struct textures textures;
+    struct sound    sound;
+    struct sound_fx vivaldi;
 } game = { 0 };
 
 #ifdef EMSCRIPTEN
@@ -505,10 +508,12 @@ void key_callback(struct input *input, GLFWwindow *window, int key,
         switch(key) {
             case GLFW_KEY_O:
                 game.graphics.delta_time_factor *= 2.0f;
+                sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
                 printf("time_mod=%f\n", game.graphics.delta_time_factor);
                 break;
             case GLFW_KEY_P:
                 game.graphics.delta_time_factor /= 2.0f;
+                sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
                 printf("time_mod=%f\n", game.graphics.delta_time_factor);
                 break;
             case GLFW_KEY_ESCAPE:
@@ -518,12 +523,47 @@ void key_callback(struct input *input, GLFWwindow *window, int key,
     }
 }
 
+void load_sounds()
+{
+    if(sound_fx_open(&game.vivaldi, "vivaldi.ogg") != SOUND_OK) {
+        sound_error("sound_stream_open\n");
+    } else {
+        sound_fx_play(&game.vivaldi);
+    }
+}
+
+void release_sounds()
+{
+    sound_fx_free(&game.vivaldi);
+}
+
+void release_textures()
+{
+    texture_free(game.textures.none);
+    texture_free(game.textures.test);
+}
+
+void load_textures()
+{
+    /* Create a square white texture for texturing empty sprites with. */
+    texture_white(&game.textures.none);
+
+    /* Load textures. */
+    int ret = texture_load(&game.textures.test, "test.png");
+    if(ret != GRAPHICS_OK) {
+        graphics_error("Texture load failed\n");
+    }
+}
+
 int main(int argc, char **argv)
 {
     int ret = 0;
 
     /* Seed random number generator. */
     srand(time(NULL));
+
+    /* Set up sound. */
+    sound_init(&game.sound);
 
     /* Set up graphics. */
     int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
@@ -537,16 +577,9 @@ int main(int argc, char **argv)
         exit(ret);
     }
 
-    /* Create a square white texture for texturing empty sprites with. */
-    texture_white(&game.textures.none);
-    printf("game.textures.none=%d\n", game.textures.none);
-
-    /* Load textures. */
-    ret = texture_load(&game.textures.test, "test.png");
-    if(ret != GRAPHICS_OK) {
-        graphics_error("Texture load failed\n");
-    }
-    printf("game.textures.test=%d\n", game.textures.test);
+    /* Load assets. */
+    load_sounds();
+    load_textures();
 
     /* Get input events. */
     game.input.callback = key_callback;
@@ -563,6 +596,13 @@ int main(int argc, char **argv)
 
     /* Loop until the user closes the window */
     graphics_loop(&game.graphics);
+
+    /* Release assets. */
+    release_sounds();
+    release_textures();
+
+    /* Free OpenAL. */
+    sound_free(&game.sound);
 
     /* If we reach here, quit the game. */
     graphics_free(&game.graphics);
