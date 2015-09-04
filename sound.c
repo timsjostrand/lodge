@@ -10,7 +10,13 @@
 #include <errno.h>
 #include <stdint.h>
 #include <inttypes.h>
+
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
+
 #include <stdbool.h>
 #include <stb/stb_vorbis.c>
 #define AL_LIBTYPE_STATIC
