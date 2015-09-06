@@ -109,6 +109,8 @@ struct game {
     struct textures textures;
     struct sound    sound;
     struct sound_fx vivaldi;
+    struct sound_fx tone_hit;
+    struct sound_fx tone_bounce;
 } game = { 0 };
 
 #ifdef EMSCRIPTEN
@@ -290,6 +292,8 @@ void ball_player_bounce(struct ball *ball, struct player *p)
     ball->last_hit_x = 0.0f;
 
     p->charge = 0.0f;
+
+    sound_fx_play(&game.tone_hit);
 }
 
 void ball_think(float dt)
@@ -330,10 +334,12 @@ void ball_think(float dt)
         game.ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT/2;
         game.ball.vy *= -1.0f;
         game.ball.last_hit_y = 0.0f;
+        sound_fx_play(&game.tone_bounce);
     } else if(game.ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT/2) {
         game.ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT/2;
         game.ball.vy *= -1.0f;
         game.ball.last_hit_y = 0.0f;
+        sound_fx_play(&game.tone_bounce);
     }
 
     // Ball: move
@@ -541,12 +547,43 @@ void key_callback(struct input *input, GLFWwindow *window, int key,
     }
 }
 
+void test_make_sound_manual()
+{
+    /* 1 s buffer. */
+    ALshort buf[SOUND_SAMPLE_RATE] = { 0 };
+
+    /* Add a 440 Hz tone into the buffer. */
+    sound_fx_add_filter(buf, 0, SOUND_SAMPLE_RATE, sound_filter_add_440hz);
+
+    /* Lower the volume of half the buffer. */
+    sound_fx_add_filter(buf, SOUND_SAMPLE_RATE/2, SOUND_SAMPLE_RATE, sound_filter_half_gain);
+
+    /* Make a sound. */
+    if(sound_fx_load_pcm(&game.tone_hit, buf, sizeof(buf)) != SOUND_OK) {
+        sound_error("Could not load manual sound\n");
+    }
+}
+
 void load_sounds()
 {
-    if(sound_fx_open(&game.vivaldi, "vivaldi.ogg") != SOUND_OK) {
+    if(sound_fx_load_vorbis_file(&game.vivaldi, "vivaldi.ogg") != SOUND_OK) {
         sound_error("sound_stream_open\n");
     } else {
         sound_fx_play(&game.vivaldi);
+    }
+
+    if(sound_fx_load_filter(&game.tone_hit,
+                0.1 * SOUND_SAMPLE_RATE,
+                SOUND_SAMPLE_RATE,
+                &sound_filter_add_440hz) != SOUND_OK) {
+        sound_error("could not generate tone\n");
+    }
+
+    if(sound_fx_load_filter(&game.tone_bounce,
+                0.1 * SOUND_SAMPLE_RATE,
+                SOUND_SAMPLE_RATE,
+                &sound_filter_add_220hz) != SOUND_OK) {
+        sound_error("could not generate tone\n");
     }
 }
 

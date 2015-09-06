@@ -1,6 +1,26 @@
 /**
  * OpenAL wrapper.
  *
+ * Unless otherwise noted sound data is 16 bit mono.
+ *
+ * TODO:
+ *
+ * - Play sources in "channels": CHAN_MUSIC, CHAN_EFFECTS and so on. These should
+ *   probably be pooled. So sounds playing in CHAN_MUSIC can never be
+ *   interrupted, but CHAN_EFFECTS may be stopped if a new sound should be
+ *   played and there are no more available resources.
+ *
+ * - Separate buffers from channels. Load a file (buffer) and play it later (source).
+ *
+ * - How many channels can be used? Allocate channels on play() or for every
+ *   entity? Or on-demand when sound_play() is called?
+ *
+ * - Add sound_{pitch,gain}() that sets pitch and gain globally for all sounds.
+ *   So for instance, if time_delta_factor is changed all sounds are slowed
+ *   down/up. This will however require all sounds to be registered somewhere
+ *   (will be required for pooling resources anyways?), which they are not
+ *   currently.
+ *
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
@@ -10,6 +30,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <stb/stb_vorbis.c>
@@ -18,6 +39,9 @@
 #include <AL/alc.h>
 
 #include "sound.h"
+
+static size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
+        ALshort *buf, int len);
 
 static int al_test(const char *msg)
 {
@@ -31,7 +55,7 @@ static int al_test(const char *msg)
 
 static ALenum to_al_format(short channels, short samples)
 {
-    bool stereo = (channels > 1);
+    bool stereo = (channels == 2);
 
     switch(samples) {
     case 16:
@@ -128,7 +152,43 @@ int sound_fx_play(struct sound_fx *s)
     return SOUND_OK;
 }
 
-int sound_fx_open_header(struct sound_fx *s, stb_vorbis *header)
+/**
+ * Loads a 16 bit mono PCM buffer.
+ */
+int sound_fx_load_pcm(struct sound_fx *s, ALshort *buf, size_t len)
+{
+    ALenum format = to_al_format(1, SOUND_SAMPLE_SIZE);
+
+    /* Generate the audio source (emitter). */
+    alGenSources(1, &s->source);
+    AL_TEST("generate source");
+
+    /* Generate PCM buffers. */
+    alGenBuffers(1, &s->buffer);
+    AL_TEST("generate buffer");
+
+    /* Bind buffer. */
+    alBufferData(s->buffer,
+            format,
+            buf,
+            len,
+            SOUND_SAMPLE_RATE);
+    AL_TEST("buffer data");
+
+    /* Bind buffer to source. */
+    alSourcei(s->source, AL_BUFFER, s->buffer);
+    AL_TEST("bind buffer");
+
+    sound_fx_pitch(s, 1.0f);
+    sound_fx_gain(s, 1.0f);
+    sound_fx_position(s, 0, 0, 0);
+    sound_fx_velocity(s, 0, 0, 0);
+    sound_fx_loop(s, AL_FALSE);
+
+    return SOUND_OK;
+}
+
+int sound_fx_load_vorbis_header(struct sound_fx *s, stb_vorbis *header)
 {
     /* File info. */
     stb_vorbis_info info = stb_vorbis_get_info(header);
@@ -207,7 +267,7 @@ int sound_fx_loop(struct sound_fx *s, ALboolean loop)
     return SOUND_OK;
 }
 
-size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
+static size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
         ALshort *buf, int len)
 {
     size_t size = 0;
@@ -234,7 +294,24 @@ size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
     return size;
 }
 
-int sound_fx_open(struct sound_fx *s, const char *filename)
+int sound_fx_load_vorbis(struct sound_fx *s, const void *buf, size_t len)
+{
+    memset(s, 0, sizeof(struct sound_fx));
+
+    stb_vorbis *vorbis = stb_vorbis_open_memory((const unsigned char *) buf, len, NULL, NULL);
+    if(!vorbis) {
+        sound_error("Could not parse vorbis data\n");
+        return SOUND_ERROR;
+    }
+
+    int ret = sound_fx_load_vorbis_header(s, vorbis);
+
+    stb_vorbis_close(vorbis);
+
+    return ret;
+}
+
+int sound_fx_load_vorbis_file(struct sound_fx *s, const char *filename)
 {
     memset(s, 0, sizeof(struct sound_fx));
 
@@ -244,17 +321,139 @@ int sound_fx_open(struct sound_fx *s, const char *filename)
         return SOUND_ERROR;
     }
 
-    int ret = sound_fx_open_header(s, vorbis);
+    int ret = sound_fx_load_vorbis_header(s, vorbis);
 
     stb_vorbis_close(vorbis);
 
     return ret;
 }
 
+/**
+ * Adds a mono tone with the specified frequency into a buffer.
+ *
+ * @param freq      The frequency of the tone in Hz.
+ * @param buf       The buffer to add into.
+ * @param offset    The number of samples that have already passed.
+ * @param len       The number of samples to add into the buffer.
+ *
+ * @return          Number of samples written to the buffer.
+ */
+static int sound_filter_add_tone(double freq, ALshort *buf, size_t offset,
+        size_t len)
+{
+    double theta = (freq * 2 * M_PI) / (double) SOUND_SAMPLE_RATE;
+    for(int i=0; i < len; i++) {
+        buf[i] += (ALshort) (SOUND_SAMPLE_MAX * sin(theta * (double) (i + offset)));
+    }
+    return len;
+}
+
+int sound_filter_add_440hz(ALshort *buf, size_t offset, size_t len)
+{
+    return sound_filter_add_tone(440.0, buf, offset, len);
+}
+
+int sound_filter_add_220hz(ALshort *buf, size_t offset, size_t len)
+{
+    return sound_filter_add_tone(220.0, buf, offset, len);
+}
+
+int sound_filter_half_gain(ALshort *buf, size_t offset, size_t len)
+{
+    ALshort *end = buf + len;
+    for(; buf<end; buf++) {
+        *buf >>= 1;
+    }
+    return len;
+}
+
+/**
+ * Takes a buffer and adds a filter to it.
+ *
+ * @param buf       The buffer to filter.
+ * @param start     The offset in the buffer to start at in samples.
+ * @param len       The length of the buffer in samples.
+ * @param filter    The filter to apply.
+ */
+size_t sound_fx_add_filter(ALshort *buf, const size_t start, const size_t len,
+        filter_t filter)
+{
+    size_t size = start;
+
+    /* Fill the buffer. */
+    while(size < len) {
+        size_t read = filter(buf + size, size, len - size);
+        if(read > 0) {
+            size += read;
+        } else {
+            break;
+        }
+    }
+
+    /* End of file. */
+    if(size == 0) {
+        sound_debug("sound_fx_add_filter(): 0 samples added\n");
+    }
+
+    return size;
+}
+
+int sound_fx_load_filter(struct sound_fx *s, size_t samples_count,
+        const int sample_rate, filter_t filter)
+{
+    ALenum format = to_al_format(1, SOUND_SAMPLE_SIZE);
+
+    /* Load data. */
+    ALshort *buf = (ALshort *) malloc(samples_count * sizeof(ALshort));
+    if(buf == NULL) {
+        sound_error("Out of memory\n");
+        return SOUND_ERROR;
+    }
+
+    /* Fill buffer. */
+    memset(buf, 0, samples_count * sizeof(ALshort));
+    sound_fx_add_filter(buf, 0, samples_count, filter);
+
+    /* Generate the audio source (emitter). */
+    alGenSources(1, &s->source);
+    AL_TEST("generate source");
+
+    /* Generate PCM buffers. */
+    alGenBuffers(1, &s->buffer);
+    AL_TEST("generate buffer");
+
+    /* Bind buffer. */
+    alBufferData(s->buffer,
+            format,
+            buf,
+            samples_count * sizeof(ALshort),
+            sample_rate);
+    AL_TEST("buffer data");
+    free(buf);
+
+    /* Bind buffer to source. */
+    alSourcei(s->source, AL_BUFFER, s->buffer);
+    AL_TEST("bind buffer");
+
+    sound_fx_pitch(s, 1.0f);
+    sound_fx_gain(s, 1.0f);
+    sound_fx_position(s, 0, 0, 0);
+    sound_fx_velocity(s, 0, 0, 0);
+    sound_fx_loop(s, AL_FALSE);
+
+    return SOUND_OK;
+}
+
 int sound_fx_stop(struct sound_fx *s)
 {
-    alSourceStop(s->source);
-    AL_TEST("source stop");
+    ALint source_state;
+    alGetSourcei(s->source, AL_SOURCE_STATE, &source_state);
+
+    if(source_state == AL_PLAYING) {
+        alSourceStop(s->source);
+        AL_TEST("source stop");
+    }
+
     return SOUND_OK;
 }
 
