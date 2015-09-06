@@ -20,6 +20,9 @@
 #include "texture.h"
 #include "sound.c"
 
+#define VFS_ENABLE_FILEWATCH
+#include "vfs.h"
+
 #define VIEW_WIDTH      640
 #define VIEW_HEIGHT     360     /* 16:9 aspect ratio */
 
@@ -450,6 +453,8 @@ void shader_think(struct graphics *g, float delta_time)
 
 void think(struct graphics *g, float delta_time)
 {
+	VFS_FILEWATCH
+
     game.time = glfwGetTime();
     game_think(delta_time);
     particles_think(delta_time);
@@ -610,8 +615,38 @@ void load_textures()
     }
 }
 
+void test_read_file(const char* filename, unsigned int size, void* data)
+{
+	printf("%s: ", filename);
+	for (unsigned int i = 0; i < size; i++)
+	{
+		printf("%c", ((char*)data)[i]);
+	}
+	printf("\n\n");
+}
+
+void reload_vertex_shader(const char* filename, unsigned int size, void* data)
+{
+	vfs_free_memory(filename);
+}
+
+void reload_fragment_shader(const char* filename, unsigned int size, void* data)
+{
+	vfs_free_memory(filename);
+}
+
 int main(int argc, char **argv)
 {
+	/* Start the virtual file system */
+	vfs_init();
+
+	/* Asset location */
+	vfs_mount("C:/Users/Johan/Desktop/assets");
+	
+	/* Register asset callbacks */
+	vfs_register_callback("basic_shader.frag", reload_fragment_shader);
+	vfs_register_callback("basic_shader.vert", reload_vertex_shader);
+
     int ret = 0;
 
     /* Seed random number generator. */
@@ -649,6 +684,9 @@ int main(int argc, char **argv)
     /* Set up game. */
     init_game();
 
+	/* Load all assets */
+	vfs_run_callbacks();
+
     /* Loop until the user closes the window */
     graphics_loop(&game.graphics);
 
@@ -661,6 +699,8 @@ int main(int argc, char **argv)
 
     /* If we reach here, quit the game. */
     graphics_free(&game.graphics);
+
+	vfs_shutdown();
 
     return 0;
 }

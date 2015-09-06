@@ -51,8 +51,11 @@ endif()
 # Include stb.h
 include_directories(lib/)
 
+set( SOURCE main.c math4.c graphics.c input.c texture.c color.c vfs.c )
+set( HEADERS math4.h graphics.h input.h texture.h color.h vfs.h )
+
 # Main executable.
-add_executable(glpong main.c math4.c graphics.c input.c texture.c color.c)
+add_executable(glpong ${SOURCE} ${HEADERS})
 
 # OpenAL has different names on different platforms.
 if(WIN32)
