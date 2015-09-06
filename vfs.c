@@ -12,9 +12,7 @@
 
 #include "vfs.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
+typedef unsigned long DWORD;
 
 #define STB_DEFINE
 #include <stb/stb.h>
