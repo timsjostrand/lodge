@@ -69,6 +69,17 @@ void vfs_register_callback(const char* filename, read_callback_t fn)
 	}
 }
 
+void vfs_register_callback_filter(const char* filter, read_callback_t fn)
+{
+	for (int i = 0; i < file_count; i++)
+	{
+		if (strstr(file_table[i].name, filter) != 0)
+		{
+			stb_arr_push(file_table[i].read_callbacks, fn);
+		}
+	}
+}
+
 void vfs_filewatch()
 {
 	for (int i = 0; i < file_count; i++)

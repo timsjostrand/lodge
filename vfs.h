@@ -13,6 +13,7 @@ void	vfs_init();
 void	vfs_shutdown();
 void	vfs_mount(const char* dir);
 void	vfs_register_callback(const char* filename, read_callback_t fn);
+void	vfs_register_callback_filter(const char* filter, read_callback_t fn);
 void	vfs_run_callbacks();
 void	vfs_filewatch();
 
