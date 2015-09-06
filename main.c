@@ -18,7 +18,7 @@
 #include "graphics.h"
 #include "input.h"
 #include "texture.h"
-#include "sound.c"
+#include "sound.h"
 
 #define VFS_ENABLE_FILEWATCH
 #include "vfs.h"

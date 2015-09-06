@@ -1,6 +1,8 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <limits.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <stb/stb_vorbis.c>
@@ -54,5 +56,6 @@ void    sound_free(struct sound *s);
 
 int     sound_filter_add_440hz(ALshort *buf, size_t offset, size_t len);
 int     sound_filter_add_220hz(ALshort *buf, size_t offset, size_t len);
+int     sound_filter_half_gain(ALshort *buf, size_t offset, size_t len);
 
 #endif

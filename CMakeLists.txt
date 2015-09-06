@@ -51,8 +51,8 @@ endif()
 # Include stb.h
 include_directories(lib/)
 
-set( SOURCE main.c math4.c graphics.c input.c texture.c color.c vfs.c )
-set( HEADERS math4.h graphics.h input.h texture.h color.h vfs.h )
+set( SOURCE main.c math4.c graphics.c input.c texture.c color.c sound.c vfs.c )
+set( HEADERS math4.h graphics.h input.h texture.h color.h sound.h vfs.h )
 
 # Main executable.
 add_executable(glpong ${SOURCE} ${HEADERS})
