@@ -77,6 +77,7 @@ void vfs_filewatch()
 
 		if (file_table[i].lastChange != lastChange)
 		{
+			file_table[i].file = stb_fopen(file_table[i].name, "rb");
 			fseek(file_table[i].file, 0, SEEK_SET);
 
 			stb_free(file_table[i].data);
@@ -92,6 +93,7 @@ void vfs_filewatch()
 
 			file_table[i].data = stb_malloc(0, file_table[i].size);
 			fread(file_table[i].data, 1, file_table[i].size, file_table[i].file);
+			stb_fclose(file_table[i].file, 0);
 
 			for (int j = 0, j_size = stb_arr_len(file_table[i].read_callbacks); j < j_size; j++)
 			{
@@ -149,6 +151,7 @@ void vfs_mount(const char* dir)
 				file_table[j].size = stb_filelen(file_table[j].file);
 				file_table[j].data = stb_malloc(0, file_table[j].size);
 				fread(file_table[j].data, 1, file_table[j].size, file_table[j].file);
+				stb_fclose(file_table[i].file, 0);
 
 				replaced = 1;
 				break;
@@ -164,6 +167,8 @@ void vfs_mount(const char* dir)
 			new_file.size = stb_filelen(new_file.file);
 			new_file.data = stb_malloc(0, new_file.size);
 			fread(new_file.data, 1, new_file.size, new_file.file);
+			stb_fclose(new_file.file, 0);
+
 			file_table[file_count] = new_file;
 			file_count++;
 		}
