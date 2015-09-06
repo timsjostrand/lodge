@@ -83,7 +83,6 @@ void texture_white(GLuint *tex)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     /* Filter. */
-    glGenerateMipmap(GL_TEXTURE_2D);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
@@ -104,14 +103,11 @@ int texture_load(GLuint *tex, const char *path)
     int height;
     int ret;
     ret = image_load(&data, &width, &height, path);
-    graphics_debug("image_load(%s): w=%d h=%d\n", path, width, height);
     if(ret != GRAPHICS_OK) {
         return ret;
     }
     ret = texture_load_data(tex, data, width, height);
-    graphics_debug("texture_load(%s): tex=%d\n", path, *tex);
     image_free(data);
-    graphics_debug("image_free()\n");
     if(ret != GRAPHICS_OK) {
         texture_free(*tex);
         return ret;

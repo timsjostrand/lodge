@@ -27,12 +27,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <stdint.h>
-#include <inttypes.h>
 #include <limits.h>
-#include <unistd.h>
-#include <stdbool.h>
 #include <stb/stb_vorbis.c>
 #define AL_LIBTYPE_STATIC
 #include <AL/al.h>
@@ -55,7 +51,7 @@ static int al_test(const char *msg)
 
 static ALenum to_al_format(short channels, short samples)
 {
-    bool stereo = (channels == 2);
+    int stereo = (channels == 2);
 
     switch(samples) {
     case 16:

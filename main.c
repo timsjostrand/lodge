@@ -223,9 +223,9 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->sprite.rotation = angle;
     p->sprite.texture = game.textures.none;
 
-    setv(p->sprite.pos, x, y, 0.0f, 1.0f);
-    setv(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
-    setv(p->sprite.scale, w, h, 1.0f, 1.0f);
+    set4f(p->sprite.pos, x, y, 0.0f, 1.0f);
+    set4f(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
+    set4f(p->sprite.scale, w, h, 1.0f, 1.0f);
 }
 
 void particle_new(float x, float y, float w, float h, float angle, float vx,
@@ -485,8 +485,8 @@ void init_player1(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
     p->sprite.texture = game.textures.none;
-    setv(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
-    setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
+    set4f(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
+    set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
 }
 
@@ -494,8 +494,8 @@ void init_player2(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
     p->sprite.texture = game.textures.none;
-    setv(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
-    setv(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
+    set4f(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
+    set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
 }
 
@@ -512,8 +512,8 @@ void init_ball(struct ball *ball)
     ball->last_hit_x = 10.0f;
     ball->last_hit_y = 0.0f;
 
-    setv(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.0f, 1.0f);
-    setv(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
+    set4f(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.0f, 1.0f);
+    set4f(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
     copyv(ball->sprite.color, COLOR_WHITE);
 }
 

@@ -13,6 +13,8 @@
     b = t;
 
 typedef float mat4[16];
+typedef float vec2[2];
+typedef float vec3[3];
 typedef float vec4[4];
 typedef float vec3[3];
 
@@ -47,7 +49,8 @@ void printv(vec4 v);
 
 void copym(mat4 m, const mat4 a);
 void copyv(vec4 v, const vec4 a);
-void setv(vec4 v, float x, float y, float z, float w);
-void set3f(vec3 v, float x, float y, float z);
+void set2f(vec2 v, const float x, const float y);
+void set3f(vec3 v, const float x, const float y, const float z);
+void set4f(vec4 v, const float x, const float y, const float z, const float w);
 
 #endif

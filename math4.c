@@ -337,12 +337,17 @@ float randr(float min, float max)
     return min + (((float) rand()) / (float) RAND_MAX) * (max - min);
 }
 
-void setv(vec4 v, float x, float y, float z, float w)
+void set2f(vec2 v, const float x, const float y)
 {
-    v[0] = x; v[1] = y; v[2] = z; v[3] = w;
+    v[0] = x; v[1] = y;
 }
 
-void set3f(vec3 v, float x, float y, float z)
+void set3f(vec3 v, const float x, const float y, const float z)
 {
     v[0] = x; v[1] = y; v[2] = z;
+}
+
+void set4f(vec4 v, const float x, const float y, const float z, const float w)
+{
+    v[0] = x; v[1] = y; v[2] = z; v[3] = w;
 }

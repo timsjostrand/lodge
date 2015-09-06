@@ -8,5 +8,5 @@ COMPILING
   # cd build
   # mkdir unix
   # cd unix
-  # cmake -G "Unix Makefiles" ../
+  # cmake -G "Unix Makefiles" ../../
   # make
