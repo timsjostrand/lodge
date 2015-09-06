@@ -455,7 +455,11 @@ int sound_fx_stop(struct sound_fx *s)
 
 void sound_fx_free(struct sound_fx *s)
 {
-    sound_fx_stop(s);
-    alDeleteSources(1, &s->source);
-    alDeleteBuffers(1, &s->buffer);
+    if(alIsSource(s->source)) {
+        sound_fx_stop(s);
+        alDeleteSources(1, &s->source);
+    }
+    if(alIsBuffer(s->buffer)) {
+        alDeleteBuffers(1, &s->buffer);
+    }
 }
