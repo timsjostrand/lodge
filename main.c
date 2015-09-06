@@ -569,13 +569,22 @@ void test_make_sound_manual()
     }
 }
 
-void load_sounds()
+void reload_vivaldi(const char *filename, unsigned int size, void *data)
 {
-    if(sound_fx_load_vorbis_file(&game.vivaldi, "vivaldi.ogg") != SOUND_OK) {
-        sound_error("sound_stream_open\n");
+    /* Release current sound (if any). */
+    sound_fx_free(&game.vivaldi);
+
+    /* Reload sound. */
+    if(sound_fx_load_vorbis(&game.vivaldi, data, size) != SOUND_OK) {
+        sound_error("Could not load %s\n", filename);
     } else {
         sound_fx_play(&game.vivaldi);
     }
+}
+
+void load_sounds()
+{
+    vfs_register_callback("vivaldi.ogg", &reload_vivaldi);
 
     if(sound_fx_load_filter(&game.tone_hit,
                 0.1 * SOUND_SAMPLE_RATE,
