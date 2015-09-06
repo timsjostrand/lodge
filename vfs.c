@@ -77,7 +77,12 @@ void vfs_filewatch()
 
 		if (file_table[i].lastChange != lastChange)
 		{
-			file_table[i].file = stb_fopen(file_table[i].name, "rb");
+			file_table[i].file = 0;
+			while (file_table[i].file == 0)
+			{
+				file_table[i].file = stb_fopen(file_table[i].name, "rb");
+			}
+
 			fseek(file_table[i].file, 0, SEEK_SET);
 
 			stb_free(file_table[i].data);
