@@ -11,6 +11,9 @@ add_definitions(-D_USE_MATH_DEFINES)
 # Add debug statements.
 add_definitions(-DDEBUG)
 
+# Enable asset hotswap.
+add_definitions(-DVFS_ENABLE_FILEWATCH)
+
 # GCC: More compiler warnings.
 if(CMAKE_COMPILER_IS_GNUCC)
     add_definitions(-Wall)

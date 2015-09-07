@@ -19,8 +19,6 @@
 #include "input.h"
 #include "texture.h"
 #include "sound.h"
-
-#define VFS_ENABLE_FILEWATCH
 #include "vfs.h"
 
 #define VIEW_WIDTH      640
@@ -454,8 +452,7 @@ void shader_think(struct graphics *g, float delta_time)
 
 void think(struct graphics *g, float delta_time)
 {
-	VFS_FILEWATCH
-
+	vfs_filewatch();
     game.time = glfwGetTime();
     game_think(delta_time);
     particles_think(delta_time);

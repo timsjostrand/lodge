@@ -106,6 +106,7 @@ void vfs_register_callback_filter(const char* filter, read_callback_t fn, void* 
 	}
 }
 
+#ifdef VFS_ENABLE_FILEWATCH
 void vfs_filewatch()
 {
 	for (int i = 0; i < file_count; i++)
@@ -145,6 +146,7 @@ void vfs_filewatch()
 		}
 	}
 }
+#endif
 
 void vfs_run_callbacks()
 {
