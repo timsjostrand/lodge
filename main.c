@@ -569,7 +569,7 @@ void test_make_sound_manual()
     }
 }
 
-void reload_vivaldi(const char *filename, unsigned int size, void *data)
+void reload_vivaldi(const char *filename, unsigned int size, void* data, void* userdata)
 {
     if(size == 0) {
         sound_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -595,7 +595,7 @@ void reload_vivaldi(const char *filename, unsigned int size, void *data)
 
 void load_sounds()
 {
-    vfs_register_callback("vivaldi.ogg", &reload_vivaldi);
+    vfs_register_callback("vivaldi.ogg", &reload_vivaldi, 0);
 
     if(sound_fx_load_filter(&game.tone_hit,
                 0.1 * SOUND_SAMPLE_RATE,
@@ -623,7 +623,7 @@ void release_textures()
     texture_free(game.textures.test);
 }
 
-void reload_textures(const char *filename, unsigned int size, void *data)
+void reload_textures(const char *filename, unsigned int size, void *data, void* userdata)
 {
     if(size == 0) {
         graphics_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
@@ -636,12 +636,14 @@ void reload_textures(const char *filename, unsigned int size, void *data)
     if(ret != GRAPHICS_OK) {
         graphics_error("Texture load failed: %s (%u bytes)\n", filename, size);
     } else {
-        if(strncmp(filename, "test.png", 8) == 0) {
-            game.textures.test = tmp;
-        } else {
-            graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
-            texture_free(tmp);
-        }
+		if (userdata)
+		{
+			(*(GLuint*)userdata) = tmp;
+		}
+		else {
+			graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
+			texture_free(tmp);
+		}
     }
 }
 
@@ -651,7 +653,7 @@ void load_textures()
     texture_white(&game.textures.none);
 
     /* Load textures. */
-    vfs_register_callback("test.png", &reload_textures);
+	vfs_register_callback("test.png", &reload_textures, &game.textures.test);
 }
 
 void test_read_file(const char* filename, unsigned int size, void* data)
@@ -664,12 +666,12 @@ void test_read_file(const char* filename, unsigned int size, void* data)
 	printf("\n\n");
 }
 
-void reload_vertex_shader(const char* filename, unsigned int size, void* data)
+void reload_vertex_shader(const char* filename, unsigned int size, void* data, void* userdata)
 {
 	vfs_free_memory(filename);
 }
 
-void reload_fragment_shader(const char* filename, unsigned int size, void* data)
+void reload_fragment_shader(const char* filename, unsigned int size, void* data, void* userdata)
 {
 	vfs_free_memory(filename);
 }
@@ -680,11 +682,12 @@ int main(int argc, char **argv)
 	vfs_init();
 
 	/* Asset location */
-	vfs_mount("C:/Users/Johan/Desktop/assets");
-	
+	vfs_mount("C:/Users/Johan/Dropbox/glpong-assets");
+	//vfs_mount("test_assets");
+
 	/* Register asset callbacks */
-	vfs_register_callback("basic_shader.frag", reload_fragment_shader);
-	vfs_register_callback("basic_shader.vert", reload_vertex_shader);
+	vfs_register_callback("basic_shader.frag", reload_fragment_shader, 0);
+	vfs_register_callback("basic_shader.vert", reload_vertex_shader, 0);
 
     int ret = 0;
 
@@ -699,7 +702,7 @@ int main(int argc, char **argv)
     ret = graphics_init(&game.graphics, &think, &render, VIEW_WIDTH, VIEW_HEIGHT,
             windowed, &vertex_shader, &fragment_shader, uniform_names,
             UNIFORM_LAST);
-
+	
     if(ret != GRAPHICS_OK) {
         graphics_error("Graphics initialization failed (%d)\n", ret);
         graphics_free(&game.graphics);
