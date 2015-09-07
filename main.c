@@ -640,6 +640,7 @@ void reload_textures(const char *filename, unsigned int size, void *data)
             game.textures.test = tmp;
         } else {
             graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
+            texture_free(tmp);
         }
     }
 }
