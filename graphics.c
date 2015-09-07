@@ -66,7 +66,7 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
 
     // Render it!
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, sprite->texture);
+    glBindTexture(GL_TEXTURE_2D, *(sprite->texture));
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 

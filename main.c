@@ -224,7 +224,7 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
     p->va = va;
     p->sprite.type = SPRITE_TYPE_PARTICLE;
     p->sprite.rotation = angle;
-    p->sprite.texture = game.textures.none;
+    p->sprite.texture = &game.textures.none;
 
     set4f(p->sprite.pos, x, y, 0.0f, 1.0f);
     set4f(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
@@ -489,7 +489,7 @@ void render(struct graphics *g, float delta_time)
 void init_player1(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
-    p->sprite.texture = game.textures.none;
+    p->sprite.texture = &game.textures.none;
     set4f(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -498,7 +498,7 @@ void init_player1(struct player *p)
 void init_player2(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
-    p->sprite.texture = game.textures.none;
+    p->sprite.texture = &game.textures.none;
     set4f(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -507,7 +507,7 @@ void init_player2(struct player *p)
 void init_ball(struct ball *ball)
 {
     ball->sprite.type = SPRITE_TYPE_BALL;
-    ball->sprite.texture = game.textures.test;
+    ball->sprite.texture = &game.textures.test;
     ball->speed = 0.6f;
     rand(); rand(); rand();
     float random_angle = randr(0.0f, 2.0f * M_PI);
@@ -571,13 +571,24 @@ void test_make_sound_manual()
 
 void reload_vivaldi(const char *filename, unsigned int size, void *data)
 {
-    /* Release current sound (if any). */
-    sound_fx_free(&game.vivaldi);
+    if(size == 0) {
+        sound_debug("Skipped reload of %s (%u bytes)\n", filename, size);
+        return;
+    }
+
+    struct sound_fx tmp = { 0 };
 
     /* Reload sound. */
-    if(sound_fx_load_vorbis(&game.vivaldi, data, size) != SOUND_OK) {
-        sound_error("Could not load %s\n", filename);
+    if(sound_fx_load_vorbis(&tmp, data, size) != SOUND_OK) {
+        sound_error("Could not load %s (%u bytes)\n", filename, size);
     } else {
+        /* Release current sound (if any). */
+        sound_fx_free(&game.vivaldi);
+
+        /* Assign new sound (only if parsing was OK). */
+        game.vivaldi = tmp;
+
+        /* Start playing music. */
         sound_fx_play(&game.vivaldi);
     }
 }
@@ -612,16 +623,34 @@ void release_textures()
     texture_free(game.textures.test);
 }
 
+void reload_textures(const char *filename, unsigned int size, void *data)
+{
+    if(size == 0) {
+        graphics_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
+        return;
+    }
+
+    GLuint tmp;
+
+    int ret = texture_load(&tmp, data, size);
+    if(ret != GRAPHICS_OK) {
+        graphics_error("Texture load failed: %s (%u bytes)\n", filename, size);
+    } else {
+        if(strncmp(filename, "test.png", 8) == 0) {
+            game.textures.test = tmp;
+        } else {
+            graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
+        }
+    }
+}
+
 void load_textures()
 {
     /* Create a square white texture for texturing empty sprites with. */
     texture_white(&game.textures.none);
 
     /* Load textures. */
-    int ret = texture_load(&game.textures.test, "test.png");
-    if(ret != GRAPHICS_OK) {
-        graphics_error("Texture load failed\n");
-    }
+    vfs_register_callback("test.png", &reload_textures);
 }
 
 void test_read_file(const char* filename, unsigned int size, void* data)

@@ -25,7 +25,7 @@ struct sprite {
     vec4    scale;
     vec4    color;
     float   rotation;
-    GLuint  texture;
+    GLuint  *texture;
 };
 
 #define UNIFORM_TRANSFORM_NAME      "transform"
