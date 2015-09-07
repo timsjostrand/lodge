@@ -567,7 +567,7 @@ void test_make_sound_manual()
     }
 }
 
-void reload_vivaldi(const char *filename, unsigned int size, void* data, void* userdata)
+void reload_vivaldi(const char *filename, unsigned int size, void *data, void *userdata)
 {
     if(size == 0) {
         sound_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -575,25 +575,26 @@ void reload_vivaldi(const char *filename, unsigned int size, void* data, void* u
     }
 
     struct sound_fx tmp = { 0 };
+    struct sound_fx *dst = (struct sound_fx *) userdata;
 
     /* Reload sound. */
     if(sound_fx_load_vorbis(&tmp, data, size) != SOUND_OK) {
         sound_error("Could not load %s (%u bytes)\n", filename, size);
     } else {
         /* Release current sound (if any). */
-        sound_fx_free(&game.vivaldi);
+        sound_fx_free(dst);
 
         /* Assign new sound (only if parsing was OK). */
-        game.vivaldi = tmp;
+        *(dst) = tmp;
 
         /* Start playing music. */
-        sound_fx_play(&game.vivaldi);
+        sound_fx_play(dst);
     }
 }
 
 void load_sounds()
 {
-    vfs_register_callback("vivaldi.ogg", &reload_vivaldi, 0);
+    vfs_register_callback("vivaldi.ogg", &reload_vivaldi, &game.vivaldi);
 
     if(sound_fx_load_filter(&game.tone_hit,
                 0.1 * SOUND_SAMPLE_RATE,
