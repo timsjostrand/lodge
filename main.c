@@ -472,10 +472,6 @@ void render(struct graphics *g, float delta_time)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(g->shader.program);
 
-    /* Sprites. */
-    sprite_render(&game.player1.sprite, &game.graphics);
-    sprite_render(&game.player2.sprite, &game.graphics);
-
     /* Ball. */
     sprite_render(&game.ball.sprite, &game.graphics);
 
@@ -485,13 +481,17 @@ void render(struct graphics *g, float delta_time)
             sprite_render(&game.particles[i].sprite, &game.graphics);
         }
     }
+
+	/* Sprites. */
+	sprite_render(&game.player1.sprite, &game.graphics);
+	sprite_render(&game.player2.sprite, &game.graphics);
 }
 
 void init_player1(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
     p->sprite.texture = &game.textures.paddle;
-    set4f(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
+	set4f(p->sprite.pos, 32.0f, VIEW_HEIGHT / 2, 0.1f, 1.0f);
     set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
 }
@@ -500,7 +500,7 @@ void init_player2(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
 	p->sprite.texture = &game.textures.paddle;
-    set4f(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
+	set4f(p->sprite.pos, 608.0f, VIEW_HEIGHT / 2, 0.1f, 1.0f);
     set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
 }
