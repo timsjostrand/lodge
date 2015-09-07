@@ -97,6 +97,7 @@ struct particle {
 struct textures {
     GLuint  none;
     GLuint  test;
+	GLuint  paddle;
 };
 
 struct game {
@@ -489,7 +490,7 @@ void render(struct graphics *g, float delta_time)
 void init_player1(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
-    p->sprite.texture = &game.textures.none;
+    p->sprite.texture = &game.textures.paddle;
     set4f(p->sprite.pos, 32.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -498,7 +499,7 @@ void init_player1(struct player *p)
 void init_player2(struct player *p)
 {
     p->sprite.type = SPRITE_TYPE_PLAYER;
-    p->sprite.texture = &game.textures.none;
+	p->sprite.texture = &game.textures.paddle;
     set4f(p->sprite.pos, 608.0f, VIEW_HEIGHT/2, 0.0f, 1.0f);
     set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
     copyv(p->sprite.color, COLOR_WHITE);
@@ -633,11 +634,18 @@ void reload_textures(const char *filename, unsigned int size, void *data, void* 
     GLuint tmp;
 
     int ret = texture_load(&tmp, data, size);
+
     if(ret != GRAPHICS_OK) {
         graphics_error("Texture load failed: %s (%u bytes)\n", filename, size);
     } else {
 		if (userdata)
 		{
+			if (strcmp("paddle.png", filename) == 0)
+			{
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			}
+			
 			(*(GLuint*)userdata) = tmp;
 		}
 		else {
@@ -654,6 +662,7 @@ void load_textures()
 
     /* Load textures. */
 	vfs_register_callback("test.png", &reload_textures, &game.textures.test);
+	vfs_register_callback("paddle.png", &reload_textures, &game.textures.paddle);
 }
 
 void test_read_file(const char* filename, unsigned int size, void* data)
