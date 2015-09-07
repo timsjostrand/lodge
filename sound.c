@@ -138,7 +138,6 @@ int sound_fx_play(struct sound_fx *s)
 {
     ALint source_state;
     alGetSourcei(s->source, AL_SOURCE_STATE, &source_state);
-    sound_debug("source_state=%d\n", source_state);
 
     if(source_state != AL_PLAYING) {
         alSourcePlay(s->source);
