@@ -14,11 +14,6 @@ add_definitions(-DDEBUG)
 # Enable asset hotswap.
 add_definitions(-DVFS_ENABLE_FILEWATCH)
 
-# GCC: More compiler warnings.
-if(CMAKE_COMPILER_IS_GNUCC)
-    add_definitions(-Wall)
-endif()
-
 if(NOT EMSCRIPTEN)
     # Build GLFW.
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
@@ -54,11 +49,32 @@ endif()
 # Include stb.h
 include_directories(lib/)
 
-set( SOURCE main.c math4.c graphics.c input.c texture.c color.c sound.c vfs.c )
-set( HEADERS math4.h graphics.h input.h texture.h color.h sound.h vfs.h )
+set(SOURCE main.c math4.c graphics.c input.c texture.c color.c sound.c vfs.c)
+set(HEADERS math4.h graphics.h input.h texture.h color.h sound.h vfs.h)
 
 # Main executable.
 add_executable(glpong ${SOURCE} ${HEADERS})
+
+# GCC Compiler settings.
+if(CMAKE_COMPILER_IS_GNUCC)
+    # More warnings.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall ")
+
+    # QUIRK: stb.h requires all these warnings to be silenced, but it seems
+    # warnings have to be set for the source file including the header...
+    set(STB_HEADER vfs.c)
+    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-maybe-uninitialized ")
+    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-strict-aliasing ")
+    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-but-set-variable ")
+    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-value ")
+    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
+endif()
+
+# MSVC Compiler settings.
+if(MSVC)
+    # More warnings.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS /W3)
+endif()
 
 # OpenAL has different names on different platforms.
 if(WIN32)
