@@ -66,6 +66,8 @@ void vfs_shutdown()
 
 void vfs_register_callback(const char* filename, read_callback_t fn, void* userdata)
 {
+	int added = 0;
+
 	for (int i = 0; i < file_count; i++)
 	{
 		if (strcmp(filename, file_table[i].simplename) == 0)
@@ -74,7 +76,13 @@ void vfs_register_callback(const char* filename, read_callback_t fn, void* userd
 			cbck.fn = fn;
 			cbck.userdata = userdata;
 			stb_arr_push(file_table[i].read_callbacks, cbck);
+			added = 1;
 		}
+	}
+
+	if (!added)
+	{
+		fn(filename, 0, 0, userdata);
 	}
 }
 
