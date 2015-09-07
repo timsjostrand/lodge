@@ -35,7 +35,6 @@ struct vfs_file
 	char simplename[MAX_FILENAME_LEN];
 	time_t lastChange;
 	struct read_callback* read_callbacks;
-	int num_callbacks;
 	size_t size;
 	void* data;
 };
@@ -50,7 +49,6 @@ void vfs_init()
 		file_table[i].name[0] = '\0';
 		file_table[i].size = 0;
 		file_table[i].data = 0;
-		file_table[i].num_callbacks = 0;
 		file_table[i].read_callbacks = 0;
 	}
 }
@@ -68,13 +66,14 @@ void vfs_register_callback(const char* filename, read_callback_t fn, void* userd
 {
 	int added = 0;
 
+	struct read_callback cbck;
+	cbck.fn = fn;
+	cbck.userdata = userdata;
+
 	for (int i = 0; i < file_count; i++)
 	{
 		if (strcmp(filename, file_table[i].simplename) == 0)
 		{
-			struct read_callback cbck;
-			cbck.fn = fn;
-			cbck.userdata = userdata;
 			stb_arr_push(file_table[i].read_callbacks, cbck);
 			added = 1;
 		}
@@ -82,7 +81,14 @@ void vfs_register_callback(const char* filename, read_callback_t fn, void* userd
 
 	if (!added)
 	{
-		fn(filename, 0, 0, userdata);
+		file_table[file_count].data = 0;
+		file_table[file_count].file = 0;
+		file_table[file_count].lastChange = 0;
+		strcpy(file_table[file_count].name, filename);
+		strcpy(file_table[file_count].simplename, filename);
+		file_table[file_count].size = 0;
+		stb_arr_push(file_table[file_count].read_callbacks, cbck);
+		file_count++;
 	}
 }
 
@@ -105,7 +111,6 @@ void vfs_filewatch()
 	for (int i = 0; i < file_count; i++)
 	{
 		time_t lastChange = stb_ftimestamp(file_table[i].name);
-
 		if (file_table[i].lastChange != lastChange)
 		{
 			file_table[i].file = stb_fopen(file_table[i].name, "rb");
@@ -199,7 +204,6 @@ void vfs_mount(const char* dir)
 
 		if (!replaced)
 		{
-			new_file.num_callbacks = 0;
 			new_file.read_callbacks = 0;
 			new_file.file = stb_fopen(new_file.name, "rb");
 			new_file.lastChange = stb_ftimestamp(new_file.name);
