@@ -22,13 +22,19 @@ typedef unsigned long DWORD;
 
 #define vfs_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__)
 
+struct read_callback
+{
+	read_callback_t* fn;
+	void* userdata;
+};
+
 struct vfs_file
 {
 	FILE* file;
 	char name[MAX_FILENAME_LEN];
 	char simplename[MAX_FILENAME_LEN];
 	time_t lastChange;
-	read_callback_t* read_callbacks;
+	struct read_callback* read_callbacks;
 	int num_callbacks;
 	size_t size;
 	void* data;
@@ -58,24 +64,30 @@ void vfs_shutdown()
 	}
 }
 
-void vfs_register_callback(const char* filename, read_callback_t fn)
+void vfs_register_callback(const char* filename, read_callback_t fn, void* userdata)
 {
 	for (int i = 0; i < file_count; i++)
 	{
 		if (strcmp(filename, file_table[i].simplename) == 0)
 		{
-			stb_arr_push(file_table[i].read_callbacks, fn);
+			struct read_callback cbck;
+			cbck.fn = fn;
+			cbck.userdata = userdata;
+			stb_arr_push(file_table[i].read_callbacks, cbck);
 		}
 	}
 }
 
-void vfs_register_callback_filter(const char* filter, read_callback_t fn)
+void vfs_register_callback_filter(const char* filter, read_callback_t fn, void* userdata)
 {
 	for (int i = 0; i < file_count; i++)
 	{
 		if (strstr(file_table[i].name, filter) != 0)
 		{
-			stb_arr_push(file_table[i].read_callbacks, fn);
+			struct read_callback cbck;
+			cbck.fn = fn;
+			cbck.userdata = userdata;
+			stb_arr_push(file_table[i].read_callbacks, cbck);
 		}
 	}
 }
@@ -114,7 +126,8 @@ void vfs_filewatch()
 
 			for (int j = 0, j_size = stb_arr_len(file_table[i].read_callbacks); j < j_size; j++)
 			{
-				file_table[i].read_callbacks[j](file_table[i].simplename, file_table[i].size, file_table[i].data);
+				read_callback_t cbck = file_table[i].read_callbacks[j].fn;
+				cbck(file_table[i].simplename, file_table[i].size, file_table[i].data, file_table[i].read_callbacks[j].userdata);
 			}
 		}
 	}
@@ -126,7 +139,8 @@ void vfs_run_callbacks()
 	{
 		for (int j = 0, j_size = stb_arr_len(file_table[i].read_callbacks); j < j_size; j++)
 		{
-			file_table[i].read_callbacks[j](file_table[i].simplename, file_table[i].size, file_table[i].data);
+			read_callback_t cbck = file_table[i].read_callbacks[j].fn;
+			cbck(file_table[i].simplename, file_table[i].size, file_table[i].data, file_table[i].read_callbacks[j].userdata);
 		}
 	}
 }
