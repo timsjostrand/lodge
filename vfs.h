@@ -1,6 +1,8 @@
 #ifndef _VFS_H
 #define _VFS_H
 
+#include <stdlib.h>
+
 typedef void(*read_callback_t)(const char* filename, unsigned int size, void* data, void* userdata);
 
 void	vfs_init();
@@ -15,7 +17,7 @@ void	vfs_filewatch();
 #define vfs_filewatch(...)
 #endif
 
-void*	vfs_get_file(const char* filename, unsigned int* out_num_bytes);
+void*	vfs_get_file(const char* filename, size_t* out_num_bytes);
 void	vfs_free_memory(const char* filename);
 
 #endif //_VFS_H
