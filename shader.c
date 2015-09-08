@@ -107,8 +107,8 @@ int shader_init(struct shader *s,
 	s->frag_src_len = frag_src_len;
 
 	/* FIXME: make sure string ends with \0. */
-	vert_src[vert_src_len] = '\0';
-	frag_src[frag_src_len] = '\0';
+	vert_src[vert_src_len-1] = '\0';
+	frag_src[frag_src_len-1] = '\0';
 
 	/* Compile vertex shader. */
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
