@@ -59,6 +59,7 @@ void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 	transpose_same(transform_final);
 	
 	// Upload matrices and color
+	glUseProgram(s->program);
 	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
 	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
 	glUniform4fv(s->uniform_color, 1, sprite->color);
