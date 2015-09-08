@@ -24,7 +24,7 @@ typedef unsigned long DWORD;
 
 struct read_callback
 {
-	read_callback_t* fn;
+	read_callback_t fn;
 	void* userdata;
 };
 
