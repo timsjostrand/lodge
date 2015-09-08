@@ -164,18 +164,18 @@ int shader_init(struct shader *s,
 		shader_debug("uniform: %s=%d\n", name, s->uniforms[i]);
 	}
 
-    /* Position stream. */
-    GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
-    shader_debug("attrib: %s=%d\n", ATTRIB_NAME_POSITION, posAttrib);
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	/* Position stream. */
+	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
+	shader_debug("attrib: %s=%d\n", ATTRIB_NAME_POSITION, posAttrib);
+	glEnableVertexAttribArray(posAttrib);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
 
-    /* Texcoord stream. */
-    GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
-    shader_debug("attrib: %s=%d\n", ATTRIB_NAME_TEXCOORD, texcoordAttrib);
-    glEnableVertexAttribArray(texcoordAttrib);
-    glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-            (void*) (3 * sizeof(float)));
+	/* Texcoord stream. */
+	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
+	shader_debug("attrib: %s=%d\n", ATTRIB_NAME_TEXCOORD, texcoordAttrib);
+	glEnableVertexAttribArray(texcoordAttrib);
+	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+			(void*) (3 * sizeof(float)));
 
 	return SHADER_OK;
 }

@@ -5,7 +5,7 @@
 * Use vfs_mount(const char* dir) to read all files in dir to memory.
 * Use vfs_register_callback(const char* filename, read_callback_t fn) to read file
 *
-*    Compile with VFS_ENABLE_FILEWATCH to enable filewatching
+*	 Compile with VFS_ENABLE_FILEWATCH to enable filewatching
 *
 * Author: Johan Yngman <johan.yngman@gmail.com>
 */

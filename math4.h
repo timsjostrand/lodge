@@ -9,8 +9,8 @@
 #define xyzw(v) v[0], v[1], v[2], v[3]
 
 #define swapf(t,a,b) t = a;\
-    a = b; \
-    b = t;
+	a = b; \
+	b = t;
 
 typedef float mat4[16];
 typedef float vec2[2];
