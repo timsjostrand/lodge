@@ -16,7 +16,6 @@ typedef float mat4[16];
 typedef float vec2[2];
 typedef float vec3[3];
 typedef float vec4[4];
-typedef float vec3[3];
 
 void ortho(mat4 m, float left, float right, float top, float bottom, float near, float far);
 void mult(mat4 m, const mat4 a, const mat4 b);
