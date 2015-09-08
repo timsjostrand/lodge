@@ -16,6 +16,7 @@
 #include "math4.h"
 #include "color.h"
 #include "graphics.h"
+#include "shader.h"
 #include "input.h"
 #include "texture.h"
 #include "sound.h"
@@ -101,6 +102,7 @@ struct textures {
 struct game {
     double          time;                       /* Time since start. */
     struct graphics graphics;                   /* Graphics state. */
+    struct shader   shader;                     /* Shader program information. */
     struct player   player1;                    /* Left player. */
     struct player   player2;                    /* Right player. */
     struct ball     ball;
@@ -114,90 +116,6 @@ struct game {
     struct sound_fx tone_hit;
     struct sound_fx tone_bounce;
 } game = { 0 };
-
-#ifdef EMSCRIPTEN
-const char *fragment_shader =
-    "#version 100\n"
-    "precision mediump float;"
-    "uniform float time;"
-    "uniform vec4 color;"
-    "void main() {"
-    "   gl_FragColor = color;"
-    "}";
-
-const char *vertex_shader =
-    "#version 100\n"
-    "uniform mat4 transform;"
-    "uniform mat4 projection;"
-    "attribute vec3 vp;"
-    "void main() {"
-    "   gl_Position = projection * transform * vec4(vp, 1.0);"
-    "}";
-#else
-const char *fragment_shader =
-    "#version 400\n"
-    "in vec2 texcoord;"
-    "out vec4 frag_color;"
-    "uniform float time;"
-    "uniform vec4 color;"
-    "uniform sampler2D tex;"
-    "void main() {"
-    "   frag_color = texture(tex, texcoord) * color;"
-    "}";
-
-const char *vertex_shader =
-    "#version 400 core\n"
-    "precision highp float;"
-    ""
-    "const int TYPE_UNKNOWN     = 0;"
-    "const int TYPE_BALL        = 1;"
-    "const int TYPE_PLAYER      = 2;"
-    "const int TYPE_PARTICLE    = 3;"
-    ""
-    "uniform mat4 transform;"
-    "uniform mat4 projection;"
-    "uniform float time;"
-    "uniform int sprite_type;"
-    "uniform float ball_last_hit_x;"
-    "uniform float ball_last_hit_y;"
-    ""
-    "const vec4 wobble_x_offsets[6] = vec4[6]("
-    "   vec4( 0.25,  0.5, 0.0, 0.0),"
-    "   vec4( 0.25, -0.5, 0.0, 0.0),"
-    "   vec4(-0.25,  0.5, 0.0, 0.0),"
-    "   vec4(-0.25,  0.5, 0.0, 0.0),"
-    "   vec4( 0.25, -0.5, 0.0, 0.0),"
-    "   vec4(-0.25, -0.5, 0.0, 0.0)"
-    ");"
-    ""
-    "const vec4 wobble_y_offsets[6] = vec4[6]("
-    "   vec4(-0.25, -0.25, 0.0, 0.0),"
-    "   vec4(-0.25,  0.25, 0.0, 0.0),"
-    "   vec4( 0.25, -0.25, 0.0, 0.0),"
-    "   vec4( 0.25, -0.25, 0.0, 0.0),"
-    "   vec4(-0.25,  0.25, 0.0, 0.0),"
-    "   vec4( 0.25,  0.25, 0.0, 0.0)"
-    ");"
-    ""
-    "in vec3 vp;"
-    "in vec2 texcoord_in;"
-    "out vec2 texcoord;"
-    "void main() {"
-    "   texcoord = texcoord_in;"
-    "   vec4 offset = (ball_last_hit_x < ball_last_hit_y) ? wobble_x_offsets[gl_VertexID] : wobble_y_offsets[gl_VertexID];"
-    "   float bh = min(ball_last_hit_x, ball_last_hit_y);"
-    "   if(bh <= 0.016)"
-    "       bh = 0.016;"
-    "   float decay = 0.016 / (bh*0.0001);"
-    "   decay = clamp(decay, 0.0, 1.5);"
-    "   float hit_wobble = abs(cos(bh/80.0)) * decay;"
-    "   gl_Position = projection * transform * ("
-    "       vec4(vp, 1.0)"
-    "       + offset*float(sprite_type == TYPE_BALL)*hit_wobble"
-    "       + 0.0*offset*float(sprite_type == TYPE_BALL)*cos(time*8.0f)/6.0"
-    "   );"
-    "}";
-#endif
 
 void print_stats()
 {
@@ -440,14 +358,14 @@ void particles_think(float dt)
     }
 }
 
-void shader_think(struct graphics *g, float delta_time)
+void shader_think(struct shader *s, struct graphics *g, float delta_time)
 {
     /* Upload uniforms. */
-    glUniform1f(g->shader.uniforms[TIME], (GLfloat) game.time);
+    glUniform1f(s->uniforms[TIME], (GLfloat) game.time);
 
     /* Ball stuff */
-    glUniform1f(g->shader.uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
-    glUniform1f(g->shader.uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
+    glUniform1f(s->uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
+    glUniform1f(s->uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
 }
 
 void think(struct graphics *g, float delta_time)
@@ -456,8 +374,8 @@ void think(struct graphics *g, float delta_time)
     game.time = glfwGetTime();
     game_think(delta_time);
     particles_think(delta_time);
-    shader_think(g, delta_time);
     input_think(&game.input, delta_time);
+    shader_think(&game.shader, g, delta_time);
 }
 
 void render(struct graphics *g, float delta_time)
@@ -467,21 +385,21 @@ void render(struct graphics *g, float delta_time)
 
     /* Clear. */
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(g->shader.program);
+    glUseProgram(game.shader.program);
 
     /* Ball. */
-    sprite_render(&game.ball.sprite, &game.graphics);
+    sprite_render(&game.ball.sprite, &game.shader, &game.graphics);
 
     /* Particles. */
     for(int i=0; i<game.particles_count; i++) {
         if(!game.particles[i].dead) {
-            sprite_render(&game.particles[i].sprite, &game.graphics);
+            sprite_render(&game.particles[i].sprite, &game.shader, &game.graphics);
         }
     }
 
 	/* Sprites. */
-	sprite_render(&game.player1.sprite, &game.graphics);
-	sprite_render(&game.player2.sprite, &game.graphics);
+	sprite_render(&game.player1.sprite, &game.shader, &game.graphics);
+	sprite_render(&game.player2.sprite, &game.shader, &game.graphics);
 }
 
 void init_player1(struct player *p)
@@ -611,6 +529,64 @@ void load_sounds()
     }
 }
 
+void reload_shader(const char *filename, unsigned int size, void *data, void *userdata)
+{
+	if(size == 0) {
+		shader_debug("Skipped reload of %s (%u bytes)\n", filename, size);
+		return;
+	}
+
+	struct shader *dst = (struct shader *) userdata;
+
+	if(!dst) {
+		shader_error("Invalid argument to reload_shader()\n");
+		return;
+	}
+
+	/* Keep references to shader sources. */
+	if(strstr(filename, ".frag") != NULL) {
+		dst->frag_src = data;
+		dst->frag_src_len = size;
+	} else if(strstr(filename, ".vert") != NULL) {
+		dst->vert_src = data;
+		dst->vert_src_len = size;
+	} else {
+		shader_error("Unknown source name \"%s\" (%u bytes)\n", filename, size);
+		return;
+	}
+
+	/* Have both sources been loaded? */
+	if(dst->vert_src_len == 0) {
+		shader_debug("Awaiting vertex shader source...\n");
+		return;
+	}
+	if(dst->frag_src_len == 0) {
+		shader_debug("Awaiting fragment shader source...\n");
+		return;
+	}
+
+	/* Recompile shader. */
+	struct shader tmp = { 0 };
+
+	int ret = shader_init(&tmp,
+			dst->vert_src, dst->vert_src_len,
+			dst->frag_src, dst->frag_src_len,
+			uniform_names, UNIFORM_LAST);
+	if(ret != SHADER_OK) {
+		shader_error("Error %d when loading shader %s (%u bytes)\n", ret, filename, size);
+	} else {
+		shader_free(dst);
+		*(dst) = tmp;
+	}
+}
+
+void load_shaders()
+{
+	/* Register asset callbacks */
+	vfs_register_callback("basic_shader.frag", reload_shader, &game.shader);
+	vfs_register_callback("basic_shader.vert", reload_shader, &game.shader);
+}
+
 void release_sounds()
 {
     sound_fx_free(&game.vivaldi);
@@ -673,16 +649,6 @@ void test_read_file(const char* filename, unsigned int size, void* data)
 	printf("\n\n");
 }
 
-void reload_vertex_shader(const char* filename, unsigned int size, void* data, void* userdata)
-{
-	vfs_free_memory(filename);
-}
-
-void reload_fragment_shader(const char* filename, unsigned int size, void* data, void* userdata)
-{
-	vfs_free_memory(filename);
-}
-
 int main(int argc, char **argv)
 {
 	/* Start the virtual file system */
@@ -691,10 +657,6 @@ int main(int argc, char **argv)
 	/* Asset location */
 	vfs_mount("C:/Users/Johan/Dropbox/glpong-assets");
 	//vfs_mount("test_assets");
-
-	/* Register asset callbacks */
-	vfs_register_callback("basic_shader.frag", reload_fragment_shader, 0);
-	vfs_register_callback("basic_shader.vert", reload_vertex_shader, 0);
 
     int ret = 0;
 
@@ -706,9 +668,8 @@ int main(int argc, char **argv)
 
     /* Set up graphics. */
     int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
-    ret = graphics_init(&game.graphics, &think, &render, VIEW_WIDTH, VIEW_HEIGHT,
-            windowed, &vertex_shader, &fragment_shader, uniform_names,
-            UNIFORM_LAST);
+    ret = graphics_init(&game.graphics, &think, &render, VIEW_WIDTH,
+			VIEW_HEIGHT, windowed);
 	
     if(ret != GRAPHICS_OK) {
         graphics_error("Graphics initialization failed (%d)\n", ret);
@@ -717,6 +678,7 @@ int main(int argc, char **argv)
     }
 
     /* Load assets. */
+	load_shaders();
     load_sounds();
     load_textures();
 
@@ -745,6 +707,9 @@ int main(int argc, char **argv)
 
     /* Free OpenAL. */
     sound_free(&game.sound);
+
+	/* Free shader. */
+    shader_free(&game.shader);
 
     /* If we reach here, quit the game. */
     graphics_free(&game.graphics);

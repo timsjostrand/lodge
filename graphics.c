@@ -36,7 +36,8 @@ const float vertices_rect[] = {
 struct graphics* graphics_global;
 #endif
 
-void sprite_render(struct sprite *sprite, struct graphics *g)
+/* TODO: separate into sprite.c */
+void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 {
     glEnableVertexAttribArray(0);
 
@@ -58,156 +59,16 @@ void sprite_render(struct sprite *sprite, struct graphics *g)
     transpose_same(transform_final);
     
     // Upload matrices and color
-    glUniformMatrix4fv(g->shader.uniform_transform, 1, GL_FALSE, transform_final);
-    glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
-    glUniform4fv(g->shader.uniform_color, 1, sprite->color);
-    glUniform1i(g->shader.uniform_sprite_type, sprite->type);
-    glUniform1i(g->shader.uniform_tex, 0);
+    glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
+    glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
+    glUniform4fv(s->uniform_color, 1, sprite->color);
+    glUniform1i(s->uniform_sprite_type, sprite->type);
+    glUniform1i(s->uniform_tex, 0);
 
     // Render it!
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, *(sprite->texture));
     glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-int shader_program_log(GLuint program, const char *name)
-{
-    graphics_debug("=== %s ===\n", name);
-
-    GLint status = 0;
-    glGetProgramiv(program, GL_LINK_STATUS, &status);
-
-    if(status == GL_FALSE) {
-        graphics_error("Link failed\n");
-    }
-
-    GLint len = 0;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
-
-    if(len > 0) {
-        GLchar *msg = (GLchar *) malloc(len);
-        glGetProgramInfoLog(program, len, &len, msg);
-        /* TODO: readline() and output for each line */
-        if(status == GL_FALSE) {
-            graphics_error("%s", msg);
-        } else {
-            graphics_debug("%s", msg);
-        }
-        free(msg);
-    }
-
-    GLint uniforms = 0;
-    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniforms);
-    graphics_debug("%d active uniforms\n", uniforms);
-
-    if(status == GL_FALSE) {
-        return GRAPHICS_SHADER_ERROR;
-    }
-
-    return GRAPHICS_OK;
-}
-
-int shader_log(GLuint shader, const char *name)
-{
-    graphics_debug("=== %s ===\n", name);
-
-    GLint status = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-
-    if(status == GL_FALSE) {
-        graphics_error("Compilation of %s failed\n", name);
-    }
-
-    GLint len = 0;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-
-    if(len > 0) {
-        GLchar *msg = (GLchar *) malloc(len);
-        glGetShaderInfoLog(shader, len, &len, msg);
-        /* TODO: readline() and output for each line */
-        if(status == GL_FALSE) {
-            graphics_error("%s", msg);
-        } else {
-            graphics_debug("%s", msg);
-        }
-        free(msg);
-    }
-
-    if(status == GL_FALSE) {
-        glDeleteShader(shader);
-        return GRAPHICS_SHADER_ERROR;
-    }
-
-    return GRAPHICS_OK;
-}
-
-int shader_init(struct shader *s, const char **vertex_shader_src,
-        const char **fragment_shader_src, const char **uniform_names,
-        int uniforms_count)
-{
-    int ret = 0;
-
-    /* Compile vertex shader. */
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, vertex_shader_src, NULL);
-    glCompileShader(vs);
-    ret = shader_log(vs, "vertex shader");
-
-    if(ret != GRAPHICS_OK) {
-        return ret;
-    }
-
-    /* Compile fragment shader. */
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, fragment_shader_src, NULL);
-    glCompileShader(fs);
-    ret = shader_log(fs, "fragment shader");
-
-    if(ret != GRAPHICS_OK) {
-        return ret;
-    }
-
-    /* Compile shader. */
-    s->program = glCreateProgram();
-    glAttachShader(s->program, fs);
-    glAttachShader(s->program, vs);
-    glLinkProgram(s->program);
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-    ret = shader_program_log(s->program, "program");
-
-    if(ret != GRAPHICS_OK) {
-        return ret;
-    }
-
-    /* Set up global uniforms. */
-    s->uniform_transform = glGetUniformLocation(s->program, UNIFORM_TRANSFORM_NAME);
-    graphics_debug("uniform: %s=%d\n", UNIFORM_TRANSFORM_NAME, s->uniform_transform);
-    s->uniform_projection = glGetUniformLocation(s->program, UNIFORM_PROJECTION_NAME);
-    graphics_debug("uniform: %s=%d\n", UNIFORM_PROJECTION_NAME, s->uniform_projection);
-    s->uniform_color = glGetUniformLocation(s->program, UNIFORM_COLOR_NAME);
-    graphics_debug("uniform: %s=%d\n", UNIFORM_COLOR_NAME, s->uniform_color);
-    s->uniform_sprite_type = glGetUniformLocation(s->program, UNIFORM_SPRITE_TYPE_NAME);
-    graphics_debug("uniform: %s=%d\n", UNIFORM_SPRITE_TYPE_NAME, s->uniform_sprite_type);
-    s->uniform_tex = glGetUniformLocation(s->program, UNIFORM_TEX_NAME);
-    graphics_debug("uniform: %s=%d\n", UNIFORM_TEX_NAME, s->uniform_tex);
-
-    /* Set up user uniforms. */
-    /* NOTE: non-existing uniforms do not result in an error being returned. */
-    s->uniforms = (GLint *) malloc(uniforms_count * sizeof(GLint));
-    for(int i=0; i<uniforms_count; i++) {
-        const char *name = uniform_names[i];
-        s->uniforms[i] = glGetUniformLocation(s->program, name);
-        graphics_debug("uniform: %s=%d\n", name, s->uniforms[i]);
-    }
-
-    return GRAPHICS_OK;
-}
-
-void shader_free(struct shader *s)
-{
-    free(s->uniforms);
-    glDeleteProgram(s->program);
 }
 
 static int graphics_opengl_init(struct graphics *g, int view_width, int view_height)
@@ -238,19 +99,6 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
     /* Vertex array. */
     glGenVertexArrays(1, &g->vao_rect);
     glBindVertexArray(g->vao_rect);
-
-    /* Position stream. */
-    GLint posAttrib = glGetAttribLocation(g->shader.program, "vp");
-    graphics_debug("attrib: vp=%d\n", posAttrib);
-    glEnableVertexAttribArray(posAttrib);
-    glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-
-    /* Texcoord stream. */
-    GLint texcoordAttrib = glGetAttribLocation(g->shader.program, "texcoord_in");
-    graphics_debug("attrib: texcoord_in=%d\n", texcoordAttrib);
-    glEnableVertexAttribArray(texcoordAttrib);
-    glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-            (void*) (3 * sizeof(float)));
 
     return GRAPHICS_OK;
 }
@@ -313,21 +161,13 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
 }
 
 /**
- *
  * @param g                     A graphics struct to fill in.
  * @param view_width            The width of the view, used for ortho().
  * @param view_height           The height of the view, used for ortho().
  * @param windowed              If applicable, whether to start in windowed mode.
- * @param vertex_shader_src     Vertex shader source.
- * @param fragment_shader_src   Fragment shader source.
- * @param uniform_names         A list of uniform names in the shader,
- *                              excluding 'transform', 'projection' and 'color'.
- * @param uniforms_count        Number of elements in the uniform name list.
  */
 int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-        int view_width, int view_height, int windowed,
-        const char **vertex_shader_src, const char **fragment_shader_src,
-        const char **uniform_names, int uniforms_count)
+        int view_width, int view_height, int windowed)
 {
     int ret = 0;
 
@@ -343,14 +183,6 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 
     /* Set up GLEW and glfw. */
     ret = graphics_libraries_init(g, view_width, view_height, windowed);
-
-    if(ret != GRAPHICS_OK) {
-        return ret;
-    }
-
-    /* Set up shader. */
-    ret = shader_init(&g->shader, vertex_shader_src, fragment_shader_src,
-            uniform_names, uniforms_count);
 
     if(ret != GRAPHICS_OK) {
         return ret;
@@ -372,9 +204,6 @@ void graphics_free(struct graphics *g)
     glDeleteVertexArrays(1, &g->vao_rect);
     glDeleteBuffers(1, &g->vbo_rect);
 
-    /* Free shader. */
-    shader_free(&g->shader);
-
     /* Shut down glfw. */
     glfwTerminate();
 }
@@ -389,19 +218,6 @@ void graphics_count_frame(struct graphics *g)
     }
 }
 
-static void shader_think(struct graphics *g, float delta_time)
-{
-    /* Upload transform uniform. */
-    mat4 transform;
-    mult(transform, g->translate, g->scale);
-    mult(transform, transform, g->rotate);
-    transpose_same(transform);
-    glUniformMatrix4fv(g->shader.uniform_transform, 1, GL_FALSE, transform);
-
-    /* Upload projection uniform. */
-    glUniformMatrix4fv(g->shader.uniform_projection, 1, GL_FALSE, g->projection);
-}
-
 void graphics_do_frame(struct graphics *g)
 {     
     /* Delta-time. */
@@ -413,7 +229,6 @@ void graphics_do_frame(struct graphics *g)
 
     /* Game loop. */
     g->think(g, delta_time);
-    shader_think(g, delta_time);
     g->render(g, delta_time);
 
     /* Swap front and back buffers */

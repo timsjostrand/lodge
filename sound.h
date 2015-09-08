@@ -15,12 +15,12 @@
 #define SOUND_SAMPLE_MAX    SHRT_MAX
 
 #ifdef DEBUG
-#define sound_debug(...) fprintf(stderr, "AL_DEBUG: " __VA_ARGS__)
+#define sound_debug(...) fprintf(stderr, "DEBUG @ Sound: " __VA_ARGS__)
 #else
 #define sound_debug(...) do {} while (0)
 #endif
 
-#define sound_error(...) fprintf(stderr, "AL_ERROR: " __VA_ARGS__)
+#define sound_error(...) fprintf(stderr, "ERROR @ Sound: " __VA_ARGS__)
 
 #define AL_TEST(msg) if(al_test(msg) != SOUND_OK) { return SOUND_ERROR; }
 

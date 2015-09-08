@@ -2,14 +2,15 @@
 #define _GRAPHICS_H
 
 #include "math4.h"
+#include "shader.h"
 
 #ifdef DEBUG
-#define graphics_debug(...) fprintf(stderr, "DEBUG: " __VA_ARGS__)
+#define graphics_debug(...) fprintf(stderr, "DEBUG @ Graphics: " __VA_ARGS__)
 #else
 #define graphics_debug(...) do {} while (0)
 #endif
 
-#define graphics_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__)
+#define graphics_error(...) fprintf(stderr, "ERROR @ Graphics: " __VA_ARGS__)
 
 #define GRAPHICS_OK                  0
 #define GRAPHICS_ERROR              -1
@@ -26,22 +27,6 @@ struct sprite {
     vec4    color;
     float   rotation;
     GLuint  *texture;
-};
-
-#define UNIFORM_TRANSFORM_NAME      "transform"
-#define UNIFORM_PROJECTION_NAME     "projection"
-#define UNIFORM_COLOR_NAME          "color"
-#define UNIFORM_SPRITE_TYPE_NAME    "sprite_type"
-#define UNIFORM_TEX_NAME            "tex"
-
-struct shader {
-    GLuint  program;
-    GLint   uniform_transform;
-    GLint   uniform_projection;
-    GLint   uniform_color;
-    GLint   uniform_sprite_type;
-    GLint   uniform_tex;
-    GLint   *uniforms;
 };
 
 struct graphics;
@@ -63,24 +48,14 @@ struct graphics {
     mat4            translate;                  /* Global translation matrix. */
     mat4            rotate;                     /* Global rotation matrix. */
     mat4            scale;                      /* Global scale matrix. */
-    struct shader   shader;                     /* Shader program information. */
 };
 
 int  graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-        int view_width, int view_height, int windowed,
-        const char **vertex_shader_src, const char **fragment_shader_src,
-        const char **uniform_names, int uniforms_count);
+        int view_width, int view_height, int windowed);
 void graphics_free(struct graphics *g);
 void graphics_count_frame(struct graphics *g);
 void graphics_loop();
 
-int  shader_init(struct shader *s, const char **vertex_shader_src,
-        const char **fragment_shader_src, const char **uniform_names,
-        int uniforms_count);
-void shader_free(struct shader *s);
-int  shader_program_log(GLuint program, const char *name);
-int  shader_log(GLuint shader, const char *name);
-
-void sprite_render(struct sprite *sprite, struct graphics *g);
+void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g);
 
 #endif
