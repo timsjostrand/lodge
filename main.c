@@ -51,6 +51,9 @@ enum uniforms {
 	TIME,
 	BALL_LAST_HIT_X,
 	BALL_LAST_HIT_Y,
+	BALL_POS,
+	BOARD_VIEW_WIDTH,
+	BOARD_VIEW_HEIGHT,
 	UNIFORM_LAST
 };
 
@@ -58,6 +61,9 @@ const char *uniform_names[] = {
 	"time",
 	"ball_last_hit_x",
 	"ball_last_hit_y",
+	"ball_pos",
+	"view_width",
+	"view_height"
 };
 
 struct stats {
@@ -103,8 +109,10 @@ struct game {
 	double			time;						/* Time since start. */
 	struct graphics	graphics;					/* Graphics state. */
 	struct shader	shader;						/* Shader program information. */
+	struct shader	bg_shader;
 	struct player	player1;					/* Left player. */
 	struct player	player2;					/* Right player. */
+	struct sprite	effectslayer;
 	struct ball		ball;
 	struct stats	total_stats;
 	struct particle	particles[PARTICLES_MAX];
@@ -360,12 +368,25 @@ void particles_think(float dt)
 
 void shader_think(struct shader *s, struct graphics *g, float delta_time)
 {
+	glUseProgram(s->program);
+
 	/* Upload uniforms. */
 	glUniform1f(s->uniforms[TIME], (GLfloat) game.time);
 
 	/* Ball stuff */
 	glUniform1f(s->uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
 	glUniform1f(s->uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
+}
+
+void effectslayer_think(struct shader *s, struct graphics *g, float delta_time)
+{
+	glUseProgram(s->program);
+	glUniform1f(s->uniforms[TIME], (GLfloat)game.time);
+	glUniform1f(s->uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
+	glUniform1f(s->uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
+	glUniform4fv(s->uniforms[BALL_POS], 1, game.ball.sprite.pos);
+	glUniform1f(s->uniforms[BOARD_VIEW_WIDTH], (GLfloat)VIEW_WIDTH);
+	glUniform1f(s->uniforms[BOARD_VIEW_HEIGHT], (GLfloat)VIEW_HEIGHT);
 }
 
 void think(struct graphics *g, float delta_time)
@@ -376,6 +397,7 @@ void think(struct graphics *g, float delta_time)
 	particles_think(delta_time);
 	input_think(&game.input, delta_time);
 	shader_think(&game.shader, g, delta_time);
+	effectslayer_think(&game.bg_shader, g, delta_time);
 }
 
 void render(struct graphics *g, float delta_time)
@@ -385,7 +407,6 @@ void render(struct graphics *g, float delta_time)
 
 	/* Clear. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(game.shader.program);
 
 	/* Ball. */
 	sprite_render(&game.ball.sprite, &game.shader, &game.graphics);
@@ -400,6 +421,18 @@ void render(struct graphics *g, float delta_time)
 	/* Sprites. */
 	sprite_render(&game.player1.sprite, &game.shader, &game.graphics);
 	sprite_render(&game.player2.sprite, &game.shader, &game.graphics);
+
+	/* Effectslayer */
+	sprite_render(&game.effectslayer, &game.bg_shader, &game.graphics);
+}
+
+void init_effectslayer(struct sprite* b)
+{
+	b->type == SPRITE_TYPE_UNKNOWN;
+	b->texture = &game.textures.none;
+	set4f(b->pos, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 0.5f, 1.0f);
+	set4f(b->scale, VIEW_WIDTH, VIEW_HEIGHT, 1.0f, 1.0f);
+	copyv(b->color, COLOR_BLACK);
 }
 
 void init_player1(struct player *p)
@@ -433,7 +466,7 @@ void init_ball(struct ball *ball)
 	ball->last_hit_x = 10.0f;
 	ball->last_hit_y = 0.0f;
 
-	set4f(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.0f, 1.0f);
+	set4f(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.06f, 1.0f);
 	set4f(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
 	copyv(ball->sprite.color, COLOR_WHITE);
 }
@@ -441,6 +474,7 @@ void init_ball(struct ball *ball)
 void init_game()
 {
 	/* Entities. */
+	init_effectslayer(&game.effectslayer);
 	init_player1(&game.player1);
 	init_player2(&game.player2);
 	init_ball(&game.ball);
@@ -585,6 +619,8 @@ void load_shaders()
 	/* Register asset callbacks */
 	vfs_register_callback("basic_shader.frag", reload_shader, &game.shader);
 	vfs_register_callback("basic_shader.vert", reload_shader, &game.shader);
+	vfs_register_callback("ball_trail.frag", reload_shader, &game.bg_shader);
+	vfs_register_callback("ball_trail.vert", reload_shader, &game.bg_shader);
 }
 
 void release_sounds()
@@ -655,8 +691,8 @@ int main(int argc, char **argv)
 	vfs_init();
 
 	/* Asset location */
-	vfs_mount("C:/Users/Johan/Dropbox/glpong-assets");
-	//vfs_mount("test_assets");
+	//vfs_mount("C:/Users/Johan/Dropbox/glpong-assets");
+	vfs_mount("test_assets");
 
 	int ret = 0;
 
