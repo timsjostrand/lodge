@@ -428,7 +428,7 @@ void render(struct graphics *g, float delta_time)
 
 void init_effectslayer(struct sprite* b)
 {
-	b->type == SPRITE_TYPE_UNKNOWN;
+	b->type = SPRITE_TYPE_UNKNOWN;
 	b->texture = &game.textures.none;
 	set4f(b->pos, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 0.5f, 1.0f);
 	set4f(b->scale, VIEW_WIDTH, VIEW_HEIGHT, 1.0f, 1.0f);
