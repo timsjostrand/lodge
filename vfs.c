@@ -20,7 +20,7 @@ typedef unsigned long DWORD;
 #define MAX_FILENAME_LEN 256
 #define MAX_NUM_FILES 256
 
-#define vfs_error(...) fprintf(stderr, "ERROR: " __VA_ARGS__)
+#define vfs_error(...) fprintf(stderr, "ERROR @ VFS: " __VA_ARGS__)
 
 struct read_callback
 {
@@ -58,7 +58,9 @@ void vfs_shutdown()
 	for (int i = 0; i < MAX_NUM_FILES; i++)
 	{
 		stb_fclose(file_table[i].file, 0);
-		stb_free(file_table[i].data);
+		if (file_table[i].data != NULL) {
+			free(file_table[i].data);
+		}
 	}
 }
 
@@ -123,7 +125,7 @@ void vfs_filewatch()
 
 			fseek(file_table[i].file, 0, SEEK_SET);
 
-			stb_free(file_table[i].data);
+			free(file_table[i].data);
 			file_table[i].lastChange = lastChange;
 
 			// Hacky solution to make sure the OS is finished with the fseek call
@@ -134,7 +136,7 @@ void vfs_filewatch()
 				file_table[i].size = stb_filelen(file_table[i].file);
 			}
 
-			file_table[i].data = stb_malloc(0, file_table[i].size);
+			file_table[i].data = malloc(file_table[i].size);
 			fread(file_table[i].data, 1, file_table[i].size, file_table[i].file);
 			stb_fclose(file_table[i].file, 0);
 
@@ -189,13 +191,13 @@ void vfs_mount(const char* dir)
 			if (strcmp(file_table[j].simplename, new_file.simplename) == 0)
 			{
 				stb_fclose(file_table[j].file, 0);
-				stb_free(file_table[j].data);
+				free(file_table[j].data);
 
 				strcpy(file_table[j].name, new_file.name);
 				file_table[j].file = stb_fopen(file_table[j].name, "rb");
 				file_table[j].lastChange = stb_ftimestamp(file_table[j].name);
 				file_table[j].size = stb_filelen(file_table[j].file);
-				file_table[j].data = stb_malloc(0, file_table[j].size);
+				file_table[j].data = malloc(file_table[j].size);
 				fread(file_table[j].data, 1, file_table[j].size, file_table[j].file);
 				stb_fclose(file_table[i].file, 0);
 
@@ -210,7 +212,7 @@ void vfs_mount(const char* dir)
 			new_file.file = stb_fopen(new_file.name, "rb");
 			new_file.lastChange = stb_ftimestamp(new_file.name);
 			new_file.size = stb_filelen(new_file.file);
-			new_file.data = stb_malloc(0, new_file.size);
+			new_file.data = malloc(new_file.size);
 			fread(new_file.data, 1, new_file.size, new_file.file);
 			stb_fclose(new_file.file, 0);
 
@@ -240,7 +242,7 @@ void vfs_free_memory(const char* filename)
 	{
 		if (strcmp(filename, file_table[i].simplename) == 0)
 		{
-			stb_free(file_table[i].data);
+			free(file_table[i].data);
 			file_table[i].data = 0;
 		}
 	}
