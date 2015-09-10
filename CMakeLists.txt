@@ -29,16 +29,31 @@ if(NOT EMSCRIPTEN)
     include_directories(lib/glew/include)
     add_definitions(-DGLEW_STATIC)
 
-    # Build OpenAL-Soft.
-    set(LIBTYPE "STATIC" CACHE STRING "Build static library")
-    set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs")
-    set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility")
-    set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs")
-    set(ALSOFT_CONFIG OFF CACHE BOOL "Install alsoft.conf sample configuration file")
-    set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files")
-    set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries")
-    add_subdirectory(lib/openal)
-    include_directories(lib/openal/include)
+    if(NOT APPLE)
+        # Build OpenAL-Soft.
+        set(LIBTYPE "STATIC" CACHE STRING "Build static library")
+        set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs")
+        set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility")
+        set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs")
+        set(ALSOFT_CONFIG OFF CACHE BOOL "Install alsoft.conf sample configuration file")
+        set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files")
+        set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries")
+        add_subdirectory(lib/openal)
+        include_directories(lib/openal/include/AL)
+
+        # OpenAL has different names on different platforms.
+        if(WIN32)
+            list(APPEND EXTRA_LIBS OpenAL32)
+        else()
+            list(APPEND EXTRA_LIBS openal)
+        endif()
+    else()
+        # Use the OS X OpenAL framework.
+        find_library(OPENAL_LIBRARY OpenAL)
+        find_path(OPENAL_INCLUDE_DIR al.h)
+        include_directories(${OPENAL_INCLUDE_DIR})
+        list(APPEND EXTRA_LIBS ${OPENAL_LIBRARY})
+    endif()
 else()
     # glfw and glew is provided by emscripten
     option(USE_GLFW_3 "Use glfw3" ON)
@@ -80,13 +95,6 @@ if(MSVC)
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS /W3)
 endif()
 
-# OpenAL has different names on different platforms.
-if(WIN32)
-    set(OPENAL OpenAL32)
-else()
-    set(OPENAL openal)
-endif()
-
 # Link.
 if(NOT EMSCRIPTEN)
     # Build glpong using the C99 standard.
@@ -94,7 +102,7 @@ if(NOT EMSCRIPTEN)
     target_link_libraries(glpong libglew_static
         ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES}
         glfw ${GLFW_LIBRARIES}
-        ${OPENAL}
+        ${EXTRA_LIBS}
     )
 else()
     target_link_libraries(glpong)

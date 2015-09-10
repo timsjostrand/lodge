@@ -1,8 +1,8 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <al.h>
+#include <alc.h>
 #include <limits.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <stb/stb_vorbis.c>
