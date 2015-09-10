@@ -1,8 +1,13 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
+#ifndef EMSCRIPTEN
 #include <al.h>
 #include <alc.h>
+#else
+#include <AL/al.h>
+#include <AL/alc.h>
+#endif
 #include <limits.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <stb/stb_vorbis.c>
