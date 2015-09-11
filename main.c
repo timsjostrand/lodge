@@ -47,25 +47,6 @@
 #define SPRITE_TYPE_PLAYER		2
 #define SPRITE_TYPE_PARTICLE	3
 
-enum uniforms {
-	TIME,
-	BALL_LAST_HIT_X,
-	BALL_LAST_HIT_Y,
-	BALL_POS,
-	BOARD_VIEW_WIDTH,
-	BOARD_VIEW_HEIGHT,
-	UNIFORM_LAST
-};
-
-const char *uniform_names[] = {
-	"time",
-	"ball_last_hit_x",
-	"ball_last_hit_y",
-	"ball_pos",
-	"view_width",
-	"view_height"
-};
-
 struct stats {
 	int points;
 	int hits;
@@ -106,7 +87,9 @@ struct textures {
 };
 
 struct game {
-	double			time;						/* Time since start. */
+	float			time;						/* Time since start. */
+	float			view_width;
+	float			view_height;
 	struct graphics	graphics;					/* Graphics state. */
 	struct shader	shader;						/* Shader program information. */
 	struct shader	bg_shader;
@@ -366,38 +349,15 @@ void particles_think(float dt)
 	}
 }
 
-void shader_think(struct shader *s, struct graphics *g, float delta_time)
-{
-	glUseProgram(s->program);
-
-	/* Upload uniforms. */
-	glUniform1f(s->uniforms[TIME], (GLfloat) game.time);
-
-	/* Ball stuff */
-	glUniform1f(s->uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
-	glUniform1f(s->uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
-}
-
-void effectslayer_think(struct shader *s, struct graphics *g, float delta_time)
-{
-	glUseProgram(s->program);
-	glUniform1f(s->uniforms[TIME], (GLfloat)game.time);
-	glUniform1f(s->uniforms[BALL_LAST_HIT_X], game.ball.last_hit_x);
-	glUniform1f(s->uniforms[BALL_LAST_HIT_Y], game.ball.last_hit_y);
-	glUniform4fv(s->uniforms[BALL_POS], 1, game.ball.sprite.pos);
-	glUniform1f(s->uniforms[BOARD_VIEW_WIDTH], (GLfloat)VIEW_WIDTH);
-	glUniform1f(s->uniforms[BOARD_VIEW_HEIGHT], (GLfloat)VIEW_HEIGHT);
-}
-
 void think(struct graphics *g, float delta_time)
 {
 	vfs_filewatch();
-	game.time = glfwGetTime();
+	game.time = (float) glfwGetTime();
 	game_think(delta_time);
 	particles_think(delta_time);
 	input_think(&game.input, delta_time);
-	shader_think(&game.shader, g, delta_time);
-	effectslayer_think(&game.bg_shader, g, delta_time);
+	shader_uniforms_think(&game.shader, delta_time);
+	shader_uniforms_think(&game.bg_shader, delta_time);
 }
 
 void render(struct graphics *g, float delta_time)
@@ -473,6 +433,8 @@ void init_ball(struct ball *ball)
 
 void init_game()
 {
+	game.view_width = VIEW_WIDTH;
+	game.view_height = VIEW_HEIGHT;
 	/* Entities. */
 	init_effectslayer(&game.effectslayer);
 	init_player1(&game.player1);
@@ -600,17 +562,20 @@ void reload_shader(const char *filename, unsigned int size, void *data, void *us
 	}
 
 	/* Recompile shader. */
-	struct shader tmp = { 0 };
+	struct shader tmp = *(dst);
 
 	int ret = shader_init(&tmp,
 			dst->vert_src, dst->vert_src_len,
-			dst->frag_src, dst->frag_src_len,
-			uniform_names, UNIFORM_LAST);
+			dst->frag_src, dst->frag_src_len);
 	if(ret != SHADER_OK) {
 		shader_error("Error %d when loading shader %s (%u bytes)\n", ret, filename, size);
 	} else {
-		shader_free(dst);
+		/* Delete the old shader. */
+		shader_delete(dst);
+		/* Assign the new shader only if compilation succeeded. */
 		*(dst) = tmp;
+		/* Relocate uniforms in the shader, if they changed. */
+		shader_uniforms_relocate(dst);
 	}
 }
 
@@ -621,6 +586,19 @@ void load_shaders()
 	vfs_register_callback("basic_shader.vert", reload_shader, &game.shader);
 	vfs_register_callback("ball_trail.frag", reload_shader, &game.bg_shader);
 	vfs_register_callback("ball_trail.vert", reload_shader, &game.bg_shader);
+
+	/* Sprite shader: set up uniforms */
+	shader_uniform1f(&game.shader, "time", &game.time);
+	shader_uniform1f(&game.shader, "ball_last_hit_x", &game.ball.last_hit_x);
+	shader_uniform1f(&game.shader, "ball_last_hit_y", &game.ball.last_hit_y);
+
+	/* Effects shader: set up uniforms */
+	shader_uniform1f(&game.bg_shader, "time", &game.time);
+	shader_uniform1f(&game.bg_shader, "ball_last_hit_x", &game.ball.last_hit_x);
+	shader_uniform1f(&game.bg_shader, "ball_last_hit_y", &game.ball.last_hit_y);
+	shader_uniform4f(&game.bg_shader, "ball_pos", &game.ball.sprite.pos);
+	shader_uniform1f(&game.bg_shader, "view_width", &game.view_width);
+	shader_uniform1f(&game.bg_shader, "view_height", &game.view_height);
 }
 
 void release_sounds()

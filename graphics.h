@@ -29,6 +29,15 @@ struct sprite {
 	GLuint	*texture;
 };
 
+struct frames {
+	int			frames;						/* Number of frames drawn since last_frame_report. */
+	double		last_frame_report;			/* When frames were last summed up. */
+	double		last_frame;					/* When the last frame was drawn. */
+	float		frame_time_min;
+	float		frame_time_max;
+	float		frame_time_sum;
+};
+
 struct graphics;
 
 typedef void (*think_func_t)(struct graphics *g, float delta_time);
@@ -38,9 +47,7 @@ struct graphics {
 	GLFWwindow		*window;					/* The window handle created by GLFW. */
 	think_func_t	think;						/* This function does thinking. */
 	render_func_t	render;						/* This function does rendering. */
-	int				frames;						/* Number of frames drawn since last_frame_report. */
-	double			last_frame_report;			/* When frames were last summed up. */
-	double			last_frame;					/* When the last frame was drawn. */
+	struct frames	frames;						/* Frame debug information. */
 	float			delta_time_factor;			/* Delta-time is multiplied with this factor. */
 	GLuint			vbo_rect;					/* Vertex Buffer Object. */
 	GLuint			vao_rect;					/* Vertex Array Object. */
@@ -50,12 +57,13 @@ struct graphics {
 	mat4			scale;						/* Global scale matrix. */
 };
 
-int  graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-		int view_width, int view_height, int windowed);
-void graphics_free(struct graphics *g);
-void graphics_count_frame(struct graphics *g);
-void graphics_loop();
+int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
+				int view_width, int view_height, int windowed);
+void	graphics_free(struct graphics *g);
+void	graphics_loop();
 
-void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g);
+double	now();
+
+void	sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g);
 
 #endif

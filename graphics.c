@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 #include <string.h>
 #include <time.h>
 #include <GL/glew.h>
@@ -209,24 +210,46 @@ void graphics_free(struct graphics *g)
 	glfwTerminate();
 }
 
-void graphics_count_frame(struct graphics *g)
+static void graphics_count_frame(struct frames *f)
 {
-	g->frames ++;
-	if(glfwGetTime()*1000.0  - g->last_frame_report >= 1000.0) {
-		graphics_debug("%d FPS\n", g->frames);
-		g->last_frame_report = glfwGetTime()*1000.0f;
-		g->frames = 0;
+	f->frames ++;
+	if(now() - f->last_frame_report >= 1000.0) {
+		graphics_debug("FPS: % 6d, Frame-Time (min/max/avg): % 5.1f /% 5.1f /% 5.1f ms\n",
+				f->frames, f->frame_time_min, f->frame_time_max,
+				f->frame_time_sum/f->frames);
+		f->frame_time_max = FLT_MIN;
+		f->frame_time_min = FLT_MAX;
+		f->frame_time_sum = 0;
+		f->last_frame_report = now();
+		f->frames = 0;
 	}
+}
+
+static void graphics_frames_register(struct frames *f, float delta_time)
+{
+	f->frame_time_min = fmin(delta_time, f->frame_time_min);
+	f->frame_time_max = fmax(delta_time, f->frame_time_max);
+	f->frame_time_sum += delta_time;
+}
+
+/**
+ * Returns the number of milliseconds since the program was started.
+ */
+double now()
+{
+	return glfwGetTime() * 1000.0;
 }
 
 void graphics_do_frame(struct graphics *g)
 {	  
+	double before = now();
+
 	/* Delta-time. */
 	float delta_time = 0;
-	if(g->last_frame != 0) {
-		delta_time = (glfwGetTime() - g->last_frame) * 1000.0f * g->delta_time_factor;
+	if(g->frames.last_frame != 0) {
+		delta_time = (now() - g->frames.last_frame) * g->delta_time_factor;
 	}
-	g->last_frame = glfwGetTime();
+	g->frames.last_frame = now();
 
 	/* Game loop. */
 	g->think(g, delta_time);
@@ -239,7 +262,8 @@ void graphics_do_frame(struct graphics *g)
 	glfwPollEvents();
 
 	/* Register that a frame has been drawn. */
-	graphics_count_frame(g);
+	graphics_frames_register(&g->frames, now() - before);
+	graphics_count_frame(&g->frames);
 }
 
 #ifdef EMSCRIPTEN

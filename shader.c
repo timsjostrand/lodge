@@ -11,6 +11,7 @@
 #include <GLFW/glfw3.h>
 
 #include "shader.h"
+#include "math4.h"
 
 int shader_program_log(GLuint program, const char *name)
 {
@@ -89,14 +90,10 @@ int shader_log(GLuint shader, const char *name)
  * @param s					The shader struct to store into.
  * @param vert_src			Vertex shader source.
  * @param frag_src			Fragment shader source.
- * @param uniform_names		A list of uniform names in the shader,
- *							excluding 'transform', 'projection' and 'color'.
- * @param uniforms_count	Number of elements in the uniform name list.
  */
 int shader_init(struct shader *s,
 		char *vert_src, int vert_src_len,
-		char *frag_src, int frag_src_len,
-		const char **uniform_names, int uniforms_count)
+		char *frag_src, int frag_src_len)
 {
 	int ret = 0;
 
@@ -155,15 +152,6 @@ int shader_init(struct shader *s,
 	s->uniform_tex = glGetUniformLocation(s->program, UNIFORM_NAME_TEX);
 	shader_debug("uniform: %s=%d\n", UNIFORM_NAME_TEX, s->uniform_tex);
 
-	/* Set up user uniforms. */
-	/* NOTE: non-existing uniforms do not result in an error being returned. */
-	s->uniforms = (GLint *) malloc(uniforms_count * sizeof(GLint));
-	for(int i=0; i<uniforms_count; i++) {
-		const char *name = uniform_names[i];
-		s->uniforms[i] = glGetUniformLocation(s->program, name);
-		shader_debug("uniform: %s=%d\n", name, s->uniforms[i]);
-	}
-
 	/* Position stream. */
 	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
 	shader_debug("attrib: %s=%d\n", ATTRIB_NAME_POSITION, posAttrib);
@@ -180,29 +168,153 @@ int shader_init(struct shader *s,
 	return SHADER_OK;
 }
 
-void shader_free(struct shader *s)
+void shader_delete(struct shader *s)
 {
-	free(s->uniforms);
 	if(glIsProgram(s->program) == GL_TRUE) {
 		glDeleteProgram(s->program);
 	}
 }
 
-#if 0
-/**
- * TODO: step through code and see if we still actually use/want this, or if all
- * shader thinking should be done per sprite or manually instead.
- */
-void shader_think(struct shader *s, struct graphics *g, float delta_time)
+void shader_free(struct shader *s)
 {
-	/* Upload transform uniform. */
-	mat4 transform;
-	mult(transform, g->translate, g->scale);
-	mult(transform, transform, g->rotate);
-	transpose_same(transform);
-	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform);
-
-	/* Upload projection uniform. */
-	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
+	shader_uniforms_free(s);
+	shader_delete(s);
 }
-#endif
+
+/**
+ * Updates the location of all uniforms in a shader.
+ */
+void shader_uniforms_relocate(struct shader *s)
+{
+	glUseProgram(s->program);
+
+	for(int i=0; i<UNIFORMS_MAX; i++) {
+		struct uniform *u = s->uniforms[i];
+
+		if(u == NULL) {
+			continue;
+		} else {
+			int old_id = u->id;
+			u->id = glGetUniformLocation(s->program, u->name);
+			if(u->id != old_id) {
+				shader_debug("Relocated uniform \"%s\", id: %d => %d\n", u->name, old_id, u->id);
+			}
+		}
+	}
+}
+
+/**
+ * Find the next unused uniform index in this shader.
+ */
+int shader_uniform_idx_next(struct shader *s)
+{
+	for(int i=0; i<UNIFORMS_MAX; i++) {
+		if(s->uniforms[i] == NULL) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+int shader_uniform(struct shader *s, const char *name, void *data, int type)
+{
+	int index = shader_uniform_idx_next(s);
+
+	if(index < 0) {
+		shader_error("UNIFORMS_MAX reached\n");
+		return SHADER_UNIFORMS_MAX_ERROR;
+	}
+
+	struct uniform *u = (struct uniform *) malloc(sizeof(struct uniform));
+
+	if(u == NULL) {
+		shader_error("Out of memory");
+		return SHADER_OOM_ERROR;
+	}
+
+	s->uniforms[index] = u;
+
+	glUseProgram(s->program);
+
+	u->name = name;
+	u->datatype = type;
+	u->data = data;
+	u->id = glGetUniformLocation(s->program, u->name);
+
+	return SHADER_OK;
+}
+
+int shader_uniform1f(struct shader *s, const char *name, float *data)
+{
+	return shader_uniform(s, name, (void *) data, TYPE_VEC_1F);
+}
+
+int shader_uniform2f(struct shader *s, const char *name, vec2 *data)
+{
+	return shader_uniform(s, name, (void *) data, TYPE_VEC_2F);
+}
+
+int shader_uniform3f(struct shader *s, const char *name, vec3 *data)
+{
+	return shader_uniform(s, name, (void *) data, TYPE_VEC_3F);
+}
+
+int shader_uniform4f(struct shader *s, const char *name, vec4 *data)
+{
+	return shader_uniform(s, name, (void *) data, TYPE_VEC_4F);
+}
+
+int shader_uniform_matrix4f(struct shader *s, const char *name, mat4 *data)
+{
+	return shader_uniform(s, name, (void *) data, TYPE_MAT_4F);
+}
+
+void shader_uniforms_free(struct shader *s)
+{
+	for(int i=0; i<UNIFORMS_MAX; i++) {
+		if(s->uniforms[i] != NULL) {
+			free(s->uniforms[i]);
+		}
+		s->uniforms[i] = NULL;
+	}
+}
+
+void shader_uniforms_think(struct shader *s, float delta_time)
+{
+	glUseProgram(s->program);
+
+	for(int i=0; i<UNIFORMS_MAX; i++) {
+		struct uniform *u = s->uniforms[i];
+
+		if(u == NULL) {
+			continue;
+		}
+
+		switch(u->datatype) {
+		case TYPE_VEC_1F: {
+			glUniform1f(u->id, *((GLfloat *) u->data));
+			break;
+		}
+		case TYPE_VEC_2F: {
+			float *v = u->data;
+			glUniform2f(u->id, v[0], v[1]);
+			break;
+		}
+		case TYPE_VEC_3F: {
+			glUniform3f(u->id, xyz(((float *) u->data)));
+			break;
+		}
+		case TYPE_VEC_4F: {
+			glUniform4f(u->id, xyzw(((float *) u->data)));
+			break;
+		}
+		case TYPE_MAT_4F: {
+			glUniformMatrix4fv(u->id, 1, GL_FALSE, (float *) u->data);
+			break;
+		}
+		default:
+			shader_debug("Unknown datatype for uniform \"%s\"\n", u->name);
+			break;
+		}
+	}
+}
