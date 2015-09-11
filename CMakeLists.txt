@@ -22,12 +22,19 @@ if(NOT EMSCRIPTEN)
     set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
     add_subdirectory(lib/glfw)
     include_directories(lib/glfw/include)
+    list(APPEND EXTRA_LIBS glfw ${GLFW_LIBRARIES})
 
     # Build glew.
     set(glew-cmake_BUILD_SHARED OFF CACHE BOOL "Build the shared glew library")
     add_subdirectory(lib/glew)
     include_directories(lib/glew/include)
     add_definitions(-DGLEW_STATIC)
+    list(APPEND EXTRA_LIBS libglew_static ${GL_LIBRARY}
+        ${PLATFORM_SPECIFIC_LIBRARIES})
+
+    # Build cJSON.
+    add_subdirectory(lib/cjson)
+    list(APPEND EXTRA_LIBS cJSON)
 
     if(NOT APPLE)
         # Build OpenAL-Soft.
@@ -68,8 +75,10 @@ endif()
 # Include stb.h
 include_directories(lib/)
 
-set(SOURCE main.c math4.c graphics.c shader.c input.c texture.c color.c sound.c vfs.c)
-set(HEADERS math4.h graphics.h shader.h input.h texture.h color.h sound.h vfs.h)
+set(SOURCE main.c math4.c graphics.c shader.c input.c texture.c color.c sound.c
+    vfs.c atlas.c)
+set(HEADERS math4.h graphics.h shader.h input.h texture.h color.h sound.h vfs.h
+    atlas.h)
 
 # Main executable.
 add_executable(glpong ${SOURCE} ${HEADERS})
@@ -99,11 +108,7 @@ endif()
 if(NOT EMSCRIPTEN)
     # Build glpong using the C99 standard.
     set_property(TARGET glpong PROPERTY C_STANDARD 99)
-    target_link_libraries(glpong libglew_static
-        ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES}
-        glfw ${GLFW_LIBRARIES}
-        ${EXTRA_LIBS}
-    )
+    target_link_libraries(glpong ${EXTRA_LIBS})
 else()
     target_link_libraries(glpong)
 endif()

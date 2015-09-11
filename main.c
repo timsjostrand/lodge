@@ -21,6 +21,7 @@
 #include "texture.h"
 #include "sound.h"
 #include "vfs.h"
+#include "atlas.h"
 
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360		/* 16:9 aspect ratio */
@@ -106,6 +107,7 @@ struct game {
 	struct sound_fx	vivaldi;
 	struct sound_fx	tone_hit;
 	struct sound_fx	tone_bounce;
+	struct atlas	atlas_earl;
 } game = { 0 };
 
 void print_stats()
@@ -601,6 +603,42 @@ void load_shaders()
 	shader_uniform1f(&game.bg_shader, "view_height", &game.view_height);
 }
 
+void reload_atlas(const char *filename, unsigned int size, void *data, void *userdata)
+{
+	if(size == 0) {
+		shader_debug("Skipped reload of %s (%u bytes)\n", filename, size);
+		return;
+	}
+
+	struct atlas *dst = (struct atlas *) userdata;
+
+	if(!dst) {
+		shader_error("Invalid argument to reload_atlas()\n");
+		return;
+	}
+
+	struct atlas tmp = { 0 };
+
+	int ret = atlas_load(&tmp, data, size);
+	if(ret != ATLAS_OK) {
+		graphics_error("Error %d when loading atlas %s (%u bytes)\n", ret, filename, size);
+	} else {
+		/* Delete the old shader. */
+		atlas_free(dst);
+		/* Assign the new shader only if compilation succeeded. */
+		*(dst) = tmp;
+		/* DEBUG: Dump debug information about atlas to stdout. */
+		atlas_print(dst);
+	}
+}
+
+
+void load_atlases()
+{
+	/* Register asset callbacks */
+	vfs_register_callback("earl.json", reload_atlas, &game.atlas_earl);
+}
+
 void release_sounds()
 {
 	sound_fx_free(&game.vivaldi);
@@ -610,6 +648,11 @@ void release_textures()
 {
 	texture_free(game.textures.none);
 	texture_free(game.textures.test);
+}
+
+void release_atlases()
+{
+	atlas_free(&game.atlas_earl);
 }
 
 void reload_textures(const char *filename, unsigned int size, void *data, void* userdata)
@@ -626,17 +669,14 @@ void reload_textures(const char *filename, unsigned int size, void *data, void* 
 	if(ret != GRAPHICS_OK) {
 		graphics_error("Texture load failed: %s (%u bytes)\n", filename, size);
 	} else {
-		if (userdata)
-		{
-			if (strcmp("paddle.png", filename) == 0)
-			{
+		if(userdata) {
+			if(strcmp("paddle.png", filename) == 0) {
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			}
 			
 			(*(GLuint*)userdata) = tmp;
-		}
-		else {
+		} else {
 			graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
 			texture_free(tmp);
 		}
@@ -695,6 +735,7 @@ int main(int argc, char **argv)
 	load_shaders();
 	load_sounds();
 	load_textures();
+	load_atlases();
 
 	/* Get input events. */
 	game.input.callback = key_callback;
@@ -718,6 +759,7 @@ int main(int argc, char **argv)
 	/* Release assets. */
 	release_sounds();
 	release_textures();
+	release_atlases();
 
 	/* Free OpenAL. */
 	sound_free(&game.sound);
