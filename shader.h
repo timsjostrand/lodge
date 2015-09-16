@@ -1,6 +1,8 @@
 #ifndef _SHADER_H
 #define _SHADER_H
 
+#include <GLFW/glfw3.h>
+
 #include "math4.h"
 
 #ifdef DEBUG
