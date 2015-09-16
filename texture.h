@@ -2,6 +2,7 @@
 #define _TEXTURE_H
 
 #include <stdint.h>
+#include <GLFW/glfw3.h>
 
 int  image_load(uint8_t **out, int *width, int *height, const uint8_t *data, size_t len);
 int  image_load_file(uint8_t **data, int *width, int *height, const char *path);
