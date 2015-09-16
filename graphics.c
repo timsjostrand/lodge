@@ -21,8 +21,6 @@
 #include "math4.h"
 #include "texture.h"
 
-#define VERTICES_RECT_LEN 30
-
 const float vertices_rect[] = {  
 	// Vertex			 // Texcoord
 	-0.5f,	0.5f,  0.0f, 0.0f, 0.0f, // Top-left?
@@ -40,17 +38,17 @@ struct graphics* graphics_global;
 /* TODO: separate into sprite.c */
 void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 {
-	glEnableVertexAttribArray(0);
-
+	glUseProgram(s->program);
+	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
 	glBindVertexArray(g->vao_rect);
 
 	// Position, rotation and scale
 	mat4 transform_position;
 	translate(transform_position, xyz(sprite->pos));
-	
+
 	mat4 transform_scale;
 	scale(transform_scale, xyz(sprite->scale));
-	
+
 	mat4 transform_rotation;
 	rotate_z(transform_rotation, sprite->rotation);
 
@@ -60,7 +58,6 @@ void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 	transpose_same(transform_final);
 	
 	// Upload matrices and color
-	glUseProgram(s->program);
 	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
 	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
 	glUniform4fv(s->uniform_color, 1, sprite->color);
@@ -85,17 +82,20 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
 	/* OpenGL. */
 	// glViewport( 0, 0, view_width, view_height );
 	glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
 	glEnable(GL_CULL_FACE);
 	//glDisable(GL_CULL_FACE);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	/* Vertex buffer. */
 	glGenBuffers(1, &g->vbo_rect);
 	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-	glBufferData(GL_ARRAY_BUFFER, VERTICES_RECT_LEN * sizeof(float),
+	glBufferData(GL_ARRAY_BUFFER, VBO_QUAD_LEN * sizeof(float),
 			vertices_rect, GL_STATIC_DRAW);
 
 	/* Vertex array. */
@@ -169,7 +169,7 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
  * @param windowed				If applicable, whether to start in windowed mode.
  */
 int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-		int view_width, int view_height, int windowed)
+		fps_func_t fps_callback, int view_width, int view_height, int windowed)
 {
 	int ret = 0;
 
@@ -182,6 +182,7 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	g->delta_time_factor = 1.0f;
 	g->think = think;
 	g->render = render;
+	g->frames.callback = fps_callback;
 
 	/* Set up GLEW and glfw. */
 	ret = graphics_libraries_init(g, view_width, view_height, windowed);
@@ -210,26 +211,26 @@ void graphics_free(struct graphics *g)
 	glfwTerminate();
 }
 
-static void graphics_count_frame(struct frames *f)
-{
-	f->frames ++;
-	if(now() - f->last_frame_report >= 1000.0) {
-		graphics_debug("FPS: % 6d, Frame-Time (min/max/avg): % 5.1f /% 5.1f /% 5.1f ms\n",
-				f->frames, f->frame_time_min, f->frame_time_max,
-				f->frame_time_sum/f->frames);
-		f->frame_time_max = FLT_MIN;
-		f->frame_time_min = FLT_MAX;
-		f->frame_time_sum = 0;
-		f->last_frame_report = now();
-		f->frames = 0;
-	}
-}
-
 static void graphics_frames_register(struct frames *f, float delta_time)
 {
+	f->frames ++;
 	f->frame_time_min = fmin(delta_time, f->frame_time_min);
 	f->frame_time_max = fmax(delta_time, f->frame_time_max);
 	f->frame_time_sum += delta_time;
+
+	if(now() - f->last_frame_report >= 1000.0) {
+		f->last_frame_report = now();
+		f->frame_time_avg = f->frame_time_sum / (float) f->frames;
+		if(f->callback != NULL) {
+			f->callback(f);
+		}
+		graphics_debug("FPS: % 6d, Frame-Time (min/max/avg): % 5.1f /% 5.1f /% 5.1f ms\n",
+				f->frames, f->frame_time_min, f->frame_time_max, f->frame_time_avg);
+		f->frame_time_max = FLT_MIN;
+		f->frame_time_min = FLT_MAX;
+		f->frame_time_sum = 0;
+		f->frames = 0;
+	}
 }
 
 /**
@@ -263,7 +264,6 @@ void graphics_do_frame(struct graphics *g)
 
 	/* Register that a frame has been drawn. */
 	graphics_frames_register(&g->frames, now() - before);
-	graphics_count_frame(&g->frames);
 }
 
 #ifdef EMSCRIPTEN

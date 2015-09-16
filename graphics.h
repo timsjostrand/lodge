@@ -20,6 +20,9 @@
 #define GRAPHICS_IMAGE_LOAD_ERROR	-5
 #define GRAPHICS_TEXTURE_LOAD_ERROR -6
 
+#define VBO_VERTEX_LEN	5
+#define VBO_QUAD_LEN	(6 * VBO_VERTEX_LEN)
+
 struct sprite {
 	int		type;
 	vec4	pos;
@@ -29,6 +32,10 @@ struct sprite {
 	GLuint	*texture;
 };
 
+struct frames;
+
+typedef void (*fps_func_t)(struct frames *f);
+
 struct frames {
 	int			frames;						/* Number of frames drawn since last_frame_report. */
 	double		last_frame_report;			/* When frames were last summed up. */
@@ -36,6 +43,8 @@ struct frames {
 	float		frame_time_min;
 	float		frame_time_max;
 	float		frame_time_sum;
+	float		frame_time_avg;
+	fps_func_t	callback;					/* A callback thas is called approximately every 1 sec. */
 };
 
 struct graphics;
@@ -58,7 +67,7 @@ struct graphics {
 };
 
 int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-				int view_width, int view_height, int windowed);
+				fps_func_t fps_callback, int view_width, int view_height, int windowed);
 void	graphics_free(struct graphics *g);
 void	graphics_loop();
 
