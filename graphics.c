@@ -67,7 +67,7 @@ void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 	// Render it!
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *(sprite->texture));
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDrawArrays(GL_TRIANGLES, 0, VBO_QUAD_VERTEX_COUNT);
 }
 
 static int graphics_opengl_init(struct graphics *g, int view_width, int view_height)

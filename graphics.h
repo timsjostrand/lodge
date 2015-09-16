@@ -20,8 +20,12 @@
 #define GRAPHICS_IMAGE_LOAD_ERROR	-5
 #define GRAPHICS_TEXTURE_LOAD_ERROR -6
 
-#define VBO_VERTEX_LEN	5
-#define VBO_QUAD_LEN	(6 * VBO_VERTEX_LEN)
+/* Number of components in a vertex (x,y,z,u,v). */
+#define VBO_VERTEX_LEN			5
+/* Number of vertices in a quad. */
+#define VBO_QUAD_VERTEX_COUNT	6
+/* Number of components in a quad. */
+#define VBO_QUAD_LEN			(VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
 
 struct sprite {
 	int		type;
