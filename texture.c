@@ -36,24 +36,6 @@ int image_load(uint8_t **out, int *width, int *height, const uint8_t *data, size
 }
 
 /**
- * @param data		Store the pixel data from the image here.
- * @param width		Store the width of the image here.
- * @param height	Store the height of the image here.
- * @param path		The path to load image data from.
- */
-int image_load_file(uint8_t **data, int *width, int *height, const char *path)
-{
-	int components;
-	uint8_t *tmp = stbi_load(path, width, height, &components, STBI_rgb_alpha);
-	if(tmp == NULL) {
-		graphics_error("image_load_file(): %s\n", stbi_failure_reason());
-		return GRAPHICS_IMAGE_LOAD_ERROR;
-	}
-	*data = tmp;
-	return GRAPHICS_OK;
-}
-
-/**
  * When an image has been loaded via image_load{_file}(), use image_free() to release
  * it.
  *
@@ -119,48 +101,34 @@ void texture_free(const GLuint tex)
  * Parses the image data from a PNG, JPEG, BMP or TGA image and stores in an
  * OpenGL texture.
  *
- * @param tex	Store the OpenGL texture id here.
- * @param data	The image data to load.
- * @param len	The length of the image data.
+ * @param tex		Store the OpenGL texture id here.
+ * @param width		Store the width of the texture here (or NULL).
+ * @param height	Store the height of the texture here (or NULL).
+ * @param data		The image data to load.
+ * @param len		The length of the image data.
  */
-int texture_load(GLuint *tex, const uint8_t *data, size_t len)
+int texture_load(GLuint *tex, int *width, int *height, const uint8_t *data,
+		size_t len)
 {
 	uint8_t *tmp;
-	int width;
-	int height;
+	int tmp_width;
+	int tmp_height;
 	int ret;
-	ret = image_load(&tmp, &width, &height, data, len);
+	ret = image_load(&tmp, &tmp_width, &tmp_height, data, len);
 	if(ret != GRAPHICS_OK) {
 		return ret;
 	}
-	ret = texture_load_pixels(tex, tmp, width, height);
+	ret = texture_load_pixels(tex, tmp, tmp_width, tmp_height);
 	image_free(tmp);
 	if(ret != GRAPHICS_OK) {
 		texture_free(*tex);
 		return ret;
 	}
-	return GRAPHICS_OK;
-}
-
-/**
- * @param tex	Store the OpenGL texture id here.
- * @param path	Where to load the image from.
- */
-int texture_load_file(GLuint *tex, const char *path)
-{
-	uint8_t *data;
-	int width;
-	int height;
-	int ret;
-	ret = image_load_file(&data, &width, &height, path);
-	if(ret != GRAPHICS_OK) {
-		return ret;
+	if(width != NULL) {
+		*(width) = tmp_width;
 	}
-	ret = texture_load_pixels(tex, data, width, height);
-	image_free(data);
-	if(ret != GRAPHICS_OK) {
-		texture_free(*tex);
-		return ret;
+	if(height != NULL) {
+		*(height) = tmp_height;
 	}
 	return GRAPHICS_OK;
 }

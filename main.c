@@ -664,7 +664,7 @@ void reload_textures(const char *filename, unsigned int size, void *data, void* 
 
 	GLuint tmp;
 
-	int ret = texture_load(&tmp, data, size);
+	int ret = texture_load(&tmp, NULL, NULL, data, size);
 
 	if(ret != GRAPHICS_OK) {
 		graphics_error("Texture load failed: %s (%u bytes)\n", filename, size);
@@ -722,8 +722,8 @@ int main(int argc, char **argv)
 
 	/* Set up graphics. */
 	int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
-	ret = graphics_init(&game.graphics, &think, &render, VIEW_WIDTH,
-			VIEW_HEIGHT, windowed);
+	ret = graphics_init(&game.graphics, &think, &render, &fps_callback,
+			VIEW_WIDTH, VIEW_HEIGHT, windowed);
 	
 	if(ret != GRAPHICS_OK) {
 		graphics_error("Graphics initialization failed (%d)\n", ret);
