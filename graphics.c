@@ -83,8 +83,10 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
 	// glViewport( 0, 0, view_width, view_height );
 	glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
 
+#ifdef DEPTH
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LEQUAL);
+#endif
 
 	glEnable(GL_CULL_FACE);
 	//glDisable(GL_CULL_FACE);
