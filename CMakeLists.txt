@@ -76,9 +76,9 @@ endif()
 include_directories(lib/)
 
 set(SOURCE main.c math4.c graphics.c shader.c input.c texture.c color.c sound.c
-    vfs.c atlas.c)
+    vfs.c atlas.c monotext.c)
 set(HEADERS math4.h graphics.h shader.h input.h texture.h color.h sound.h vfs.h
-    atlas.h)
+    atlas.h monotext.h)
 
 # Main executable.
 add_executable(glpong ${SOURCE} ${HEADERS})
