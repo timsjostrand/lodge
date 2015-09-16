@@ -483,7 +483,7 @@ void test_make_sound_manual()
 	}
 }
 
-void reload_vivaldi(const char *filename, unsigned int size, void *data, void *userdata)
+void reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
 		sound_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -510,7 +510,7 @@ void reload_vivaldi(const char *filename, unsigned int size, void *data, void *u
 
 void load_sounds()
 {
-	vfs_register_callback("vivaldi.ogg", &reload_vivaldi, &game.vivaldi);
+	vfs_register_callback("vivaldi.ogg", &reload_sound, &game.vivaldi);
 
 	if(sound_fx_load_filter(&game.tone_hit,
 				0.1 * SOUND_SAMPLE_RATE,
