@@ -22,6 +22,7 @@
 #include "sound.h"
 #include "vfs.h"
 #include "atlas.h"
+#include "monotext.h"
 
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360		/* 16:9 aspect ratio */
@@ -108,6 +109,8 @@ struct game {
 	struct sound_fx	tone_hit;
 	struct sound_fx	tone_bounce;
 	struct atlas	atlas_earl;
+	struct monofont	font;
+	struct monotext	txt_debug;
 } game = { 0 };
 
 void print_stats()
@@ -386,6 +389,9 @@ void render(struct graphics *g, float delta_time)
 
 	/* Effectslayer */
 	sprite_render(&game.effectslayer, &game.bg_shader, &game.graphics);
+
+	/* Text. */
+	monotext_render(&game.txt_debug, &game.shader, &game.graphics);
 }
 
 void init_effectslayer(struct sprite* b)
@@ -442,6 +448,8 @@ void init_game()
 	init_player1(&game.player1);
 	init_player2(&game.player2);
 	init_ball(&game.ball);
+	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
+			VIEW_HEIGHT - 16.0f);
 }
 
 void key_callback(struct input *input, GLFWwindow *window, int key,
@@ -703,6 +711,22 @@ void test_read_file(const char* filename, unsigned int size, void* data)
 	printf("\n\n");
 }
 
+static void load_fonts()
+{
+	monofont_new(&game.font, "manaspace.png", 16, 16, -7, 0);
+}
+
+static void release_fonts()
+{
+	monofont_free(&game.font);
+}
+
+static void fps_callback(struct frames *f)
+{
+	monotext_updatef(&game.txt_debug, "FPS:% 5d, MS:% 3.1f/% 3.1f/% 3.1f",
+			f->frames, f->frame_time_min, f->frame_time_avg, f->frame_time_max);
+}
+
 int main(int argc, char **argv)
 {
 	/* Start the virtual file system */
@@ -736,6 +760,7 @@ int main(int argc, char **argv)
 	load_sounds();
 	load_textures();
 	load_atlases();
+	load_fonts();
 
 	/* Get input events. */
 	game.input.callback = key_callback;
@@ -747,11 +772,11 @@ int main(int argc, char **argv)
 		exit(ret);
 	}
 
-	/* Set up game. */
-	init_game();
-
 	/* Load all assets */
 	vfs_run_callbacks();
+
+	/* Set up game. */
+	init_game();
 
 	/* Loop until the user closes the window */
 	graphics_loop(&game.graphics);
@@ -760,6 +785,7 @@ int main(int argc, char **argv)
 	release_sounds();
 	release_textures();
 	release_atlases();
+	release_fonts();
 
 	/* Free OpenAL. */
 	sound_free(&game.sound);
