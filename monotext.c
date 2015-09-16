@@ -1,5 +1,16 @@
 /**
- * Stupid simple bitmap font rendering.
+ * Simple monospace font rendering.
+ *
+ * - monofont_new() parses a new font from a PNG file.
+ *
+ * - monotext_new() creates a new text object with a specific font. The font
+ *   MUST have been completely loaded before monotext_new() is used!
+ *
+ * - monotext_update() updates the vertex buffer for a monotext with a new text
+ *   to display, possibly reallocating memory and pushing new vertices to the
+ *   GPU.
+ *
+ * - monotext_updatef() does the same but takes a printf-style format as well.
  *
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
@@ -224,6 +235,10 @@ static void monotext_print_quad(float *verts, int quad)
 void monotext_new(struct monotext *dst, const char *text, vec4 color,
 		struct monofont *font, const float blx, const float bly)
 {
+	if(!font->loaded) {
+		monotext_error("Font not loaded!\n");
+		return;
+	}
 	dst->font = font;
 	set3f(dst->bottom_left, blx, bly, 0.2f);
 	copyv(dst->color, color);
