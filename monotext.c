@@ -65,8 +65,8 @@ static int monofont_atlas_coords(float *tx, float *ty, float *tw, float *th,
  */
 static void strnbounds(const char *s, const int len, int *width_max, int *height_max)
 {
-	*width_max = 0;
-	*height_max = 0;
+	*(width_max) = 0;
+	*(height_max) = 0;
 	for(int i=0; i<len; i++) {
 		switch(s[i]) {
 		case '\n':
@@ -232,7 +232,7 @@ static void monotext_print_quad(float *verts, int quad)
  * @param bly	The bottom left Y origin.
  * @param font	The font to render with.
  */
-void monotext_new(struct monotext *dst, const char *text, vec4 color,
+void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 		struct monofont *font, const float blx, const float bly)
 {
 	if(!font->loaded) {

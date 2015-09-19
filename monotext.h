@@ -55,7 +55,7 @@ struct monotext {
 	GLuint			vao;
 };
 
-void monotext_new(struct monotext *dst, const char *text, vec4 color,
+void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 		struct monofont *font, const float blx, const float bly);
 void monotext_updatef(struct monotext *dst, const char *fmt, ...);
 void monotext_update(struct monotext *dst, const char *text);
