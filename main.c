@@ -611,6 +611,12 @@ void load_shaders()
 	shader_uniform1f(&game.bg_shader, "view_height", &game.view_height);
 }
 
+static void release_shaders()
+{
+	shader_free(&game.shader);
+	shader_free(&game.bg_shader);
+}
+
 void reload_atlas(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
@@ -727,6 +733,24 @@ static void fps_callback(struct frames *f)
 			f->frames, f->frame_time_min, f->frame_time_avg, f->frame_time_max);
 }
 
+static void load_assets()
+{
+	load_shaders();
+	load_sounds();
+	load_textures();
+	load_atlases();
+	load_fonts();
+}
+
+static void release_assets()
+{
+	release_shaders();
+	release_sounds();
+	release_textures();
+	release_atlases();
+	release_fonts();
+}
+
 int main(int argc, char **argv)
 {
 	/* Start the virtual file system */
@@ -755,12 +779,7 @@ int main(int argc, char **argv)
 		exit(ret);
 	}
 
-	/* Load assets. */
-	load_shaders();
-	load_sounds();
-	load_textures();
-	load_atlases();
-	load_fonts();
+	load_assets();
 
 	/* Get input events. */
 	game.input.callback = key_callback;
@@ -781,17 +800,10 @@ int main(int argc, char **argv)
 	/* Loop until the user closes the window */
 	graphics_loop(&game.graphics);
 
-	/* Release assets. */
-	release_sounds();
-	release_textures();
-	release_atlases();
-	release_fonts();
+	release_assets();
 
 	/* Free OpenAL. */
 	sound_free(&game.sound);
-
-	/* Free shader. */
-	shader_free(&game.shader);
 
 	/* If we reach here, quit the game. */
 	graphics_free(&game.graphics);
