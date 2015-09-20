@@ -47,8 +47,8 @@ static int monofont_atlas_coords(float *tx, float *ty, float *tw, float *th,
 		return TEXT_ERROR;
 	}
 
-	int grid_y = letter / font->grids_y;
-	int grid_x = letter - (grid_y * font->grids_y);
+	int grid_y = letter / font->grids_x;
+	int grid_x = (letter - (grid_y * font->grids_x)) % font->grids_x;
 
 	/* Map coordinates to [0,1]. */
     *(tx) = grid_x / (float) font->grids_x;
