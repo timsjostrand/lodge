@@ -756,10 +756,6 @@ int main(int argc, char **argv)
 	/* Start the virtual file system */
 	vfs_init(argc, argv);
 
-	/* Asset location */
-	//vfs_mount("C:/Users/Johan/Dropbox/glpong-assets");
-	vfs_mount("test_assets");
-
 	int ret = 0;
 
 	/* Seed random number generator. */
