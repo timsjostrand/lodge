@@ -754,7 +754,7 @@ static void release_assets()
 int main(int argc, char **argv)
 {
 	/* Start the virtual file system */
-	vfs_init();
+	vfs_init(argc, argv);
 
 	/* Asset location */
 	//vfs_mount("C:/Users/Johan/Dropbox/glpong-assets");
