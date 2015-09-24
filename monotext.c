@@ -291,8 +291,9 @@ void monotext_update(struct monotext *dst, const char *text)
 
 	/* Create vertices: 5 rows of floats for every letter. */
 	int old_verts_len = dst->verts_len;
-	dst->quads_len = dst->text_len - dst->height_chars;
-	dst->verts_len = dst->quads_len * VBO_QUAD_LEN;
+	dst->quads_count = dst->text_len - dst->height_chars;
+	dst->verts_count = dst->quads_count * VBO_QUAD_VERTEX_COUNT;
+	dst->verts_len = dst->quads_count * VBO_QUAD_LEN;
 	realloc_verts = old_verts_len != dst->verts_len;
 
 	/* Reallocate vertices memory if necessary. */
@@ -409,5 +410,5 @@ void monotext_render(struct monotext *text, struct shader *s, struct graphics *g
 	glBindTexture(GL_TEXTURE_2D, text->font->texture);
 
 	/* Render it! */
-	glDrawArrays(GL_TRIANGLES, 0, text->verts_len);
+	glDrawArrays(GL_TRIANGLES, 0, text->verts_count);
 }

@@ -49,8 +49,9 @@ struct monotext {
 	int				width;						/* The width of the text in pixels. */
 	int				height;						/* The height fo the text in pixels. */
 	float			*verts;						/* The vertices required to draw this text. */
-	int				verts_len;					/* Length of the vertex array. */
-	int				quads_len;					/* The number of quads required (text_len - newlines). */
+	int				verts_count;				/* Number of vertices in verts buffer. */
+	int				verts_len;					/* Length of the vertex buffer. */
+	int				quads_count;				/* The number of quads required (text_len - newlines). */
 	GLuint			vbo;						/* VBO for the vertex array. */
 	GLuint			vao;
 };
