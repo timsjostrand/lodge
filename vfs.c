@@ -255,3 +255,13 @@ void vfs_free_memory(const char* filename)
 		}
 	}
 }
+
+int vfs_file_count()
+{
+	return file_count;
+}
+
+void vfs_get_simple_name(char **c, const int index)
+{
+	*c = file_table[index].simplename;
+}

@@ -20,4 +20,7 @@ void	vfs_filewatch();
 void*	vfs_get_file(const char* filename, size_t* out_num_bytes);
 void	vfs_free_memory(const char* filename);
 
+int		vfs_file_count();
+void	vfs_get_simple_name(char **c, const int index);
+
 #endif //_VFS_H
