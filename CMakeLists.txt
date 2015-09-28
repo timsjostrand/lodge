@@ -14,6 +14,10 @@ add_definitions(-DDEBUG)
 # Enable asset hotswap.
 add_definitions(-DVFS_ENABLE_FILEWATCH)
 
+# Check for compatibility.
+include(CheckFunctionExists)
+check_function_exists(strnlen HAVE_STRNLEN)
+
 if(NOT EMSCRIPTEN)
     # Build GLFW.
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
@@ -76,9 +80,9 @@ endif()
 include_directories(lib/)
 
 set(SOURCE main.c math4.c graphics.c shader.c input.c texture.c color.c sound.c
-    vfs.c atlas.c monotext.c)
+    vfs.c atlas.c monotext.c str.c list.c console.c)
 set(HEADERS math4.h graphics.h shader.h input.h texture.h color.h sound.h vfs.h
-    atlas.h monotext.h)
+    atlas.h monotext.h str.h list.h console.h)
 
 # Main executable.
 add_executable(glpong ${SOURCE} ${HEADERS})
@@ -86,7 +90,16 @@ add_executable(glpong ${SOURCE} ${HEADERS})
 # GCC Compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
     # More warnings.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall ")
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -fdiagnostics-show-option ")
+    # Do not allow declaring functions without implementing them.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
+        "-Werror-implicit-function-declaration ")
+    # Force casting of pointer types.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
+        "-Werror=strict-aliasing ")
+    # Lightweight buffer overflow detection.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
+        "-D_FORTIFY_SOURCE=2 ")
 
     # QUIRK: stb.h requires all these warnings to be silenced, but it seems
     # warnings have to be set for the source file including the header...
@@ -101,7 +114,11 @@ endif()
 # MSVC Compiler settings.
 if(MSVC)
     # More warnings.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS /W3)
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "/W3 ")
+    # Disable "unsafe" functions that redirects to Microsoft-specific
+    # implementations.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
+        "/D_CRT_SECURE_NO_WARNINGS ")
 endif()
 
 # Link.

@@ -23,6 +23,7 @@
 #include "vfs.h"
 #include "atlas.h"
 #include "monotext.h"
+#include "console.h"
 
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360		/* 16:9 aspect ratio */
@@ -110,7 +111,13 @@ struct game {
 	struct sound_fx	tone_bounce;
 	struct atlas	atlas_earl;
 	struct monofont	font;
+	struct monofont	font_console;
 	struct monotext	txt_debug;
+	struct console	console;
+	struct console_cmd cmd_quit;
+	struct console_cmd cmd_assets;
+	struct console_cmd cmd_assets_list;
+	struct console_cmd cmd_assets_reload;
 } game = { 0 };
 
 void print_stats()
@@ -361,6 +368,7 @@ void think(struct graphics *g, float delta_time)
 	game_think(delta_time);
 	particles_think(delta_time);
 	input_think(&game.input, delta_time);
+	console_think(&game.console, delta_time);
 	shader_uniforms_think(&game.shader, delta_time);
 	shader_uniforms_think(&game.bg_shader, delta_time);
 }
@@ -392,6 +400,9 @@ void render(struct graphics *g, float delta_time)
 
 	/* Text. */
 	monotext_render(&game.txt_debug, &game.shader, &game.graphics);
+	if(game.console.focused) {
+		console_render(&game.console, &game.shader, &game.graphics);
+	}
 }
 
 void init_effectslayer(struct sprite* b)
@@ -428,7 +439,6 @@ void init_ball(struct ball *ball)
 	ball->speed = 0.6f;
 	rand(); rand(); rand();
 	float random_angle = randr(0.0f, 2.0f * M_PI);
-	printf("random_angle=%6f\n", random_angle);
 	ball->vy = ball->speed * sin(random_angle) / 4.0f;
 	ball->vx = ball->speed * cos(random_angle) / 4.0f;
 	ball->last_hit_x = 10.0f;
@@ -437,6 +447,59 @@ void init_ball(struct ball *ball)
 	set4f(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.06f, 1.0f);
 	set4f(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
 	copyv(ball->sprite.color, COLOR_WHITE);
+}
+
+static void cmd_quit_func(struct console *c, struct console_cmd *cmd, struct list *argv)
+{
+	glfwSetWindowShouldClose(game.graphics.window, 1);
+}
+
+static void cmd_assets_list_func(struct console *c, struct console_cmd *cmd, struct list *argv)
+{
+	char *simplename;
+	for(int i=0; i<vfs_file_count(); i++) {
+		vfs_get_simple_name(&simplename, i);
+		if(simplename != NULL) {
+			console_printf(c, "%s\n", simplename);
+		}
+	}
+}
+
+static void cmd_assets_reload_func(struct console *c, struct console_cmd *cmd, struct list *argv)
+{
+	struct char_element *asset = (struct char_element *) list_element_at(argv, 2);
+	if(asset == NULL) {
+		console_printf(c, "ERROR: No asset specified\n");
+	} else {
+		console_printf(c, "TODO: Reload asset: \"%s\"\n", asset->data);
+	}
+}
+
+static void cmd_assets_reload_autocomplete(struct console *c, struct console_cmd *cmd,
+		struct list *argv, struct list *matches)
+{
+	char *simplename;
+	for(int i=0; i<vfs_file_count(); i++) {
+		vfs_get_simple_name(&simplename, i);
+		list_append(matches, simplename);
+	}
+}
+
+void init_console()
+{
+	console_new(&game.console, &game.font_console, VIEW_WIDTH, 16);
+
+	/* Create commands. */
+	console_cmd_new(&game.cmd_quit, "quit", 0, &cmd_quit_func, NULL);
+	console_cmd_new(&game.cmd_assets, "assets", 0, NULL, NULL);
+	console_cmd_new(&game.cmd_assets_list, "list", 0, &cmd_assets_list_func, NULL);
+	console_cmd_new(&game.cmd_assets_reload, "reload", 1, &cmd_assets_reload_func, &cmd_assets_reload_autocomplete);
+
+	/* Register command tree. */
+	console_cmd_add(&game.cmd_quit,				&game.console.root_cmd);
+	console_cmd_add(&game.cmd_assets,			&game.console.root_cmd);
+	console_cmd_add(&game.cmd_assets_reload,	&game.cmd_assets);
+	console_cmd_add(&game.cmd_assets_list,		&game.cmd_assets);
 }
 
 void init_game()
@@ -450,26 +513,52 @@ void init_game()
 	init_ball(&game.ball);
 	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
 			VIEW_HEIGHT - 16.0f);
+	init_console();
 }
 
-void key_callback(struct input *input, GLFWwindow *window, int key,
+static void char_callback(struct input *input, GLFWwindow *window, char key,
+		int mods)
+{
+	/* Input localized text into console. */
+	if(key != CONSOLE_KEY_FOCUS
+			&& game.console.focused) {
+		console_input_feed_char(&game.console, key, mods);
+	}
+}
+
+static void key_callback(struct input *input, GLFWwindow *window, int key,
 		int scancode, int action, int mods)
 {
+	/* Input control characters into console. */
+	if(key != CONSOLE_KEY_FOCUS
+			&& game.console.focused
+			&& key >= 256) {
+		console_input_feed_control(&game.console, key, scancode, action, mods);
+	}
+
 	if(action == GLFW_RELEASE) {
-		switch(key) {
-			case GLFW_KEY_O:
-				game.graphics.delta_time_factor *= 2.0f;
-				sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
-				printf("time_mod=%f\n", game.graphics.delta_time_factor);
-				break;
-			case GLFW_KEY_P:
-				game.graphics.delta_time_factor /= 2.0f;
-				sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
-				printf("time_mod=%f\n", game.graphics.delta_time_factor);
-				break;
-			case GLFW_KEY_ESCAPE:
-				glfwSetWindowShouldClose(window, 1);
-				break;
+		/* Toggle console. */
+		if(key == CONSOLE_KEY_FOCUS) {
+			console_toggle_focus(&game.console);
+			input->enabled = !game.console.focused;
+		}
+	} else if(action == GLFW_PRESS) {
+		if(!game.console.focused) {
+			switch(key) {
+				case GLFW_KEY_O:
+					game.graphics.delta_time_factor *= 2.0f;
+					sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
+					printf("time_mod=%f\n", game.graphics.delta_time_factor);
+					break;
+				case GLFW_KEY_P:
+					game.graphics.delta_time_factor /= 2.0f;
+					sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
+					printf("time_mod=%f\n", game.graphics.delta_time_factor);
+					break;
+				case GLFW_KEY_ESCAPE:
+					glfwSetWindowShouldClose(window, 1);
+					break;
+			}
 		}
 	}
 }
@@ -720,11 +809,13 @@ void test_read_file(const char* filename, unsigned int size, void* data)
 static void load_fonts()
 {
 	monofont_new(&game.font, "manaspace.png", 16, 16, -7, 0);
+	monofont_new(&game.font_console, "04B03_8px.png", 8, 8, -2, 0);
 }
 
 static void release_fonts()
 {
 	monofont_free(&game.font);
+	monofont_free(&game.font_console);
 }
 
 static void fps_callback(struct frames *f)
@@ -778,8 +869,8 @@ int main(int argc, char **argv)
 	load_assets();
 
 	/* Get input events. */
-	game.input.callback = key_callback;
-	ret = input_init(&game.input, game.graphics.window);
+	ret = input_init(&game.input, game.graphics.window, key_callback,
+			char_callback);
 
 	if(ret != GRAPHICS_OK) {
 		graphics_error("Input initialization failed (%d)\n", ret);
