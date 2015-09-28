@@ -456,9 +456,9 @@ static void cmd_quit_func(struct console *c, struct console_cmd *cmd, struct lis
 
 static void cmd_assets_list_func(struct console *c, struct console_cmd *cmd, struct list *argv)
 {
-	char *simplename;
+	const char *simplename;
 	for(int i=0; i<vfs_file_count(); i++) {
-		vfs_get_simple_name(&simplename, i);
+		simplename = vfs_get_simple_name(i);
 		if(simplename != NULL) {
 			console_printf(c, "%s\n", simplename);
 		}
@@ -478,9 +478,9 @@ static void cmd_assets_reload_func(struct console *c, struct console_cmd *cmd, s
 static void cmd_assets_reload_autocomplete(struct console *c, struct console_cmd *cmd,
 		struct list *argv, struct list *matches)
 {
-	char *simplename;
+	const char *simplename;
 	for(int i=0; i<vfs_file_count(); i++) {
-		vfs_get_simple_name(&simplename, i);
+		simplename = vfs_get_simple_name(i);
 		list_append(matches, simplename);
 	}
 }
