@@ -191,12 +191,6 @@ void console_print(struct console *c, const char *text, size_t text_len)
 		return;
 	}
 
-	/* No newline supplied by user? Add it manually. */
-	int add_newline = 0; //(strchr(text, '\n') == NULL);
-	if(add_newline) {
-		text_len ++;
-	}
-
 	/* FIXME: implement line splitting. OR: implement wordwrapping in monotext
 	 * instead? */
 	if(text_len > (size_t) (c->chars_per_line-1)) {
@@ -212,9 +206,6 @@ void console_print(struct console *c, const char *text, size_t text_len)
 
 	/* Push new line. */
 	strncpy(c->history_cur, text, text_len);
-	if(add_newline) {
-		c->history_cur[text_len - 1] = '\n';
-	}
 	c->history_cur += text_len;
 
 	/* Display only subsection of history. */
