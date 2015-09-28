@@ -40,6 +40,7 @@ float determinant(const mat4 m);
 void adjugate(mat4 m, const mat4 a);
 
 int imax(int a, int b);
+int imin(int a, int b);
 float clamp(float f, float min, float max);
 float randr(float min, float max);
 

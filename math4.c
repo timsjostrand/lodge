@@ -324,7 +324,12 @@ void copyv(vec4 v, const vec4 a)
 
 int imax(int a, int b)
 {
-	return a > b ? a : b;
+	return a >= b ? a : b;
+}
+
+int imin(int a, int b)
+{
+	return a <= b ? a : b;
 }
 
 float clamp(float f, float min, float max)
