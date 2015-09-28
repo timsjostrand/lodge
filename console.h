@@ -12,6 +12,7 @@
 #define console_error(...) fprintf(stderr, "ERROR @ Console: " __VA_ARGS__)
 
 #define CONSOLE_KEY_FOCUS		96	/* Paragraph key. */
+#define CONSOLE_CHAR_FOCUS		'§'	/* Paragraph key. */
 
 #define CONSOLE_HISTORY_LINES		128	/* These many screen-width lines are guaranteed to fit into the history. */
 #define CONSOLE_DISPLAY_LINES		10	/* These many screen-width lines are drawn at any given moment to the screen. */

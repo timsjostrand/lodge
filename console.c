@@ -397,6 +397,11 @@ void console_input_feed_char(struct console *c, char key, int mods)
 		return;
 	}
 
+	/* Ignore focus key. */
+	if(key == CONSOLE_CHAR_FOCUS) {
+		return;
+	}
+
 	c->cursor.time_input = now();
 
 	/* Type char into input if input buffer is not full. */
@@ -574,7 +579,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		if(list_count(argv) == 1) {
 			cmd = &(c->root_cmd);
 		} else {
-			console_error("cmd == null\n");
+			console_debug("Autocomplete: command not found\n");
 			return;
 		}
 	}
