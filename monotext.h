@@ -17,7 +17,7 @@
 #define TEXT_OK				0
 #define TEXT_ERROR			-1
 
-#define MONOTEXT_STR_MAX	255
+#define MONOTEXT_STR_MAX	1024
 
 #define MONOFONT_START_CHAR	32
 
@@ -59,7 +59,7 @@ struct monotext {
 void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 		struct monofont *font, const float blx, const float bly);
 void monotext_updatef(struct monotext *dst, const char *fmt, ...);
-void monotext_update(struct monotext *dst, const char *text);
+void monotext_update(struct monotext *dst, const char *text, const size_t len);
 void monotext_render(struct monotext *text, struct shader *s, struct graphics *g);
 void monotext_free(struct monotext *text);
 

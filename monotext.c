@@ -27,6 +27,7 @@
 #include "texture.h"
 #include "vfs.h"
 #include "color.h"
+#include "str.h"
 
 /**
  * Looks up a character in the texture atlas and returns the texture coordinates
@@ -242,7 +243,7 @@ void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 	dst->font = font;
 	set3f(dst->bottom_left, blx, bly, 0.2f);
 	copyv(dst->color, color);
-	monotext_update(dst, text);
+	monotext_update(dst, text, strnlen(text, MONOTEXT_STR_MAX));
 }
 
 void monotext_free(struct monotext *text)
@@ -266,23 +267,29 @@ void monotext_updatef(struct monotext *dst, const char *fmt, ...)
 	vsprintf(s, fmt, args);
 	va_end(args);
 	
-	monotext_update(dst, s);
+	monotext_update(dst, s, strnlen(s, MONOTEXT_STR_MAX));
 }
 
 /**
  * Updates the displayed text of a monotext, potentially reallocating memory and
  * pushing new buffer objects to the GPU.
  */
-void monotext_update(struct monotext *dst, const char *text)
+void monotext_update(struct monotext *dst, const char *text, const size_t len)
 {
+	/* Sanity check. */
+	if(len >= MONOTEXT_STR_MAX) {
+		monotext_error("text length %d >= MONOTEXT_STR_MAX!\n", (int) len);
+		return;
+	}
+
 	/* Set this flag if more/less vert memory is required for vertices. */
 	int realloc_verts = 0;
 	/* Set this flag if vertices are to be re-uploaded to the GPU. */
 	int rearrange_verts = (dst->text == NULL) || !(strcmp(dst->text, text) == 0);
 
 	/* Text metadata. */
-	strcpy(dst->text, text);
-	dst->text_len = strlen(text);
+	strncpy(dst->text, text, MONOTEXT_STR_MAX);
+	dst->text_len = strnlen(text, MONOTEXT_STR_MAX);
 
 	/* Text bounds. */
 	strnbounds(dst->text, dst->text_len, &(dst->width_chars), &(dst->height_chars));
@@ -326,6 +333,8 @@ void monotext_update(struct monotext *dst, const char *text)
 			char c = dst->text[i];
 			/* Handle new lines. */
 			switch(c) {
+			case '\0':
+				break;
 			case '\n':
 				x = 0;
 				y--;
@@ -340,8 +349,8 @@ void monotext_update(struct monotext *dst, const char *text)
 							blx + x * (f->letter_width + f->letter_spacing_x),	// x
 							bly + y * (f->letter_height + f->letter_spacing_y),	// y
 							blz,												// z
-							f->letter_width,									// w
-							f->letter_height,									// h
+							(float) f->letter_width,							// w
+							(float) f->letter_height,							// h
 							tx, ty, tw, th);
 					index++;
 					x++;
@@ -353,8 +362,8 @@ void monotext_update(struct monotext *dst, const char *text)
 		/* glBufferData reallocates memory if necessary. */
 		glBindBuffer(GL_ARRAY_BUFFER, dst->vbo);
 		glBindVertexArray(dst->vao);
-		glBufferData(GL_ARRAY_BUFFER, dst->verts_len * sizeof(float),
-				dst->verts, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, dst->verts_len * sizeof(GLfloat),
+				dst->verts, GL_DYNAMIC_DRAW);
 	}
 }
 
