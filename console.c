@@ -24,10 +24,7 @@ const vec4 CONSOLE_COLOR_DISPLAY	= { 0.8f, 0.8f, 0.8f, 1.0f };
 const vec4 CONSOLE_COLOR_CURSOR		= { 0.0f, 0.0f, 0.0f, 1.0f };
 const vec4 CONSOLE_COLOR_BG			= { 0.0f, 0.0f, 0.0f, 0.4f };
 
-/* FIXME: should be texture_white */
-GLuint FIXME_WHITE_TEX = 0;
-
-static void console_cursor_init(struct console_cursor *cur, struct monotext *txt)
+static void console_cursor_init(struct console_cursor *cur, struct monotext *txt, GLuint *white_tex)
 {
 	cur->txt = txt;
 	cur->pos = 0;
@@ -37,7 +34,7 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	struct sprite *s = &cur->sprite;
 	s->type = 0;
 	s->rotation = 0;
-	s->texture = &FIXME_WHITE_TEX;
+	s->texture = white_tex;
 	set4f(s->pos, xyz(txt->bottom_left), 0.0f);
 	set4f(s->scale,
 			txt->font->letter_width  + txt->font->letter_spacing_x + 1,
@@ -126,7 +123,8 @@ static int console_split_args(const char *s, size_t s_size, const char token, st
 	return 0;
 }
 
-void console_new(struct console *c, struct monofont *font, int view_width, int padding)
+void console_new(struct console *c, struct monofont *font, int view_width,
+		int padding, GLuint *white_tex)
 {
 	c->font = font;
 	c->chars_per_line = view_width / (font->letter_width + font->letter_spacing_x);
@@ -150,12 +148,12 @@ void console_new(struct console *c, struct monofont *font, int view_width, int p
 			bg_h,
 			CONSOLE_COLOR_BG,
 			0.0f,
-			&FIXME_WHITE_TEX);
+			white_tex);
 
 	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, padding, padding);
 	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, padding, padding);
 	
-	console_cursor_init(&c->cursor, &c->txt_input);
+	console_cursor_init(&c->cursor, &c->txt_input, white_tex);
 	console_cmd_new(&c->root_cmd, NULL, 0, NULL, NULL);
 }
 
