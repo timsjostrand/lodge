@@ -487,7 +487,7 @@ static void cmd_assets_reload_autocomplete(struct console *c, struct console_cmd
 
 void init_console()
 {
-	console_new(&game.console, &game.font_console, VIEW_WIDTH, 16);
+	console_new(&game.console, &game.font_console, VIEW_WIDTH, 16, &game.textures.none);
 
 	/* Create commands. */
 	console_cmd_new(&game.cmd_quit, "quit", 0, &cmd_quit_func, NULL);
