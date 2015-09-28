@@ -77,6 +77,8 @@ void	graphics_loop();
 
 double	now();
 
+void	sprite_init(struct sprite *sprite, int type, float x, float y, float z,
+				float w, float h, const vec4 color, float rotation, GLuint *texture);
 void	sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g);
 
 #endif

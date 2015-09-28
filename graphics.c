@@ -20,8 +20,9 @@
 #include "graphics.h"
 #include "math4.h"
 #include "texture.h"
+#include "color.h"
 
-const float vertices_rect[] = {  
+const float vertices_rect[] = {
 	// Vertex			 // Texcoord
 	-0.5f,	0.5f,  0.0f, 0.0f, 0.0f, // Top-left?
 	-0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left ?
@@ -68,6 +69,17 @@ void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *(sprite->texture));
 	glDrawArrays(GL_TRIANGLES, 0, VBO_QUAD_VERTEX_COUNT);
+}
+
+void sprite_init(struct sprite *sprite, int type, float x, float y, float z,
+				float w, float h, const vec4 color, float rotation, GLuint *texture)
+{
+	sprite->type = type;
+	set4f(sprite->pos, x, y, z, 0.0f);
+	set4f(sprite->scale, w, h, 1.0f, 1.0f);
+	set4f(sprite->color, rgba(color));
+	sprite->rotation = rotation;
+	sprite->texture = texture;
 }
 
 static int graphics_opengl_init(struct graphics *g, int view_width, int view_height)
