@@ -292,3 +292,19 @@ char* str_copy(const char *s, const size_t s_size)
 	memcpy(tmp, s, s_size);
 	return tmp;
 }
+
+/**
+ * Parses a float from a string.
+ *
+ * @return -1 on error, 0 on success.
+ */
+int str_parse_1f(const char *s, float *dst)
+{
+	char *end;
+	float f = strtof(s, &end);
+	if(end == NULL || s == end || (*end) != '\0') {
+		return -1;
+	}
+	(*dst) = f;
+	return 0;
+}
