@@ -27,7 +27,7 @@
 /* Number of components in a quad. */
 #define VBO_QUAD_LEN			(VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
 
-struct sprite {
+struct basic_sprite {
 	int		type;
 	vec4	pos;
 	vec4	scale;
@@ -77,8 +77,8 @@ void	graphics_loop();
 
 double	now();
 
-void	sprite_init(struct sprite *sprite, int type, float x, float y, float z,
+void	sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
 				float w, float h, const vec4 color, float rotation, GLuint *texture);
-void	sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g);
+void	sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g);
 
 #endif

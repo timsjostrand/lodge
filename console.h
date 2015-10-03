@@ -37,11 +37,11 @@ struct console_cmd {
 define_element(struct cmd_element, struct console_cmd*);
 
 struct console_cursor {
-	size_t			pos;				/* Input cursor position. */
-	double			time_input;			/* When input was last entered. */
-	double			time_blink;			/* When the cursor was last blinked. */
-	struct sprite	sprite;				/* Sprite used for rendering the cursor. */
-	struct monotext *txt;				/* Text sprite used for rendering input text. */
+	size_t				pos;				/* Input cursor position. */
+	double				time_input;			/* When input was last entered. */
+	double				time_blink;			/* When the cursor was last blinked. */
+	struct basic_sprite	sprite;				/* Sprite used for rendering the cursor. */
+	struct monotext*	txt;				/* Text sprite used for rendering input text. */
 };
 
 struct console {
@@ -59,7 +59,7 @@ struct console {
 	struct monofont			*font;
 	struct console_cursor	cursor;
 	struct console_cmd		root_cmd;
-	struct sprite			background;
+	struct basic_sprite		background;
 };
 
 void console_new(struct console *c, struct monofont *font, int view_width,

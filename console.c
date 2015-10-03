@@ -31,7 +31,7 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	cur->time_input = 0;
 	cur->time_blink = 0;
 
-	struct sprite *s = &cur->sprite;
+	struct basic_sprite *s = &cur->sprite;
 	s->type = 0;
 	s->rotation = 0;
 	s->texture = white_tex;
@@ -50,7 +50,7 @@ static double timer_elapsed(double since)
 
 static void console_cursor_think(struct console_cursor *cur, float dt)
 {
-	struct sprite *s = &(cur->sprite);
+	struct basic_sprite *s = &(cur->sprite);
 
 	/* Update cursor X. */
 	s->pos[0] = cur->txt->bottom_left[0] + cur->pos * (cur->txt->font->letter_width + cur->txt->font->letter_spacing_x) + cur->txt->font->letter_spacing_x;

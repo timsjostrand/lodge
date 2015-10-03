@@ -37,7 +37,7 @@ struct graphics* graphics_global;
 #endif
 
 /* TODO: separate into sprite.c */
-void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
+void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g)
 {
 	glUseProgram(s->program);
 	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
@@ -71,7 +71,7 @@ void sprite_render(struct sprite *sprite, struct shader *s, struct graphics *g)
 	glDrawArrays(GL_TRIANGLES, 0, VBO_QUAD_VERTEX_COUNT);
 }
 
-void sprite_init(struct sprite *sprite, int type, float x, float y, float z,
+void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
 				float w, float h, const vec4 color, float rotation, GLuint *texture)
 {
 	sprite->type = type;
