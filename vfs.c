@@ -11,6 +11,8 @@
 */
 
 #include "vfs.h"
+#include "list.h"
+#include "log.h"
 
 typedef unsigned long DWORD;
 
@@ -20,7 +22,7 @@ typedef unsigned long DWORD;
 #define MAX_FILENAME_LEN 256
 #define MAX_NUM_FILES 256
 
-#define vfs_error(...) fprintf(stderr, "ERROR @ VFS: " __VA_ARGS__)
+#define vfs_error(...) errorf("VFS", __VA_ARGS__)
 
 struct read_callback
 {
@@ -180,8 +182,8 @@ void vfs_mount(const char* dir)
 
 	char** filenames = stb_readdir_recursive(dir, NULL);
 
-	if (filenames == NULL) 
-	{ 
+	if (filenames == NULL)
+	{
 		vfs_error("Could not read directory: %s\n", dir);
 		return;
 	}

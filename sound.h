@@ -12,6 +12,8 @@
 #define STB_VORBIS_HEADER_ONLY
 #include <stb/stb_vorbis.c>
 
+#include "log.h"
+
 #define SOUND_OK			0
 #define SOUND_ERROR			-1
 
@@ -19,13 +21,8 @@
 #define SOUND_SAMPLE_RATE	44100
 #define SOUND_SAMPLE_MAX	SHRT_MAX
 
-#ifdef DEBUG
-#define sound_debug(...) fprintf(stderr, "DEBUG @ Sound: " __VA_ARGS__)
-#else
-#define sound_debug(...) do {} while (0)
-#endif
-
-#define sound_error(...) fprintf(stderr, "ERROR @ Sound: " __VA_ARGS__)
+#define sound_debug(...) debugf("Sound", __VA_ARGS__)
+#define sound_error(...) errorf("Sound", __VA_ARGS__)
 
 #define AL_TEST(msg) if(al_test(msg) != SOUND_OK) { return SOUND_ERROR; }
 

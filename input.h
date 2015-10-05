@@ -9,7 +9,7 @@ typedef void (*input_callback_t)(struct input *input, GLFWwindow *window,
 		int key, int scancode, int action, int mods);
 
 typedef void (*input_char_callback_t)(struct input *input, GLFWwindow *window,
-		char key, int mods);
+		unsigned int key, int mods);
 
 struct input {
 	int							enabled;

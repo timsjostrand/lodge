@@ -24,6 +24,8 @@ const vec4 CONSOLE_COLOR_DISPLAY	= { 0.8f, 0.8f, 0.8f, 1.0f };
 const vec4 CONSOLE_COLOR_CURSOR		= { 0.0f, 0.0f, 0.0f, 1.0f };
 const vec4 CONSOLE_COLOR_BG			= { 0.0f, 0.0f, 0.0f, 0.4f };
 
+static struct console_var* console_var_get_by_name(struct console_env *e, const char *name);
+
 static void console_cursor_init(struct console_cursor *cur, struct monotext *txt, GLuint *white_tex)
 {
 	cur->txt = txt;
@@ -85,6 +87,9 @@ static int console_split_args(const char *s, size_t s_size, const char token, st
 	}
 
 	for(size_t i=0; i<s_size-1; i++) {
+		if(s[i] == '\0') {
+			break;
+		}
 		if(i == 0 || (s[i-1] == token && s[i] != token)) {
 			/* Find end token. */
 			size_t n;
@@ -115,9 +120,6 @@ static int console_split_args(const char *s, size_t s_size, const char token, st
 			/* Advance token counter. */
 			i += word_len - 1;
 		}
-		if(s[i] == '\0') {
-			break;
-		}
 	}
 
 	return 0;
@@ -144,17 +146,17 @@ void console_new(struct console *c, struct monofont *font, int view_width,
 			view_width/2.0f,		/* x */
 			bg_h/2.0f,				/* y */
 			0.0f,					/* z */
-			view_width,				/* h */
-			bg_h,
+			view_width,				/* w */
+			bg_h,					/* h */
 			CONSOLE_COLOR_BG,
 			0.0f,
 			white_tex);
 
 	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, padding, padding);
 	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, padding, padding);
-	
+
 	console_cursor_init(&c->cursor, &c->txt_input, white_tex);
-	console_cmd_new(&c->root_cmd, NULL, 0, NULL, NULL);
+	console_cmd_new(&c->root_cmd, "root", 0, NULL, NULL);
 }
 
 void console_free(struct console *c)
@@ -172,13 +174,17 @@ void console_printf(struct console *c, const char *fmt, ...)
 		return;
 	}
 
-	char tmp[CONSOLE_INPUT_MAX] = { 0 };
-
 	va_list args;
 	va_start(args, fmt);
-	vsprintf(tmp, fmt, args);
+	console_vprintf(c, fmt, args);
 	va_end(args);
 
+}
+
+void console_vprintf(struct console *c, const char *fmt, va_list args)
+{
+	char tmp[CONSOLE_INPUT_MAX] = { 0 };
+	vsprintf(tmp, fmt, args);
 	console_print(c, tmp, strnlen(tmp, CONSOLE_INPUT_MAX));
 }
 
@@ -245,73 +251,97 @@ void console_render(struct console *c, struct shader *s, struct graphics *g)
  * @param c		The console where these commands live.
  * @param argv	A list of splitted strings of the entered commands.
  */
-static void console_cmd_get(struct console_cmd **cmd, struct console *c,
-		struct list *argv)
+static void console_cmd_get(struct console_cmd **cmd, int *cmd_index,
+		struct console *c, struct list *argv)
 {
 	int argc = list_count(argv);
+
+	/* Optimization: if no argument vector, always return root cmd. */
+	if(argc == 0) {
+		if(cmd_index != NULL) {
+			(*cmd_index) = -1;
+		}
+		(*cmd) = &(c->root_cmd);
+		return;
+	}
+
 	struct console_cmd *cur = &(c->root_cmd);
+	int cur_index = -1;
 
 	for(int i=0; i<argc; i++) {
 		struct char_element *e = (struct char_element *) list_element_at(argv, i);
 
 		/* Dead end? */
 		if(list_count(cur->commands) == 0) {
-			return;
+			goto bail;
 		}
 
 		foreach_list(struct cmd_element*, f, cur->commands) {
 			if(strncmp(e->data, f->data->name, strnlen(f->data->name, CONSOLE_CMD_NAME_MAX)) == 0) {
 				cur = f->data;
+				if(i + f->data->argc >= argc - 1) {
+					cur_index = i;
+				}
 				i += f->data->argc;
 				break;
 			} else if(f == (struct cmd_element *) list_last(cur->commands)) {
 				/* Exhausted subcommands list? */
-				return;
+				goto bail;
 			}
 		}
 	}
 
+	if(cmd_index != NULL) {
+		(*cmd_index) = cur_index;
+	}
 	(*cmd) = cur;
+	return;
+bail:
+	if(cmd_index != NULL) {
+		(*cmd_index) = -100;
+	}
+	(*cmd) = NULL;
 }
 
-/**
- * Like console_cmd_get(), returns a console_cmd structure matching a series
- * of command names. However: if the series of command names does not match
- * _exactly_ one command, it will shave off the last command name in order
- * to find the first command that matches.
- *
- * This is useful for retrieving the console_cmd struct responsible for auto-
- * completing the given argument vector.
- *
- * @see console_cmd_get()
- */
-static void console_cmd_find(struct console_cmd **cmd, struct console *c,
-		struct list *argv)
+static void console_print_argv(struct console *c, struct list *argv)
 {
-	struct console_cmd *tmp = NULL;
-	
-	/* Exact match? */
-	console_cmd_get(&tmp, c, argv);
+	printf("Argv: ");
+	foreach_list(struct char_element *, e, argv) {
+		printf("%s ", e->data);
+	}
+	printf("\n");
+}
 
-	/* Keep shaving the arguments list until an exact match is found. */
-	if(tmp == NULL) {
-		struct list *sub = list_copy(argv);
-		while(!list_empty(sub)) {
-			list_element_delete(list_last(sub), 0);
-			if(list_empty(sub)) {
-				break;
-			}
-			console_cmd_get(&tmp, c, sub);
-			if(tmp != NULL) {
-				break;
-			}
+static void console_cmd_find(struct console_cmd **cmd, int *cmd_index,
+		struct console *c, struct list *argv)
+{
+	if(list_empty(argv)) {
+		(*cmd) = &(c->root_cmd);
+		(*cmd_index) = -1;
+		return;
+	}
+
+	struct list *sub = list_copy(argv);
+	(*cmd) = NULL;
+
+	while(!list_empty(sub)) {
+		console_print_argv(c, argv);
+		console_cmd_get(cmd, cmd_index, c, sub);
+		printf("post-get\n");
+		if((*cmd) != NULL) {
+			break;
 		}
-		list_free(sub, 0);
+		printf("delete\n");
+		list_element_delete(list_last(sub), 0);
+
+		/* Reached end of argument vector: assume root command. */
+		if(list_empty(sub)) {
+			(*cmd) = &(c->root_cmd);
+			(*cmd_index) = -1;
+		}
 	}
 
-	if(tmp != NULL) {
-		(*cmd) = tmp;
-	}
+	list_free(sub, 0);
 }
 
 static void console_cmd_autocomplete_default(struct console *c, struct console_cmd *cmd,
@@ -344,38 +374,128 @@ static void console_cmd_func_default(struct console *c, struct console_cmd *cmd,
 	}
 }
 
-void console_parse(struct console *c, const char *cmd_str, size_t cmd_str_len)
+static void console_parse_cmd(struct console *c, struct list *argv)
 {
-	/* Split arguments. */
-	struct list *argv = list_new();
-	console_split_args(cmd_str, cmd_str_len, ' ', argv);
-
 	/* Search the command tree. */
 	struct console_cmd *cmd = NULL;
-	console_cmd_get(&cmd, c, argv);
+	int cmd_index;
+	console_cmd_get(&cmd, &cmd_index, c, argv);
 
+	if(cmd == NULL || cmd == &(c->root_cmd)) {
+		console_print(c, "Command not found\n", 18);
+	} else {
+		if(cmd->callback != NULL) {
+			int argc = list_count(argv);
+
+			/* Extract arguments specific to this command. */
+			struct list *cmd_argv = list_copy_subset(argv, cmd_index + 1, argc - (cmd_index + 1));
+
+			/* Run the command callback. */
+			cmd->callback(c, cmd, cmd_argv);
+
+			list_free(cmd_argv, 0);
+		} else {
+			console_debug("TODO: list subcommands due to NULL callback\n");
+		}
+	}
+}
+
+static void console_env_set(struct console *c, const char *name,
+		const char *value)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		console_printf(c, "Unknown variable: \"%s\"\n", name);
+		return;
+	}
+
+	switch(var->type) {
+		case CONSOLE_VAR_TYPE_1F: {
+			float f;
+			if(str_parse_1f(value, &f) != 0) {
+				console_printf(c, "Usage: %s=<FLOAT>\n", name);
+				return;
+			} else {
+				console_env_set_1f(c, name, f);
+			}
+			break;
+		}
+		default:
+			console_printf(c, "TODO: Variable type not implemented %d\n", var->type);
+			break;
+	}
+}
+
+static void console_parse_var(struct console *c, struct list *argv)
+{
+	/* Sanity check. */
+	if(list_count(argv) != 1) {
+		return;
+	}
+
+	struct char_element *input = (struct char_element *) list_first(argv);
+
+	/* Sanity check. */
+	if(input == NULL) {
+		return;
+	}
+
+	size_t input_len = strnlen(input->data, CONSOLE_INPUT_MAX);
+
+	/* Sanity check. */
+	if(input_len == 0) {
+		return;
+	}
+
+	char *input_equal_sign = memchr(input->data, '=', CONSOLE_INPUT_MAX);
+
+	/* Sanity check. */
+	if(input_equal_sign == NULL) {
+		return;
+	}
+
+	size_t name_len = input_equal_sign - input->data;
+	size_t value_len = input_len - name_len - 1;
+
+	char name[CONSOLE_VAR_NAME_MAX] = { 0 };
+	char value[CONSOLE_VAR_NAME_MAX] = { 0 };
+
+	strncpy(name, input->data, imin(name_len, CONSOLE_VAR_NAME_MAX));
+	strncpy(value, input_equal_sign + 1, imin(value_len, CONSOLE_VAR_NAME_MAX));
+
+	console_env_set(c, name, value);
+}
+
+static int console_argv_is_var(struct list *argv)
+{
+	return list_count(argv) == 1
+		&& (memchr(((struct char_element *) list_first(argv))->data, '=', CONSOLE_INPUT_MAX) != NULL);
+}
+
+void console_parse(struct console *c, const char *in_str, size_t in_str_len)
+{
 	/* Store to input history. */
-	list_prepend(c->input_history, str_copy(cmd_str, CONSOLE_CMD_NAME_MAX));
+	list_prepend(c->input_history, str_copy(in_str, CONSOLE_CMD_NAME_MAX));
 	if(list_count(c->input_history) > CONSOLE_INPUT_HISTORY_MAX) {
 		list_element_delete(list_last(c->input_history), 1);
 	}
 
 	/* Store to display history. */
 	char tmp[CONSOLE_INPUT_MAX] = { 0 };
-	strncpy(tmp, cmd_str, cmd_str_len);
-	cmd_str_len += str_insert(tmp, CONSOLE_INPUT_MAX, 0, "# ", 2);
-	cmd_str_len += str_insert(tmp, CONSOLE_INPUT_MAX, cmd_str_len, "\n", 1);
-	console_print(c, tmp, cmd_str_len);
+	strncpy(tmp, in_str, in_str_len);
+	in_str_len += str_insert(tmp, CONSOLE_INPUT_MAX, 0, "# ", 2);
+	in_str_len += str_insert(tmp, CONSOLE_INPUT_MAX, in_str_len, "\n", 1);
+	console_print(c, tmp, in_str_len);
 
-	if(cmd == NULL || cmd == &(c->root_cmd)) {
-		console_print(c, "Command not found\n", 18);
+	/* Split arguments. */
+	struct list *argv = list_new();
+	console_split_args(in_str, in_str_len, ' ', argv);
+
+	if(console_argv_is_var(argv)) {
+		console_parse_var(c, argv);
 	} else {
-		/* Run the command callback. */
-		if(cmd->callback != NULL) {
-			cmd->callback(c, cmd, argv);
-		} else {
-			console_debug("TODO: list subcommands due to NULL callback\n");
-		}
+		console_parse_cmd(c, argv);
 	}
 
 	/* Free argv list and its elements. */
@@ -390,7 +510,7 @@ void console_input_clear(struct console *c)
 	c->input_history_cur = -1;
 }
 
-void console_input_feed_char(struct console *c, char key, int mods)
+void console_input_feed_char(struct console *c, unsigned int key, int mods)
 {
 	/* Sanity check. */
 	if(c == NULL) {
@@ -399,6 +519,12 @@ void console_input_feed_char(struct console *c, char key, int mods)
 
 	/* Ignore focus key. */
 	if(key == CONSOLE_CHAR_FOCUS) {
+		return;
+	}
+
+	/* Sanity check. */
+	if(key >= 127) {
+		console_debug("Non-ASCII char: %#04x\n", key);
 		return;
 	}
 
@@ -424,7 +550,6 @@ static void console_input_set(struct console *c, const char *s, const size_t s_l
 static void console_input_history_seek(struct console *c, int index_delta)
 {
 	int index = imin(imax(c->input_history_cur + index_delta, -1), list_count(c->input_history));
-	console_debug("History seek, index=%d\n", index);
 	if(index < 0) {
 		console_input_clear(c);
 	}
@@ -558,9 +683,16 @@ void console_cmd_free(struct console_cmd *cmd)
 static void console_filter_list(struct list *out, struct list *in, const char *match, size_t match_size)
 {
 	foreach_list(struct char_element*, elem, in) {
-		if(strncmp(elem->data, match, strnlen(match, match_size)) == 0) {
+		if(match == NULL || strncmp(elem->data, match, strnlen(match, match_size)) == 0) {
 			list_append(out, elem->data);
 		}
+	}
+}
+
+static void console_env_autocomplete(struct console_env *env, struct list *completions)
+{
+	for(int i=0; i<env->len; i++) {
+		list_append(completions, env->vars[i].name);
 	}
 }
 
@@ -573,31 +705,38 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 
 	/* Find the command that most closely resembles the input. */
 	struct console_cmd *cmd = NULL;
-	console_cmd_find(&cmd, c, argv);
+	int cmd_index = 0;
+	console_cmd_find(&cmd, &cmd_index, c, argv);
+	console_debug("cmd_index=%d\n", cmd_index);
 
 	if(cmd == NULL) {
-		if(list_count(argv) == 1) {
-			cmd = &(c->root_cmd);
-		} else {
-			console_debug("Autocomplete: command not found\n");
-			return;
-		}
+		console_debug("Autocomplete: command not found\n");
+		return;
 	}
-	
+
 	/* Completions are put here. */
 	struct list *completions = list_new();
 
 	/* Get command-specific completions. */
 	cmd->autocomplete(c, cmd, argv, completions);
 
-	/* Filter completions to match currently typed command. */
-	struct char_element *leaf = (struct char_element *) list_last(argv);
-	struct list *filtered = list_new();
-	console_filter_list(filtered, completions, leaf->data, CONSOLE_CMD_NAME_MAX);
+	console_debug("completions post-autocomplete: %d\n", list_count(completions));
 
-	/* Switch completions with the filtered list. */
-	list_free(completions, 0);
-	completions = filtered;
+	/* Autocomplete variables? */
+	if(list_count(argv) <= 1) {
+		console_env_autocomplete(&c->env, completions);
+	}
+
+	/* Filter completions to match currently typed command. */
+	struct char_element *leaf = (struct char_element *) list_element_at(argv, cmd_index + 1);
+	if(leaf != NULL && leaf->data != NULL) {
+		console_debug("filter leaf: %s\n", leaf->data);
+		struct list *filtered = list_new();
+		console_filter_list(filtered, completions, leaf->data, CONSOLE_CMD_NAME_MAX);
+		/* Switch completions with the filtered list. */
+		list_free(completions, 0);
+		completions = filtered;
+	}
 
 	if(list_count(completions) == 1) {
 		/* If only one (1) completion is available: automatically insert it
@@ -612,17 +751,111 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		size_t added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - input_cmd_len, head, strnlen(head, CONSOLE_INPUT_MAX));
 		c->input_len += added - input_cmd_len;
 		c->cursor.pos += added - input_cmd_len;
-		/* For convenience, append an extra space. */
-		added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos, " ", 1);
+		/* Add a convience character based on completed type. */
+		if(list_count(argv) == 1 && console_var_get_by_name(&c->env, head)) {
+			/* Is variable: append equal sign. */
+			added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos, "=", 1);
+		} else {
+			/* Is command: append space. */
+			added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos, " ", 1);
+		}
 		c->input_len += added;
 		c->cursor.pos += added;
 	} else {
+		console_debug("Print completions %d\n", list_count(completions));
 		/* Print completions */
 		foreach_list(struct char_element*, e, completions) {
 			console_printf(c, "%s\n", e->data);
 		}
 	}
-	
+
 	list_free(completions, 0);
 	list_free(argv, 1);
+}
+
+/**
+ * Parse a float value from argv[0] and store it in dst.
+ *
+ * @return 0 on OK, -1 on error (any error message is printed on the specified
+ * console).
+ */
+int console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
+		struct list *argv, float *dst)
+{
+	struct char_element *elem = (struct char_element *) list_element_at(argv, 0);
+	if(elem == NULL) {
+		console_printf(c, "Usage: %s <FLOAT>\n", cmd->name);
+		return -1;
+	}
+	return str_parse_1f(elem->data, dst);
+}
+
+static struct console_var* console_var_get_by_name(struct console_env *e,
+		const char *name)
+{
+	int name_len = strnlen(name, CONSOLE_VAR_NAME_MAX);
+
+	for(int i=0; i<e->len; i++) {
+		struct console_var *var = (struct console_var *) &(e->vars[i]);
+		int var_name_len = strnlen(var->name, CONSOLE_VAR_NAME_MAX);
+		if(strncmp(var->name, name, imax(var_name_len, name_len)) == 0) {
+			return var;
+		}
+	}
+
+	return NULL;
+}
+
+static void console_var_set(struct console_var *var, const char *name, int type,
+		void *value, size_t value_size)
+{
+	strncpy(var->name, name, CONSOLE_VAR_NAME_MAX);
+	var->type = type;
+	var->value = value;
+	var->value_size = value_size;
+}
+
+static int console_var_new(struct console_env *e, const char *name, int type,
+		void *value, size_t value_size, struct console_var **dst)
+{
+	if(e->len >= CONSOLE_ENV_MAX) {
+		return -1;
+	}
+	struct console_var *var = &(e->vars[e->len]);
+	console_var_set(var, name, type, value, value_size);
+	(*dst) = var;
+	e->len ++;
+	return 0;
+}
+
+int console_env_bind_1f(struct console *c, const char *name, float *value)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_1F, value,
+					sizeof(float), &var) != 0) {
+			console_printf(c, "ERROR: Too many variables in environment\n");
+			return -1;
+		}
+	}
+
+	console_var_set(var, name, CONSOLE_VAR_TYPE_1F, value, sizeof(float));
+	return 0;
+}
+
+int console_env_set_1f(struct console *c, const char *name, const float value)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
+		return -1;
+	} else if(var->type != CONSOLE_VAR_TYPE_1F) {
+		console_printf(c, "ERROR: Not a float variable: \"%s\"\n", name);
+		return -1;
+	}
+
+	(*((float *) var->value)) = value;
+	return 0;
 }

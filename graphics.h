@@ -3,14 +3,10 @@
 
 #include "math4.h"
 #include "shader.h"
+#include "log.h"
 
-#ifdef DEBUG
-#define graphics_debug(...) fprintf(stderr, "DEBUG @ Graphics: " __VA_ARGS__)
-#else
-#define graphics_debug(...) do {} while (0)
-#endif
-
-#define graphics_error(...) fprintf(stderr, "ERROR @ Graphics: " __VA_ARGS__)
+#define graphics_debug(...) debugf("Graphics", __VA_ARGS__)
+#define graphics_error(...) errorf("Graphics", __VA_ARGS__)
 
 #define GRAPHICS_OK					 0
 #define GRAPHICS_ERROR				-1

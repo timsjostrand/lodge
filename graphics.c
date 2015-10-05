@@ -57,7 +57,7 @@ void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphic
 	mult(transform_final, transform_position, transform_rotation);
 	mult(transform_final, transform_final, transform_scale);
 	transpose_same(transform_final);
-	
+
 	// Upload matrices and color
 	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
 	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
@@ -240,8 +240,6 @@ static void graphics_frames_register(struct frames *f, float delta_time)
 		if(f->callback != NULL) {
 			f->callback(f);
 		}
-		graphics_debug("FPS: % 6d, Frame-Time (min/max/avg): % 5.1f /% 5.1f /% 5.1f ms\n",
-				f->frames, f->frame_time_min, f->frame_time_max, f->frame_time_avg);
 		f->frame_time_max = FLT_MIN;
 		f->frame_time_min = FLT_MAX;
 		f->frame_time_sum = 0;
@@ -258,7 +256,7 @@ double now()
 }
 
 void graphics_do_frame(struct graphics *g)
-{	  
+{
 	double before = now();
 
 	/* Delta-time. */

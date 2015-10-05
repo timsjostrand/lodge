@@ -73,12 +73,8 @@ void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods)
 		printf("ERROR: input_init() not called\n");
 		return;
 	}
-	if(key > 255) {
-		printf("ERROR: Non-convertible Unicode char: %lc\n", key);
-		return;
-	}
 	if(input_global->char_callback) {
-		input_global->char_callback(input_global, window, (unsigned char) key, mods);
+		input_global->char_callback(input_global, window, key, mods);
 	}
 }
 

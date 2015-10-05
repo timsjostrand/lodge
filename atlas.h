@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 
-#define atlas_error(...) fprintf(stderr, "ERROR @ Atlas: " __VA_ARGS__)
+#include "log.h"
+
+#define atlas_error(...) errorf("Atlas", __VA_ARGS__)
 
 #define ATLAS_OK		0
 #define ATLAS_ERROR		-1

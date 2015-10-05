@@ -25,6 +25,8 @@
 #include "monotext.h"
 #include "console.h"
 
+#include "core_console.h"
+
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360		/* 16:9 aspect ratio */
 
@@ -114,10 +116,6 @@ struct game {
 	struct monofont	font_console;
 	struct monotext	txt_debug;
 	struct console	console;
-	struct console_cmd cmd_quit;
-	struct console_cmd cmd_assets;
-	struct console_cmd cmd_assets_list;
-	struct console_cmd cmd_assets_reload;
 } game = { 0 };
 
 void print_stats()
@@ -191,7 +189,6 @@ void ball_player_bounce(struct ball *ball, struct player *p)
 {
 	/* 0 on player1, 1 on player2. */
 	int player_no = (p == &game.player2);
-	printf("collides with player %d\n", player_no + 1);
 
 	p->stats.hits ++;
 	p->stats.current_streak ++;
@@ -208,7 +205,6 @@ void ball_player_bounce(struct ball *ball, struct player *p)
 	float angle = M_PI/2.0f + (player_no == 0 ? -1 : +1) * acos(diff);
 	float force = 1.0f + (1.5f * player_is_charged(p));
 	float current_speed = sqrt(ball->vx*ball->vx + ball->vy*ball->vy);
-	printf("force=%6f, current_speed=%6f\n", force, current_speed);
 	current_speed = fmax(BALL_SPEED_MAX, current_speed);
 	ball->vx = cos(angle) * current_speed * force;
 	ball->vy = sin(angle) * current_speed * force;
@@ -449,6 +445,7 @@ void init_ball(struct ball *ball)
 	copyv(ball->sprite.color, COLOR_WHITE);
 }
 
+<<<<<<< HEAD
 static void cmd_quit_func(struct console *c, struct console_cmd *cmd, struct list *argv)
 {
 	glfwSetWindowShouldClose(game.graphics.window, 1);
@@ -485,21 +482,10 @@ static void cmd_assets_reload_autocomplete(struct console *c, struct console_cmd
 	}
 }
 
-void init_console()
+static void init_console()
 {
 	console_new(&game.console, &game.font_console, VIEW_WIDTH, 16, &game.textures.none);
-
-	/* Create commands. */
-	console_cmd_new(&game.cmd_quit, "quit", 0, &cmd_quit_func, NULL);
-	console_cmd_new(&game.cmd_assets, "assets", 0, NULL, NULL);
-	console_cmd_new(&game.cmd_assets_list, "list", 0, &cmd_assets_list_func, NULL);
-	console_cmd_new(&game.cmd_assets_reload, "reload", 1, &cmd_assets_reload_func, &cmd_assets_reload_autocomplete);
-
-	/* Register command tree. */
-	console_cmd_add(&game.cmd_quit,				&game.console.root_cmd);
-	console_cmd_add(&game.cmd_assets,			&game.console.root_cmd);
-	console_cmd_add(&game.cmd_assets_reload,	&game.cmd_assets);
-	console_cmd_add(&game.cmd_assets_list,		&game.cmd_assets);
+	core_console_init(&game.graphics, &game.console);
 }
 
 void init_game()
@@ -516,13 +502,18 @@ void init_game()
 	init_console();
 }
 
-static void char_callback(struct input *input, GLFWwindow *window, char key,
-		int mods)
+static void char_callback(struct input *input, GLFWwindow *window,
+		unsigned int key, int mods)
 {
 	/* Input localized text into console. */
-	if(key != CONSOLE_KEY_FOCUS
-			&& game.console.focused) {
+	if(game.console.focused) {
 		console_input_feed_char(&game.console, key, mods);
+	}
+
+	/* Toggle console. */
+	if(key == CONSOLE_CHAR_FOCUS) {
+		console_toggle_focus(&game.console);
+		input->enabled = !game.console.focused;
 	}
 }
 
@@ -530,19 +521,11 @@ static void key_callback(struct input *input, GLFWwindow *window, int key,
 		int scancode, int action, int mods)
 {
 	/* Input control characters into console. */
-	if(key != CONSOLE_KEY_FOCUS
-			&& game.console.focused
-			&& key >= 256) {
+	if(game.console.focused && key >= 256) {
 		console_input_feed_control(&game.console, key, scancode, action, mods);
 	}
 
-	if(action == GLFW_RELEASE) {
-		/* Toggle console. */
-		if(key == CONSOLE_KEY_FOCUS) {
-			console_toggle_focus(&game.console);
-			input->enabled = !game.console.focused;
-		}
-	} else if(action == GLFW_PRESS) {
+	if(action == GLFW_PRESS) {
 		if(!game.console.focused) {
 			switch(key) {
 				case GLFW_KEY_O:
@@ -777,7 +760,7 @@ void reload_textures(const char *filename, unsigned int size, void *data, void* 
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			}
-			
+
 			(*(GLuint*)userdata) = tmp;
 		} else {
 			graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);

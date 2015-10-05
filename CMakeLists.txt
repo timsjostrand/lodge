@@ -5,6 +5,12 @@ cmake_minimum_required(VERSION 3.1)
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
 
+# Console support
+option(ENABLE_CONSOLE "Compile with console support" ON)
+if(ENABLE_CONSOLE)
+	add_definitions(-DCONSOLE_ENABLE)
+endif()
+
 # QUIRK: Define M_PI on Windows.
 add_definitions(-D_USE_MATH_DEFINES)
 
@@ -79,9 +85,9 @@ endif()
 # Include stb.h
 include_directories(lib/)
 
-set(SOURCE main.c math4.c graphics.c shader.c input.c texture.c color.c sound.c
+set(SOURCE main.c math4.c core_console.c graphics.c shader.c input.c texture.c color.c sound.c
     vfs.c atlas.c monotext.c str.c list.c console.c spritebatch.c animatedsprites.c)
-set(HEADERS math4.h graphics.h shader.h input.h texture.h color.h sound.h vfs.h
+set(HEADERS math4.h core_console.h graphics.h shader.h input.h texture.h color.h sound.h vfs.h
     atlas.h monotext.h str.h list.h console.h spritebatch.h animatedsprites.h)
 
 # Main executable.

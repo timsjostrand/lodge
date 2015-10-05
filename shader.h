@@ -4,14 +4,10 @@
 #include <GLFW/glfw3.h>
 
 #include "math4.h"
+#include "log.h"
 
-#ifdef DEBUG
-#define shader_debug(...) fprintf(stderr, "DEBUG @ Shader: " __VA_ARGS__)
-#else
-#define shader_debug(...) do {} while (0)
-#endif
-
-#define shader_error(...) fprintf(stderr, "ERROR @ Shader: " __VA_ARGS__)
+#define shader_debug(...) debugf("Shader", __VA_ARGS__)
+#define shader_error(...) errorf("Shader", __VA_ARGS__)
 
 #define SHADER_OK					 0
 #define SHADER_COMPILE_ERROR		-1

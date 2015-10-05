@@ -5,19 +5,15 @@
 
 #include "math4.h"
 #include "graphics.h"
+#include "log.h"
 
-#ifdef DEBUG
-#define monotext_debug(...) fprintf(stderr, "DEBUG @ Monotext: " __VA_ARGS__)
-#else
-#define monotext_debug(...) do {} while (0)
-#endif
-
-#define monotext_error(...) fprintf(stderr, "ERROR @ Monotext: " __VA_ARGS__)
+#define monotext_debug(...) debugf("Monotext", __VA_ARGS__)
+#define monotext_error(...) errorf("Monotext", __VA_ARGS__)
 
 #define TEXT_OK				0
 #define TEXT_ERROR			-1
 
-#define MONOTEXT_STR_MAX	1024
+#define MONOTEXT_STR_MAX	1024*10
 
 #define MONOFONT_START_CHAR	32
 
