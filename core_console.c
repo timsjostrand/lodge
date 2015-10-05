@@ -77,9 +77,9 @@ static void core_console_graphics_init(struct console *c, struct commands_graphi
 
 static void core_console_vfs_list(struct console *c, struct console_cmd *cmd, struct list *argv)
 {
-	char *name;
+	const char *name;
 	for(int i=0; i<vfs_file_count(); i++) {
-		vfs_get_simple_name(&name, i);
+		name = vfs_get_simple_name(i);
 		console_printf(c, "%s\n", name);
 	}
 }
@@ -107,9 +107,9 @@ static void core_console_vfs_mount(struct console *c, struct console_cmd *cmd, s
 static void core_console_vfs_autocomplete_simplename(struct console *c, struct console_cmd *cmd,
 		struct list *argv, struct list *matches)
 {
-	char *name;
+	const char *name;
 	for(int i=0; i<vfs_file_count(); i++) {
-		vfs_get_simple_name(&name, i);
+		name = vfs_get_simple_name(i);
 		list_append(matches, name);
 	}
 }

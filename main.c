@@ -60,23 +60,23 @@ struct stats {
 };
 
 struct player {
-	struct sprite	sprite;
-	struct stats	stats;
-	float			charge;
-	float			last_emit;
+	struct basic_sprite	sprite;
+	struct stats		stats;
+	float				charge;
+	float				last_emit;
 };
 
 struct ball {
-	struct sprite	sprite;
-	float			vx;
-	float			vy;
-	float			speed;
-	float			last_hit_x;
-	float			last_hit_y;
+	struct basic_sprite	sprite;
+	float				vx;
+	float				vy;
+	float				speed;
+	float				last_hit_x;
+	float				last_hit_y;
 };
 
 struct particle {
-	struct sprite	sprite;
+	struct basic_sprite	sprite;
 	int				dead;
 	float			age;
 	float			age_max;
@@ -92,30 +92,30 @@ struct textures {
 };
 
 struct game {
-	float			time;						/* Time since start. */
-	float			view_width;
-	float			view_height;
-	struct graphics	graphics;					/* Graphics state. */
-	struct shader	shader;						/* Shader program information. */
-	struct shader	bg_shader;
-	struct player	player1;					/* Left player. */
-	struct player	player2;					/* Right player. */
-	struct sprite	effectslayer;
-	struct ball		ball;
-	struct stats	total_stats;
-	struct particle	particles[PARTICLES_MAX];
-	int				particles_count;
-	struct input	input;
-	struct textures	textures;
-	struct sound	sound;
-	struct sound_fx	vivaldi;
-	struct sound_fx	tone_hit;
-	struct sound_fx	tone_bounce;
-	struct atlas	atlas_earl;
-	struct monofont	font;
-	struct monofont	font_console;
-	struct monotext	txt_debug;
-	struct console	console;
+	float				time;						/* Time since start. */
+	float				view_width;
+	float				view_height;
+	struct graphics		graphics;					/* Graphics state. */
+	struct shader		shader;						/* Shader program information. */
+	struct shader		bg_shader;
+	struct player		player1;					/* Left player. */
+	struct player		player2;					/* Right player. */
+	struct basic_sprite	effectslayer;
+	struct ball			ball;
+	struct stats		total_stats;
+	struct particle		particles[PARTICLES_MAX];
+	int					particles_count;
+	struct input		input;
+	struct textures		textures;
+	struct sound		sound;
+	struct sound_fx		vivaldi;
+	struct sound_fx		tone_hit;
+	struct sound_fx		tone_bounce;
+	struct atlas		atlas_earl;
+	struct monofont		font;
+	struct monofont		font_console;
+	struct monotext		txt_debug;
+	struct console		console;
 } game = { 0 };
 
 void print_stats()
@@ -401,7 +401,7 @@ void render(struct graphics *g, float delta_time)
 	}
 }
 
-void init_effectslayer(struct sprite* b)
+void init_effectslayer(struct basic_sprite* b)
 {
 	b->type = SPRITE_TYPE_UNKNOWN;
 	b->texture = &game.textures.none;
@@ -443,43 +443,6 @@ void init_ball(struct ball *ball)
 	set4f(ball->sprite.pos, VIEW_WIDTH/2, VIEW_HEIGHT/2, 0.06f, 1.0f);
 	set4f(ball->sprite.scale, BALL_WIDTH, BALL_HEIGHT, 1.0f, 1.0f);
 	copyv(ball->sprite.color, COLOR_WHITE);
-}
-
-<<<<<<< HEAD
-static void cmd_quit_func(struct console *c, struct console_cmd *cmd, struct list *argv)
-{
-	glfwSetWindowShouldClose(game.graphics.window, 1);
-}
-
-static void cmd_assets_list_func(struct console *c, struct console_cmd *cmd, struct list *argv)
-{
-	const char *simplename;
-	for(int i=0; i<vfs_file_count(); i++) {
-		simplename = vfs_get_simple_name(i);
-		if(simplename != NULL) {
-			console_printf(c, "%s\n", simplename);
-		}
-	}
-}
-
-static void cmd_assets_reload_func(struct console *c, struct console_cmd *cmd, struct list *argv)
-{
-	struct char_element *asset = (struct char_element *) list_element_at(argv, 2);
-	if(asset == NULL) {
-		console_printf(c, "ERROR: No asset specified\n");
-	} else {
-		console_printf(c, "TODO: Reload asset: \"%s\"\n", asset->data);
-	}
-}
-
-static void cmd_assets_reload_autocomplete(struct console *c, struct console_cmd *cmd,
-		struct list *argv, struct list *matches)
-{
-	const char *simplename;
-	for(int i=0; i<vfs_file_count(); i++) {
-		simplename = vfs_get_simple_name(i);
-		list_append(matches, simplename);
-	}
 }
 
 static void init_console()
