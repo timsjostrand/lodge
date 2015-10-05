@@ -303,15 +303,6 @@ bail:
 	(*cmd) = NULL;
 }
 
-static void console_print_argv(struct console *c, struct list *argv)
-{
-	printf("Argv: ");
-	foreach_list(struct char_element *, e, argv) {
-		printf("%s ", e->data);
-	}
-	printf("\n");
-}
-
 static void console_cmd_find(struct console_cmd **cmd, int *cmd_index,
 		struct console *c, struct list *argv)
 {
@@ -325,13 +316,10 @@ static void console_cmd_find(struct console_cmd **cmd, int *cmd_index,
 	(*cmd) = NULL;
 
 	while(!list_empty(sub)) {
-		console_print_argv(c, argv);
 		console_cmd_get(cmd, cmd_index, c, sub);
-		printf("post-get\n");
 		if((*cmd) != NULL) {
 			break;
 		}
-		printf("delete\n");
 		list_element_delete(list_last(sub), 0);
 
 		/* Reached end of argument vector: assume root command. */
@@ -524,7 +512,7 @@ void console_input_feed_char(struct console *c, unsigned int key, int mods)
 
 	/* Sanity check. */
 	if(key >= 127) {
-		console_debug("Non-ASCII char: %#04x\n", key);
+		console_error("Non-ASCII char: %#04x\n", key);
 		return;
 	}
 
@@ -707,7 +695,6 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	struct console_cmd *cmd = NULL;
 	int cmd_index = 0;
 	console_cmd_find(&cmd, &cmd_index, c, argv);
-	console_debug("cmd_index=%d\n", cmd_index);
 
 	if(cmd == NULL) {
 		console_debug("Autocomplete: command not found\n");
@@ -720,8 +707,6 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	/* Get command-specific completions. */
 	cmd->autocomplete(c, cmd, argv, completions);
 
-	console_debug("completions post-autocomplete: %d\n", list_count(completions));
-
 	/* Autocomplete variables? */
 	if(list_count(argv) <= 1) {
 		console_env_autocomplete(&c->env, completions);
@@ -730,7 +715,6 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	/* Filter completions to match currently typed command. */
 	struct char_element *leaf = (struct char_element *) list_element_at(argv, cmd_index + 1);
 	if(leaf != NULL && leaf->data != NULL) {
-		console_debug("filter leaf: %s\n", leaf->data);
 		struct list *filtered = list_new();
 		console_filter_list(filtered, completions, leaf->data, CONSOLE_CMD_NAME_MAX);
 		/* Switch completions with the filtered list. */
@@ -762,7 +746,6 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		c->input_len += added;
 		c->cursor.pos += added;
 	} else {
-		console_debug("Print completions %d\n", list_count(completions));
 		/* Print completions */
 		foreach_list(struct char_element*, e, completions) {
 			console_printf(c, "%s\n", e->data);

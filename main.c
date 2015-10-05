@@ -247,7 +247,7 @@ void ball_think(float dt)
 		game.ball.sprite.pos[0] = VIEW_WIDTH/2;
 		game.ball.sprite.pos[1] = VIEW_HEIGHT/2;
 	}
-		
+
 	// Ball: top/bottom hit detection
 	if(game.ball.sprite.pos[1] > BOARD_TOP - BALL_HEIGHT/2) {
 		game.ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT/2;
@@ -842,7 +842,7 @@ int main(int argc, char **argv)
 	int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
 	ret = graphics_init(&game.graphics, &think, &render, &fps_callback,
 			VIEW_WIDTH, VIEW_HEIGHT, windowed);
-	
+
 	if(ret != GRAPHICS_OK) {
 		graphics_error("Graphics initialization failed (%d)\n", ret);
 		graphics_free(&game.graphics);

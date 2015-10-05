@@ -46,8 +46,6 @@ void core_console_printf(const char *fmt, ...)
 
 /* Graphics */
 
-//console_template_1f(dt, &(state.graphics->delta_time_factor));
-
 static void core_console_graphics_quit(struct console *c, struct console_cmd *cmd,
 		struct list *argv)
 {
