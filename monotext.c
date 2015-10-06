@@ -266,7 +266,7 @@ void monotext_updatef(struct monotext *dst, const char *fmt, ...)
 	va_start(args, fmt);
 	vsprintf(s, fmt, args);
 	va_end(args);
-	
+
 	monotext_update(dst, s, strnlen(s, MONOTEXT_STR_MAX));
 }
 
@@ -395,10 +395,10 @@ void monotext_render(struct monotext *text, struct shader *s, struct graphics *g
 	/* Position, rotation and scale. */
 	mat4 transform_position;
 	translate(transform_position, 0, 0, 0);
-	
+
 	mat4 transform_scale;
 	scale(transform_scale, 1, 1, 1);
-	
+
 	mat4 transform_rotation;
 	rotate_z(transform_rotation, 0);
 
@@ -406,7 +406,7 @@ void monotext_render(struct monotext *text, struct shader *s, struct graphics *g
 	mult(transform_final, transform_position, transform_rotation);
 	mult(transform_final, transform_final, transform_scale);
 	transpose_same(transform_final);
-	
+
 	/* Upload matrices and color. */
 	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
 	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);

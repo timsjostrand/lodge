@@ -4,6 +4,8 @@
 * Author: Johan Yngman <johan.yngman@gmail.com>
 */
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <GL/glew.h>
 
 #include "spritebatch.h"
@@ -26,8 +28,8 @@ void spritebatch_create(struct spritebatch* batch)
 	glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
 	glBufferData(GL_ARRAY_BUFFER, SPRITEBATCH_BUFFER_CAPACITY, 0, GL_STREAM_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, 0);						// Vertex
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, sizeof(GLfloat) * 3);		// Texcoord
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) 0);						// Vertex
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) (sizeof(GLfloat) * 3));	// Texcoord
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -46,12 +48,12 @@ void spritebatch_begin(struct spritebatch* batch)
 	if (batch->offset_stream + SPRITEBATCH_CHUNK >= SPRITEBATCH_BUFFER_CAPACITY)
 	{
 		glBindVertexArray(batch->vao);
-		
+
 		glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
 		glBufferData(GL_ARRAY_BUFFER, SPRITEBATCH_BUFFER_CAPACITY, 0, GL_STREAM_DRAW);
 
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, 0);						// Vertex
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, sizeof(GLfloat) * 3);		// Texcoord
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) 0);						// Vertex
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) (sizeof(GLfloat) * 3));	// Texcoord
 
 		glBindVertexArray(0);
 
@@ -142,12 +144,12 @@ void spritebatch_render(struct spritebatch* batch, struct shader *s, struct grap
 	/* Position stream. */
 	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
 	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, 0);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) 0);
 
 	/* Texcoord stream. */
 	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
 	glEnableVertexAttribArray(texcoordAttrib);
-	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, sizeof(GLfloat) * 3);
+	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) (sizeof(GLfloat) * 3));
 
 	/* Position, rotation and scale. */
 	mat4 transform_position;

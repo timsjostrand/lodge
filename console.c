@@ -464,7 +464,7 @@ static int console_argv_is_var(struct list *argv)
 void console_parse(struct console *c, const char *in_str, size_t in_str_len)
 {
 	/* Store to input history. */
-	list_prepend(c->input_history, str_copy(in_str, CONSOLE_CMD_NAME_MAX));
+	list_prepend(c->input_history, str_copy(in_str, CONSOLE_INPUT_MAX));
 	if(list_count(c->input_history) > CONSOLE_INPUT_HISTORY_MAX) {
 		list_element_delete(list_last(c->input_history), 1);
 	}
@@ -545,7 +545,7 @@ static void console_input_history_seek(struct console *c, int index_delta)
 	if(elem == NULL) {
 		return;
 	}
-	console_input_set(c, elem->data, strnlen(elem->data, CONSOLE_CMD_NAME_MAX));
+	console_input_set(c, elem->data, strnlen(elem->data, CONSOLE_INPUT_MAX));
 	c->input_history_cur = index;
 }
 

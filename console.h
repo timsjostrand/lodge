@@ -1,6 +1,8 @@
 #ifndef _CONSOLE_H
 #define _CONSOLE_H
 
+#include <stdarg.h>
+
 #include "list.h"
 #include "graphics.h"
 #include "monotext.h"
