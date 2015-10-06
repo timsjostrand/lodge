@@ -330,7 +330,6 @@ int list_insert_element_at(struct list *list, int index, struct element *e)
 	if(curr == NULL) {
 		/* Specified index beyond current range, or the list is empty.
 		 * In either case: append element last in list instead. */
-		printf("appending element: %d\n", e->data);
 		list_append_element(list, e);
 		return list_count(list);
 	} else {
