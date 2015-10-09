@@ -39,7 +39,7 @@ void            list_element_delete(struct element *e, int free_data);
 int             list_init(struct list *list);
 void            list_prepend_element(struct list *list, struct element *e);
 void            list_append_element(struct list *list, struct element *e);
-void            list_print_char(struct list *list);
+void            list_print_strings(struct list *list);
 
 struct list*	list_copy(struct list *original);
 struct list*	list_copy_subset(struct list *original, size_t start, size_t count);
@@ -49,11 +49,11 @@ struct list*	list_copy_subset(struct list *original, size_t start, size_t count)
  * element in a variable named after 'item'.
  *
  * @code
- * foreach_list(struct char_element*, e, list) {
+ * foreach_list(struct str_element*, e, list) {
  *     printf("%d=%s\n", index, e->data);
  * }
  * @endcode
- * 
+ *
  * @param type  The pointer type of elements in the list.
  * @param item  The name assigned to the currently iterated element pointer.
  * @param list  The list to iterate over.
@@ -65,7 +65,7 @@ struct list*	list_copy_subset(struct list *original, size_t start, size_t count)
 
 /**
  * Iterates a list in reverse.
- * 
+ *
  * @see foreach_list(type, item, list)
  */
 #define foreach_reverse(type, item, list) \
@@ -75,17 +75,17 @@ struct list*	list_copy_subset(struct list *original, size_t start, size_t count)
 
 /**
  * Defines a new list element where 'data' is a pointer of the specified type.
- * 
- * Example: @code define_element(struct char_element, char *); @endcode
- * 
+ *
+ * Example: @code define_element(struct str_element, char *); @endcode
+ *
  * Results in: @code
- * struct char_element {
+ * struct str_element {
  *	char *data;
  *	struct element *next;
  *	struct element *prev;
  * };
  * @endcode
- * 
+ *
  * @param name  The struct declaration including the name for the element.
  * @param type  The data pointer type.
  */
@@ -96,7 +96,7 @@ struct list*	list_copy_subset(struct list *original, size_t start, size_t count)
 		struct element *prev; \
 	}
 
-define_element(struct char_element, char *);
+define_element(struct str_element, char *);
 
 #endif	/* LIST_H */
 

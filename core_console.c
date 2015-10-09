@@ -86,7 +86,7 @@ static void core_console_vfs_list(struct console *c, struct console_cmd *cmd, st
 
 static void core_console_vfs_reload(struct console *c, struct console_cmd *cmd, struct list *argv)
 {
-	struct char_element *asset = (struct char_element *) list_element_at(argv, 0);
+	struct str_element *asset = (struct str_element *) list_element_at(argv, 0);
 	if(asset == NULL) {
 		console_printf(c, "ERROR: No asset specified\n");
 	} else {
@@ -96,7 +96,7 @@ static void core_console_vfs_reload(struct console *c, struct console_cmd *cmd, 
 
 static void core_console_vfs_mount(struct console *c, struct console_cmd *cmd, struct list *argv)
 {
-	struct char_element *e = (struct char_element *) list_element_at(argv, 0);
+	struct str_element *e = (struct str_element *) list_element_at(argv, 0);
 	if(e == NULL) {
 		return;
 	}

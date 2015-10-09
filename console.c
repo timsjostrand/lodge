@@ -269,7 +269,7 @@ static void console_cmd_get(struct console_cmd **cmd, int *cmd_index,
 	int cur_index = -1;
 
 	for(int i=0; i<argc; i++) {
-		struct char_element *e = (struct char_element *) list_element_at(argv, i);
+		struct str_element *e = (struct str_element *) list_element_at(argv, i);
 
 		/* Dead end? */
 		if(list_count(cur->commands) == 0) {
@@ -422,7 +422,7 @@ static void console_parse_var(struct console *c, struct list *argv)
 		return;
 	}
 
-	struct char_element *input = (struct char_element *) list_first(argv);
+	struct str_element *input = (struct str_element *) list_first(argv);
 
 	/* Sanity check. */
 	if(input == NULL) {
@@ -458,7 +458,7 @@ static void console_parse_var(struct console *c, struct list *argv)
 static int console_argv_is_var(struct list *argv)
 {
 	return list_count(argv) == 1
-		&& (memchr(((struct char_element *) list_first(argv))->data, '=', CONSOLE_INPUT_MAX) != NULL);
+		&& (memchr(((struct str_element *) list_first(argv))->data, '=', CONSOLE_INPUT_MAX) != NULL);
 }
 
 void console_parse(struct console *c, const char *in_str, size_t in_str_len)
@@ -541,7 +541,7 @@ static void console_input_history_seek(struct console *c, int index_delta)
 	if(index < 0) {
 		console_input_clear(c);
 	}
-	struct char_element *elem = (struct char_element *) list_element_at(c->input_history, index);
+	struct str_element *elem = (struct str_element *) list_element_at(c->input_history, index);
 	if(elem == NULL) {
 		return;
 	}
@@ -670,7 +670,7 @@ void console_cmd_free(struct console_cmd *cmd)
  */
 static void console_filter_list(struct list *out, struct list *in, const char *match, size_t match_size)
 {
-	foreach_list(struct char_element*, elem, in) {
+	foreach_list(struct str_element*, elem, in) {
 		if(match == NULL || strncmp(elem->data, match, strnlen(match, match_size)) == 0) {
 			list_append(out, elem->data);
 		}
@@ -713,7 +713,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	}
 
 	/* Filter completions to match currently typed command. */
-	struct char_element *leaf = (struct char_element *) list_element_at(argv, cmd_index + 1);
+	struct str_element *leaf = (struct str_element *) list_element_at(argv, cmd_index + 1);
 	if(leaf != NULL && leaf->data != NULL) {
 		struct list *filtered = list_new();
 		console_filter_list(filtered, completions, leaf->data, CONSOLE_CMD_NAME_MAX);
@@ -729,7 +729,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 
 		/* Insert autocompleted command (guaranteed to exist since
 		 * list_count(completions) == 1). */
-		char *head = ((struct char_element *) list_first(completions))->data;
+		char *head = ((struct str_element *) list_first(completions))->data;
 
 		/* Insert completion, set length and update cursor. */
 		size_t added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - input_cmd_len, head, strnlen(head, CONSOLE_INPUT_MAX));
@@ -747,7 +747,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		c->cursor.pos += added;
 	} else {
 		/* Print completions */
-		foreach_list(struct char_element*, e, completions) {
+		foreach_list(struct str_element*, e, completions) {
 			console_printf(c, "%s\n", e->data);
 		}
 	}
@@ -765,7 +765,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 int console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
 		struct list *argv, float *dst)
 {
-	struct char_element *elem = (struct char_element *) list_element_at(argv, 0);
+	struct str_element *elem = (struct str_element *) list_element_at(argv, 0);
 	if(elem == NULL) {
 		console_printf(c, "Usage: %s <FLOAT>\n", cmd->name);
 		return -1;

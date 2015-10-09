@@ -22,7 +22,7 @@ struct element {
 
 /**
  * Initializes an allocated list element with the specified data.
- * 
+ *
  * @param e	The element to initialize.
  * @param data	The data to assign the element.
  * @see		list_element_new
@@ -37,7 +37,7 @@ void list_element_init(struct element *e, void *data)
 
 /**
  * Allocates and initializes a new list element with the specified data.
- * 
+ *
  * @param data	The data to assign to the new element.
  * @return	A pointer to the new element.
  * @see		list_element_free()
@@ -45,11 +45,11 @@ void list_element_init(struct element *e, void *data)
 struct element* list_element_new(void *data)
 {
 	struct element *tmp = malloc(sizeof(struct element));
-	
+
 	if(tmp == NULL) {
 		return NULL;
 	}
-	
+
 	list_element_init(tmp, data);
 
 	return tmp;
@@ -57,7 +57,7 @@ struct element* list_element_new(void *data)
 
 /**
  * Free an element but do not touch the links pertaining to it.
- * 
+ *
  * @param e		The element to free.
  * @param free_data	Whether or not to also free the contained data.
  */
@@ -71,7 +71,7 @@ void list_element_free(struct element *e, int free_data)
 
 /**
  * Unlink and free an element.
- * 
+ *
  * @param e		The element to unlink and free.
  * @param free_data	Whether or not to also free the contained data.
  */
@@ -90,7 +90,7 @@ void list_element_delete(struct element *e, int free_data)
 
 /**
  * Creates the head element and initializes a list.
- * 
+ *
  * @param list	The list to initialize.
  * @return	True if successful, false if out of memory.
  */
@@ -104,11 +104,11 @@ int list_init(struct list *list)
 	if(list->head == NULL) {
 		return 0;
 	}
-	
+
 	/* No more elements at the moment. */
 	list->head->next = list->head;
 	list->head->prev = list->head;
-	
+
 	return 1;
 }
 
@@ -119,7 +119,7 @@ int list_init(struct list *list)
 struct list* list_new()
 {
 	struct list* tmp = malloc(sizeof(struct list));
-	
+
 	if(tmp == NULL) {
 		return NULL;
 	}
@@ -128,13 +128,13 @@ struct list* list_new()
 		free(tmp);
 		return NULL;
 	}
-	
+
 	return tmp;
 }
 
 /**
  * Removes all the elements contained in a list.
- * 
+ *
  * @param list		The list to clear.
  * @param free_data	Whether or not to also free the data contained in each
  *			element.
@@ -184,11 +184,11 @@ struct element* list_head(struct list *list)
 struct element* list_first(struct list *list)
 {
 	struct element *first = list->head->next;
-	
+
 	if(first == NULL) {
 		first = list->head;
 	}
-	
+
 	return first;
 }
 
@@ -200,11 +200,11 @@ struct element* list_first(struct list *list)
 struct element* list_last(struct list *list)
 {
 	struct element *last = list->head->prev;
-	
+
 	if(last == NULL) {
 		last = list->head;
 	}
-	
+
 	return last;
 }
 
@@ -219,14 +219,14 @@ int list_empty(struct list *list)
 
 /**
  * Counts all the elements of the list (expensive!).
- * 
+ *
  * @param list	The list to count the elements of.
  * @return	The number of elements in the list.
  */
 int list_count(struct list *list)
 {
 	int count = 0;
-	foreach_list(struct char_element*, elem, list) {
+	foreach_list(struct str_element*, elem, list) {
 		count ++;
 	}
 	return count;
@@ -234,7 +234,7 @@ int list_count(struct list *list)
 
 /**
  * Inserts an element first in a list (immediately after the head element).
- * 
+ *
  * @param list	The list to add the element to.
  * @param e	The element to add.
  */
@@ -250,7 +250,7 @@ void list_prepend_element(struct list *list, struct element *e)
 /**
  * Creates a list element with the specified data and inserts it first in a
  * list.
- * 
+ *
  * @param list	The list to prepend the element into.
  * @param data	The data to assign to the new element.
  * @return	True when successful, false if out of memory.
@@ -258,19 +258,19 @@ void list_prepend_element(struct list *list, struct element *e)
 int list_prepend(struct list *list, void *data)
 {
 	struct element *e = list_element_new(data);
-	
+
 	if(e == NULL) {
 		return 0;
 	}
-	
+
 	list_prepend_element(list, e);
-	
+
 	return 1;
 }
 
 /**
  * Inserts an element last in a list.
- * 
+ *
  * @param list	The list to add the element to.
  * @param e	The element to add.
  */
@@ -278,7 +278,7 @@ void list_append_element(struct list *list, struct element *e)
 {
 	struct element *last = list_last(list);
 	struct element *last_old_next = last->next;
-	
+
 	e->next = last_old_next;	/* This is list->head. */
 	e->prev = last;
 	last->next = e;
@@ -287,7 +287,7 @@ void list_append_element(struct list *list, struct element *e)
 
 /**
  * Creates a list element with the specified data and inserts it last in a list.
- * 
+ *
  * @param list	The list to add the element to.
  * @param data	The data to assign to the new element.
  * @return	True if successful, false if out of memory.
@@ -295,24 +295,24 @@ void list_append_element(struct list *list, struct element *e)
 int list_append(struct list *list, void *data)
 {
 	struct element *e = list_element_new(data);
-	
+
 	if(e == NULL) {
 		return 0;
 	}
-	
+
 	list_append_element(list, e);
-	
+
 	return 1;
 }
 
 /**
  * Inserts an element at the specified index in the list. This performs poorly
  * and where possible list_append() and list_prepend() should be used instead.
- * 
+ *
  * If index is 0, the result will be equivalent to list_prepend().
- * 
+ *
  * If index is >= the length of the list, nothing is added.
- * 
+ *
  * @param list	The list to perform the insert in.
  * @param index	The position at which to insert the element in the list.
  * @param e	The element to insert.
@@ -345,17 +345,17 @@ int list_insert_element_at(struct list *list, int index, struct element *e)
 int list_insert_at(struct list *list, int index, void *data)
 {
 	struct element *e = list_element_new(data);
-	
+
 	if(e == NULL) {
 		return 0;
 	}
-	
+
 	if(!list_insert_element_at(list, index, e)) {
 		/* TODO: free_data should be per list instead, this is not clean... */
 		list_element_free(e, 0);
 		return 0;
 	}
-	
+
 	return 1;
 }
 
@@ -394,15 +394,15 @@ struct element* list_get_element(struct list *list, void *data)
 }
 
 /**
- * A utility function to print a list of strings (struct char_element) to
+ * A utility function to print a list of strings (struct str_element) to
  * stdout on the form "index=string".
- * 
+ *
  * @param list	The list to print.
  */
-void list_print_char(struct list *list)
+void list_print_strings(struct list *list)
 {
 	int index = 0;
-	foreach_list(struct char_element*, elem, list) {
+	foreach_list(struct str_element*, elem, list) {
 		printf("%d=%s\n", index, elem->data == NULL ? "NULL" : elem->data);
 		index ++;
 	}
