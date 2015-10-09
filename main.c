@@ -509,23 +509,6 @@ static void key_callback(struct input *input, GLFWwindow *window, int key,
 	}
 }
 
-void test_make_sound_manual()
-{
-	/* 1 s buffer. */
-	ALshort buf[SOUND_SAMPLE_RATE] = { 0 };
-
-	/* Add a 440 Hz tone into the buffer. */
-	sound_fx_add_filter(buf, 0, SOUND_SAMPLE_RATE, sound_filter_add_440hz);
-
-	/* Lower the volume of half the buffer. */
-	sound_fx_add_filter(buf, SOUND_SAMPLE_RATE/2, SOUND_SAMPLE_RATE, sound_filter_half_gain);
-
-	/* Make a sound. */
-	if(sound_fx_load_pcm(&game.tone_hit, buf, sizeof(buf)) != SOUND_OK) {
-		sound_error("Could not load manual sound\n");
-	}
-}
-
 void reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
