@@ -772,16 +772,6 @@ void load_textures()
 	vfs_register_callback("paddle.png", &reload_textures, &game.textures.paddle);
 }
 
-void test_read_file(const char* filename, unsigned int size, void* data)
-{
-	printf("%s: ", filename);
-	for (unsigned int i = 0; i < size; i++)
-	{
-		printf("%c", ((char*)data)[i]);
-	}
-	printf("\n\n");
-}
-
 static void load_fonts()
 {
 	monofont_new(&game.font, "manaspace.png", 16, 16, -7, 0);
