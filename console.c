@@ -106,12 +106,12 @@ static int console_split_args(const char *s, size_t s_size, const char token, st
 			/* Length of this word. */
 			int word_len = n - i;
 			/* Create string to store parsed argument in. */
-			char *name = (char *) malloc(word_len + 1);
+			char *name = (char *) malloc((word_len + 1) * sizeof(char));
 			if(name == NULL) {
 				console_error("Out of memory");
 				return -1;
 			}
-			memcpy(name, s + i, word_len);
+			memcpy(name, s + i, word_len * sizeof(char));
 			/* Append NULL terminator. */
 			name[word_len] = '\0';
 			/* Append parsed arg to argv. */
@@ -457,8 +457,8 @@ static void console_parse_var(struct console *c, struct list *argv)
 
 static int console_argv_is_var(struct list *argv)
 {
-	return list_count(argv) == 1
-		&& (memchr(((struct str_element *) list_first(argv))->data, '=', CONSOLE_INPUT_MAX) != NULL);
+	struct str_element *s = (struct str_element *) list_first(argv);
+	return list_count(argv) == 1 && (memchr(s->data, '=', strnlen(s->data, CONSOLE_INPUT_MAX)) != NULL);
 }
 
 void console_parse(struct console *c, const char *in_str, size_t in_str_len)
