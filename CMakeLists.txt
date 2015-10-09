@@ -5,17 +5,16 @@ cmake_minimum_required(VERSION 3.1)
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
 
-# Console support
+# Compile options
 option(ENABLE_CONSOLE "Compile with console support" ON)
+
+# Console capture stdout support
 if(ENABLE_CONSOLE)
 	add_definitions(-DCONSOLE_ENABLE)
 endif()
 
 # QUIRK: Define M_PI on Windows.
 add_definitions(-D_USE_MATH_DEFINES)
-
-# Add debug statements.
-add_definitions(-DDEBUG)
 
 # Enable asset hotswap.
 add_definitions(-DVFS_ENABLE_FILEWATCH)
@@ -93,7 +92,7 @@ set(HEADERS math4.h core_console.h graphics.h shader.h input.h texture.h color.h
 # Main executable.
 add_executable(glpong ${SOURCE} ${HEADERS})
 
-# GCC Compiler settings.
+# GCC compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
     # More warnings.
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -fdiagnostics-show-option ")
@@ -103,8 +102,8 @@ if(CMAKE_COMPILER_IS_GNUCC)
     # Force casting of pointer types.
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
         "-Werror=strict-aliasing ")
-    # Lightweight buffer overflow detection.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
+	# DEBUG: Lightweight buffer overflow detection.
+	set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG
         "-D_FORTIFY_SOURCE=2 ")
 
     # QUIRK: stb.h requires all these warnings to be silenced, but it seems
@@ -117,7 +116,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
 endif()
 
-# MSVC Compiler settings.
+# MSVC compiler settings.
 if(MSVC)
     # More warnings.
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "/W3 ")
@@ -125,6 +124,18 @@ if(MSVC)
     # implementations.
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
         "/D_CRT_SECURE_NO_WARNINGS ")
+endif()
+
+# Compiling with Clang?
+if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
+	set(CLANG 1)
+endif()
+
+# Clang compiler settings.
+if(CLANG)
+	# DEBUG: Bounds checking.
+	set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG "-fsanitize=address ")
+	set_property(TARGET glpong APPEND_STRING PROPERTY LINK_FLAGS_DEBUG "-fsanitize=address ")
 endif()
 
 # Link.
