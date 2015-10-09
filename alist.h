@@ -74,7 +74,7 @@ void			alist_print_strings(struct alist *alist);
  * @param list	The list to iterate.
  */
 #define foreach_alist_p(type, item, list) \
-	for(type *item = list->data; \
+	for(type *item = (type *) list->data; \
 			item < ((type *) list->data) + list->count; \
 			item++)
 

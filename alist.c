@@ -11,7 +11,7 @@
 #include "alist.h"
 
 /**
- * If required, grows the list in increments of 2x unti the specified index
+ * If required, grows the list in increments of 2x until the specified index
  * can be accessed.
  *
  * @param alist	The list to maybe resize.
@@ -24,12 +24,13 @@ static int alist_maybe_grow(struct alist *alist, size_t index)
 	if(alist == NULL) {
 		return -1;
 	}
-	/* FIXME: Optimize away while-loop, just calculate what power of 2 multiply
-	 * with and alist_resize() once only. */
-	while(index >= alist->size) {
-		if(alist_resize(alist, alist->size * 2) != 0) {
-			return -1;
-		}
+	size_t new_size = alist->size;
+	while(index >= new_size) {
+		new_size *= 2;
+	}
+	if(new_size != alist->size
+			&& alist_resize(alist, new_size) != 0) {
+		return -1;
 	}
 	return 0;
 }
@@ -43,7 +44,7 @@ static int alist_maybe_grow(struct alist *alist, size_t index)
  * @param offset		The offset into the data array to shift from.
  * @param shift_count	The number of times to shift to the right.
  */
-int alist_shift_data_right(struct alist *alist, size_t offset, size_t shift_count)
+static int alist_shift_data_right(struct alist *alist, size_t offset, size_t shift_count)
 {
 	/* Sanity check. */
 	if(alist == NULL) {
@@ -75,7 +76,7 @@ int alist_shift_data_right(struct alist *alist, size_t offset, size_t shift_coun
  * @param shift_count	The number of times to shift to the left.
  * @return				0 on success, not 0 on error.
  */
-int alist_shift_data_left(struct alist *alist, size_t offset, size_t shift_count)
+static int alist_shift_data_left(struct alist *alist, size_t offset, size_t shift_count)
 {
 	/* Sanity check. */
 	if(alist == NULL
