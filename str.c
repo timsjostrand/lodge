@@ -289,7 +289,7 @@ char* str_copy(const char *s, const size_t s_size)
 	if(tmp == NULL) {
 		return NULL;
 	}
-	memcpy(tmp, s, s_size);
+	memcpy(tmp, s, s_size * sizeof(char));
 	return tmp;
 }
 
