@@ -8,10 +8,16 @@
 #include <stdarg.h>
 #include <GLFW/glfw3.h>
 
+#include "sound.h"
 #include "console.h"
 #include "graphics.h"
 #include "vfs.h"
 #include "core_console.h"
+
+struct commands_sound {
+	struct console_cmd root;
+	struct console_cmd volume;
+};
 
 struct commands_graphics {
 	struct console_cmd root;
@@ -29,6 +35,7 @@ struct commands_vfs {
 static struct state {
 	struct graphics				*graphics;
 	struct console				*console;
+	struct commands_sound		cmd_sound;
 	struct commands_graphics	cmd_graphics;
 	struct commands_vfs			cmd_vfs;
 } state = { 0 };
@@ -42,6 +49,34 @@ void core_console_printf(const char *fmt, ...)
 	va_start(args, fmt);
 	console_vprintf(state.console, fmt, args);
 	va_end(args);
+}
+
+/* Sound */
+
+static void core_console_sound_volume(struct console *c, struct console_cmd *cmd, struct list *argv)
+{
+	float f;
+	if(console_cmd_parse_1f(c, cmd, argv, &f) != 0) {
+		return;
+	}
+	sound_master_gain(f);
+}
+
+static void core_console_sound_free(struct commands_sound *cmd)
+{
+	console_cmd_free(&cmd->root);
+	console_cmd_free(&cmd->volume);
+}
+
+static void core_console_sound_init(struct console *c, struct commands_sound *cmd)
+{
+	/* Create commands. */
+	console_cmd_new(&cmd->root, "sound", 0, NULL, NULL);
+	console_cmd_new(&cmd->volume, "volume", 1, &core_console_sound_volume, NULL);
+
+	/* Register command tree. */
+	console_cmd_add(&cmd->root, &c->root_cmd);
+	console_cmd_add(&cmd->volume, &cmd->root);
 }
 
 /* Graphics */
@@ -143,12 +178,14 @@ void core_console_init(struct graphics *g, struct console *c)
 	state.graphics = g;
 	state.console = c;
 
+	core_console_sound_init(c, &state.cmd_sound);
 	core_console_graphics_init(c, &state.cmd_graphics);
 	core_console_vfs_init(c, &state.cmd_vfs);
 }
 
 void core_console_free()
 {
+	core_console_sound_free(&state.cmd_sound);
 	core_console_graphics_free(&state.cmd_graphics);
 	core_console_vfs_free(&state.cmd_vfs);
 
