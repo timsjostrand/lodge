@@ -118,12 +118,13 @@ int sound_init(struct sound *s)
 	}
 	AL_TEST("make default context");
 
-	/* set orientation */
-#if 0
-	alListener3f(AL_POSITION, 0, 0, 1.0f);
+	/* Set up 2D listener. */
+	alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+	alListener3f(AL_POSITION, 0, 0, 0.0f);
 	AL_TEST("listener position");
 	alListener3f(AL_VELOCITY, 0, 0, 0);
 	AL_TEST("listener velocity");
+#if 0
 	alListenerfv(AL_ORIENTATION, listenerOri);
 	AL_TEST("listener orientation");
 #endif
@@ -466,4 +467,9 @@ void sound_fx_free(struct sound_fx *s)
 	if(alIsBuffer(s->buffer)) {
 		alDeleteBuffers(1, &s->buffer);
 	}
+}
+
+void sound_master_gain(float gain)
+{
+	alListenerf(AL_GAIN, gain);
 }

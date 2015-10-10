@@ -55,6 +55,7 @@ int		sound_fx_loop(struct sound_fx *s, ALboolean loop);
 
 int		sound_init(struct sound *s);
 void	sound_free(struct sound *s);
+void	sound_master_gain(float gain);
 
 int		sound_filter_add_440hz(ALshort *buf, size_t offset, size_t len);
 int		sound_filter_add_220hz(ALshort *buf, size_t offset, size_t len);
