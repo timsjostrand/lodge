@@ -708,7 +708,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	cmd->autocomplete(c, cmd, argv, completions);
 
 	/* Autocomplete variables? */
-	if(list_count(argv) <= 1) {
+	if(cmd_index < 0) {
 		console_env_autocomplete(&c->env, completions);
 	}
 
