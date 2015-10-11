@@ -101,10 +101,11 @@ void console_cmd_free(struct console_cmd *cmd);
 void console_cmd_autocomplete(struct console *c, const char *input,
 		const size_t input_len, const size_t cursor_pos);
 
-int console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
+void console_parse(struct console *c, const char *in_str, size_t in_str_len);
+int  console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
 		struct list *argv, float *dst);
 
-int console_env_bind_1f(struct console *c, const char *name, float *value);
-int console_env_set_1f(struct console *c, const char *name, const float value);
+int  console_env_bind_1f(struct console *c, const char *name, float *value);
+int  console_env_set_1f(struct console *c, const char *name, const float value);
 
 #endif
