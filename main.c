@@ -24,6 +24,7 @@
 #include "atlas.h"
 #include "monotext.h"
 #include "console.h"
+#include "str.h"
 
 #include "core_console.h"
 
@@ -92,6 +93,7 @@ struct textures {
 };
 
 struct game {
+	int					initialized;
 	float				time;						/* Time since start. */
 	float				view_width;
 	float				view_height;
@@ -116,6 +118,8 @@ struct game {
 	struct monofont		font_console;
 	struct monotext		txt_debug;
 	struct console		console;
+	const char			*conf;
+	size_t				conf_size;
 } game = { 0 };
 
 void print_stats()
@@ -451,6 +455,82 @@ static void init_console()
 	core_console_init(&game.graphics, &game.console);
 }
 
+void parse_conf(const char *conf, const size_t size, struct console *console)
+{
+	foreach_line(conf, size) {
+		/* Empty line or comment? Skip. */
+		if(len == 0 || conf[start] == '#') {
+			continue;
+		}
+
+		/* Parse and execute console command. */
+		/* FIXME: there is a bug somewhere in the console stack that does not
+		 * respect the len argument of console_parse(). Using str_copy manually
+		 * here in the mean time to avoid confusion with missing \0. */
+		char *line = str_copy(conf + start, len, len + 1);
+		console_parse(console, line, len);
+		free(line);
+	}
+}
+
+void parse_conf_manual(const char *conf, const size_t size, struct console *console)
+{
+	size_t start = 0;
+
+	for(size_t i = 0; i <= size; i++) {
+		size_t end = 0;
+
+		/* Found end of line? */
+		if(i == size || conf[i] == '\r' || conf[i] == '\n' || conf[i] == '\0') {
+			end = i;
+		}
+
+		if(end > 0) {
+			long len = end - start;
+
+			/* Empty line or comment? Skip. */
+			if(len <= 0
+					|| conf[start] == '#') {
+				start = i + 1;
+				continue;
+			}
+
+			/* Parse and execute console command. */
+			char *line = str_copy(conf + start, len, len + 1);
+			console_parse(console, line, len);
+			free(line);
+
+			/* Skip \r\n. */
+			if(i+1 < size && conf[i+1] == '\n') {
+				i++;
+			}
+
+			/* Remember where next line starts. */
+			start = i + 1;
+		}
+	}
+}
+
+void reload_conf(const char *filename, unsigned int size, void *data, void *userdata)
+{
+	if(size == 0) {
+		console_debug("Skipped reload of %s (%u bytes)\n", filename, size);
+		return;
+	}
+
+	game.conf = (const char *) data;
+	game.conf_size = size;
+
+	if(game.initialized) {
+		parse_conf(game.conf, game.conf_size, &game.console);
+	}
+}
+
+void load_conf()
+{
+	vfs_register_callback("glpong.rc", &reload_conf, &game.console);
+}
+
 void init_game()
 {
 	game.view_width = VIEW_WIDTH;
@@ -463,6 +543,8 @@ void init_game()
 	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
 			VIEW_HEIGHT - 16.0f);
 	init_console();
+	parse_conf(game.conf, game.conf_size, &game.console);
+	game.initialized = 1;
 }
 
 static void char_callback(struct input *input, GLFWwindow *window,
@@ -760,6 +842,7 @@ static void load_assets()
 	load_textures();
 	load_atlases();
 	load_fonts();
+	load_conf();
 }
 
 static void release_assets()
