@@ -120,6 +120,7 @@ int sound_init(struct sound *s)
 
 	/* Set up 2D listener. */
 	alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+	AL_TEST("distance model");
 	alListener3f(AL_POSITION, 0, 0, 0.0f);
 	AL_TEST("listener position");
 	alListener3f(AL_VELOCITY, 0, 0, 0);
