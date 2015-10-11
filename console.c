@@ -464,7 +464,7 @@ static int console_argv_is_var(struct list *argv)
 void console_parse(struct console *c, const char *in_str, size_t in_str_len)
 {
 	/* Store to input history. */
-	list_prepend(c->input_history, str_copy(in_str, CONSOLE_INPUT_MAX));
+	list_prepend(c->input_history, str_copy(in_str, in_str_len, CONSOLE_INPUT_MAX));
 	if(list_count(c->input_history) > CONSOLE_INPUT_HISTORY_MAX) {
 		list_element_delete(list_last(c->input_history), 1);
 	}

@@ -283,13 +283,14 @@ char* str_search_reverse(char *s, const size_t s_size, const char needle,
  * Allocates new memory and copies a string to it. Equivalent to the
  * non-standard strndup().
  */
-char* str_copy(const char *s, const size_t s_size)
+char* str_copy(const char *s, const size_t s_len, const size_t s_size)
 {
 	char *tmp = (char *) malloc(s_size);
 	if(tmp == NULL) {
 		return NULL;
 	}
-	memcpy(tmp, s, s_size * sizeof(char));
+	memcpy(tmp, s, s_len * sizeof(char));
+	tmp[s_len] = '\0';
 	return tmp;
 }
 
