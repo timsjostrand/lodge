@@ -8,9 +8,14 @@ set(CMAKE_MACOSX_RPATH 1)
 # Compile options
 option(ENABLE_CONSOLE "Compile with console support" ON)
 
+# Add debug options of debug build type
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+	add_definitions(-DDEBUG)
+endif()
+
 # Console capture stdout support
 if(ENABLE_CONSOLE)
-	add_definitions(-DCONSOLE_ENABLE)
+    add_definitions(-DCONSOLE_ENABLE)
 endif()
 
 # QUIRK: Define M_PI on Windows.
@@ -97,7 +102,7 @@ add_executable(glpong ${SOURCE} ${HEADERS})
 # GCC compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
     # More warnings.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -fdiagnostics-show-option ")
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wpedantic -fdiagnostics-show-option ")
     # Do not allow declaring functions without implementing them.
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
         "-Werror-implicit-function-declaration ")
