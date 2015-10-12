@@ -473,44 +473,6 @@ void parse_conf(const char *conf, const size_t size, struct console *console)
 	}
 }
 
-void parse_conf_manual(const char *conf, const size_t size, struct console *console)
-{
-	size_t start = 0;
-
-	for(size_t i = 0; i <= size; i++) {
-		size_t end = 0;
-
-		/* Found end of line? */
-		if(i == size || conf[i] == '\r' || conf[i] == '\n' || conf[i] == '\0') {
-			end = i;
-		}
-
-		if(end > 0) {
-			long len = end - start;
-
-			/* Empty line or comment? Skip. */
-			if(len <= 0
-					|| conf[start] == '#') {
-				start = i + 1;
-				continue;
-			}
-
-			/* Parse and execute console command. */
-			char *line = str_copy(conf + start, len, len + 1);
-			console_parse(console, line, len);
-			free(line);
-
-			/* Skip \r\n. */
-			if(i+1 < size && conf[i+1] == '\n') {
-				i++;
-			}
-
-			/* Remember where next line starts. */
-			start = i + 1;
-		}
-	}
-}
-
 void reload_conf(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
