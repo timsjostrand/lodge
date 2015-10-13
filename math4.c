@@ -307,6 +307,18 @@ int inverse(mat4 m, const mat4 a)
 }
 
 /**
+ * Calculate the distance between two 3D points.
+ **/
+float distance3f(const vec3 a, const vec3 b)
+{
+	return sqrt(
+			(a[0]-b[0]) * (a[0]-b[0]) +
+			(a[1]-b[1]) * (a[1]-b[1]) +
+			(a[2]-b[2]) * (a[2]-b[2])
+	);
+}
+
+/**
  * Copy the contents of matrix 'a' into 'm'.
  */
 void copym(mat4 m, const mat4 a)

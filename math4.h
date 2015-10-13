@@ -38,6 +38,7 @@ void cross(vec4 v, vec4 a, vec4 b);
 int inverse(mat4 m, const mat4 a);
 float determinant(const mat4 m);
 void adjugate(mat4 m, const mat4 a);
+float distance3f(const vec3 a, const vec3 b);
 
 int imax(int a, int b);
 int imin(int a, int b);
