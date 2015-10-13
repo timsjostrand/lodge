@@ -19,10 +19,10 @@
 #include "math4.h"
 #include "graphics.h"
 
-const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
-const vec4 CONSOLE_COLOR_DISPLAY	= { 0.8f, 0.8f, 0.8f, 1.0f };
-const vec4 CONSOLE_COLOR_CURSOR		= { 0.0f, 0.0f, 0.0f, 1.0f };
-const vec4 CONSOLE_COLOR_BG			= { 0.0f, 0.0f, 0.0f, 0.4f };
+static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
+static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };
+static const vec4 CONSOLE_COLOR_CURSOR		= { 0.0f, 0.0f, 0.0f, 1.0f };
+static const vec4 CONSOLE_COLOR_BG			= { 0.0f, 0.0f, 0.0f, 0.4f };
 
 static struct console_var* console_var_get_by_name(struct console_env *e, const char *name);
 

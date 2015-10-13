@@ -109,10 +109,12 @@ struct game {
 	int					particles_count;
 	struct input		input;
 	struct textures		textures;
+	vec3				listener;
 	struct sound		sound;
-	struct sound_fx		vivaldi;
-	struct sound_fx		tone_hit;
-	struct sound_fx		tone_bounce;
+	sound_buf_t			vivaldi;
+	struct sound_emitter *vivaldi_src;
+	sound_buf_t			tone_hit;
+	sound_buf_t			tone_bounce;
 	struct atlas		atlas_earl;
 	struct monofont		font;
 	struct monofont		font_console;
@@ -120,6 +122,7 @@ struct game {
 	struct console		console;
 	const char			*conf;
 	size_t				conf_size;
+	vec3				mouse_pos;
 } game = { 0 };
 
 void print_stats()
@@ -216,7 +219,7 @@ void ball_player_bounce(struct ball *ball, struct player *p)
 
 	p->charge = 0.0f;
 
-	sound_fx_play(&game.tone_hit);
+	sound_buf_play_pitched(&game.sound, game.tone_hit, ball->sprite.pos, 0.05f);
 }
 
 void ball_think(float dt)
@@ -257,12 +260,12 @@ void ball_think(float dt)
 		game.ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT/2;
 		game.ball.vy *= -1.0f;
 		game.ball.last_hit_y = 0.0f;
-		sound_fx_play(&game.tone_bounce);
+		sound_buf_play_pitched(&game.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
 	} else if(game.ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT/2) {
 		game.ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT/2;
 		game.ball.vy *= -1.0f;
 		game.ball.last_hit_y = 0.0f;
-		sound_fx_play(&game.tone_bounce);
+		sound_buf_play_pitched(&game.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
 	}
 
 	// Ball: move
@@ -367,6 +370,7 @@ void think(struct graphics *g, float delta_time)
 	game.time = (float) glfwGetTime();
 	game_think(delta_time);
 	particles_think(delta_time);
+	sound_think(&game.sound, delta_time);
 	input_think(&game.input, delta_time);
 	console_think(&game.console, delta_time);
 	shader_uniforms_think(&game.shader, delta_time);
@@ -506,6 +510,7 @@ void init_game()
 			VIEW_HEIGHT - 16.0f);
 	init_console();
 	parse_conf(game.conf, game.conf_size, &game.console);
+	game.vivaldi_src = sound_buf_play_music(&game.sound, game.vivaldi, 1.0f);
 	game.initialized = 1;
 }
 
@@ -537,12 +542,12 @@ static void key_callback(struct input *input, GLFWwindow *window, int key,
 			switch(key) {
 				case GLFW_KEY_O:
 					game.graphics.delta_time_factor *= 2.0f;
-					sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
+					sound_src_pitch(game.vivaldi_src->src, game.graphics.delta_time_factor);
 					printf("time_mod=%f\n", game.graphics.delta_time_factor);
 					break;
 				case GLFW_KEY_P:
 					game.graphics.delta_time_factor /= 2.0f;
-					sound_fx_pitch(&game.vivaldi, game.graphics.delta_time_factor);
+					sound_src_pitch(game.vivaldi_src->src, game.graphics.delta_time_factor);
 					printf("time_mod=%f\n", game.graphics.delta_time_factor);
 					break;
 				case GLFW_KEY_ESCAPE:
@@ -560,21 +565,18 @@ void reload_sound(const char *filename, unsigned int size, void *data, void *use
 		return;
 	}
 
-	struct sound_fx tmp = { 0 };
-	struct sound_fx *dst = (struct sound_fx *) userdata;
+	sound_buf_t tmp = 0;
+	sound_buf_t *dst = (sound_buf_t *) userdata;
 
 	/* Reload sound. */
-	if(sound_fx_load_vorbis(&tmp, data, size) != SOUND_OK) {
+	if(sound_buf_load_vorbis(&tmp, data, size) != SOUND_OK) {
 		sound_error("Could not load %s (%u bytes)\n", filename, size);
 	} else {
 		/* Release current sound (if any). */
-		sound_fx_free(dst);
+		sound_buf_free((*dst));
 
 		/* Assign new sound (only if parsing was OK). */
-		*(dst) = tmp;
-
-		/* Start playing music. */
-		sound_fx_play(dst);
+		(*dst) = tmp;
 	}
 }
 
@@ -582,14 +584,14 @@ void load_sounds()
 {
 	vfs_register_callback("vivaldi.ogg", &reload_sound, &game.vivaldi);
 
-	if(sound_fx_load_filter(&game.tone_hit,
+	if(sound_buf_load_filter(&game.tone_hit,
 				0.1 * SOUND_SAMPLE_RATE,
 				SOUND_SAMPLE_RATE,
 				&sound_filter_add_440hz) != SOUND_OK) {
 		sound_error("could not generate tone\n");
 	}
 
-	if(sound_fx_load_filter(&game.tone_bounce,
+	if(sound_buf_load_filter(&game.tone_bounce,
 				0.1 * SOUND_SAMPLE_RATE,
 				SOUND_SAMPLE_RATE,
 				&sound_filter_add_220hz) != SOUND_OK) {
@@ -708,7 +710,6 @@ void reload_atlas(const char *filename, unsigned int size, void *data, void *use
 	}
 }
 
-
 void load_atlases()
 {
 	/* Register asset callbacks */
@@ -717,7 +718,9 @@ void load_atlases()
 
 void release_sounds()
 {
-	sound_fx_free(&game.vivaldi);
+	sound_buf_free(game.vivaldi);
+	sound_buf_free(game.tone_bounce);
+	sound_buf_free(game.tone_hit);
 }
 
 void release_textures()
@@ -816,6 +819,26 @@ static void release_assets()
 	release_fonts();
 }
 
+static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
+{
+	if(action == GLFW_PRESS) {
+		double x = 0;
+		double y = 0;
+		glfwGetCursorPos(window, &x, &y);
+		int win_w = 0;
+		int win_h = 0;
+		glfwGetWindowSize(window, &win_w, &win_h);
+		/* Convert screen space => game space. */
+		game.mouse_pos[0] = x * (VIEW_WIDTH / (float) win_w);
+		game.mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float) win_h);
+
+		sound_buf_play_pitched(&game.sound, game.tone_hit, game.mouse_pos, 0.2f);
+		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
+				game.mouse_pos[0], game.mouse_pos[1],
+				distance3f(game.listener, game.mouse_pos));
+	}
+}
+
 int main(int argc, char **argv)
 {
 	/* Start the virtual file system */
@@ -826,8 +849,11 @@ int main(int argc, char **argv)
 	/* Seed random number generator. */
 	srand(time(NULL));
 
-	/* Set up sound. */
-	sound_init(&game.sound);
+	/* Set up sound with listener in the middle of the screen and sounds emitted
+	 * from within the screen being audible.*/
+	set3f(game.listener, VIEW_WIDTH/2.0f, VIEW_HEIGHT/2.0f, 0);
+	vec3 sound_audible_max = { VIEW_WIDTH, VIEW_HEIGHT, 0.0f };
+	sound_init(&game.sound, game.listener, distance3f(game.listener, sound_audible_max));
 
 	/* Set up graphics. */
 	int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
@@ -845,6 +871,7 @@ int main(int argc, char **argv)
 	/* Get input events. */
 	ret = input_init(&game.input, game.graphics.window, key_callback,
 			char_callback);
+	glfwSetMouseButtonCallback(game.graphics.window, &glfw_mouse_button);
 
 	if(ret != GRAPHICS_OK) {
 		graphics_error("Input initialization failed (%d)\n", ret);

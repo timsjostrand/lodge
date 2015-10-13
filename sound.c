@@ -3,24 +3,6 @@
  *
  * Unless otherwise noted sound data is 16 bit mono.
  *
- * TODO:
- *
- * - Play sources in "channels": CHAN_MUSIC, CHAN_EFFECTS and so on. These should
- *	 probably be pooled. So sounds playing in CHAN_MUSIC can never be
- *	 interrupted, but CHAN_EFFECTS may be stopped if a new sound should be
- *	 played and there are no more available resources.
- *
- * - Separate buffers from channels. Load a file (buffer) and play it later (source).
- *
- * - How many channels can be used? Allocate channels on play() or for every
- *	 entity? Or on-demand when sound_play() is called?
- *
- * - Add sound_{pitch,gain}() that sets pitch and gain globally for all sounds.
- *	 So for instance, if time_delta_factor is changed all sounds are slowed
- *	 down/up. This will however require all sounds to be registered somewhere
- *	 (will be required for pooling resources anyways?), which they are not
- *	 currently.
- *
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
@@ -40,9 +22,12 @@
 #endif
 
 #include "sound.h"
+#include "alist.h"
+#include "math4.h"
 
-static size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
+static size_t sound_buf_read_file(stb_vorbis *header, stb_vorbis_info *info,
 		ALshort *buf, int len);
+static struct sound_emitter* sound_emitter_get(struct sound *s);
 
 static int al_test(const char *msg)
 {
@@ -84,14 +69,18 @@ static void sound_list_devices(const ALCchar *devices)
 	sound_debug("----------\n");
 }
 
-int sound_init(struct sound *s)
+/**
+ * @param s				The sound context to initialize into.
+ * @param listener_pos	The position where the listener is. For a 2D game, this
+ *						might be the center of the screen. For a 3D game, this
+ *						might be the camera position.
+ * @param max_distance	The maximum distance from the listener where a sound is
+ *						still audible.
+ */
+int sound_init(struct sound *s, vec3 listener_pos, float max_distance)
 {
-	ALboolean enumeration;
-	const ALCchar *defaultDeviceName;
-	ALCdevice *device;
-
 	/* List devices if extension is available. */
-	enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
+	ALboolean enumeration = alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT");
 	if(enumeration == AL_FALSE) {
 		sound_error("enumeration extension not available\n");
 	} else {
@@ -99,8 +88,8 @@ int sound_init(struct sound *s)
 	}
 
 	/* Open the default device. */
-	defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
-	device = alcOpenDevice(defaultDeviceName);
+	const ALCchar *defaultDeviceName = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+	ALCdevice *device = alcOpenDevice(defaultDeviceName);
 	if(!device) {
 		sound_error("unable to open default device\n");
 		return SOUND_ERROR;
@@ -121,76 +110,166 @@ int sound_init(struct sound *s)
 	/* Set up 2D listener. */
 	alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 	AL_TEST("distance model");
-	alListener3f(AL_POSITION, 0, 0, 0.0f);
+	alListener3f(AL_POSITION, xyz(listener_pos));
 	AL_TEST("listener position");
-	alListener3f(AL_VELOCITY, 0, 0, 0);
+	alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 	AL_TEST("listener velocity");
 #if 0
 	alListenerfv(AL_ORIENTATION, listenerOri);
 	AL_TEST("listener orientation");
 #endif
 
-	return SOUND_OK;
-}
+	/* Set up sound object. */
+	s->emitters = alist_new(SOUND_EMITTERS_MAX);
 
-void sound_free(struct sound *s)
-{
-	ALCdevice *device = alcGetContextsDevice(s->context);
-	alcMakeContextCurrent(NULL);
-	alcDestroyContext(s->context);
-	alcCloseDevice(device);
-}
+	/* Generate static sound sources. */
+	sound_src_t sources[SOUND_EMITTERS_MAX];
+	alGenSources(SOUND_EMITTERS_MAX, sources);
+	AL_TEST("generate sources");
 
-int sound_fx_play(struct sound_fx *s)
-{
-	ALint source_state;
-	alGetSourcei(s->source, AL_SOURCE_STATE, &source_state);
-
-	if(source_state != AL_PLAYING) {
-		alSourcePlay(s->source);
-		AL_TEST("could not play source");
+	/* Assign each emitter a unique source name. */
+	for(int i=0; i<SOUND_EMITTERS_MAX; i++) {
+		sound_emitter_init(&(s->emitters_mem[i]));
+		s->emitters_mem[i].src = sources[i];
+		alSourcef(sources[i], AL_MAX_DISTANCE, max_distance);
+		alSourcef(sources[i], AL_ROLLOFF_FACTOR, 1);
 	}
 
 	return SOUND_OK;
 }
 
+static void sound_src_free_all(struct sound *s)
+{
+	for(int i=0; i<SOUND_EMITTERS_MAX; i++) {
+		struct sound_emitter *em = &(s->emitters_mem[i]);
+		//sound_emitter_stop(em);
+		if(alIsSource(em->src)) {
+			alDeleteSources(1, &em->src);
+		}
+	}
+}
+
+
+void sound_free(struct sound *s)
+{
+	/* Free sources. */
+	sound_src_free_all(s);
+	/* Free OpenAL resources. */
+	ALCdevice *device = alcGetContextsDevice(s->context);
+	alcMakeContextCurrent(NULL);
+	alcDestroyContext(s->context);
+	alcCloseDevice(device);
+	/* Free local memory. */
+	alist_free(s->emitters, 0);
+}
+
+/**
+ * Play a sound buffer with control over all the playback parameters.
+ *
+ * @param s					The sound context to play the sound in.
+ * @param buf				The OpenAL pre-uploaded buffer to play.
+ * @param pos				The 3D position vector of the sound emitter.
+ * @param velocity			The 3D velocity vector of the sound emitter.
+ * @param loop				Whether to loop the buffer or not.
+ * @param gain				Gain/volume to play this buffer with (default 1.0).
+ * @param pitch				Pitch factor to play this buffer with (default 1.0).
+ * @param uninterruptable	Set to true if this sound cannot be interrupted due
+ *							to the sound pool running out. Use only for certain
+ *							sound effects, like music or important dialog.
+ *
+ * @return					A pointer to the sound emitter assigned to the
+ *							buffer, or NULL on error.
+ */
+struct sound_emitter* sound_buf_play_detailed(struct sound *s, const sound_buf_t buf,
+		float *pos, float *velocity, ALboolean loop, float gain, float pitch,
+		int uninterruptable)
+{
+	/* Get available emitter. */
+	struct sound_emitter *em = sound_emitter_get(s);
+	if(em == NULL) {
+		sound_debug("Could not get new emitter\n");
+		return NULL;
+	}
+
+	/* Bind buffer to source. */
+	alSourcei(em->src, AL_BUFFER, buf);
+	if(al_test("bind buffer") != SOUND_OK) {
+		return NULL;
+	}
+
+	/* Put emitter last in queue to be interrupted. */
+	alist_append(s->emitters, em);
+
+	/* Set attributes. */
+	sound_src_loop(em->src, loop);
+	sound_src_pitch(em->src, pitch);
+	sound_src_gain(em->src, gain);
+
+	/* Set up emitter. */
+	em->pos = pos;
+	em->velocity = velocity;
+	em->uninterruptable = uninterruptable;
+	sound_emitter_update(em);
+
+	/* Start playing source. */
+	alSourcePlay(em->src);
+
+	return em;
+}
+
+/**
+ * Start playing an uninterruptable, looping music track. Use sound_src_stop()
+ * to stop it.
+ */
+struct sound_emitter* sound_buf_play_music(struct sound *s, const sound_buf_t buf,
+		float gain)
+{
+	return sound_buf_play_detailed(s, buf, NULL, NULL, AL_TRUE, gain, 1.0f, 1);
+}
+
+/**
+ * Plays a non-looping sound buffer with a random pitch variation between
+ * [1.0-variation, 1.0+variation].
+ */
+struct sound_emitter* sound_buf_play_pitched(struct sound *s, const sound_buf_t buf,
+		float *pos, float pitch_range)
+{
+	return sound_buf_play_detailed(s, buf, pos, NULL, AL_FALSE, 1.0f,
+			randr(1.0f - pitch_range, 1.0f + pitch_range), 0);
+}
+
+/**
+ * Plays a non-looping sound with zero velocity and default pitch and gain.
+ */
+struct sound_emitter* sound_buf_play(struct sound *s, const sound_buf_t buf,
+		float *pos)
+{
+	return sound_buf_play_detailed(s, buf, pos, NULL, AL_FALSE, 1.0f, 1.0f, 0);
+}
+
 /**
  * Loads a 16 bit mono PCM buffer.
  */
-int sound_fx_load_pcm(struct sound_fx *s, ALshort *buf, size_t len)
+int sound_buf_load_pcm(sound_buf_t *buf, ALshort *data, size_t len)
 {
 	ALenum format = to_al_format(1, SOUND_SAMPLE_SIZE);
 
-	/* Generate the audio source (emitter). */
-	alGenSources(1, &s->source);
-	AL_TEST("generate source");
-
 	/* Generate PCM buffers. */
-	alGenBuffers(1, &s->buffer);
+	alGenBuffers(1, buf);
 	AL_TEST("generate buffer");
 
 	/* Bind buffer. */
-	alBufferData(s->buffer,
+	alBufferData((*buf),
 			format,
-			buf,
+			data,
 			len,
 			SOUND_SAMPLE_RATE);
 	AL_TEST("buffer data");
 
-	/* Bind buffer to source. */
-	alSourcei(s->source, AL_BUFFER, s->buffer);
-	AL_TEST("bind buffer");
-
-	sound_fx_pitch(s, 1.0f);
-	sound_fx_gain(s, 1.0f);
-	sound_fx_position(s, 0, 0, 0);
-	sound_fx_velocity(s, 0, 0, 0);
-	sound_fx_loop(s, AL_FALSE);
-
 	return SOUND_OK;
 }
 
-int sound_fx_load_vorbis_header(struct sound_fx *s, stb_vorbis *header)
+int sound_buf_load_vorbis_header(sound_buf_t *buf, stb_vorbis *header)
 {
 	/* File info. */
 	stb_vorbis_info info = stb_vorbis_get_info(header);
@@ -198,78 +277,64 @@ int sound_fx_load_vorbis_header(struct sound_fx *s, stb_vorbis *header)
 
 	/* Load file. */
 	unsigned int samples_count = stb_vorbis_stream_length_in_samples(header) * info.channels;
-	size_t buf_len = samples_count * sizeof(ALshort);
-	ALshort *buf = (ALshort *) malloc(buf_len);
-	if(buf == NULL) {
+	size_t data_len = samples_count * sizeof(ALshort);
+	ALshort *data = (ALshort *) malloc(data_len);
+	if(data == NULL) {
 		sound_error("Out of memory\n");
 		return SOUND_ERROR;
 	}
-	size_t size = sound_fx_read_file(header, &info, buf, buf_len);
+	size_t size = sound_buf_read_file(header, &info, data, data_len);
 	if(size <= 0) {
 		return SOUND_ERROR;
 	}
 
-	/* Generate the audio source (emitter). */
-	alGenSources(1, &s->source);
-	AL_TEST("generate source");
-
 	/* Generate PCM buffers. */
-	alGenBuffers(1, &s->buffer);
+	alGenBuffers(1, (ALuint *) buf);
 	AL_TEST("generate buffer");
 
 	/* Bind buffer. */
-	alBufferData(s->buffer, format, buf, size*sizeof(ALshort), info.sample_rate);
+	alBufferData((*buf), format, data, size*sizeof(ALshort), info.sample_rate);
 	AL_TEST("buffer data");
-
-	/* Bind buffer to source. */
-	alSourcei(s->source, AL_BUFFER, s->buffer);
-	AL_TEST("bind buffer");
-
-	sound_fx_pitch(s, 1.0f);
-	sound_fx_gain(s, 1.0f);
-	sound_fx_position(s, 0, 0, 0);
-	sound_fx_velocity(s, 0, 0, 0);
-	sound_fx_loop(s, AL_FALSE);
 
 	return SOUND_OK;
 }
 
-int sound_fx_pitch(struct sound_fx *s, float pitch)
+int sound_src_pitch(sound_src_t src, float pitch)
 {
-	alSourcef(s->source, AL_PITCH, pitch);
+	alSourcef(src, AL_PITCH, pitch);
 	AL_TEST("source pitch");
 	return SOUND_OK;
 }
 
-int sound_fx_gain(struct sound_fx *s, float gain)
+int sound_src_gain(sound_src_t src, float gain)
 {
-	alSourcef(s->source, AL_GAIN, gain);
+	alSourcef(src, AL_GAIN, gain);
 	AL_TEST("source gain");
 	return SOUND_OK;
 }
 
-int sound_fx_position(struct sound_fx *s, float x, float y, float z)
+int sound_src_position(sound_src_t src, float x, float y, float z)
 {
-	alSource3f(s->source, AL_POSITION, x, y, z);
+	alSource3f(src, AL_POSITION, x, y, z);
 	AL_TEST("source position");
 	return SOUND_OK;
 }
 
-int sound_fx_velocity(struct sound_fx *s, float vx, float vy, float vz)
+int sound_src_velocity(sound_src_t src, float vx, float vy, float vz)
 {
-	alSource3f(s->source, AL_VELOCITY, vx, vy, vz);
+	alSource3f(src, AL_VELOCITY, vx, vy, vz);
 	AL_TEST("source velocity");
 	return SOUND_OK;
 }
 
-int sound_fx_loop(struct sound_fx *s, ALboolean loop)
+int sound_src_loop(sound_src_t src, ALboolean loop)
 {
-	alSourcei(s->source, AL_LOOPING, loop);
+	alSourcei(src, AL_LOOPING, loop);
 	AL_TEST("source looping");
 	return SOUND_OK;
 }
 
-static size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
+static size_t sound_buf_read_file(stb_vorbis *header, stb_vorbis_info *info,
 		ALshort *buf, int len)
 {
 	size_t size = 0;
@@ -296,34 +361,30 @@ static size_t sound_fx_read_file(stb_vorbis *header, stb_vorbis_info *info,
 	return size;
 }
 
-int sound_fx_load_vorbis(struct sound_fx *s, const void *buf, size_t len)
+int sound_buf_load_vorbis(sound_buf_t *buf, const void *data, size_t len)
 {
-	memset(s, 0, sizeof(struct sound_fx));
-
-	stb_vorbis *vorbis = stb_vorbis_open_memory((const unsigned char *) buf, len, NULL, NULL);
+	stb_vorbis *vorbis = stb_vorbis_open_memory((const unsigned char *) data, len, NULL, NULL);
 	if(!vorbis) {
 		sound_error("Could not parse vorbis data\n");
 		return SOUND_ERROR;
 	}
 
-	int ret = sound_fx_load_vorbis_header(s, vorbis);
+	int ret = sound_buf_load_vorbis_header(buf, vorbis);
 
 	stb_vorbis_close(vorbis);
 
 	return ret;
 }
 
-int sound_fx_load_vorbis_file(struct sound_fx *s, const char *filename)
+int sound_buf_load_vorbis_file(sound_buf_t *buf, const char *filename)
 {
-	memset(s, 0, sizeof(struct sound_fx));
-
 	stb_vorbis *vorbis = stb_vorbis_open_filename(filename, NULL, NULL);
 	if(!vorbis) {
 		sound_error("Could not open vorbis file\n");
 		return SOUND_ERROR;
 	}
 
-	int ret = sound_fx_load_vorbis_header(s, vorbis);
+	int ret = sound_buf_load_vorbis_header(buf, vorbis);
 
 	stb_vorbis_close(vorbis);
 
@@ -377,7 +438,7 @@ int sound_filter_half_gain(ALshort *buf, size_t offset, size_t len)
  * @param len		The length of the buffer in samples.
  * @param filter	The filter to apply.
  */
-size_t sound_fx_add_filter(ALshort *buf, const size_t start, const size_t len,
+size_t sound_buf_add_filter(ALshort *buf, const size_t start, const size_t len,
 		filter_t filter)
 {
 	size_t size = start;
@@ -394,83 +455,153 @@ size_t sound_fx_add_filter(ALshort *buf, const size_t start, const size_t len,
 
 	/* End of file. */
 	if(size == 0) {
-		sound_debug("sound_fx_add_filter(): 0 samples added\n");
+		sound_debug("sound_buf_add_filter(): 0 samples added\n");
 	}
 
 	return size;
 }
 
-int sound_fx_load_filter(struct sound_fx *s, size_t samples_count,
+int sound_buf_load_filter(sound_buf_t *buf, size_t samples_count,
 		const int sample_rate, filter_t filter)
 {
 	ALenum format = to_al_format(1, SOUND_SAMPLE_SIZE);
 
 	/* Load data. */
-	ALshort *buf = (ALshort *) malloc(samples_count * sizeof(ALshort));
-	if(buf == NULL) {
+	ALshort *data = (ALshort *) malloc(samples_count * sizeof(ALshort));
+	if(data == NULL) {
 		sound_error("Out of memory\n");
 		return SOUND_ERROR;
 	}
 
 	/* Fill buffer. */
-	memset(buf, 0, samples_count * sizeof(ALshort));
-	sound_fx_add_filter(buf, 0, samples_count, filter);
-
-	/* Generate the audio source (emitter). */
-	alGenSources(1, &s->source);
-	AL_TEST("generate source");
+	memset(data, 0, samples_count * sizeof(ALshort));
+	sound_buf_add_filter(data, 0, samples_count, filter);
 
 	/* Generate PCM buffers. */
-	alGenBuffers(1, &s->buffer);
+	alGenBuffers(1, buf);
 	AL_TEST("generate buffer");
 
 	/* Bind buffer. */
-	alBufferData(s->buffer,
+	alBufferData((*buf),
 			format,
-			buf,
+			data,
 			samples_count * sizeof(ALshort),
 			sample_rate);
 	AL_TEST("buffer data");
-	free(buf);
-
-	/* Bind buffer to source. */
-	alSourcei(s->source, AL_BUFFER, s->buffer);
-	AL_TEST("bind buffer");
-
-	sound_fx_pitch(s, 1.0f);
-	sound_fx_gain(s, 1.0f);
-	sound_fx_position(s, 0, 0, 0);
-	sound_fx_velocity(s, 0, 0, 0);
-	sound_fx_loop(s, AL_FALSE);
+	free(data);
 
 	return SOUND_OK;
 }
 
-int sound_fx_stop(struct sound_fx *s)
+int sound_src_stop(sound_src_t src)
 {
 	ALint source_state;
-	alGetSourcei(s->source, AL_SOURCE_STATE, &source_state);
+	alGetSourcei(src, AL_SOURCE_STATE, &source_state);
 
 	if(source_state == AL_PLAYING) {
-		alSourceStop(s->source);
+		alSourceStop(src);
 		AL_TEST("source stop");
 	}
 
 	return SOUND_OK;
 }
 
-void sound_fx_free(struct sound_fx *s)
+void sound_buf_free(sound_buf_t buf)
 {
-	if(alIsSource(s->source)) {
-		sound_fx_stop(s);
-		alDeleteSources(1, &s->source);
-	}
-	if(alIsBuffer(s->buffer)) {
-		alDeleteBuffers(1, &s->buffer);
+	if(alIsBuffer(buf)) {
+		alDeleteBuffers(1, &buf);
 	}
 }
 
 void sound_master_gain(float gain)
 {
 	alListenerf(AL_GAIN, gain);
+}
+
+void sound_emitter_init(struct sound_emitter *em)
+{
+	em->available = 1;
+	em->pos = NULL;
+	em->velocity = NULL;
+}
+
+/**
+ * Make an emitter ready for use.
+ */
+void sound_emitter_stop(struct sound_emitter *em)
+{
+	sound_src_stop(em->src);
+	sound_emitter_init(em);
+}
+
+struct sound_emitter* sound_emitter_get_next_interruptable(struct sound *s)
+{
+	foreach_alist_p(struct sound_emitter *, em, s->emitters) {
+		if(!(*em)->uninterruptable) {
+			return (*em);
+		}
+	}
+	return NULL;
+}
+
+/**
+ * Get the next available sound emitter, or force one to be available.
+ */
+static struct sound_emitter* sound_emitter_get(struct sound *s)
+{
+	/* Any available emitters? */
+	for(int i=0; i<SOUND_EMITTERS_MAX; i++) {
+		if(s->emitters_mem[i].available) {
+			s->emitters_mem[i].available = 0;
+			return &(s->emitters_mem[i]);
+		}
+	}
+	/* No available emitters: force stop oldest emitter. */
+	struct sound_emitter *emitter = sound_emitter_get_next_interruptable(s);
+	/* Sanity check. */
+	if(emitter == NULL) {
+		sound_error("All emitters busy and non-interruptable\n");
+		return NULL;
+	}
+	sound_debug("All emitters busy: terminating %u...\n", emitter->src);
+	sound_emitter_stop(emitter);
+	emitter->available = 0;
+	return emitter;
+}
+
+static void sound_emitters_clean(struct sound *s)
+{
+	ALint source_state;
+	foreach_alist(struct sound_emitter *, em, index, s->emitters) {
+		alGetSourcei(em->src, AL_SOURCE_STATE, &source_state);
+		if(source_state != AL_PLAYING) {
+			/* Make available. */
+			em->available = 1;
+			/* Remove emitter. */
+			alist_delete_at(s->emitters, index, 0);
+			/* Deleted self: stay on same index for next element. */
+			index--;
+		}
+	}
+}
+
+void sound_emitter_update(struct sound_emitter *em)
+{
+	if(em->pos != NULL) {
+		sound_src_position(em->src, xyz(em->pos));
+	}
+	if(em->velocity != NULL) {
+		sound_src_velocity(em->src, xyz(em->velocity));
+	}
+}
+
+void sound_think(struct sound *s, float delta_time)
+{
+	/* Remove done emitters. */
+	sound_emitters_clean(s);
+
+	/* Update emitter attributes. */
+	foreach_alist_p(struct sound_emitter *, emitter, s->emitters) {
+		sound_emitter_update((*emitter));
+	}
 }
