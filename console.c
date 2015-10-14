@@ -277,7 +277,9 @@ static void console_cmd_get(struct console_cmd **cmd, int *cmd_index,
 		}
 
 		foreach_list(struct cmd_element*, f, cur->commands) {
-			if(strncmp(e->data, f->data->name, strnlen(f->data->name, CONSOLE_CMD_NAME_MAX)) == 0) {
+			size_t e_len = strnlen(e->data, CONSOLE_CMD_NAME_MAX);
+			size_t f_len = strnlen(f->data->name, CONSOLE_CMD_NAME_MAX);
+			if(strncmp(e->data, f->data->name, e_len > f_len ? e_len : f_len) == 0) {
 				cur = f->data;
 				if(i + f->data->argc >= argc - 1) {
 					cur_index = i;
