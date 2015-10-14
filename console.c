@@ -686,6 +686,34 @@ static void console_env_autocomplete(struct console_env *env, struct list *compl
 	}
 }
 
+static size_t console_common_chars(const char *s1, const char *s2, size_t s_max)
+{
+	size_t same = 0;
+	for(size_t i=0; i<s_max && s1[i] != '\0' && s2[i] != '\0'; i++) {
+		if(s1[i] == s2[i]) {
+			same ++;
+		} else {
+			break;
+		}
+	}
+	return same;
+}
+
+static void console_common_chars_in_list(char *out, size_t out_size, struct list *strings)
+{
+	if(list_count(strings) <= 0) {
+		return;
+	}
+	struct str_element *first = (struct str_element *) list_first(strings);
+	strncpy(out, first->data, strnlen(first->data, out_size));
+	foreach_list(struct str_element *, s, strings) {
+		size_t same = console_common_chars(out, s->data, out_size);
+		same = same > out_size-1 ? out_size-1 : same;
+		strncpy(out, s->data, same);
+		out[same] = '\0';
+	}
+}
+
 void console_cmd_autocomplete(struct console *c, const char *input,
 		const size_t input_len, const size_t cursor_pos)
 {
@@ -753,6 +781,18 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		c->input_len += added;
 		c->cursor.pos += added;
 	} else {
+		/* Find common characters in autocomplete suggestions. */
+		char common[CONSOLE_CMD_NAME_MAX] = { 0 };
+		console_common_chars_in_list(common, CONSOLE_CMD_NAME_MAX, completions);
+		size_t common_count = strnlen(common, CONSOLE_CMD_NAME_MAX);
+
+		/* Any common characters? Autocomplete them. */
+		if(common_count > 0) {
+			size_t added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - leaf_len, common, common_count);
+			c->input_len += added - leaf_len;
+			c->cursor.pos += added - leaf_len;
+		}
+
 		/* Print completions */
 		foreach_list(struct str_element*, e, completions) {
 			console_printf(c, "%s\n", e->data);
