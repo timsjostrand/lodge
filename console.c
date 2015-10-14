@@ -705,7 +705,9 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	struct list *completions = list_new();
 
 	/* Get command-specific completions. */
-	cmd->autocomplete(c, cmd, argv, completions);
+	if(cmd->autocomplete != NULL) {
+		cmd->autocomplete(c, cmd, argv, completions);
+	}
 
 	/* Autocomplete variables? */
 	if(cmd_index < 0) {
@@ -714,9 +716,13 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 
 	/* Filter completions to match currently typed command. */
 	struct str_element *leaf = (struct str_element *) list_element_at(argv, cmd_index + 1);
+	size_t leaf_len = 0;
 	if(leaf != NULL && leaf->data != NULL) {
+		leaf_len = strnlen(leaf->data, CONSOLE_CMD_NAME_MAX);
+
 		struct list *filtered = list_new();
 		console_filter_list(filtered, completions, leaf->data, CONSOLE_CMD_NAME_MAX);
+
 		/* Switch completions with the filtered list. */
 		list_free(completions, 0);
 		completions = filtered;
@@ -725,16 +731,15 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 	if(list_count(completions) == 1) {
 		/* If only one (1) completion is available: automatically insert it
 		 * for the user. */
-		size_t input_cmd_len = strnlen(leaf->data, CONSOLE_CMD_NAME_MAX);
 
 		/* Insert autocompleted command (guaranteed to exist since
 		 * list_count(completions) == 1). */
 		char *head = ((struct str_element *) list_first(completions))->data;
 
 		/* Insert completion, set length and update cursor. */
-		size_t added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - input_cmd_len, head, strnlen(head, CONSOLE_INPUT_MAX));
-		c->input_len += added - input_cmd_len;
-		c->cursor.pos += added - input_cmd_len;
+		size_t added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - leaf_len, head, strnlen(head, CONSOLE_INPUT_MAX));
+		c->input_len += added - leaf_len;
+		c->cursor.pos += added - leaf_len;
 		/* Add a convience character based on completed type. */
 		if(list_count(argv) == 1 && console_var_get_by_name(&c->env, head)) {
 			/* Is variable: append equal sign. */
