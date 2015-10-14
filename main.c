@@ -100,6 +100,7 @@ struct game {
 	struct graphics		graphics;					/* Graphics state. */
 	struct shader		shader;						/* Shader program information. */
 	struct shader		bg_shader;
+	float				graphics_detail;
 	struct player		player1;					/* Left player. */
 	struct player		player2;					/* Right player. */
 	struct basic_sprite	effectslayer;
@@ -400,7 +401,9 @@ void render(struct graphics *g, float delta_time)
 	sprite_render(&game.player2.sprite, &game.shader, &game.graphics);
 
 	/* Effectslayer */
-	sprite_render(&game.effectslayer, &game.bg_shader, &game.graphics);
+	if(game.graphics_detail <= 0) {
+		sprite_render(&game.effectslayer, &game.bg_shader, &game.graphics);
+	}
 
 	/* Text. */
 	monotext_render(&game.txt_debug, &game.shader, &game.graphics);
@@ -457,6 +460,7 @@ static void init_console()
 {
 	console_new(&game.console, &game.font_console, VIEW_WIDTH, 16, &game.textures.none);
 	core_console_init(&game.graphics, &game.console);
+	console_env_bind_1f(&game.console, "graphics_detail", &(game.graphics_detail));
 }
 
 void parse_conf(const char *conf, const size_t size, struct console *console)
