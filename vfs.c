@@ -44,7 +44,7 @@ struct vfs_file
 struct vfs_file file_table[MAX_NUM_FILES];
 static int file_count = 0;
 
-void vfs_init(int argc, char **argv)
+void vfs_init(const char *mount_path)
 {
 	for (int i = 0; i < MAX_NUM_FILES; i++)
 	{
@@ -54,12 +54,8 @@ void vfs_init(int argc, char **argv)
 		file_table[i].read_callbacks = 0;
 	}
 
-	for (int i = 0; i < argc - 1; i++)
-	{
-		if (strcmp(argv[i], "-mount") == 0)
-		{
-			vfs_mount(argv[i+1]);
-		}
+	if (mount_path != NULL) {
+		vfs_mount(mount_path);
 	}
 }
 

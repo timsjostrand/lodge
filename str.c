@@ -309,3 +309,8 @@ int str_parse_1f(const char *s, float *dst)
 	(*dst) = f;
 	return 0;
 }
+
+void str_print_hex(const char *s)
+{
+	while(*s) printf("%02x ", (unsigned int) *s++);
+}

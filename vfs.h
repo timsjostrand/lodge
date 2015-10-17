@@ -5,7 +5,7 @@
 
 typedef void(*read_callback_t)(const char* filename, unsigned int size, void* data, void* userdata);
 
-void	vfs_init(int argc, char **argv);
+void	vfs_init(const char *mount_path);
 void	vfs_shutdown();
 void	vfs_mount(const char* dir);
 void	vfs_register_callback(const char* filename, read_callback_t fn, void* userdata);

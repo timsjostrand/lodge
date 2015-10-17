@@ -15,6 +15,7 @@
 
 #include "math4.h"
 #include "color.h"
+#include "core.h"
 #include "graphics.h"
 #include "shader.h"
 #include "input.h"
@@ -25,8 +26,7 @@
 #include "monotext.h"
 #include "console.h"
 #include "str.h"
-
-#include "core_console.h"
+#include "core_argv.h"
 
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360		/* 16:9 aspect ratio */
@@ -78,12 +78,12 @@ struct ball {
 
 struct particle {
 	struct basic_sprite	sprite;
-	int				dead;
-	float			age;
-	float			age_max;
-	float			vx;
-	float			vy;
-	float			va;
+	int					dead;
+	float				age;
+	float				age_max;
+	float				vx;
+	float				vy;
+	float				va;
 };
 
 struct textures {
@@ -95,9 +95,6 @@ struct textures {
 struct game {
 	int					initialized;
 	float				time;						/* Time since start. */
-	float				view_width;
-	float				view_height;
-	struct graphics		graphics;					/* Graphics state. */
 	struct shader		shader;						/* Shader program information. */
 	struct shader		bg_shader;
 	float				graphics_detail;
@@ -108,19 +105,15 @@ struct game {
 	struct stats		total_stats;
 	struct particle		particles[PARTICLES_MAX];
 	int					particles_count;
-	struct input		input;
 	struct textures		textures;
 	vec3				listener;
-	struct sound		sound;
 	sound_buf_t			vivaldi;
 	struct sound_emitter *vivaldi_src;
 	sound_buf_t			tone_hit;
 	sound_buf_t			tone_bounce;
 	struct atlas		atlas_earl;
 	struct monofont		font;
-	struct monofont		font_console;
 	struct monotext		txt_debug;
-	struct console		console;
 	const char			*conf;
 	size_t				conf_size;
 	vec3				mouse_pos;
@@ -150,7 +143,7 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
 	p->va = va;
 	p->sprite.type = SPRITE_TYPE_PARTICLE;
 	p->sprite.rotation = angle;
-	p->sprite.texture = &game.textures.none;
+	p->sprite.texture = &core.textures.none;
 
 	set4f(p->sprite.pos, x, y, 0.0f, 1.0f);
 	set4f(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
@@ -220,7 +213,7 @@ void ball_player_bounce(struct ball *ball, struct player *p)
 
 	p->charge = 0.0f;
 
-	sound_buf_play_pitched(&game.sound, game.tone_hit, ball->sprite.pos, 0.05f);
+	sound_buf_play_pitched(&core.sound, game.tone_hit, ball->sprite.pos, 0.05f);
 }
 
 void ball_think(float dt)
@@ -261,12 +254,12 @@ void ball_think(float dt)
 		game.ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT/2;
 		game.ball.vy *= -1.0f;
 		game.ball.last_hit_y = 0.0f;
-		sound_buf_play_pitched(&game.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
+		sound_buf_play_pitched(&core.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
 	} else if(game.ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT/2) {
 		game.ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT/2;
 		game.ball.vy *= -1.0f;
 		game.ball.last_hit_y = 0.0f;
-		sound_buf_play_pitched(&game.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
+		sound_buf_play_pitched(&core.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
 	}
 
 	// Ball: move
@@ -367,55 +360,45 @@ void particles_think(float dt)
 
 void think(struct graphics *g, float delta_time)
 {
-	vfs_filewatch();
 	game.time = (float) glfwGetTime();
 	game_think(delta_time);
 	particles_think(delta_time);
-	sound_think(&game.sound, delta_time);
-	input_think(&game.input, delta_time);
-	console_think(&game.console, delta_time);
 	shader_uniforms_think(&game.shader, delta_time);
 	shader_uniforms_think(&game.bg_shader, delta_time);
 }
 
 void render(struct graphics *g, float delta_time)
 {
-	//glEnableClientState(0);
-	glEnableVertexAttribArray(0);
-
 	/* Clear. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Ball. */
-	sprite_render(&game.ball.sprite, &game.shader, &game.graphics);
+	sprite_render(&game.ball.sprite, &game.shader, g);
 
 	/* Particles. */
 	for(int i=0; i<game.particles_count; i++) {
 		if(!game.particles[i].dead) {
-			sprite_render(&game.particles[i].sprite, &game.shader, &game.graphics);
+			sprite_render(&game.particles[i].sprite, &game.shader, g);
 		}
 	}
 
 	/* Sprites. */
-	sprite_render(&game.player1.sprite, &game.shader, &game.graphics);
-	sprite_render(&game.player2.sprite, &game.shader, &game.graphics);
+	sprite_render(&game.player1.sprite, &game.shader, g);
+	sprite_render(&game.player2.sprite, &game.shader, g);
 
 	/* Effectslayer */
 	if(game.graphics_detail <= 0) {
-		sprite_render(&game.effectslayer, &game.bg_shader, &game.graphics);
+		sprite_render(&game.effectslayer, &game.bg_shader, &core.graphics);
 	}
 
 	/* Text. */
-	monotext_render(&game.txt_debug, &game.shader, &game.graphics);
-	if(game.console.focused) {
-		console_render(&game.console, &game.shader, &game.graphics);
-	}
+	monotext_render(&game.txt_debug, &game.shader, g);
 }
 
 void init_effectslayer(struct basic_sprite* b)
 {
 	b->type = SPRITE_TYPE_UNKNOWN;
-	b->texture = &game.textures.none;
+	b->texture = &core.textures.none;
 	set4f(b->pos, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 0.5f, 1.0f);
 	set4f(b->scale, VIEW_WIDTH, VIEW_HEIGHT, 1.0f, 1.0f);
 	copyv(b->color, COLOR_BLACK);
@@ -456,13 +439,6 @@ void init_ball(struct ball *ball)
 	copyv(ball->sprite.color, COLOR_WHITE);
 }
 
-static void init_console()
-{
-	console_new(&game.console, &game.font_console, VIEW_WIDTH, 16, &game.textures.none);
-	core_console_init(&game.graphics, &game.console);
-	console_env_bind_1f(&game.console, "graphics_detail", &(game.graphics_detail));
-}
-
 void parse_conf(const char *conf, const size_t size, struct console *console)
 {
 	foreach_line(conf, size) {
@@ -492,19 +468,43 @@ void reload_conf(const char *filename, unsigned int size, void *data, void *user
 	game.conf_size = size;
 
 	if(game.initialized) {
-		parse_conf(game.conf, game.conf_size, &game.console);
+		parse_conf(game.conf, game.conf_size, (struct console *) userdata);
 	}
 }
 
 void load_conf()
 {
-	vfs_register_callback("glpong.rc", &reload_conf, &game.console);
+	vfs_register_callback("glpong.rc", &reload_conf, &core.console);
+}
+
+static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
+{
+	if(action == GLFW_PRESS) {
+		double x = 0;
+		double y = 0;
+		glfwGetCursorPos(window, &x, &y);
+		int win_w = 0;
+		int win_h = 0;
+		glfwGetWindowSize(window, &win_w, &win_h);
+		/* Convert screen space => game space. */
+		game.mouse_pos[0] = x * (VIEW_WIDTH / (float) win_w);
+		game.mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float) win_h);
+
+		sound_buf_play_pitched(&core.sound, game.tone_hit, game.mouse_pos, 0.2f);
+		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
+				game.mouse_pos[0], game.mouse_pos[1],
+				distance3f(game.listener, game.mouse_pos));
+	}
 }
 
 void init_game()
 {
-	game.view_width = VIEW_WIDTH;
-	game.view_height = VIEW_HEIGHT;
+	/* FIXME: hack... */
+	glfwSetMouseButtonCallback(core.graphics.window, &glfw_mouse_button);
+
+	/* Console variables. */
+	console_env_bind_1f(&core.console, "graphics_detail", &(game.graphics_detail));
+
 	/* Entities. */
 	init_effectslayer(&game.effectslayer);
 	init_player1(&game.player1);
@@ -512,52 +512,29 @@ void init_game()
 	init_ball(&game.ball);
 	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
 			VIEW_HEIGHT - 16.0f);
-	init_console();
-	parse_conf(game.conf, game.conf_size, &game.console);
-	game.vivaldi_src = sound_buf_play_music(&game.sound, game.vivaldi, 1.0f);
+	parse_conf(game.conf, game.conf_size, &core.console);
+	game.vivaldi_src = sound_buf_play_music(&core.sound, game.vivaldi, 1.0f);
 	game.initialized = 1;
-}
-
-static void char_callback(struct input *input, GLFWwindow *window,
-		unsigned int key, int mods)
-{
-	/* Input localized text into console. */
-	if(game.console.focused) {
-		console_input_feed_char(&game.console, key, mods);
-	}
-
-	/* Toggle console. */
-	if(key == CONSOLE_CHAR_FOCUS) {
-		console_toggle_focus(&game.console);
-		input->enabled = !game.console.focused;
-	}
 }
 
 static void key_callback(struct input *input, GLFWwindow *window, int key,
 		int scancode, int action, int mods)
 {
-	/* Input control characters into console. */
-	if(game.console.focused && key >= 256) {
-		console_input_feed_control(&game.console, key, scancode, action, mods);
-	}
-
 	if(action == GLFW_PRESS) {
-		if(!game.console.focused) {
-			switch(key) {
-				case GLFW_KEY_O:
-					game.graphics.delta_time_factor *= 2.0f;
-					sound_src_pitch(game.vivaldi_src->src, game.graphics.delta_time_factor);
-					printf("time_mod=%f\n", game.graphics.delta_time_factor);
-					break;
-				case GLFW_KEY_P:
-					game.graphics.delta_time_factor /= 2.0f;
-					sound_src_pitch(game.vivaldi_src->src, game.graphics.delta_time_factor);
-					printf("time_mod=%f\n", game.graphics.delta_time_factor);
-					break;
-				case GLFW_KEY_ESCAPE:
-					glfwSetWindowShouldClose(window, 1);
-					break;
-			}
+		switch(key) {
+			case GLFW_KEY_O:
+				core.graphics.delta_time_factor *= 2.0f;
+				sound_src_pitch(game.vivaldi_src->src, core.graphics.delta_time_factor);
+				printf("time_mod=%f\n", core.graphics.delta_time_factor);
+				break;
+			case GLFW_KEY_P:
+				core.graphics.delta_time_factor /= 2.0f;
+				sound_src_pitch(game.vivaldi_src->src, core.graphics.delta_time_factor);
+				printf("time_mod=%f\n", core.graphics.delta_time_factor);
+				break;
+			case GLFW_KEY_ESCAPE:
+				glfwSetWindowShouldClose(window, 1);
+				break;
 		}
 	}
 }
@@ -640,7 +617,7 @@ void reload_shader(const char *filename, unsigned int size, void *data, void *us
 	}
 
 	/* Recompile shader. */
-	struct shader tmp = *(dst);
+	struct shader tmp = (*dst);
 
 	int ret = shader_init(&tmp,
 			dst->vert_src, dst->vert_src_len,
@@ -651,7 +628,7 @@ void reload_shader(const char *filename, unsigned int size, void *data, void *us
 		/* Delete the old shader. */
 		shader_delete(dst);
 		/* Assign the new shader only if compilation succeeded. */
-		*(dst) = tmp;
+		(*dst) = tmp;
 		/* Relocate uniforms in the shader, if they changed. */
 		shader_uniforms_relocate(dst);
 	}
@@ -675,8 +652,8 @@ void load_shaders()
 	shader_uniform1f(&game.bg_shader, "ball_last_hit_x", &game.ball.last_hit_x);
 	shader_uniform1f(&game.bg_shader, "ball_last_hit_y", &game.ball.last_hit_y);
 	shader_uniform4f(&game.bg_shader, "ball_pos", &game.ball.sprite.pos);
-	shader_uniform1f(&game.bg_shader, "view_width", &game.view_width);
-	shader_uniform1f(&game.bg_shader, "view_height", &game.view_height);
+	shader_uniform1f(&game.bg_shader, "view_width", &core.view_width);
+	shader_uniform1f(&game.bg_shader, "view_height", &core.view_height);
 }
 
 static void release_shaders()
@@ -708,7 +685,7 @@ void reload_atlas(const char *filename, unsigned int size, void *data, void *use
 		/* Delete the old shader. */
 		atlas_free(dst);
 		/* Assign the new shader only if compilation succeeded. */
-		*(dst) = tmp;
+		(*dst) = tmp;
 		/* DEBUG: Dump debug information about atlas to stdout. */
 		atlas_print(dst);
 	}
@@ -729,7 +706,6 @@ void release_sounds()
 
 void release_textures()
 {
-	texture_free(game.textures.none);
 	texture_free(game.textures.test);
 }
 
@@ -768,9 +744,6 @@ void reload_textures(const char *filename, unsigned int size, void *data, void* 
 
 void load_textures()
 {
-	/* Create a square white texture for texturing empty sprites with. */
-	texture_white(&game.textures.none);
-
 	/* Load textures. */
 	vfs_register_callback("test.png", &reload_textures, &game.textures.test);
 	vfs_register_callback("paddle.png", &reload_textures, &game.textures.paddle);
@@ -779,13 +752,11 @@ void load_textures()
 static void load_fonts()
 {
 	monofont_new(&game.font, "manaspace.png", 16, 16, -7, 0);
-	monofont_new(&game.font_console, "04B03_8px.png", 8, 8, -2, 0);
 }
 
 static void release_fonts()
 {
 	monofont_free(&game.font);
-	monofont_free(&game.font_console);
 }
 
 static void fps_callback(struct frames *f)
@@ -813,84 +784,29 @@ static void release_assets()
 	release_fonts();
 }
 
-static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
-{
-	if(action == GLFW_PRESS) {
-		double x = 0;
-		double y = 0;
-		glfwGetCursorPos(window, &x, &y);
-		int win_w = 0;
-		int win_h = 0;
-		glfwGetWindowSize(window, &win_w, &win_h);
-		/* Convert screen space => game space. */
-		game.mouse_pos[0] = x * (VIEW_WIDTH / (float) win_w);
-		game.mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float) win_h);
-
-		sound_buf_play_pitched(&game.sound, game.tone_hit, game.mouse_pos, 0.2f);
-		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
-				game.mouse_pos[0], game.mouse_pos[1],
-				distance3f(game.listener, game.mouse_pos));
-	}
-}
-
 int main(int argc, char **argv)
 {
-	/* Start the virtual file system */
-	vfs_init(argc, argv);
+	/* Parse command line arguments. */
+	struct core_argv arguments = { 0 };
+	core_argv_parse(&arguments, argc, argv);
 
-	int ret = 0;
-
-	/* Seed random number generator. */
-	srand(time(NULL));
-
-	/* Set up sound with listener in the middle of the screen and sounds emitted
-	 * from within the screen being audible.*/
 	set3f(game.listener, VIEW_WIDTH/2.0f, VIEW_HEIGHT/2.0f, 0);
 	vec3 sound_audible_max = { VIEW_WIDTH, VIEW_HEIGHT, 0.0f };
-	sound_init(&game.sound, game.listener, distance3f(game.listener, sound_audible_max));
+	float sound_distance_max = distance3f(game.listener, sound_audible_max);
 
-	/* Set up graphics. */
-	int windowed = (argc >= 2 && strncmp(argv[1], "windowed", 8) == 0);
-	ret = graphics_init(&game.graphics, &think, &render, &fps_callback,
-			VIEW_WIDTH, VIEW_HEIGHT, windowed);
-
-	if(ret != GRAPHICS_OK) {
-		graphics_error("Graphics initialization failed (%d)\n", ret);
-		graphics_free(&game.graphics);
-		exit(ret);
-	}
-
-	load_assets();
-
-	/* Get input events. */
-	ret = input_init(&game.input, game.graphics.window, key_callback,
-			char_callback);
-	glfwSetMouseButtonCallback(game.graphics.window, &glfw_mouse_button);
-
-	if(ret != GRAPHICS_OK) {
-		graphics_error("Input initialization failed (%d)\n", ret);
-		graphics_free(&game.graphics);
-		exit(ret);
-	}
-
-	/* Load all assets */
-	vfs_run_callbacks();
-
-	/* Set up game. */
-	init_game();
-
-	/* Loop until the user closes the window */
-	graphics_loop(&game.graphics);
-
-	release_assets();
-
-	/* Free OpenAL. */
-	sound_free(&game.sound);
-
-	/* If we reach here, quit the game. */
-	graphics_free(&game.graphics);
-
-	vfs_shutdown();
+	core_init(VIEW_WIDTH, VIEW_HEIGHT, arguments.windowed,
+			arguments.mount,
+			&game.listener, sound_distance_max,
+			&game.shader,
+			&think,
+			&render,
+			&fps_callback,
+			&load_assets,
+			&init_game,
+			&release_assets,
+			&key_callback,
+			NULL
+	);
 
 	return 0;
 }

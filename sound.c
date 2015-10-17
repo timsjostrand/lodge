@@ -149,7 +149,6 @@ static void sound_src_free_all(struct sound *s)
 	}
 }
 
-
 void sound_free(struct sound *s)
 {
 	/* Free sources. */
