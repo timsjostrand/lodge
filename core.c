@@ -52,6 +52,11 @@ static void core_assets_init()
 	/* Load console. */
 	console_new(&core.console, &core.font_console, core.view_width, 16, &core.textures.none);
 	core_console_init(&core.graphics, &core.console);
+	if(core.console_init_callback != NULL) {
+		core.console_init_callback(&core.console);
+	}
+	console_parse_conf(&core.console, &core.console.conf);
+
 	/* Game specific init. */
 	if(core.init_callback != NULL) {
 		core.init_callback();
@@ -81,7 +86,7 @@ static void core_render(struct graphics *g, float delta_time)
 
 	/* Render the console. */
 	if(core.console.focused) {
-		console_render(&core.console, core.shader_console, g);
+		console_render(&core.console, core.console_shader, g);
 	}
 }
 
@@ -118,6 +123,41 @@ static void core_char_callback(struct input *input, GLFWwindow *window,
 	}
 }
 
+void core_set_fps_callback(fps_func_t fps_callback)
+{
+	core.fps_callback = fps_callback;
+}
+
+void core_set_asset_callbacks(core_load_t load_callback,
+		core_init_t init_callback, core_release_t release_callback)
+{
+	core.load_callback = load_callback;
+	core.init_callback = init_callback;
+	core.release_callback = release_callback;
+}
+
+void core_set_key_callback(input_callback_t key_callback)
+{
+	core.key_callback = key_callback;
+}
+
+void core_set_char_callback(input_char_callback_t char_callback)
+{
+	core.char_callback = char_callback;
+}
+
+void core_set_up_sound(vec3 *listener, float distance_max)
+{
+	core.sound_listener = listener;
+	core.sound_distance_max = distance_max;
+}
+
+void core_set_up_console(core_console_init_t console_init_callback, struct shader *console_shader)
+{
+	core.console_init_callback = console_init_callback;
+	core.console_shader = console_shader;
+}
+
 /**
  * @param load_callback		Responsible for registering all the VFS callbacks
  *							required for the game. After load_callback has been
@@ -127,32 +167,14 @@ static void core_char_callback(struct input *input, GLFWwindow *window,
  * @param release_callback	Runs just before the game quits, and should release
  *							all assets and free dynamically allocated memory.
  */
-void core_init(int view_width, int view_height, int windowed,
-		const char *mount_path,
-		vec3 *listener, float sound_distance_max,
-		struct shader *shader_console,
-		think_func_t			think_callback,
-		render_func_t			render_callback,
-		fps_func_t				fps_callback,
-		core_load_t				load_callback,
-		core_init_t				init_callback,
-		core_release_t			release_callback,
-		input_callback_t		key_callback,
-		input_char_callback_t	char_callback
-)
+void core_run(int view_width, int view_height, int windowed, const char *mount_path,
+		think_func_t think_callback, render_func_t render_callback)
 {
 	/* Store global references. */
 	core.view_width = view_width;
 	core.view_height = view_height;
-	core.listener = listener;
 	core.render_callback = render_callback;
 	core.think_callback = think_callback;
-	core.load_callback = load_callback;
-	core.init_callback = init_callback;
-	core.think_callback = think_callback;
-	core.key_callback = key_callback;
-	core.char_callback = char_callback;
-	core.shader_console = shader_console;
 
 	/* Seed random number generator. */
 	srand(time(NULL));
@@ -161,11 +183,11 @@ void core_init(int view_width, int view_height, int windowed,
 	vfs_init(mount_path);
 
 	/* Set up sound */
-	sound_init(&core.sound, (float *) core.listener, sound_distance_max);
+	sound_init(&core.sound, (float *) core.sound_listener, core.sound_distance_max);
 
 	/* Set up graphics. */
 	int ret = graphics_init(&core.graphics, &core_think, &core_render,
-			fps_callback, view_width, view_height, windowed);
+			core.fps_callback, view_width, view_height, windowed);
 
 	if(ret != GRAPHICS_OK) {
 		core_error("Graphics initialization failed (%d)\n", ret);

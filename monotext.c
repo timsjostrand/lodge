@@ -52,12 +52,12 @@ static int monofont_atlas_coords(float *tx, float *ty, float *tw, float *th,
 	int grid_x = (letter - (grid_y * font->grids_x)) % font->grids_x;
 
 	/* Map coordinates to [0,1]. */
-    *(tx) = grid_x / (float) font->grids_x;
-    *(ty) = grid_y / (float) font->grids_y;
+	*(tx) = grid_x / (float) font->grids_x;
+	*(ty) = grid_y / (float) font->grids_y;
 	*(tw) = font->letter_width / (float) font->width;
 	*(th) = font->letter_height / (float) font->height;
 
-    return TEXT_OK;
+	return TEXT_OK;
 }
 
 /**

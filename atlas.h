@@ -5,6 +5,7 @@
 
 #include "log.h"
 
+#define atlas_debug(...) debugf("Atlas", __VA_ARGS__)
 #define atlas_error(...) errorf("Atlas", __VA_ARGS__)
 
 #define ATLAS_OK		0

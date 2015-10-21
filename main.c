@@ -15,7 +15,6 @@
 
 #include "math4.h"
 #include "color.h"
-#include "core.h"
 #include "graphics.h"
 #include "shader.h"
 #include "input.h"
@@ -26,7 +25,10 @@
 #include "monotext.h"
 #include "console.h"
 #include "str.h"
+
+#include "core.h"
 #include "core_argv.h"
+#include "core_reload.h"
 
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360		/* 16:9 aspect ratio */
@@ -87,13 +89,11 @@ struct particle {
 };
 
 struct textures {
-	GLuint	none;
 	GLuint	test;
 	GLuint	paddle;
 };
 
 struct game {
-	int					initialized;
 	float				time;						/* Time since start. */
 	struct shader		shader;						/* Shader program information. */
 	struct shader		bg_shader;
@@ -439,42 +439,9 @@ void init_ball(struct ball *ball)
 	copyv(ball->sprite.color, COLOR_WHITE);
 }
 
-void parse_conf(const char *conf, const size_t size, struct console *console)
+void load_console_conf()
 {
-	foreach_line(conf, size) {
-		/* Empty line or comment? Skip. */
-		if(len == 0 || conf[start] == '#') {
-			continue;
-		}
-
-		/* Parse and execute console command. */
-		/* FIXME: there is a bug somewhere in the console stack that does not
-		 * respect the len argument of console_parse(). Using str_copy manually
-		 * here in the mean time to avoid confusion with missing \0. */
-		char *line = str_copy(conf + start, len, len + 1);
-		console_parse(console, line, len);
-		free(line);
-	}
-}
-
-void reload_conf(const char *filename, unsigned int size, void *data, void *userdata)
-{
-	if(size == 0) {
-		console_debug("Skipped reload of %s (%u bytes)\n", filename, size);
-		return;
-	}
-
-	game.conf = (const char *) data;
-	game.conf_size = size;
-
-	if(game.initialized) {
-		parse_conf(game.conf, game.conf_size, (struct console *) userdata);
-	}
-}
-
-void load_conf()
-{
-	vfs_register_callback("glpong.rc", &reload_conf, &core.console);
+	vfs_register_callback("glpong.rc", &core_reload_console_conf, &core.console);
 }
 
 static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
@@ -497,13 +464,16 @@ static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mo
 	}
 }
 
+void console_init(struct console *c)
+{
+	/* Set up game-specific console variables. */
+	console_env_bind_1f(c, "graphics_detail", &(game.graphics_detail));
+}
+
 void init_game()
 {
 	/* FIXME: hack... */
 	glfwSetMouseButtonCallback(core.graphics.window, &glfw_mouse_button);
-
-	/* Console variables. */
-	console_env_bind_1f(&core.console, "graphics_detail", &(game.graphics_detail));
 
 	/* Entities. */
 	init_effectslayer(&game.effectslayer);
@@ -512,9 +482,7 @@ void init_game()
 	init_ball(&game.ball);
 	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
 			VIEW_HEIGHT - 16.0f);
-	parse_conf(game.conf, game.conf_size, &core.console);
 	game.vivaldi_src = sound_buf_play_music(&core.sound, game.vivaldi, 1.0f);
-	game.initialized = 1;
 }
 
 static void key_callback(struct input *input, GLFWwindow *window, int key,
@@ -539,31 +507,9 @@ static void key_callback(struct input *input, GLFWwindow *window, int key,
 	}
 }
 
-void reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
-{
-	if(size == 0) {
-		sound_debug("Skipped reload of %s (%u bytes)\n", filename, size);
-		return;
-	}
-
-	sound_buf_t tmp = 0;
-	sound_buf_t *dst = (sound_buf_t *) userdata;
-
-	/* Reload sound. */
-	if(sound_buf_load_vorbis(&tmp, data, size) != SOUND_OK) {
-		sound_error("Could not load %s (%u bytes)\n", filename, size);
-	} else {
-		/* Release current sound (if any). */
-		sound_buf_free((*dst));
-
-		/* Assign new sound (only if parsing was OK). */
-		(*dst) = tmp;
-	}
-}
-
 void load_sounds()
 {
-	vfs_register_callback("vivaldi.ogg", &reload_sound, &game.vivaldi);
+	vfs_register_callback("vivaldi.ogg", &core_reload_sound, &game.vivaldi);
 
 	if(sound_buf_load_filter(&game.tone_hit,
 				0.1 * SOUND_SAMPLE_RATE,
@@ -580,67 +526,13 @@ void load_sounds()
 	}
 }
 
-void reload_shader(const char *filename, unsigned int size, void *data, void *userdata)
-{
-	if(size == 0) {
-		shader_debug("Skipped reload of %s (%u bytes)\n", filename, size);
-		return;
-	}
-
-	struct shader *dst = (struct shader *) userdata;
-
-	if(!dst) {
-		shader_error("Invalid argument to reload_shader()\n");
-		return;
-	}
-
-	/* Keep references to shader sources. */
-	if(strstr(filename, ".frag") != NULL) {
-		dst->frag_src = data;
-		dst->frag_src_len = size;
-	} else if(strstr(filename, ".vert") != NULL) {
-		dst->vert_src = data;
-		dst->vert_src_len = size;
-	} else {
-		shader_error("Unknown source name \"%s\" (%u bytes)\n", filename, size);
-		return;
-	}
-
-	/* Have both sources been loaded? */
-	if(dst->vert_src_len == 0) {
-		shader_debug("Awaiting vertex shader source...\n");
-		return;
-	}
-	if(dst->frag_src_len == 0) {
-		shader_debug("Awaiting fragment shader source...\n");
-		return;
-	}
-
-	/* Recompile shader. */
-	struct shader tmp = (*dst);
-
-	int ret = shader_init(&tmp,
-			dst->vert_src, dst->vert_src_len,
-			dst->frag_src, dst->frag_src_len);
-	if(ret != SHADER_OK) {
-		shader_error("Error %d when loading shader %s (%u bytes)\n", ret, filename, size);
-	} else {
-		/* Delete the old shader. */
-		shader_delete(dst);
-		/* Assign the new shader only if compilation succeeded. */
-		(*dst) = tmp;
-		/* Relocate uniforms in the shader, if they changed. */
-		shader_uniforms_relocate(dst);
-	}
-}
-
 void load_shaders()
 {
 	/* Register asset callbacks */
-	vfs_register_callback("basic_shader.frag", reload_shader, &game.shader);
-	vfs_register_callback("basic_shader.vert", reload_shader, &game.shader);
-	vfs_register_callback("ball_trail.frag", reload_shader, &game.bg_shader);
-	vfs_register_callback("ball_trail.vert", reload_shader, &game.bg_shader);
+	vfs_register_callback("basic_shader.frag", core_reload_shader, &game.shader);
+	vfs_register_callback("basic_shader.vert", core_reload_shader, &game.shader);
+	vfs_register_callback("ball_trail.frag", core_reload_shader, &game.bg_shader);
+	vfs_register_callback("ball_trail.vert", core_reload_shader, &game.bg_shader);
 
 	/* Sprite shader: set up uniforms */
 	shader_uniform1f(&game.shader, "time", &game.time);
@@ -662,39 +554,10 @@ static void release_shaders()
 	shader_free(&game.bg_shader);
 }
 
-void reload_atlas(const char *filename, unsigned int size, void *data, void *userdata)
-{
-	if(size == 0) {
-		shader_debug("Skipped reload of %s (%u bytes)\n", filename, size);
-		return;
-	}
-
-	struct atlas *dst = (struct atlas *) userdata;
-
-	if(!dst) {
-		shader_error("Invalid argument to reload_atlas()\n");
-		return;
-	}
-
-	struct atlas tmp = { 0 };
-
-	int ret = atlas_load(&tmp, data, size);
-	if(ret != ATLAS_OK) {
-		graphics_error("Error %d when loading atlas %s (%u bytes)\n", ret, filename, size);
-	} else {
-		/* Delete the old shader. */
-		atlas_free(dst);
-		/* Assign the new shader only if compilation succeeded. */
-		(*dst) = tmp;
-		/* DEBUG: Dump debug information about atlas to stdout. */
-		atlas_print(dst);
-	}
-}
-
 void load_atlases()
 {
 	/* Register asset callbacks */
-	vfs_register_callback("earl.json", reload_atlas, &game.atlas_earl);
+	vfs_register_callback("earl.json", core_reload_atlas, &game.atlas_earl);
 }
 
 void release_sounds()
@@ -714,39 +577,11 @@ void release_atlases()
 	atlas_free(&game.atlas_earl);
 }
 
-void reload_textures(const char *filename, unsigned int size, void *data, void* userdata)
-{
-	if(size == 0) {
-		graphics_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
-		return;
-	}
-
-	GLuint tmp;
-
-	int ret = texture_load(&tmp, NULL, NULL, data, size);
-
-	if(ret != GRAPHICS_OK) {
-		graphics_error("Texture load failed: %s (%u bytes)\n", filename, size);
-	} else {
-		if(userdata) {
-			if(strcmp("paddle.png", filename) == 0) {
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			}
-
-			(*(GLuint*)userdata) = tmp;
-		} else {
-			graphics_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
-			texture_free(tmp);
-		}
-	}
-}
-
 void load_textures()
 {
 	/* Load textures. */
-	vfs_register_callback("test.png", &reload_textures, &game.textures.test);
-	vfs_register_callback("paddle.png", &reload_textures, &game.textures.paddle);
+	vfs_register_callback("test.png", &core_reload_texture, &game.textures.test);
+	vfs_register_callback("paddle.png", &core_reload_texture, &game.textures.paddle);
 }
 
 static void load_fonts()
@@ -772,7 +607,7 @@ static void load_assets()
 	load_textures();
 	load_atlases();
 	load_fonts();
-	load_conf();
+	load_console_conf();
 }
 
 static void release_assets()
@@ -787,26 +622,22 @@ static void release_assets()
 int main(int argc, char **argv)
 {
 	/* Parse command line arguments. */
-	struct core_argv arguments = { 0 };
-	core_argv_parse(&arguments, argc, argv);
+	struct core_argv args = { 0 };
+	core_argv_parse(&args, argc, argv);
 
 	set3f(game.listener, VIEW_WIDTH/2.0f, VIEW_HEIGHT/2.0f, 0);
 	vec3 sound_audible_max = { VIEW_WIDTH, VIEW_HEIGHT, 0.0f };
 	float sound_distance_max = distance3f(game.listener, sound_audible_max);
 
-	core_init(VIEW_WIDTH, VIEW_HEIGHT, arguments.windowed,
-			arguments.mount,
-			&game.listener, sound_distance_max,
-			&game.shader,
-			&think,
-			&render,
-			&fps_callback,
-			&load_assets,
-			&init_game,
-			&release_assets,
-			&key_callback,
-			NULL
-	);
+	/* Hook up core. */
+	core_set_asset_callbacks(&load_assets, &init_game, &release_assets);
+	core_set_key_callback(&key_callback);
+	core_set_fps_callback(&fps_callback);
+	core_set_up_console(&console_init, &game.shader);
+	core_set_up_sound(&game.listener, sound_distance_max);
+
+	/* Initialize subsystems and run main loop. */
+	core_run(VIEW_WIDTH, VIEW_HEIGHT, args.windowed, args.mount, &think, &render);
 
 	return 0;
 }

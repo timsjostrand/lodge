@@ -9,7 +9,7 @@
 #ifdef CONSOLE_ENABLE
 #define debugf(module, ...) \
 	fprintf(stderr, "DEBUG @ " module ": " __VA_ARGS__); \
-	core_console_printf("DEBUG @ " module ": " __VA_ARGS__)
+	core_console_printf("DEBUG @ " module ": " __VA_ARGS__)
 #else
 #define debugf(module, ...) \
 	fprintf(stderr, "DEBUG @ " module ": " __VA_ARGS__)
@@ -21,7 +21,7 @@
 #ifdef CONSOLE_ENABLE
 #define errorf(module, ...) \
 	fprintf(stderr, "ERROR @ " module ": " __VA_ARGS__); \
-	core_console_printf("ERROR @ " module ": " __VA_ARGS__)
+	core_console_printf("ERROR @ " module ": " __VA_ARGS__)
 #else
 #define errorf(module, ...) \
 	fprintf(stderr, "ERROR @ " module ": " __VA_ARGS__)

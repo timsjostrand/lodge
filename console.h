@@ -22,8 +22,8 @@
 struct console;
 struct console_cmd;
 
-typedef void(*console_cmd_func_t)(struct console *c, struct console_cmd *cmd, struct list *argv);
-typedef void(*console_cmd_autocomplete_t)(struct console *c, struct console_cmd *cmd, struct list *argv, struct list *completions);
+typedef void (*console_cmd_func_t)(struct console *c, struct console_cmd *cmd, struct list *argv);
+typedef void (*console_cmd_autocomplete_t)(struct console *c, struct console_cmd *cmd, struct list *argv, struct list *completions);
 
 struct console_cmd {
 	char						name[CONSOLE_CMD_NAME_MAX];	/* Name of this command. */
@@ -44,7 +44,7 @@ define_element(struct cmd_element, struct console_cmd*);
 struct console_var {
 	char		name[CONSOLE_VAR_NAME_MAX];		/* Variable name. */
 	void		*value;							/* Variable value. */
-	int			type;							/* The type of data pointed to by .value: one of CONSOLE_VAR_TYPE_*. */ 
+	int			type;							/* The type of data pointed to by .value: one of CONSOLE_VAR_TYPE_*. */
 	size_t		value_size;						/* The size in bytes of the value data. */
 };
 
@@ -61,7 +61,13 @@ struct console_env {
 	int					len;
 };
 
+struct console_conf {
+	const char		*data;
+	size_t			len;
+};
+
 struct console {
+	int						initialized;
 	int						focused;					/* Use console_toggle_focus() to set. */
 	char					*history;					/* History buffer. */
 	char					*history_cur;				/* Current offset in history buffer. */
@@ -78,6 +84,7 @@ struct console {
 	struct console_cmd		root_cmd;
 	struct basic_sprite		background;
 	struct console_env		env;
+	struct console_conf		conf;
 };
 
 void console_new(struct console *c, struct monofont *font, int view_width,
@@ -89,6 +96,7 @@ void console_vprintf(struct console *c, const char *fmt, va_list args);
 void console_think(struct console *c, float delta_time);
 void console_render(struct console *c, struct shader *s, struct graphics *g);
 void console_toggle_focus(struct console *c);
+void console_parse_conf(struct console *c, struct console_conf *conf);
 
 void console_input_feed_control(struct console *c, int key, int scancode, int action, int mods);
 void console_input_feed_char(struct console *c, unsigned int key, int mods);

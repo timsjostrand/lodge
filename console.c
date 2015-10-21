@@ -157,6 +157,8 @@ void console_new(struct console *c, struct monofont *font, int view_width,
 
 	console_cursor_init(&c->cursor, &c->txt_input, white_tex);
 	console_cmd_new(&c->root_cmd, "root", 0, NULL, NULL);
+
+	c->initialized = 1;
 }
 
 void console_free(struct console *c)
@@ -888,4 +890,28 @@ int console_env_set_1f(struct console *c, const char *name, const float value)
 
 	(*((float *) var->value)) = value;
 	return 0;
+}
+
+void console_parse_conf(struct console *console, struct console_conf *conf)
+{
+	if(conf->data == NULL) {
+		return;
+	}
+
+	console->conf = (*conf);
+
+	foreach_line(conf->data, conf->len) {
+		/* Empty line or comment? Skip. */
+		if(len == 0 || conf->data[start] == '#') {
+			continue;
+		}
+
+		/* Parse and execute console command. */
+		/* FIXME: there is a bug somewhere in the console stack that does not
+		 * respect the len argument of console_parse(). Using str_copy manually
+		 * here in the mean time to avoid confusion with missing \0. */
+		char *line = str_copy(conf->data + start, len, len + 1);
+		console_parse(console, line, len);
+		free(line);
+	}
 }
