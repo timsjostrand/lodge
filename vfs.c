@@ -11,7 +11,6 @@
 */
 
 #include "vfs.h"
-#include "list.h"
 #include "log.h"
 
 typedef unsigned long DWORD;
