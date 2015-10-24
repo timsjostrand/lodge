@@ -16,7 +16,7 @@
 #define CONSOLE_DISPLAY_LINES		25	/* These many screen-width lines are drawn at any given moment to the screen. */
 #define CONSOLE_INPUT_MAX			256	/* Max number of chars user is allowed to input. */
 #define CONSOLE_CMD_NAME_MAX		32	/* Max length of a console_cmd name. */
-#define CONSOLE_INPUT_HISTORY_MAX	4	/* Number of command input stored in console->input_history. */
+#define CONSOLE_INPUT_HISTORY_MAX	128	/* Number of command input stored in console->input_history. */
 #define CONSOLE_ENV_MAX				255 /* Number of environment variables. */
 
 struct console;
