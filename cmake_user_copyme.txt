@@ -1,0 +1,1 @@
+set( ASSET_PATH "/path/to/your/assets" )

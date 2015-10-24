@@ -1,5 +1,6 @@
 project(glpong)
 
+include(cmake_user.txt)
 cmake_minimum_required(VERSION 3.1)
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
@@ -11,11 +12,6 @@ option(ENABLE_CONSOLE "Compile with console support" ON)
 # Add debug options of debug build type
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	add_definitions(-DDEBUG)
-endif()
-
-# Console capture stdout support
-if(ENABLE_CONSOLE)
-    add_definitions(-DCONSOLE_ENABLE)
 endif()
 
 # QUIRK: Define M_PI on Windows.
@@ -91,13 +87,32 @@ include_directories(lib/)
 
 set(SOURCE math4.c core_console.c graphics.c shader.c input.c texture.c
     color.c sound.c vfs.c atlas.c monotext.c str.c list.c console.c
-    spritebatch.c animatedsprites.c alist.c core.c core_argv.c core_reload.c)
+    spritebatch.c animatedsprites.c alist.c core.c core_argv.c core_reload.c assets.c )
 set(HEADERS math4.h core_console.h graphics.h shader.h input.h texture.h
     color.h sound.h vfs.h atlas.h monotext.h str.h list.h console.h
-	spritebatch.h animatedsprites.h alist.h core.h core_argv.h core_reload.h)
+	spritebatch.h animatedsprites.h alist.h core.h core_argv.h core_reload.h assets.h )
+
+# Asset generator executable
+add_executable(generate_assets generate_assets.c vfs.c vfs.h alist.c alist.h sound.h)
+set_property(TARGET generate_assets PROPERTY C_STANDARD 99)
+set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR} ")
+target_link_libraries(generate_assets ${EXTRA_LIBS})
+
+add_custom_command(OUTPUT assets.c assets.h
+				   COMMAND generate_assets ARGS ${ASSET_PATH}
+				   COMMENT "Generating assets.c"
+				   DEPENDS generate_assets)
+				   #DEPENDS check_need_update_assets)
 
 # Main executable.
 add_executable(glpong main.c ${SOURCE} ${HEADERS})
+set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR} ")
+set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR} ")
+
+# Console capture stdout support
+if(ENABLE_CONSOLE)
+	set_property(TARGET glpong PROPERTY COMPILE_DEFINITIONS CONSOLE_ENABLE)
+endif()
 
 # GCC compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
