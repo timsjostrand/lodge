@@ -54,7 +54,7 @@ void write_assets_c()
 	fprintf(fp, "#include \"core_reload.h\"\n");
 	fprintf(fp, "\n");
 
-	fprintf(fp, "struct assets assets;\n");
+	fprintf(fp, "struct assets assets = { 0 };\n");
 	fprintf(fp, "\n");
 
 	fprintf(fp, "struct assets* assets_get()\n");
@@ -176,6 +176,8 @@ void write_assets_h()
 	fprintf(fp, "\t struct sounds sounds;\n");
 	fprintf(fp, "\t struct shaders shaders;\n");
 	fprintf(fp, "};\n\n");
+
+	fprintf(fp, "struct assets assets;\n\n");
 
 	fprintf(fp, "struct assets* assets_get();\n");
 	fprintf(fp, "void assets_load();\n");

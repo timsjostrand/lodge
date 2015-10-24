@@ -356,8 +356,8 @@ void think(struct graphics *g, float delta_time)
 	game.time = (float) glfwGetTime();
 	game_think(delta_time);
 	particles_think(delta_time);
-	shader_uniforms_think(&assets_get()->shaders.basic_shader, delta_time);
-	shader_uniforms_think(&assets_get()->shaders.ball_trail, delta_time);
+	shader_uniforms_think(&assets.shaders.basic_shader, delta_time);
+	shader_uniforms_think(&assets.shaders.ball_trail, delta_time);
 }
 
 void render(struct graphics *g, float delta_time)
@@ -366,26 +366,26 @@ void render(struct graphics *g, float delta_time)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Ball. */
-	sprite_render(&game.ball.sprite, &assets_get()->shaders.basic_shader, g);
+	sprite_render(&game.ball.sprite, &assets.shaders.basic_shader, g);
 
 	/* Particles. */
 	for(int i=0; i<game.particles_count; i++) {
 		if(!game.particles[i].dead) {
-			sprite_render(&game.particles[i].sprite, &assets_get()->shaders.basic_shader, g);
+			sprite_render(&game.particles[i].sprite, &assets.shaders.basic_shader, g);
 		}
 	}
 
 	/* Sprites. */
-	sprite_render(&game.player1.sprite, &assets_get()->shaders.basic_shader, g);
-	sprite_render(&game.player2.sprite, &assets_get()->shaders.basic_shader, g);
+	sprite_render(&game.player1.sprite, &assets.shaders.basic_shader, g);
+	sprite_render(&game.player2.sprite, &assets.shaders.basic_shader, g);
 
 	/* Effectslayer */
 	if(game.graphics_detail <= 0) {
-		sprite_render(&game.effectslayer, &assets_get()->shaders.ball_trail, &core.graphics);
+		sprite_render(&game.effectslayer, &assets.shaders.ball_trail, &core.graphics);
 	}
 
 	/* Text. */
-	monotext_render(&game.txt_debug, &assets_get()->shaders.basic_shader, g);
+	monotext_render(&game.txt_debug, &assets.shaders.basic_shader, g);
 }
 
 void init_effectslayer(struct basic_sprite* b)
@@ -400,7 +400,7 @@ void init_effectslayer(struct basic_sprite* b)
 void init_player1(struct player *p)
 {
 	p->sprite.type = SPRITE_TYPE_PLAYER;
-	p->sprite.texture = &assets_get()->textures.paddle;
+	p->sprite.texture = &assets.textures.paddle;
 	set4f(p->sprite.pos, 32.0f, VIEW_HEIGHT / 2, 0.1f, 1.0f);
 	set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
 	copyv(p->sprite.color, COLOR_WHITE);
@@ -409,7 +409,7 @@ void init_player1(struct player *p)
 void init_player2(struct player *p)
 {
 	p->sprite.type = SPRITE_TYPE_PLAYER;
-	p->sprite.texture = &assets_get()->textures.paddle;
+	p->sprite.texture = &assets.textures.paddle;
 	set4f(p->sprite.pos, 608.0f, VIEW_HEIGHT / 2, 0.1f, 1.0f);
 	set4f(p->sprite.scale, PLAYER_WIDTH, PLAYER_HEIGHT, 1.0f, 1.0f);
 	copyv(p->sprite.color, COLOR_WHITE);
@@ -418,7 +418,7 @@ void init_player2(struct player *p)
 void init_ball(struct ball *ball)
 {
 	ball->sprite.type = SPRITE_TYPE_BALL;
-	ball->sprite.texture = &assets_get()->textures.lolboll2;
+	ball->sprite.texture = &assets.textures.test_4;
 	ball->speed = 0.6f;
 	rand(); rand(); rand();
 	float random_angle = randr(0.0f, 2.0f * M_PI);
@@ -475,7 +475,7 @@ void init_game()
 	init_ball(&game.ball);
 	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
 			VIEW_HEIGHT - 16.0f);
-	game.vivaldi_src = sound_buf_play_music(&core.sound, assets_get()->sounds.vivaldi, 1.0f);
+	game.vivaldi_src = sound_buf_play_music(&core.sound, assets.sounds.vivaldi, 1.0f);
 }
 
 static void key_callback(struct input *input, GLFWwindow *window, int key,
@@ -520,17 +520,17 @@ void load_sounds()
 void load_shaders()
 {
 	/* Sprite shader: set up uniforms */
-	shader_uniform1f(&assets_get()->shaders.basic_shader, "time", &game.time);
-	shader_uniform1f(&assets_get()->shaders.basic_shader, "ball_last_hit_x", &game.ball.last_hit_x);
-	shader_uniform1f(&assets_get()->shaders.basic_shader, "ball_last_hit_y", &game.ball.last_hit_y);
+	shader_uniform1f(&assets.shaders.basic_shader, "time", &game.time);
+	shader_uniform1f(&assets.shaders.basic_shader, "ball_last_hit_x", &game.ball.last_hit_x);
+	shader_uniform1f(&assets.shaders.basic_shader, "ball_last_hit_y", &game.ball.last_hit_y);
 
 	/* Effects shader: set up uniforms */
-	shader_uniform1f(&assets_get()->shaders.ball_trail, "time", &game.time);
-	shader_uniform1f(&assets_get()->shaders.ball_trail, "ball_last_hit_x", &game.ball.last_hit_x);
-	shader_uniform1f(&assets_get()->shaders.ball_trail, "ball_last_hit_y", &game.ball.last_hit_y);
-	shader_uniform4f(&assets_get()->shaders.ball_trail, "ball_pos", &game.ball.sprite.pos);
-	shader_uniform1f(&assets_get()->shaders.ball_trail, "view_width", &core.view_width);
-	shader_uniform1f(&assets_get()->shaders.ball_trail, "view_height", &core.view_height);
+	shader_uniform1f(&assets.shaders.ball_trail, "time", &game.time);
+	shader_uniform1f(&assets.shaders.ball_trail, "ball_last_hit_x", &game.ball.last_hit_x);
+	shader_uniform1f(&assets.shaders.ball_trail, "ball_last_hit_y", &game.ball.last_hit_y);
+	shader_uniform4f(&assets.shaders.ball_trail, "ball_pos", &game.ball.sprite.pos);
+	shader_uniform1f(&assets.shaders.ball_trail, "view_width", &core.view_width);
+	shader_uniform1f(&assets.shaders.ball_trail, "view_height", &core.view_height);
 }
 
 void load_atlases()
@@ -600,7 +600,7 @@ int main(int argc, char **argv)
 	core_set_asset_callbacks(&load_assets, &init_game, &release_assets);
 	core_set_key_callback(&key_callback);
 	core_set_fps_callback(&fps_callback);
-	core_set_up_console(&console_init, &assets_get()->shaders.basic_shader);
+	core_set_up_console(&console_init, &assets.shaders.basic_shader);
 	core_set_up_sound(&game.listener, sound_distance_max);
 
 	/* Initialize subsystems and run main loop. */
