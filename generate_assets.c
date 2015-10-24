@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "vfs.h"
 #include "alist.h"
@@ -48,10 +49,13 @@ void write_assets_c()
 	fp = fopen("assets.c", "w+");
 
 	fprintf(fp, "#include \"assets.h\"\n\n");
-
-	fprintf(fp, "#include \"core_reload.h\"\n\n");
+	fprintf(fp, "#include \"vfs.h\"\n");
+	fprintf(fp, "#include \"texture.h\"\n");
+	fprintf(fp, "#include \"core_reload.h\"\n");
+	fprintf(fp, "\n");
 
 	fprintf(fp, "struct assets assets;\n");
+	fprintf(fp, "\n");
 
 	fprintf(fp, "struct assets* assets_get()\n");
 	fprintf(fp, "{\n");
@@ -91,7 +95,7 @@ void write_assets_c()
 	fprintf(fp, "\t// Textures\n");
 	foreach_alist(char*, asset, i, assets_list_textures)
 	{
-		fprintf(fp, "\ttexture_free(&assets.textures.");
+		fprintf(fp, "\ttexture_free(assets.textures.");
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -124,8 +128,6 @@ void write_assets_h()
 	fprintf(fp, "#include \"sound.h\"\n\n");
 
 	fprintf(fp, "struct shader;\n");
-	fprintf(fp, "typedef unsigned int GLuint;\n");
-	fprintf(fp, "typedef unsigned int sound_buf_t;\n\n");
 
 	fprintf(fp, "struct textures\n");
 	fprintf(fp, "{\n");

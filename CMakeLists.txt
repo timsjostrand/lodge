@@ -95,7 +95,7 @@ set(HEADERS math4.h core_console.h graphics.h shader.h input.h texture.h
 # Asset generator executable
 add_executable(generate_assets generate_assets.c vfs.c vfs.h alist.c alist.h sound.h)
 set_property(TARGET generate_assets PROPERTY C_STANDARD 99)
-set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR} ")
+set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 target_link_libraries(generate_assets ${EXTRA_LIBS})
 
 add_custom_command(OUTPUT assets.c assets.h
@@ -106,8 +106,8 @@ add_custom_command(OUTPUT assets.c assets.h
 
 # Main executable.
 add_executable(glpong main.c ${SOURCE} ${HEADERS})
-set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR} ")
-set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR} ")
+set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
+set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR})
 
 # Console capture stdout support
 if(ENABLE_CONSOLE)
