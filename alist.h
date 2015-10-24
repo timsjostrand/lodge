@@ -39,14 +39,15 @@ void			alist_print_strings(struct alist *alist);
  * element in a variable named after 'item'.
  *
  * @code
- * foreach_alist(char*, s, list) {
+ * foreach_alist(char*, s, index, list) {
  *	   printf("%d=%s\n", index, s);
  * }
  * @endcode
  *
- * @param type	The pointer type of elements in the list.
- * @param item	The name assigned to the currently iterated element pointer.
- * @param list	The list to iterate over.
+ * @param type		The pointer type of elements in the list.
+ * @param item		The name assigned to the currently iterated element pointer.
+ * @param counter	The name of the counter variable (probably 'i' or index').
+ * @param list		The list to iterate over.
  */
 #define foreach_alist(type, item, counter, list) \
 	for(size_t counter = 0; \
