@@ -217,7 +217,7 @@ void add_assets()
 		{
 			continue;
 		}
-	
+
 		for (int i = 0, i_size = sizeof(ext_sounds) / sizeof(ext_sounds[0]); i < i_size; i++)
 		{
 			if (strstr(asset, ext_sounds[i]) != 0)
@@ -242,12 +242,12 @@ void add_assets()
 				break;
 			}
 		}
-	
+
 		if (added)
 		{
 			continue;
 		}
-	
+
 		alist_append(assets_list_misc, asset);
 	}
 }
@@ -257,7 +257,7 @@ int main(int argc, char* argv[])
 	if (argc < 2)
 	{
 		printf("VFS mount directory not set for generate_assets");
-		return;
+		return 0;
 	}
 
 	assets_list = alist_new(MAX_ASSETS);
