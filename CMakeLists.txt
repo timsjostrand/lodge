@@ -9,11 +9,6 @@ set(CMAKE_MACOSX_RPATH 1)
 # Compile options
 option(ENABLE_CONSOLE "Compile with console support" ON)
 
-# Add debug options of debug build type
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
-	add_definitions(-DDEBUG)
-endif()
-
 # QUIRK: Define M_PI on Windows.
 add_definitions(-D_USE_MATH_DEFINES)
 
@@ -94,9 +89,6 @@ set(HEADERS math4.h core_console.h graphics.h shader.h input.h texture.h
 
 # Asset generator executable
 add_executable(generate_assets generate_assets.c vfs.c vfs.h alist.c alist.h sound.h)
-set_property(TARGET generate_assets PROPERTY C_STANDARD 99)
-set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
-target_link_libraries(generate_assets ${EXTRA_LIBS})
 
 add_custom_command(OUTPUT assets.c assets.h
 				   COMMAND generate_assets ARGS ${ASSET_PATH}
@@ -106,27 +98,31 @@ add_custom_command(OUTPUT assets.c assets.h
 
 # Main executable.
 add_executable(glpong main.c ${SOURCE} ${HEADERS})
-set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
-set_property(TARGET glpong APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR})
+set_property(TARGET glpong APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
+set_property(TARGET glpong APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR})
+
+# Add DEBUG define when building debug executables.
+target_compile_definitions(glpong PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
 # Console capture stdout support
 if(ENABLE_CONSOLE)
-	set_property(TARGET glpong PROPERTY COMPILE_DEFINITIONS CONSOLE_ENABLE)
+	target_compile_definitions(glpong PRIVATE CONSOLE_ENABLE)
 endif()
 
 # GCC compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
     # More warnings.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wpedantic -fdiagnostics-show-option ")
+    set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wpedantic -fdiagnostics-show-option ")
     # Do not allow declaring functions without implementing them.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
-        "-Werror-implicit-function-declaration ")
+    set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror-implicit-function-declaration ")
     # Force casting of pointer types.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
-        "-Werror=strict-aliasing ")
+    set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=strict-aliasing ")
+    # Force correct return type.
+    set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=return-type ")
 	# DEBUG: Lightweight buffer overflow detection.
-	set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG
-        "-D_FORTIFY_SOURCE=2 ")
+    target_compile_options(glpong PRIVATE $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2>)
+    target_compile_options(generate_assets PRIVATE $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2>)
 
     # QUIRK: stb.h requires all these warnings to be silenced, but it seems
     # warnings have to be set for the source file including the header...
@@ -159,6 +155,11 @@ if(CLANG)
 	set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG "-fsanitize=address ")
 	set_property(TARGET glpong APPEND_STRING PROPERTY LINK_FLAGS_DEBUG "-fsanitize=address ")
 endif()
+
+# Link generate_assets here to have it set all the compiler options.
+set_property(TARGET generate_assets PROPERTY C_STANDARD 99)
+set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
+target_link_libraries(generate_assets ${EXTRA_LIBS})
 
 # Link.
 if(NOT EMSCRIPTEN)
