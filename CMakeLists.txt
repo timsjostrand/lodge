@@ -101,6 +101,13 @@ add_executable(glpong main.c ${SOURCE} ${HEADERS})
 set_property(TARGET glpong APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
 set_property(TARGET glpong APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_BINARY_DIR})
 
+# Convenience target to compile and run the glpong executable with the same
+# asset path as in cmake_user.
+add_custom_target(run_glpong
+    COMMAND glpong --windowed --mount "${ASSET_PATH}"
+    DEPENDS glpong
+)
+
 # Add DEBUG define when building debug executables.
 target_compile_definitions(glpong PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
