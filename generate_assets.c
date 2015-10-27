@@ -54,7 +54,7 @@ void write_assets_c()
 	fprintf(fp, "#include \"core_reload.h\"\n");
 	fprintf(fp, "\n");
 
-	fprintf(fp, "struct assets assets = { 0 };\n");
+	fprintf(fp, "struct assets assets = { { 0 } };\n");
 	fprintf(fp, "\n");
 
 	fprintf(fp, "struct assets* assets_get()\n");
