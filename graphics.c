@@ -126,8 +126,8 @@ void graphics_glfw_resize_callback(GLFWwindow *window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
-		int windowed)
+int graphics_libraries_init(struct graphics *g, int window_width, int window_height,
+		int windowed, const char *title)
 {
 	/* Initialize the library */
 	if(!glfwInit()) {
@@ -135,7 +135,7 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
 	}
 
 #ifdef EMSCRIPTEN
-	g->window = glfwCreateWindow(view_width, view_height, "glpong", NULL, NULL);
+	g->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
 	if(!g->window) {
 		glfwTerminate();
 		return GRAPHICS_GLFW_ERROR;
@@ -152,9 +152,9 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
 
 	/* Create a windowed mode window and its OpenGL context */
 	if(windowed) {
-		g->window = glfwCreateWindow(view_width, view_height, "glpong", NULL, NULL);
+		g->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
 	} else {
-		g->window = glfwCreateWindow(video_mode->width, video_mode->height, "glpong", monitor, NULL);
+		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, NULL);
 	}
 	if(!g->window) {
 		glfwTerminate();
@@ -185,7 +185,8 @@ int graphics_libraries_init(struct graphics *g, int view_width, int view_height,
  * @param windowed				If applicable, whether to start in windowed mode.
  */
 int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-		fps_func_t fps_callback, int view_width, int view_height, int windowed)
+		fps_func_t fps_callback, int view_width, int view_height, int windowed,
+		const char *title, int window_width, int window_height)
 {
 	int ret = 0;
 
@@ -201,7 +202,7 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	g->frames.callback = fps_callback;
 
 	/* Set up GLEW and glfw. */
-	ret = graphics_libraries_init(g, view_width, view_height, windowed);
+	ret = graphics_libraries_init(g, window_width, window_height, windowed, title);
 
 	if(ret != GRAPHICS_OK) {
 		return ret;
@@ -229,7 +230,7 @@ void graphics_free(struct graphics *g)
 
 static void graphics_frames_register(struct frames *f, float delta_time)
 {
-	f->frames ++;
+	f->frames++;
 	f->frame_time_min = fmin(delta_time, f->frame_time_min);
 	f->frame_time_max = fmax(delta_time, f->frame_time_max);
 	f->frame_time_sum += delta_time;

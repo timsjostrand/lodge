@@ -60,7 +60,9 @@ void core_set_up_sound(vec3 *sound_listener, float distance_max);
 void core_set_up_console(core_console_init_t console_init_callback,
 		struct shader *console_shader);
 
-void core_run(int view_width, int view_height, int windowed, const char *mount_path,
-		think_func_t think_callback, render_func_t render_callback);
+void core_run(const char *title, int view_width, int view_height,
+		int window_width, int window_height, int windowed,
+		const char *mount_path, think_func_t think_callback,
+		render_func_t render_callback);
 
 #endif

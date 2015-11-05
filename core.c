@@ -69,12 +69,14 @@ static void core_think(struct graphics *g, float delta_time)
 	vfs_filewatch();
 	console_think(&core.console, delta_time);
 	sound_think(&core.sound, delta_time);
-	input_think(&core.input, delta_time);
 
 	/* Game specific think. */
 	if(core.think_callback != NULL) {
 		core.think_callback(g, delta_time);
 	}
+	
+	/* Input must think after game logic. */
+	input_think(&core.input, delta_time);
 }
 
 static void core_render(struct graphics *g, float delta_time)
@@ -167,8 +169,10 @@ void core_set_up_console(core_console_init_t console_init_callback, struct shade
  * @param release_callback	Runs just before the game quits, and should release
  *							all assets and free dynamically allocated memory.
  */
-void core_run(int view_width, int view_height, int windowed, const char *mount_path,
-		think_func_t think_callback, render_func_t render_callback)
+void core_run(const char *title, int view_width, int view_height,
+		int window_width, int window_height, int windowed,
+		const char *mount_path, think_func_t think_callback,
+		render_func_t render_callback)
 {
 	/* Store global references. */
 	core.view_width = view_width;
@@ -187,7 +191,8 @@ void core_run(int view_width, int view_height, int windowed, const char *mount_p
 
 	/* Set up graphics. */
 	int ret = graphics_init(&core.graphics, &core_think, &core_render,
-			core.fps_callback, view_width, view_height, windowed);
+			core.fps_callback, view_width, view_height, windowed, title,
+			window_width, window_height);
 
 	if(ret != GRAPHICS_OK) {
 		core_error("Graphics initialization failed (%d)\n", ret);

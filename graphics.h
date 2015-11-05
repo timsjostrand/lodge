@@ -67,7 +67,8 @@ struct graphics {
 };
 
 int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-				fps_func_t fps_callback, int view_width, int view_height, int windowed);
+				fps_func_t fps_callback, int view_width, int view_height, int windowed,
+				const char *title, int window_width, int window_height);
 void	graphics_free(struct graphics *g);
 void	graphics_loop();
 

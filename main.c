@@ -604,7 +604,8 @@ int main(int argc, char **argv)
 	core_set_up_sound(&game.listener, sound_distance_max);
 
 	/* Initialize subsystems and run main loop. */
-	core_run(VIEW_WIDTH, VIEW_HEIGHT, args.windowed, args.mount, &think, &render);
+	core_run("glpong", VIEW_WIDTH, VIEW_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT,
+			args.windowed, args.mount, &think, &render);
 
 	return 0;
 }
