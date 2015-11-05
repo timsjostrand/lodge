@@ -406,7 +406,7 @@ static void console_env_set(struct console *c, const char *name,
 		case CONSOLE_VAR_TYPE_1F: {
 			float f;
 			if(str_parse_1f(value, &f) != 0) {
-				console_printf(c, "Usage: %s=<FLOAT>\n", name);
+				console_printf(c, "Usage: %s=<FLOAT> (now: %g)\n", name, (*((float *) var->value)));
 				return;
 			} else {
 				console_env_set_1f(c, name, f);
