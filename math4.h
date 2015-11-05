@@ -40,6 +40,11 @@ float determinant(const mat4 m);
 void adjugate(mat4 m, const mat4 a);
 float distance3f(const vec3 a, const vec3 b);
 
+float length2f(const vec2 v);
+float length3f(const vec3 v);
+float length4f(const vec4 v);
+
+
 int imax(int a, int b);
 int imin(int a, int b);
 float clamp(float f, float min, float max);

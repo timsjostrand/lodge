@@ -319,6 +319,30 @@ float distance3f(const vec3 a, const vec3 b)
 }
 
 /**
+ * @return The length (hypotenuse) of the vector.
+ */
+float length2f(const vec2 v)
+{
+	return sqrt(v[0]*v[0] + v[1]*v[1]);
+}
+
+/**
+ * @return The length (hypotenuse) of the vector.
+ */
+float length3f(const vec3 v)
+{
+	return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+}
+
+/**
+ * @return The length (hypotenuse) of the vector.
+ */
+float length4f(const vec4 v)
+{
+	return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3]);
+}
+
+/**
  * Copy the contents of matrix 'a' into 'm'.
  */
 void copym(mat4 m, const mat4 a)
