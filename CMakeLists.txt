@@ -1,7 +1,10 @@
 project(glpong)
 
-include(cmake_user.txt)
 cmake_minimum_required(VERSION 3.1)
+
+# Include local settings
+include(cmake_user.txt)
+message("With ASSET_PATH=${ASSET_PATH}")
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
@@ -128,8 +131,9 @@ if(CMAKE_COMPILER_IS_GNUCC)
     # Force correct return type.
     set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=return-type ")
 	# DEBUG: Lightweight buffer overflow detection.
-    target_compile_options(glpong PRIVATE $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2>)
-    target_compile_options(generate_assets PRIVATE $<$<CONFIG:Debug>:-D_FORTIFY_SOURCE=2>)
+	target_compile_options(glpong PRIVATE $<$<CONFIG:Debug>:-O2>)
+    target_compile_definitions(glpong PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
+    target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
 
     # QUIRK: stb.h requires all these warnings to be silenced, but it seems
     # warnings have to be set for the source file including the header...
@@ -147,8 +151,7 @@ if(MSVC)
     set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "/W3 ")
     # Disable "unsafe" functions that redirects to Microsoft-specific
     # implementations.
-    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS
-        "/D_CRT_SECURE_NO_WARNINGS ")
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS ")
 endif()
 
 # Compiling with Clang?
