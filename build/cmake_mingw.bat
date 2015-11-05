@@ -6,3 +6,4 @@ cd "%BUILD_TYPE%"
 cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ../../../
 mingw32-make
 cd ../../
+pause
