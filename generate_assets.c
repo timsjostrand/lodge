@@ -131,42 +131,63 @@ void write_assets_h()
 
 	fprintf(fp, "struct textures\n");
 	fprintf(fp, "{\n");
-	foreach_alist(char*, asset, i, assets_list_textures)
+	if(alist_count(assets_list_textures) > 0)
 	{
-		fprintf(fp, "\t");
-		fprintf(fp, "GLuint\t");
-		write_clean_name(fp, asset);
-		fprintf(fp, ";");
-		fprintf(fp, "\n");
+		foreach_alist(char*, asset, i, assets_list_textures)
+		{
+			fprintf(fp, "\t");
+			fprintf(fp, "GLuint\t");
+			write_clean_name(fp, asset);
+			fprintf(fp, ";");
+			fprintf(fp, "\n");
+		}
+	}
+	else
+	{
+		fprintf(fp, "\tint\t__none;\n");
 	}
 	fprintf(fp, "};\n\n");
 
 	fprintf(fp, "struct sounds\n");
 	fprintf(fp, "{\n");
-	foreach_alist(char*, asset, i, assets_list_sounds)
+	if(alist_count(assets_list_sounds) > 0)
 	{
-		fprintf(fp, "\t");
-		fprintf(fp, "sound_buf_t\t");
-		write_clean_name(fp, asset);
-		fprintf(fp, ";");
-		fprintf(fp, "\n");
+		foreach_alist(char*, asset, i, assets_list_sounds)
+		{
+			fprintf(fp, "\t");
+			fprintf(fp, "sound_buf_t\t");
+			write_clean_name(fp, asset);
+			fprintf(fp, ";");
+			fprintf(fp, "\n");
+		}
+	}
+	else
+	{
+		fprintf(fp, "\tint\t__none;\n");
 	}
 	fprintf(fp, "};\n\n");
 
 	fprintf(fp, "struct shaders\n");
 	fprintf(fp, "{\n");
-	foreach_alist(char*, asset, i, assets_list_shaders)
+	if(alist_count(assets_list_shaders) > 0)
 	{
-		if (strstr(asset, ".frag") == 0)
+		foreach_alist(char*, asset, i, assets_list_shaders)
 		{
-			continue;
-		}
+			if (strstr(asset, ".frag") == 0)
+			{
+				continue;
+			}
 
-		fprintf(fp, "\t");
-		fprintf(fp, "struct shader ");
-		write_clean_name(fp, asset);
-		fprintf(fp, ";");
-		fprintf(fp, "\n");
+			fprintf(fp, "\t");
+			fprintf(fp, "struct shader ");
+			write_clean_name(fp, asset);
+			fprintf(fp, ";");
+			fprintf(fp, "\n");
+		}
+	}
+	else
+	{
+		fprintf(fp, "\tint\t__none;\n");
 	}
 	fprintf(fp, "};\n\n");
 
