@@ -9,6 +9,7 @@
 #include <GL/glew.h>
 
 #include "spritebatch.h"
+#include "color.h"
 
 #define STRIDE 5
 #define CURRENT_SPRITE batch->sprite_count * STRIDE * 6
@@ -171,6 +172,7 @@ void spritebatch_render(struct spritebatch* batch, struct shader *s, struct grap
 	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
 
 	/* Shader settings for all characters sprites. */
+	glUniform4fv(s->uniform_color, 1, COLOR_WHITE);
 	glUniform1i(s->uniform_sprite_type, 0);
 	glUniform1i(s->uniform_tex, 0);
 
