@@ -44,6 +44,8 @@ float length2f(const vec2 v);
 float length3f(const vec3 v);
 float length4f(const vec4 v);
 
+float lerp1f(float min, float max, float t);
+void lerp2f(vec2 dst, const vec2 src, float t);
 
 int imax(int a, int b);
 int imin(int a, int b);

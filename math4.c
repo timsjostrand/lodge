@@ -378,6 +378,17 @@ float randr(float min, float max)
 	return min + (((float) rand()) / (float) RAND_MAX) * (max - min);
 }
 
+float lerp1f(float min, float max, float t)
+{
+	return (1.0f - t) * min + t * max;
+}
+
+void lerp2f(vec2 dst, const vec2 src, float t)
+{
+	dst[0] = lerp1f(dst[0], src[0], t);
+	dst[1] = lerp1f(dst[1], src[1], t);
+}
+
 void set2f(vec2 v, const float x, const float y)
 {
 	v[0] = x; v[1] = y;
