@@ -1,6 +1,8 @@
 #ifndef ALIST_H
 #define ALIST_H
 
+#include <stdlib.h>
+
 typedef void alist_data_t;
 
 /**
