@@ -80,7 +80,7 @@ struct ball {
 	float				last_hit_y;
 };
 
-struct particle {
+struct basic_particle {
 	struct basic_sprite	sprite;
 	int					dead;
 	float				age;
@@ -91,25 +91,25 @@ struct particle {
 };
 
 struct game {
-	float				time;						/* Time since start. */
-	float				graphics_detail;
-	struct player		player1;					/* Left player. */
-	struct player		player2;					/* Right player. */
-	struct basic_sprite	effectslayer;
-	struct ball			ball;
-	struct stats		total_stats;
-	struct particle		particles[PARTICLES_MAX];
-	int					particles_count;
-	vec3				listener;
-	struct sound_emitter *vivaldi_src;
-	sound_buf_t			tone_hit;
-	sound_buf_t			tone_bounce;
-	struct atlas		atlas_earl;
-	struct monofont		font;
-	struct monotext		txt_debug;
-	const char			*conf;
-	size_t				conf_size;
-	vec3				mouse_pos;
+	float					time;						/* Time since start. */
+	float					graphics_detail;
+	struct player			player1;					/* Left player. */
+	struct player			player2;					/* Right player. */
+	struct basic_sprite		effectslayer;
+	struct ball				ball;
+	struct stats			total_stats;
+	struct basic_particle	particles[PARTICLES_MAX];
+	int						particles_count;
+	vec3					listener;
+	struct sound_emitter	*vivaldi_src;
+	sound_buf_t				tone_hit;
+	sound_buf_t				tone_bounce;
+	struct atlas			atlas_earl;
+	struct monofont			font;
+	struct monotext			txt_debug;
+	const char				*conf;
+	size_t					conf_size;
+	vec3					mouse_pos;
 } game = { 0 };
 
 void print_stats()
@@ -125,7 +125,7 @@ void print_stats()
 	printf("Longest total streak: %-2d\n", game.total_stats.streak);
 }
 
-void particle_init(struct particle *p, float x, float y, float w, float h,
+void basic_particle_init(struct basic_particle *p, float x, float y, float w, float h,
 		float angle, float vx, float vy, float va, float age_max)
 {
 	p->dead = 0;
@@ -143,14 +143,14 @@ void particle_init(struct particle *p, float x, float y, float w, float h,
 	set4f(p->sprite.scale, w, h, 1.0f, 1.0f);
 }
 
-void particle_new(float x, float y, float w, float h, float angle, float vx,
+void basic_particle_new(float x, float y, float w, float h, float angle, float vx,
 		float vy, float va, float age_max)
 {
 	if(game.particles_count >= PARTICLES_MAX) {
 		printf("max particle count reached\n");
 		return;
 	}
-	particle_init(&game.particles[game.particles_count], x, y, w, h, angle,
+	basic_particle_init(&game.particles[game.particles_count], x, y, w, h, angle,
 			vx, vy, va, age_max);
 	game.particles_count ++;
 }
@@ -165,7 +165,7 @@ void think_player_charged(struct player *p, float dt)
 {
 	if(player_is_charged(p) && p->last_emit >= 16.0f) {
 		float size = randr(8.0f, 16.0f);
-		particle_new(p->sprite.pos[0],											// x
+		basic_particle_new(p->sprite.pos[0],											// x
 				p->sprite.pos[1] + randr(-PLAYER_HEIGHT/2, PLAYER_HEIGHT/2),	// y
 				size, size,														// w, h
 				randr(0, 2 * M_PI),												// angle
@@ -323,11 +323,11 @@ void game_think(float dt)
 	think_player_charged(&game.player2, dt);
 }
 
-void particles_think(float dt)
+void basic_particles_think(float dt)
 {
 	/* Think for each particle. */
 	for(int i=0; i<game.particles_count; i++) {
-		struct particle *p = &game.particles[i];
+		struct basic_particle *p = &game.particles[i];
 
 		p->age += dt;
 		p->sprite.pos[0] += p->vx * dt;
@@ -355,7 +355,7 @@ void think(struct graphics *g, float delta_time)
 {
 	game.time = (float) glfwGetTime();
 	game_think(delta_time);
-	particles_think(delta_time);
+	basic_particles_think(delta_time);
 	shader_uniforms_think(&assets.shaders.basic_shader, delta_time);
 	shader_uniforms_think(&assets.shaders.ball_trail, delta_time);
 }
