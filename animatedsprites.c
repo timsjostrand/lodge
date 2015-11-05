@@ -30,30 +30,36 @@ void animatedsprites_update(struct animatedsprites* animatedsprites, struct atla
 	{
 		struct sprite* current_sprite = animatedsprites->sprites_todraw[i];
 
-		if (!current_sprite->done)
+		/* Do not draw this sprite. */
+		if (current_sprite->anim == NULL)
 		{
-			current_sprite->frame_time += delta_time;
+			continue;
+		}
 
-			while (current_sprite->frame_time > current_sprite->frame_length)
+		if (!current_sprite->state.done)
+		{
+			current_sprite->state.frame_time += delta_time;
+
+			while (current_sprite->state.frame_time > current_sprite->anim->frame_length)
 			{
-				current_sprite->frame_time -= current_sprite->frame_length;
+				current_sprite->state.frame_time -= current_sprite->anim->frame_length;
 
-				if (current_sprite->frame_current < current_sprite->frame_start + current_sprite->frame_count - 1)
+				if (current_sprite->state.frame_current < current_sprite->anim->frame_start + current_sprite->anim->frame_count - 1)
 				{
-					current_sprite->frame_current++;
+					current_sprite->state.frame_current++;
 				}
-				else if (current_sprite->looping)
+				else if (current_sprite->anim->looping)
 				{
-					current_sprite->frame_current = current_sprite->frame_start;
+					current_sprite->state.frame_current = current_sprite->anim->frame_start;
 				}
 				else
 				{
-					current_sprite->done = 1;
+					current_sprite->state.done = 1;
 				}
 			}
 		}
 
-		int index = current_sprite->frame_current;
+		int index = current_sprite->state.frame_current;
 
 		vec2 tex_pos;
 		tex_pos[0] = atlas->frames[index].x / (float)atlas->width;
@@ -89,11 +95,18 @@ void animatedsprites_clear(struct animatedsprites* animatedsprites)
 	animatedsprites->sprite_todraw_count = 0;
 }
 
-void animatedsprites_playanimation(struct sprite* sprite, int frame_start, int frame_count, float frame_length, int looping)
+void animatedsprites_playanimation(struct sprite* sprite, struct anim* anim)
 {
-	sprite->done = 0;
-	sprite->looping = looping;
-	sprite->frame_start = sprite->frame_current = frame_start;
-	sprite->frame_count = frame_count;
-	sprite->frame_length = frame_length;
+	/* Sanity check */
+	/* NOTE: anim == NULL is legal! */
+	if(sprite == NULL) {
+		return;
+	}
+
+	sprite->anim = anim;
+
+	/* Reset animation state. */
+	sprite->state.done = 0;
+	sprite->state.frame_current = anim != NULL ? anim->frame_start : 0;
+	sprite->state.frame_time = 0;
 }

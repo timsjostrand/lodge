@@ -13,20 +13,28 @@ typedef float mat4[16];
 typedef float vec3[3];
 typedef float vec2[2];
 
+struct anim
+{
+	int looping;
+	int frame_start;
+	int frame_count;
+	float frame_length;
+};
+
+struct anim_state
+{
+	int done;
+	int frame_current;
+	float frame_time;
+};
+
 struct sprite
 {
 	vec3 position;
 	vec2 scale;
 
-	int looping;
-	int done;
-
-	int frame_start;
-	int frame_count;
-	int frame_current;
-
-	float frame_length;
-	float frame_time;
+	const struct anim *anim;
+	struct anim_state state;
 };
 
 struct animatedsprites
@@ -37,9 +45,10 @@ struct animatedsprites
 };
 
 struct animatedsprites* animatedsprites_create();
+void animatedsprites_init(struct animatedsprites* animatedsprites);
 void animatedsprites_destroy(struct animatedsprites* animatedsprites);
 
-void animatedsprites_playanimation(struct sprite* sprite, int frame_start, int frame_count, float frame_length, int looping);
+void animatedsprites_playanimation(struct sprite* sprite, struct anim* anim);
 void animatedsprites_update(struct animatedsprites* animatedsprites, struct atlas* atlas, float delta_time);
 void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s, struct graphics *g, GLuint tex);
 
