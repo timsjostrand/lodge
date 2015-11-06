@@ -1,5 +1,6 @@
 main
 build/**/
+!build/cmake/
 *.swp
 *.exe
 cmake_user.txt

@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 # Include local settings
 include(cmake_user.txt)
-message("With ASSET_PATH=${ASSET_PATH}")
+message(STATUS "ASSET_PATH=${ASSET_PATH}")
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
@@ -72,11 +72,11 @@ if(NOT EMSCRIPTEN)
 else()
     # glfw and glew is provided by emscripten
     option(USE_GLFW_3 "Use glfw3" ON)
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1")
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/test.png")
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/vivaldi.ogg")
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/paddle.png")
-    SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s TOTAL_MEMORY=100000000")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/test.png")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/vivaldi.ogg")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/paddle.png")
+    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s TOTAL_MEMORY=100000000")
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-warn-absolute-paths")
 endif()
 
@@ -84,13 +84,13 @@ endif()
 include_directories(lib/)
 
 set(SOURCE math4.c core_console.c graphics.c shader.c input.c texture.c
-    color.c sound.c vfs.c atlas.c monotext.c str.c list.c console.c
-    spritebatch.c animatedsprites.c alist.c core.c core_argv.c core_reload.c
-	assets.c particles.c)
+        color.c sound.c vfs.c atlas.c monotext.c str.c list.c console.c
+        spritebatch.c animatedsprites.c alist.c core.c core_argv.c core_reload.c
+        assets.c particles.c)
 set(HEADERS math4.h core_console.h graphics.h shader.h input.h texture.h
-    color.h sound.h vfs.h atlas.h monotext.h str.h list.h console.h
-	spritebatch.h animatedsprites.h alist.h core.h core_argv.h core_reload.h
-	assets.h particles.h)
+        color.h sound.h vfs.h atlas.h monotext.h str.h list.h console.h
+        spritebatch.h animatedsprites.h alist.h core.h core_argv.h core_reload.h
+        assets.h particles.h)
 
 # Top-down sources
 set(TOP_DOWN_SOURCES top-down/tiles.c)
@@ -102,11 +102,19 @@ list(APPEND HEADERS ${TOP_DOWN_HEADERS})
 # Asset generator executable
 add_executable(generate_assets generate_assets.c vfs.c vfs.h alist.c alist.h sound.h)
 
+# Compare assets directory, maybe regenerate assets.c
+set(ASSETS_STAMP_FILE "${CMAKE_CURRENT_BINARY_DIR}/assets.stamp")
+add_custom_target(assets_check_update ALL
+    COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${ASSET_PATH} -DSTAMP_FILE=${ASSETS_STAMP_FILE} -P ${CMAKE_SOURCE_DIR}/build/cmake/dir_checksum.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Calculating assets checksum...")
+
 add_custom_command(OUTPUT assets.c assets.h
-				   COMMAND generate_assets ARGS ${ASSET_PATH}
-				   COMMENT "Generating assets.c"
-				   DEPENDS generate_assets)
-				   #DEPENDS check_need_update_assets)
+                   COMMAND generate_assets ARGS ${ASSET_PATH}
+                   DEPENDS generate_assets
+                   DEPENDS assets_check_update
+                   DEPENDS ${ASSETS_STAMP_FILE}
+                   COMMENT "Generating assets.c")
 
 # Main executable.
 add_executable(glpong main.c ${SOURCE} ${HEADERS})
@@ -139,8 +147,8 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=strict-aliasing ")
     # Force correct return type.
     set_property(TARGET glpong generate_assets APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=return-type ")
-	# DEBUG: Lightweight buffer overflow detection.
-	target_compile_options(glpong PRIVATE $<$<CONFIG:Debug>:-O2>)
+    # DEBUG: Lightweight buffer overflow detection.
+    target_compile_options(glpong PRIVATE $<$<CONFIG:Debug>:-O2>)
     target_compile_definitions(glpong PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
     target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
 
@@ -165,14 +173,14 @@ endif()
 
 # Compiling with Clang?
 if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
-	set(CLANG 1)
+    set(CLANG 1)
 endif()
 
 # Clang compiler settings.
 if(CLANG)
-	# DEBUG: Bounds checking.
-	set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG "-fsanitize=address ")
-	set_property(TARGET glpong APPEND_STRING PROPERTY LINK_FLAGS_DEBUG "-fsanitize=address ")
+    # DEBUG: Bounds checking.
+    set_property(TARGET glpong APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG "-fsanitize=address ")
+    set_property(TARGET glpong APPEND_STRING PROPERTY LINK_FLAGS_DEBUG "-fsanitize=address ")
 endif()
 
 # Link generate_assets here to have it set all the compiler options.
