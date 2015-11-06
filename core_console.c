@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <math.h>
 #include <GLFW/glfw3.h>
 
 #include "sound.h"
@@ -13,6 +14,11 @@
 #include "graphics.h"
 #include "vfs.h"
 #include "core_console.h"
+
+struct commands_meta {
+	struct console_cmd root;
+	struct console_cmd lines;
+};
 
 struct commands_sound {
 	struct console_cmd root;
@@ -35,6 +41,7 @@ struct commands_vfs {
 static struct state {
 	struct graphics				*graphics;
 	struct console				*console;
+	struct commands_meta		cmd_meta;
 	struct commands_sound		cmd_sound;
 	struct commands_graphics	cmd_graphics;
 	struct commands_vfs			cmd_vfs;
@@ -49,6 +56,43 @@ void core_console_printf(const char *fmt, ...)
 	va_start(args, fmt);
 	console_vprintf(state.console, fmt, args);
 	va_end(args);
+}
+
+/* Meta */
+
+static void core_console_meta_lines(struct console *c, struct console_cmd *cmd, struct list *argv)
+{
+	float f;
+	if(console_cmd_parse_1f(c, cmd, argv, &f) != 0) {
+		return;
+	}
+	c->display_lines = (int) round(f);
+
+	/* Update height & pos. */
+	float bg_h = console_height(c, c->display_lines);
+	printf("got %g typed=%g\n", bg_h, f);
+	c->background.pos[1] = bg_h/2.0f;
+	c->background.scale[1] = bg_h;
+
+	/* Trim line count. */
+	console_print(c, "", 0);
+}
+
+static void core_console_meta_free(struct commands_meta *cmd)
+{
+	console_cmd_free(&cmd->root);
+	console_cmd_free(&cmd->lines);
+}
+
+static void core_console_meta_init(struct console *c, struct commands_meta *cmd)
+{
+	/* Create commands. */
+	console_cmd_new(&cmd->root, "console", 0, NULL, NULL);
+	console_cmd_new(&cmd->lines, "lines", 1, &core_console_meta_lines, NULL);
+
+	/* Register command tree. */
+	console_cmd_add(&cmd->root, &c->root_cmd);
+	console_cmd_add(&cmd->lines, &cmd->root);
 }
 
 /* Sound */
@@ -102,7 +146,9 @@ static void core_console_graphics_init(struct console *c, struct commands_graphi
 
 	/* Register command tree. */
 	console_cmd_add(&cmd->quit,		&c->root_cmd);
+#if 0
 	console_cmd_add(&cmd->root,		&c->root_cmd);
+#endif
 
 	/* Bind variables. */
 	console_env_bind_1f(c, "dt", &(state.graphics->delta_time_factor));
@@ -178,6 +224,7 @@ void core_console_init(struct graphics *g, struct console *c)
 	state.graphics = g;
 	state.console = c;
 
+	core_console_meta_init(c, &state.cmd_meta);
 	core_console_sound_init(c, &state.cmd_sound);
 	core_console_graphics_init(c, &state.cmd_graphics);
 	core_console_vfs_init(c, &state.cmd_vfs);
@@ -185,6 +232,7 @@ void core_console_init(struct graphics *g, struct console *c)
 
 void core_console_free()
 {
+	core_console_meta_free(&state.cmd_meta);
 	core_console_sound_free(&state.cmd_sound);
 	core_console_graphics_free(&state.cmd_graphics);
 	core_console_vfs_free(&state.cmd_vfs);

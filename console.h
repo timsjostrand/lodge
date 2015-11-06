@@ -68,6 +68,8 @@ struct console_conf {
 
 struct console {
 	int						initialized;
+	int						padding;
+	int						display_lines;				/* Number of lines to display. */
 	int						focused;					/* Use console_toggle_focus() to set. */
 	char					*history;					/* History buffer. */
 	char					*history_cur;				/* Current offset in history buffer. */
@@ -97,6 +99,7 @@ void console_think(struct console *c, float delta_time);
 void console_render(struct console *c, struct shader *s, struct graphics *g);
 void console_toggle_focus(struct console *c);
 void console_parse_conf(struct console *c, struct console_conf *conf);
+float console_height(struct console *c, int display_lines);
 
 void console_input_feed_control(struct console *c, int key, int scancode, int action, int mods);
 void console_input_feed_char(struct console *c, unsigned int key, int mods);

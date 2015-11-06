@@ -125,10 +125,17 @@ static int console_split_args(const char *s, size_t s_size, const char token, st
 	return 0;
 }
 
+float console_height(struct console *c, int display_lines)
+{
+	return (c->padding * 2.0f) + (display_lines + 1) * (c->font->letter_height + c->font->letter_spacing_y);
+}
+
 void console_new(struct console *c, struct monofont *font, int view_width,
 		int padding, GLuint *white_tex)
 {
+	c->display_lines = CONSOLE_DISPLAY_LINES;
 	c->font = font;
+	c->padding = padding;
 	c->chars_per_line = view_width / (font->letter_width + font->letter_spacing_x);
 	c->history_len = CONSOLE_HISTORY_LINES * c->chars_per_line;
 	c->history = (char *) calloc(c->history_len, sizeof(char));
@@ -140,7 +147,7 @@ void console_new(struct console *c, struct monofont *font, int view_width,
 	c->input_history = list_new();
 	c->input_history_cur = -1;
 
-	float bg_h = padding*2.0f + (CONSOLE_DISPLAY_LINES + 1) * (font->letter_height + font->letter_spacing_y);
+	float bg_h = console_height(c, c->display_lines);
 	sprite_init(&c->background,
 			0,						/* type */
 			view_width/2.0f,		/* x */
@@ -215,7 +222,7 @@ void console_print(struct console *c, const char *text, size_t text_len)
 	c->history_cur += text_len;
 
 	/* Display only subsection of history. */
-	char *display = str_search_reverse(c->history, c->history_len, '\n', CONSOLE_DISPLAY_LINES + 1);
+	char *display = str_search_reverse(c->history, c->history_len, '\n', c->display_lines + 1);
 	/* Not enough to form a subsection? Display entire history. */
 	if(display == NULL) {
 		display = c->history;
