@@ -14,6 +14,7 @@
 #include "sound.h"
 #include "monotext.h"
 #include "texture.h"
+#include "assets.h"
 
 #include "core.h"
 #include "core_argv.h"
@@ -204,6 +205,7 @@ void core_setup(const char *title, int view_width, int view_height,
 	/* Allocate game memory */
 	core.shared_memory.game_memory = malloc(game_memory_size);
 	core.shared_memory.core = &core;
+	core.shared_memory.assets = &assets;
 	core.init_memory_callback(&core.shared_memory, 0);
 
 	/* Seed random number generator. */

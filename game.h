@@ -9,6 +9,7 @@ struct GLFWwindow;
 struct frames;
 struct console;
 struct core;
+struct assets;
 
 typedef float vec3[3];
 
@@ -16,6 +17,7 @@ struct shared_memory
 {
 	void* game_memory;
 	struct core* core;
+	struct assets* assets;
 };
 
 #ifdef _WIN32
