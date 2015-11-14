@@ -572,10 +572,14 @@ void game_init()
 	game->vivaldi_src = sound_buf_play_music(&core.sound, assets.sounds.vivaldi, 1.0f);
 }
 
-void game_init_memory(void* memory)
+void game_init_memory(void* memory, int reload)
 {
-	struct game tmp = { 0 };
-	memcpy(memory, &tmp, sizeof(tmp));
+	if (!reload)
+	{
+		struct game tmp = { 0 };
+		memcpy(memory, &tmp, sizeof(tmp));
+	}
+
 	game = (struct game*)memory;
 }
 

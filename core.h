@@ -72,5 +72,6 @@ void core_setup(const char *title, int view_width, int view_height,
 	int window_width, int window_height, int windowed, size_t game_memory_size);
 
 void core_run();
+void core_reload();
 
 #endif

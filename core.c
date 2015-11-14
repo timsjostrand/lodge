@@ -198,7 +198,7 @@ void core_setup(const char *title, int view_width, int view_height,
 
 	/* Allocate game memory */
 	core.game_memory = malloc(game_memory_size);
-	core.init_memory_callback(core.game_memory);
+	core.init_memory_callback(core.game_memory, 0);
 
 	/* Seed random number generator. */
 	srand(time(NULL));
@@ -250,4 +250,10 @@ void core_run()
 
 	/* Release game memory */
 	free(core.game_memory);
+}
+
+void core_reload()
+{
+	core.init_memory_callback(core.game_memory, 1);
+	core.load_callback();
 }

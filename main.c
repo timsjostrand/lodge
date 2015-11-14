@@ -122,7 +122,7 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 
 			if (!first_load)
 			{
-				game_assets_load_fn();
+				core_reload();
 			}
 		}
 	}

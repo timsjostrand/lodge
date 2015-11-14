@@ -30,7 +30,7 @@ extern "C"
 
 SHARED_SYMBOL void game_init();
 
-SHARED_SYMBOL void game_init_memory(void* memory);
+SHARED_SYMBOL void game_init_memory(void* memory, int reload);
 
 SHARED_SYMBOL void game_assets_load();
 SHARED_SYMBOL void game_assets_release();
