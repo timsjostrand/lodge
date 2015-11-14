@@ -22,5 +22,6 @@ void	vfs_free_memory(const char* filename);
 
 int			vfs_file_count();
 const char*	vfs_get_simple_name(const int index);
+const char* vfs_get_absolute_path(const char* filename);
 
 #endif //_VFS_H

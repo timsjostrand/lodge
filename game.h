@@ -11,16 +11,26 @@ struct console;
 
 typedef float vec3[3];
 
+#define LOAD_SHARED
+
 #ifdef _WIN32
 #define EXPORT __declspec( dllexport ) 
+#define IMPORT __declspec( dllimport ) 
 #else
-#define EXPORT
+#define EXPORT 
+#define IMPORT 
 #endif
 
 #ifdef ENABLE_SHARED
-#define SHARED_SYMBOL EXPORT
+	#define SHARED_SYMBOL EXPORT
 #else
-#define SHARED_SYMBOL 
+
+#ifdef LOAD_SHARED
+#define SHARED_SYMBOL IMPORT
+#else
+#define SHARED_SYMBOL
+#endif
+
 #endif
 
 #ifdef __cplusplus
@@ -46,7 +56,7 @@ SHARED_SYMBOL void game_console_init(struct console* c);
 SHARED_SYMBOL const int VIEW_WIDTH;
 SHARED_SYMBOL const int VIEW_HEIGHT;
 
-SHARED_SYMBOL vec3 sound_listener;
+vec3 sound_listener;
 
 #ifdef __cplusplus
 }

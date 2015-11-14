@@ -262,3 +262,16 @@ const char* vfs_get_simple_name(const int index)
 {
 	return file_table[index].simplename;
 }
+
+const char* vfs_get_absolute_path(const char* filename)
+{
+	for (int i = 0; i < file_count; i++)
+	{
+		if (strcmp(filename, file_table[i].simplename) == 0 && file_table[i].data != 0)
+		{
+			return file_table[i].name;
+		}
+	}
+
+	return 0;
+}

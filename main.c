@@ -89,7 +89,14 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 		game_library = 0;
 	}
 
-	game_library = load_shared_library(filename);
+	const char* absolute_path = vfs_get_absolute_path(filename);
+
+	if (!absolute_path)
+	{
+		return;
+	}
+
+	game_library = load_shared_library(absolute_path);
 	if (game_library)
 	{
 		game_init_fn = load_function(game_library, "game_init");
@@ -143,12 +150,17 @@ int main(int argc, char **argv)
 	float sound_distance_max = distance3f(sound_listener, sound_audible_max);
 	core_set_up_sound(&sound_listener, sound_distance_max);
 
-#ifdef ENABLE_SHARED
+#ifdef LOAD_SHARED
 	/* Load game library */
 	size_t filesize;
 	void* lib = vfs_get_file(args.game, &filesize);
 	load_game(args.game, filesize, lib, 0);
 	first_load = 0;
+
+	if (!game_library)
+	{
+		return 0;
+	}
 #else
 	core_set_think_callback(&game_think);
 	core_set_render_callback(&game_render);
