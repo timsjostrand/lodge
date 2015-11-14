@@ -40,6 +40,8 @@ void* load_shared_library(const char* filename)
 	{
 		errorf("Main", "Could not load library %s\n", filename);
 	}
+
+    return library;
 }
 
 void* load_function(void* library, const char* function_name)

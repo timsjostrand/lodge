@@ -59,7 +59,7 @@ static void core_assets_init()
 
 	/* Game specific init. */
 	if(core.init_callback != NULL) {
-		core.init_callback(core.game_memory);
+		core.init_callback();
 	}
 }
 
