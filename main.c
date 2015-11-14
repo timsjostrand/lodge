@@ -143,8 +143,6 @@ int main(int argc, char **argv)
 	float sound_distance_max = distance3f(sound_listener, sound_audible_max);
 	core_set_up_sound(&sound_listener, sound_distance_max);
 
-#define ENABLE_SHARED
-
 #ifdef ENABLE_SHARED
 	/* Load game library */
 	size_t filesize;
