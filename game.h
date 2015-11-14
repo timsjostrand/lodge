@@ -8,8 +8,15 @@ struct input;
 struct GLFWwindow;
 struct frames;
 struct console;
+struct core;
 
 typedef float vec3[3];
+
+struct shared_memory
+{
+	void* game_memory;
+	struct core* core;
+};
 
 #ifdef _WIN32
 #define EXPORT __declspec( dllexport ) 
@@ -38,7 +45,7 @@ extern "C"
 
 SHARED_SYMBOL void game_init();
 
-SHARED_SYMBOL void game_init_memory(void* memory, int reload);
+SHARED_SYMBOL void game_init_memory(struct shared_memory* shared_memory, int reload);
 
 SHARED_SYMBOL void game_assets_load();
 SHARED_SYMBOL void game_assets_release();
