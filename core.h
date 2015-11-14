@@ -13,7 +13,7 @@
 
 typedef void (*core_load_t)(void);
 typedef void (*core_init_t)(void);
-typedef void (*core_init_memory_t)(void*, int);
+typedef void (*core_init_memory_t)(struct shared_memory*, int);
 typedef void (*core_release_t)(void);
 typedef void (*core_console_init_t)(struct console *);
 
@@ -50,7 +50,7 @@ struct core {
 	/* Resources. */
 	struct monofont			font_console;
 
-	void*					game_memory;
+	struct shared_memory	shared_memory;
 };
 
 struct core* get_core();

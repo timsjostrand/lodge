@@ -202,8 +202,9 @@ void core_setup(const char *title, int view_width, int view_height,
 	core.view_height = view_height;
 
 	/* Allocate game memory */
-	core.game_memory = malloc(game_memory_size);
-	core.init_memory_callback(core.game_memory, 0);
+	core.shared_memory.game_memory = malloc(game_memory_size);
+	core.shared_memory.core = &core;
+	core.init_memory_callback(&core.shared_memory, 0);
 
 	/* Seed random number generator. */
 	srand(time(NULL));
@@ -254,11 +255,11 @@ void core_run()
 	graphics_free(&core.graphics);
 
 	/* Release game memory */
-	free(core.game_memory);
+	free(core.shared_memory.game_memory);
 }
 
 void core_reload()
 {
-	core.init_memory_callback(core.game_memory, 1);
+	core.init_memory_callback(&core.shared_memory, 1);
 	core.load_callback();
 }
