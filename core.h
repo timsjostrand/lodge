@@ -53,7 +53,7 @@ struct core {
 	void*					game_memory;
 };
 
-SHARED_SYMBOL struct core core;
+struct core* get_core();
 
 /* Pre-init. */
 void core_set_init_memory_callback(core_init_memory_t init_memory_callback);

@@ -19,7 +19,12 @@
 #include "core_argv.h"
 #include "core_console.h"
 
-struct core core = { 0 };
+static struct core core = { 0 };
+
+struct core* get_core()
+{
+	return &core;
+}
 
 static void core_load()
 {
