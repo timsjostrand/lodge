@@ -110,19 +110,21 @@ struct game {
 	const char				*conf;
 	size_t					conf_size;
 	vec3					mouse_pos;
-} game = { 0 };
+};
+
+struct game* game = 0;
 
 void print_stats()
 {
 	printf("Player 1: Points: %-2d, Hits: %-2d, Longest Streak: %-2d\n",
-		game.player1.stats.points,
-		game.player1.stats.hits,
-		game.player1.stats.streak);
+		game->player1.stats.points,
+		game->player1.stats.hits,
+		game->player1.stats.streak);
 	printf("Player 2: Points: %-2d, Hits: %-2d, Longest Streak: %-2d\n",
-		game.player2.stats.points,
-		game.player2.stats.hits,
-		game.player2.stats.streak);
-	printf("Longest total streak: %-2d\n", game.total_stats.streak);
+		game->player2.stats.points,
+		game->player2.stats.hits,
+		game->player2.stats.streak);
+	printf("Longest total streak: %-2d\n", game->total_stats.streak);
 }
 
 void basic_particle_init(struct basic_particle *p, float x, float y, float w, float h,
@@ -146,13 +148,13 @@ void basic_particle_init(struct basic_particle *p, float x, float y, float w, fl
 void basic_particle_new(float x, float y, float w, float h, float angle, float vx,
 	float vy, float va, float age_max)
 {
-	if (game.particles_count >= PARTICLES_MAX) {
+	if (game->particles_count >= PARTICLES_MAX) {
 		printf("max particle count reached\n");
 		return;
 	}
-	basic_particle_init(&game.particles[game.particles_count], x, y, w, h, angle,
+	basic_particle_init(&game->particles[game->particles_count], x, y, w, h, angle,
 		vx, vy, va, age_max);
-	game.particles_count++;
+	game->particles_count++;
 }
 
 int player_is_charged(struct player *p)
@@ -182,14 +184,14 @@ void think_player_charged(struct player *p, float dt)
 void ball_player_bounce(struct ball *ball, struct player *p)
 {
 	/* 0 on player1, 1 on player2. */
-	int player_no = (p == &game.player2);
+	int player_no = (p == &game->player2);
 
 	p->stats.hits++;
 	p->stats.current_streak++;
 	p->stats.streak = imax(p->stats.streak, p->stats.current_streak);
 
-	game.total_stats.current_streak++;
-	game.total_stats.streak = imax(game.total_stats.streak, game.total_stats.current_streak);
+	game->total_stats.current_streak++;
+	game->total_stats.streak = imax(game->total_stats.streak, game->total_stats.current_streak);
 
 	float diff = (ball->sprite.pos[1] - p->sprite.pos[1]) / (PLAYER_HEIGHT / 2.0f);
 	diff = clamp(diff, -0.8f, 0.8f);
@@ -206,62 +208,62 @@ void ball_player_bounce(struct ball *ball, struct player *p)
 
 	p->charge = 0.0f;
 
-	sound_buf_play_pitched(&core.sound, game.tone_hit, ball->sprite.pos, 0.05f);
+	sound_buf_play_pitched(&core.sound, game->tone_hit, ball->sprite.pos, 0.05f);
 }
 
 void ball_think(float dt)
 {
 	// Ball: left/right hit detection
 	int ball_reset = 0;
-	if (game.ball.sprite.pos[0] < BOARD_LEFT + 8) {
+	if (game->ball.sprite.pos[0] < BOARD_LEFT + 8) {
 		ball_reset = 1;
-		game.total_stats.current_streak = 0;
-		game.player1.stats.current_streak = 0;
-		game.player2.stats.points++;
+		game->total_stats.current_streak = 0;
+		game->player1.stats.current_streak = 0;
+		game->player2.stats.points++;
 		printf("player 1 looses \n");
 		print_stats();
 	}
-	else if (game.ball.sprite.pos[0] > BOARD_RIGHT - 8) {
+	else if (game->ball.sprite.pos[0] > BOARD_RIGHT - 8) {
 		ball_reset = 1;
-		game.total_stats.current_streak = 0;
-		game.player2.stats.current_streak = 0;
-		game.player1.stats.points++;
+		game->total_stats.current_streak = 0;
+		game->player2.stats.current_streak = 0;
+		game->player1.stats.points++;
 		printf("player 2 looses \n");
 		print_stats();
 	}
 
 	if (ball_reset) {
 		/* Shameball! */
-		game.ball.vx = clamp(game.ball.vx / 4.0f,
-			-game.ball.speed / 8.0f,
-			game.ball.speed / 8.0f);
-		game.ball.vy = clamp(game.ball.vy / 4.0f,
-			-game.ball.speed / 8.0f,
-			game.ball.speed / 8.0f);
+		game->ball.vx = clamp(game->ball.vx / 4.0f,
+			-game->ball.speed / 8.0f,
+			game->ball.speed / 8.0f);
+		game->ball.vy = clamp(game->ball.vy / 4.0f,
+			-game->ball.speed / 8.0f,
+			game->ball.speed / 8.0f);
 		/* Restart at center of view. */
-		game.ball.sprite.pos[0] = VIEW_WIDTH / 2;
-		game.ball.sprite.pos[1] = VIEW_HEIGHT / 2;
+		game->ball.sprite.pos[0] = VIEW_WIDTH / 2;
+		game->ball.sprite.pos[1] = VIEW_HEIGHT / 2;
 	}
 
 	// Ball: top/bottom hit detection
-	if (game.ball.sprite.pos[1] > BOARD_TOP - BALL_HEIGHT / 2) {
-		game.ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT / 2;
-		game.ball.vy *= -1.0f;
-		game.ball.last_hit_y = 0.0f;
-		sound_buf_play_pitched(&core.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
+	if (game->ball.sprite.pos[1] > BOARD_TOP - BALL_HEIGHT / 2) {
+		game->ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT / 2;
+		game->ball.vy *= -1.0f;
+		game->ball.last_hit_y = 0.0f;
+		sound_buf_play_pitched(&core.sound, game->tone_bounce, game->ball.sprite.pos, 0.05f);
 	}
-	else if (game.ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT / 2) {
-		game.ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT / 2;
-		game.ball.vy *= -1.0f;
-		game.ball.last_hit_y = 0.0f;
-		sound_buf_play_pitched(&core.sound, game.tone_bounce, game.ball.sprite.pos, 0.05f);
+	else if (game->ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT / 2) {
+		game->ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT / 2;
+		game->ball.vy *= -1.0f;
+		game->ball.last_hit_y = 0.0f;
+		sound_buf_play_pitched(&core.sound, game->tone_bounce, game->ball.sprite.pos, 0.05f);
 	}
 
 	// Ball: move
-	game.ball.sprite.pos[0] += dt*game.ball.vx;
-	game.ball.sprite.pos[1] += dt*game.ball.vy;
-	game.ball.last_hit_x += dt;
-	game.ball.last_hit_y += dt;
+	game->ball.sprite.pos[0] += dt*game->ball.vx;
+	game->ball.sprite.pos[1] += dt*game->ball.vy;
+	game->ball.last_hit_x += dt;
+	game->ball.last_hit_y += dt;
 }
 
 void player1_think(struct player *p, float dt)
@@ -303,35 +305,35 @@ void player2_think(struct player *p, float dt)
 void glpong_think(float dt)
 {
 	ball_think(dt);
-	player1_think(&game.player1, dt);
-	player2_think(&game.player2, dt);
+	player1_think(&game->player1, dt);
+	player2_think(&game->player2, dt);
 
 	// Ball collides with Player 1?
-	if (game.ball.vx < 0
-		&& game.ball.sprite.pos[1] >= (game.player1.sprite.pos[1] - PLAYER_HEIGHT / 2 - BALL_HEIGHT / 2)
-		&& game.ball.sprite.pos[1] <= (game.player1.sprite.pos[1] + PLAYER_HEIGHT / 2 + BALL_HEIGHT / 2)
-		&& game.ball.sprite.pos[0] <= (PLAYER1_HIT + PLAYER_WIDTH / 2 + BALL_WIDTH / 2)) {
-		ball_player_bounce(&game.ball, &game.player1);
+	if (game->ball.vx < 0
+		&& game->ball.sprite.pos[1] >= (game->player1.sprite.pos[1] - PLAYER_HEIGHT / 2 - BALL_HEIGHT / 2)
+		&& game->ball.sprite.pos[1] <= (game->player1.sprite.pos[1] + PLAYER_HEIGHT / 2 + BALL_HEIGHT / 2)
+		&& game->ball.sprite.pos[0] <= (PLAYER1_HIT + PLAYER_WIDTH / 2 + BALL_WIDTH / 2)) {
+		ball_player_bounce(&game->ball, &game->player1);
 	}
 
 	// Ball collides with Player 2?
-	if (game.ball.vx > 0
-		&& game.ball.sprite.pos[1] >= (game.player2.sprite.pos[1] - PLAYER_HEIGHT / 2 - BALL_HEIGHT / 2)
-		&& game.ball.sprite.pos[1] <= (game.player2.sprite.pos[1] + PLAYER_HEIGHT / 2 + BALL_HEIGHT / 2)
-		&& game.ball.sprite.pos[0] >= (PLAYER2_HIT - PLAYER_WIDTH / 2 - BALL_WIDTH / 2)) {
-		ball_player_bounce(&game.ball, &game.player2);
+	if (game->ball.vx > 0
+		&& game->ball.sprite.pos[1] >= (game->player2.sprite.pos[1] - PLAYER_HEIGHT / 2 - BALL_HEIGHT / 2)
+		&& game->ball.sprite.pos[1] <= (game->player2.sprite.pos[1] + PLAYER_HEIGHT / 2 + BALL_HEIGHT / 2)
+		&& game->ball.sprite.pos[0] >= (PLAYER2_HIT - PLAYER_WIDTH / 2 - BALL_WIDTH / 2)) {
+		ball_player_bounce(&game->ball, &game->player2);
 	}
 
 	// Emit player charge particles
-	think_player_charged(&game.player1, dt);
-	think_player_charged(&game.player2, dt);
+	think_player_charged(&game->player1, dt);
+	think_player_charged(&game->player2, dt);
 }
 
 void basic_particles_think(float dt)
 {
 	/* Think for each particle. */
-	for (int i = 0; i<game.particles_count; i++) {
-		struct basic_particle *p = &game.particles[i];
+	for (int i = 0; i<game->particles_count; i++) {
+		struct basic_particle *p = &game->particles[i];
 
 		p->age += dt;
 		p->sprite.pos[0] += p->vx * dt;
@@ -345,12 +347,12 @@ void basic_particles_think(float dt)
 	}
 
 	/* Remove dead particles. */
-	for (int i = 0; i<game.particles_count; i++) {
-		if (game.particles[i].dead) {
-			for (int n = i + 1; n<game.particles_count; n++) {
-				game.particles[i] = game.particles[n];
+	for (int i = 0; i<game->particles_count; i++) {
+		if (game->particles[i].dead) {
+			for (int n = i + 1; n<game->particles_count; n++) {
+				game->particles[i] = game->particles[n];
 			}
-			game.particles_count--;
+			game->particles_count--;
 		}
 	}
 }
@@ -414,20 +416,20 @@ static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mo
 		int win_h = 0;
 		glfwGetWindowSize(window, &win_w, &win_h);
 		/* Convert screen space => game space. */
-		game.mouse_pos[0] = x * (VIEW_WIDTH / (float)win_w);
-		game.mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float)win_h);
+		game->mouse_pos[0] = x * (VIEW_WIDTH / (float)win_w);
+		game->mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float)win_h);
 
-		sound_buf_play_pitched(&core.sound, game.tone_hit, game.mouse_pos, 0.2f);
+		sound_buf_play_pitched(&core.sound, game->tone_hit, game->mouse_pos, 0.2f);
 		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
-			game.mouse_pos[0], game.mouse_pos[1],
-			distance3f(sound_listener, game.mouse_pos));
+			game->mouse_pos[0], game->mouse_pos[1],
+			distance3f(sound_listener, game->mouse_pos));
 	}
 }
 
 void game_console_init(struct console* c)
 {
 	/* Set up game-specific console variables. */
-	console_env_bind_1f(c, "graphics_detail", &(game.graphics_detail));
+	console_env_bind_1f(c, "graphics_detail", &(game->graphics_detail));
 }
 
 void game_key_callback(struct input* input, GLFWwindow* window, int key,
@@ -437,12 +439,12 @@ void game_key_callback(struct input* input, GLFWwindow* window, int key,
 		switch (key) {
 		case GLFW_KEY_O:
 			core.graphics.delta_time_factor *= 2.0f;
-			sound_src_pitch(game.vivaldi_src->src, core.graphics.delta_time_factor);
+			sound_src_pitch(game->vivaldi_src->src, core.graphics.delta_time_factor);
 			printf("time_mod=%f\n", core.graphics.delta_time_factor);
 			break;
 		case GLFW_KEY_P:
 			core.graphics.delta_time_factor /= 2.0f;
-			sound_src_pitch(game.vivaldi_src->src, core.graphics.delta_time_factor);
+			sound_src_pitch(game->vivaldi_src->src, core.graphics.delta_time_factor);
 			printf("time_mod=%f\n", core.graphics.delta_time_factor);
 			break;
 		case GLFW_KEY_ESCAPE:
@@ -454,14 +456,14 @@ void game_key_callback(struct input* input, GLFWwindow* window, int key,
 
 void load_sounds()
 {
-	if (sound_buf_load_filter(&game.tone_hit,
+	if (sound_buf_load_filter(&game->tone_hit,
 		0.1 * SOUND_SAMPLE_RATE,
 		SOUND_SAMPLE_RATE,
 		&sound_filter_add_440hz) != SOUND_OK) {
 		sound_error("could not generate tone\n");
 	}
 
-	if (sound_buf_load_filter(&game.tone_bounce,
+	if (sound_buf_load_filter(&game->tone_bounce,
 		0.1 * SOUND_SAMPLE_RATE,
 		SOUND_SAMPLE_RATE,
 		&sound_filter_add_220hz) != SOUND_OK) {
@@ -472,15 +474,15 @@ void load_sounds()
 void load_shaders()
 {
 	/* Sprite shader: set up uniforms */
-	shader_uniform1f(&assets.shaders.basic_shader, "time", &game.time);
-	shader_uniform1f(&assets.shaders.basic_shader, "ball_last_hit_x", &game.ball.last_hit_x);
-	shader_uniform1f(&assets.shaders.basic_shader, "ball_last_hit_y", &game.ball.last_hit_y);
+	shader_uniform1f(&assets.shaders.basic_shader, "time", &game->time);
+	shader_uniform1f(&assets.shaders.basic_shader, "ball_last_hit_x", &game->ball.last_hit_x);
+	shader_uniform1f(&assets.shaders.basic_shader, "ball_last_hit_y", &game->ball.last_hit_y);
 
 	/* Effects shader: set up uniforms */
-	shader_uniform1f(&assets.shaders.ball_trail, "time", &game.time);
-	shader_uniform1f(&assets.shaders.ball_trail, "ball_last_hit_x", &game.ball.last_hit_x);
-	shader_uniform1f(&assets.shaders.ball_trail, "ball_last_hit_y", &game.ball.last_hit_y);
-	shader_uniform4f(&assets.shaders.ball_trail, "ball_pos", &game.ball.sprite.pos);
+	shader_uniform1f(&assets.shaders.ball_trail, "time", &game->time);
+	shader_uniform1f(&assets.shaders.ball_trail, "ball_last_hit_x", &game->ball.last_hit_x);
+	shader_uniform1f(&assets.shaders.ball_trail, "ball_last_hit_y", &game->ball.last_hit_y);
+	shader_uniform4f(&assets.shaders.ball_trail, "ball_pos", &game->ball.sprite.pos);
 	shader_uniform1f(&assets.shaders.ball_trail, "view_width", &core.view_width);
 	shader_uniform1f(&assets.shaders.ball_trail, "view_height", &core.view_height);
 }
@@ -488,39 +490,39 @@ void load_shaders()
 void load_atlases()
 {
 	/* Register asset callbacks */
-	vfs_register_callback("earl.json", core_reload_atlas, &game.atlas_earl);
+	vfs_register_callback("earl.json", core_reload_atlas, &game->atlas_earl);
 }
 
 void release_sounds()
 {
-	sound_buf_free(game.tone_bounce);
-	sound_buf_free(game.tone_hit);
+	sound_buf_free(game->tone_bounce);
+	sound_buf_free(game->tone_hit);
 }
 
 void release_atlases()
 {
-	atlas_free(&game.atlas_earl);
+	atlas_free(&game->atlas_earl);
 }
 
 static void load_fonts()
 {
-	monofont_new(&game.font, "manaspace.png", 16, 16, -7, 0);
+	monofont_new(&game->font, "manaspace.png", 16, 16, -7, 0);
 }
 
 static void release_fonts()
 {
-	monofont_free(&game.font);
+	monofont_free(&game->font);
 }
 
 void game_fps_callback(struct frames *f)
 {
-	monotext_updatef(&game.txt_debug, "FPS:% 5d, MS:% 3.1f/% 3.1f/% 3.1f",
+	monotext_updatef(&game->txt_debug, "FPS:% 5d, MS:% 3.1f/% 3.1f/% 3.1f",
 		f->frames, f->frame_time_min, f->frame_time_avg, f->frame_time_max);
 }
 
 void game_think(struct graphics* g, float delta_time)
 {
-	game.time = (float)glfwGetTime();
+	game->time = (float)glfwGetTime();
 	glpong_think(delta_time);
 	basic_particles_think(delta_time);
 	shader_uniforms_think(&assets.shaders.basic_shader, delta_time);
@@ -533,26 +535,26 @@ void game_render(struct graphics* g, float delta_time)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	/* Ball. */
-	sprite_render(&game.ball.sprite, &assets.shaders.basic_shader, g);
+	sprite_render(&game->ball.sprite, &assets.shaders.basic_shader, g);
 
 	/* Particles. */
-	for (int i = 0; i<game.particles_count; i++) {
-		if (!game.particles[i].dead) {
-			sprite_render(&game.particles[i].sprite, &assets.shaders.basic_shader, g);
+	for (int i = 0; i<game->particles_count; i++) {
+		if (!game->particles[i].dead) {
+			sprite_render(&game->particles[i].sprite, &assets.shaders.basic_shader, g);
 		}
 	}
 
 	/* Sprites. */
-	sprite_render(&game.player1.sprite, &assets.shaders.basic_shader, g);
-	sprite_render(&game.player2.sprite, &assets.shaders.basic_shader, g);
+	sprite_render(&game->player1.sprite, &assets.shaders.basic_shader, g);
+	sprite_render(&game->player2.sprite, &assets.shaders.basic_shader, g);
 
 	/* Effectslayer */
-	if (game.graphics_detail <= 0) {
-		sprite_render(&game.effectslayer, &assets.shaders.ball_trail, &core.graphics);
+	if (game->graphics_detail <= 0) {
+		sprite_render(&game->effectslayer, &assets.shaders.ball_trail, &core.graphics);
 	}
 
 	/* Text. */
-	monotext_render(&game.txt_debug, &assets.shaders.basic_shader, g);
+	monotext_render(&game->txt_debug, &assets.shaders.basic_shader, g);
 }
 
 void game_init()
@@ -561,13 +563,20 @@ void game_init()
 	glfwSetMouseButtonCallback(core.graphics.window, &glfw_mouse_button);
 
 	/* Entities. */
-	init_effectslayer(&game.effectslayer);
-	init_player1(&game.player1);
-	init_player2(&game.player2);
-	init_ball(&game.ball);
-	monotext_new(&game.txt_debug, "FPS: 0", COLOR_WHITE, &game.font, 16.0f,
+	init_effectslayer(&game->effectslayer);
+	init_player1(&game->player1);
+	init_player2(&game->player2);
+	init_ball(&game->ball);
+	monotext_new(&game->txt_debug, "FPS: 0", COLOR_WHITE, &game->font, 16.0f,
 		VIEW_HEIGHT - 16.0f);
-	game.vivaldi_src = sound_buf_play_music(&core.sound, assets.sounds.vivaldi, 1.0f);
+	game->vivaldi_src = sound_buf_play_music(&core.sound, assets.sounds.vivaldi, 1.0f);
+}
+
+void game_init_memory(void* memory)
+{
+	struct game tmp = { 0 };
+	memcpy(memory, &tmp, sizeof(tmp));
+	game = (struct game*)memory;
 }
 
 void game_assets_load()

@@ -1,10 +1,6 @@
 #ifndef _GAME_H
 #define _GAME_H
 
-// HACK! Platform and SHARED should be set from cmake 
-#define WINDOWS
-#define BUILD_SHARED	
-
 #include <stdio.h>
 
 struct graphics;
@@ -15,16 +11,16 @@ struct console;
 
 typedef float vec3[3];
 
-#ifdef WINDOWS
+#ifdef _WIN32
 #define EXPORT __declspec( dllexport ) 
 #else
 #define EXPORT
 #endif
 
-#ifdef BUILD_SHARED
+#ifdef ENABLE_SHARED
 #define SHARED_SYMBOL EXPORT
 #else
-#define SHARED_FUNCTION
+#define SHARED_SYMBOL 
 #endif
 
 #ifdef __cplusplus
@@ -33,6 +29,8 @@ extern "C"
 #endif
 
 SHARED_SYMBOL void game_init();
+
+SHARED_SYMBOL void game_init_memory(void* memory);
 
 SHARED_SYMBOL void game_assets_load();
 SHARED_SYMBOL void game_assets_release();

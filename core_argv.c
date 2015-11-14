@@ -65,6 +65,14 @@ int core_argv_parse(struct core_argv *dst, int argc, char **argv)
 			i++;
 		}
 
+		if (core_argv_is_arg(argv[i], "game") == 0) {
+			if (core_argv_get_value(i, dst->game, argc, argv) != 0) {
+				core_argv_error("Usage: --game <PATH>\n");
+				return -1;
+			}
+			i++;
+		}
+
 		/* --windowed */
 		if(core_argv_is_arg(argv[i], "windowed") == 0) {
 			dst->windowed = 1;

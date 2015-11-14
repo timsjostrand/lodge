@@ -59,7 +59,7 @@ static void core_assets_init()
 
 	/* Game specific init. */
 	if(core.init_callback != NULL) {
-		core.init_callback();
+		core.init_callback(core.game_memory);
 	}
 }
 
@@ -160,6 +160,26 @@ void core_set_up_console(core_console_init_t console_init_callback, struct shade
 	core.console_shader = console_shader;
 }
 
+void core_set_console_init_callback(core_console_init_t console_init_callback )
+{
+	core.console_init_callback = console_init_callback;
+}
+
+void core_set_think_callback(think_func_t think_callback)
+{
+	core.think_callback = think_callback;
+}
+
+void core_set_render_callback(render_func_t render_callback)
+{
+	core.render_callback = render_callback;
+}
+
+void core_set_init_memory_callback(core_init_memory_t init_memory_callback)
+{
+	core.init_memory_callback = init_memory_callback;
+}
+
 /**
  * @param load_callback		Responsible for registering all the VFS callbacks
  *							required for the game. After load_callback has been
@@ -169,22 +189,19 @@ void core_set_up_console(core_console_init_t console_init_callback, struct shade
  * @param release_callback	Runs just before the game quits, and should release
  *							all assets and free dynamically allocated memory.
  */
-void core_run(const char *title, int view_width, int view_height,
-		int window_width, int window_height, int windowed,
-		const char *mount_path, think_func_t think_callback,
-		render_func_t render_callback)
+void core_setup(const char *title, int view_width, int view_height,
+		int window_width, int window_height, int windowed, size_t game_memory_size)
 {
 	/* Store global references. */
 	core.view_width = view_width;
 	core.view_height = view_height;
-	core.render_callback = render_callback;
-	core.think_callback = think_callback;
+
+	/* Allocate game memory */
+	core.game_memory = malloc(game_memory_size);
+	core.init_memory_callback(core.game_memory);
 
 	/* Seed random number generator. */
 	srand(time(NULL));
-
-	/* Start the virtual file system */
-	vfs_init(mount_path);
 
 	/* Set up sound */
 	sound_init(&core.sound, (float *) core.sound_listener, core.sound_distance_max);
@@ -212,8 +229,10 @@ void core_run(const char *title, int view_width, int view_height,
 
 	/* Load all assets */
 	core_load();
-	vfs_run_callbacks();
+}
 
+void core_run()
+{
 	/* Setup. */
 	core_assets_init();
 
@@ -229,5 +248,6 @@ void core_run(const char *title, int view_width, int view_height,
 	/* If we reach here, quit the core. */
 	graphics_free(&core.graphics);
 
-	vfs_shutdown();
+	/* Release game memory */
+	free(core.game_memory);
 }

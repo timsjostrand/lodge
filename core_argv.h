@@ -8,6 +8,7 @@
 struct core_argv {
 	int		windowed;
 	char	mount[CORE_ARGV_VALUE_MAX];
+	char	game[CORE_ARGV_VALUE_MAX];
 };
 
 int core_argv_parse(struct core_argv *dst, int argc, char **argv);
