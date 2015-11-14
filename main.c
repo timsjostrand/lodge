@@ -25,6 +25,7 @@ render_func_t game_render_fn = 0;
 input_callback_t game_key_callback_fn = 0;
 fps_func_t game_fps_callback_fn = 0;
 core_console_init_t game_console_init_fn = 0;
+core_init_memory_t game_init_memory_fn = 0;
 
 void* load_shared_library(const char* filename)
 {
@@ -99,6 +100,7 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 		game_key_callback_fn = load_function(game_library, "game_key_callback");
 		game_fps_callback_fn = load_function(game_library, "game_fps_callback");
 		game_console_init_fn = load_function(game_library, "game_console_init");
+		game_init_memory_fn = load_function(game_library, "game_init_memory");
 
 		if (game_init_fn &&
 			game_assets_load_fn &&
@@ -107,7 +109,8 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 			game_render_fn &&
 			game_key_callback_fn &&
 			game_fps_callback_fn &&
-			game_console_init_fn)
+			game_console_init_fn &&
+			game_init_memory_fn)
 		{
 			core_set_asset_callbacks(game_assets_load_fn, game_init_fn, game_assets_release_fn);
 			core_set_key_callback(game_key_callback_fn);
@@ -115,6 +118,7 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 			core_set_console_init_callback(game_console_init_fn);
 			core_set_think_callback(game_think_fn);
 			core_set_render_callback(game_render_fn);
+			core_set_init_memory_callback(game_init_memory_fn);
 
 			if (!first_load)
 			{
@@ -138,6 +142,8 @@ int main(int argc, char **argv)
 	vec3 sound_audible_max = { VIEW_WIDTH, VIEW_HEIGHT, 0.0f };
 	float sound_distance_max = distance3f(sound_listener, sound_audible_max);
 	core_set_up_sound(&sound_listener, sound_distance_max);
+
+#define ENABLE_SHARED
 
 #ifdef ENABLE_SHARED
 	/* Load game library */
