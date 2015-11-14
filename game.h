@@ -11,8 +11,6 @@ struct console;
 
 typedef float vec3[3];
 
-#define LOAD_SHARED
-
 #ifdef _WIN32
 #define EXPORT __declspec( dllexport ) 
 #define IMPORT __declspec( dllimport ) 
