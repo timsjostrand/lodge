@@ -1,6 +1,7 @@
 #ifndef CORE_H_
 #define CORE_H_
 
+#include "game.h"
 #include "log.h"
 #include "math4.h"
 #include "vfs.h"
@@ -52,7 +53,7 @@ struct core {
 	void*					game_memory;
 };
 
-struct core core;
+SHARED_SYMBOL struct core core;
 
 /* Pre-init. */
 void core_set_init_memory_callback(core_init_memory_t init_memory_callback);

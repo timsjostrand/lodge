@@ -124,6 +124,7 @@ void write_assets_h()
 
 	fprintf(fp, "#ifndef ASSETS_H\n");
 	fprintf(fp, "#define ASSETS_H\n\n");
+	fprintf(fp, "#include \"game.h\"\n");
 	fprintf(fp, "#include \"shader.h\"\n");
 	fprintf(fp, "#include \"sound.h\"\n\n");
 
@@ -198,7 +199,7 @@ void write_assets_h()
 	fprintf(fp, "\t struct shaders shaders;\n");
 	fprintf(fp, "};\n\n");
 
-	fprintf(fp, "struct assets assets;\n\n");
+	fprintf(fp, "SHARED_SYMBOL struct assets assets;\n\n");
 
 	fprintf(fp, "struct assets* assets_get();\n");
 	fprintf(fp, "void assets_load();\n");
