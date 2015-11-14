@@ -101,7 +101,6 @@ struct game {
 	struct stats			total_stats;
 	struct basic_particle	particles[PARTICLES_MAX];
 	int						particles_count;
-	vec3					listener;
 	struct sound_emitter	*vivaldi_src;
 	sound_buf_t				tone_hit;
 	sound_buf_t				tone_bounce;
@@ -421,7 +420,7 @@ static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mo
 		sound_buf_play_pitched(&core.sound, game.tone_hit, game.mouse_pos, 0.2f);
 		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
 			game.mouse_pos[0], game.mouse_pos[1],
-			distance3f(game.listener, game.mouse_pos));
+			distance3f(sound_listener, game.mouse_pos));
 	}
 }
 
