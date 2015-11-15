@@ -124,7 +124,7 @@ set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES $
 target_link_libraries(generate_assets ${ENGINE_EXTRA_LIBS})
 
 # Where to store generated assets files.
-set(ASSETS_STAMP_FILE "${CMAKE_CURRENT_BINARY_DIR}/assets.stamp")
+set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
 set(ASSETS_C ${CMAKE_BINARY_DIR}/assets.c)
 set(ASSETS_H ${CMAKE_BINARY_DIR}/assets.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -189,8 +189,10 @@ add_subdirectory(${GAME_PATH})
 
 # Main executable.
 include_directories(${GAME_PATH})
-#add_executable(engine main.c ${GAME_PATH}/glpong.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-add_executable(engine main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+add_executable(engine main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+#add_executable(engine main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+
+add_dependencies(engine glpong)
 
 # Add DEBUG define when building debug executables.
 target_compile_definitions(engine PRIVATE LOAD_SHARED)
@@ -234,6 +236,12 @@ if(MSVC)
     # Disable "unsafe" functions that redirects to Microsoft-specific
     # implementations.
     set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS ")
+    # Enable error C4020: 'function': too many actual parameters
+    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/we4020 ")
+    # Enable error C4022: 'function' : pointer mismatch for actual parameter 'number'
+    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/we4022 ")
+    # Enable error C4024: 'function' : different types for formal and actual parameter 'number'
+    #set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/we4024 ")
 endif()
 
 # Compiling with Clang?
