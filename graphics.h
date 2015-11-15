@@ -34,6 +34,8 @@ struct basic_sprite {
 
 struct frames;
 
+struct core;
+
 typedef void (*fps_func_t)(struct frames *f);
 
 struct frames {

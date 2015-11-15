@@ -218,7 +218,7 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	return GRAPHICS_OK;
 }
 
-void graphics_free(struct graphics *g)
+void graphics_free(struct core *core, struct graphics *g)
 {
 	/* Free resources. */
 	glDeleteVertexArrays(1, &g->vao_rect);

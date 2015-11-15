@@ -62,9 +62,6 @@ SHARED_SYMBOL void game_fps_callback(struct frames* f);
 
 SHARED_SYMBOL void game_console_init(struct console* c);
 
-SHARED_SYMBOL const int VIEW_WIDTH;
-SHARED_SYMBOL const int VIEW_HEIGHT;
-
 vec3 sound_listener;
 
 #ifdef __cplusplus

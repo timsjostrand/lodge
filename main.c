@@ -15,6 +15,9 @@
 #include "core_argv.h"
 #include "core_reload.h"
 
+const int VIEW_WIDTH = 640;
+const int VIEW_HEIGHT = 480;
+
 struct core core = { 0 };
 
 void* game_library = 0;

@@ -5,11 +5,12 @@
 #include "log.h"
 #include "math4.h"
 #include "vfs.h"
-#include "graphics.h"
 #include "input.h"
 #include "sound.h"
 #include "monotext.h"
 #include "console.h"
+
+#include "graphics.h"
 
 struct core;
 
