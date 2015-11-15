@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+#include "vfs.h"
+
 struct graphics;
 struct input;
 struct GLFWwindow;
@@ -49,7 +51,7 @@ extern "C"
 
 SHARED_SYMBOL void game_init();
 
-SHARED_SYMBOL void game_init_memory(struct shared_memory* shared_memory, int reload);
+SHARED_SYMBOL void game_init_memory(struct shared_memory* shared_memory, struct vfs *engine_vfs, int reload);
 
 SHARED_SYMBOL void game_assets_load();
 SHARED_SYMBOL void game_assets_release();

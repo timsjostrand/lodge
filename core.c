@@ -15,6 +15,7 @@
 #include "monotext.h"
 #include "texture.h"
 #include "assets.h"
+#include "vfs.h"
 
 #include "core.h"
 #include "core_argv.h"
@@ -199,7 +200,7 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 	core->shared_memory.game_memory = malloc(game_memory_size);
 	core->shared_memory.core = core;
 	core->shared_memory.assets = &assets;
-	core->init_memory_callback(&core->shared_memory, 0);
+	core->init_memory_callback(&core->shared_memory, vfs_global, 0);
 
 	/* Seed random number generator. */
 	srand(time(NULL));
@@ -255,6 +256,6 @@ void core_run(struct core* core)
 
 void core_reload(struct core* core)
 {
-	core->init_memory_callback(&core->shared_memory, 1);
+	core->init_memory_callback(&core->shared_memory, vfs_global, 1);
 	core->load_callback();
 }

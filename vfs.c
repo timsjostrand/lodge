@@ -18,39 +18,16 @@ typedef unsigned long DWORD;
 #define STB_DEFINE
 #include <stb/stb.h>
 
-#define MAX_FILENAME_LEN 256
-#define MAX_NUM_FILES 256
-
 #define vfs_error(...) errorf("VFS", __VA_ARGS__)
-
-struct read_callback
-{
-	read_callback_t fn;
-	void* userdata;
-};
-
-struct vfs_file
-{
-	FILE* file;
-	char name[MAX_FILENAME_LEN];
-	char simplename[MAX_FILENAME_LEN];
-	time_t lastChange;
-	struct read_callback* read_callbacks;
-	size_t size;
-	void* data;
-};
-
-struct vfs_file file_table[MAX_NUM_FILES];
-static int file_count = 0;
 
 void vfs_init(const char *mount_path)
 {
 	for (int i = 0; i < MAX_NUM_FILES; i++)
 	{
-		file_table[i].name[0] = '\0';
-		file_table[i].size = 0;
-		file_table[i].data = 0;
-		file_table[i].read_callbacks = 0;
+		vfs_global->file_table[i].name[0] = '\0';
+		vfs_global->file_table[i].size = 0;
+		vfs_global->file_table[i].data = 0;
+		vfs_global->file_table[i].read_callbacks = 0;
 	}
 
 	if (mount_path != NULL) {
@@ -62,9 +39,9 @@ void vfs_shutdown()
 {
 	for (int i = 0; i < MAX_NUM_FILES; i++)
 	{
-		stb_fclose(file_table[i].file, 0);
-		if (file_table[i].data != NULL) {
-			free(file_table[i].data);
+		stb_fclose(vfs_global->file_table[i].file, 0);
+		if (vfs_global->file_table[i].data != NULL) {
+			free(vfs_global->file_table[i].data);
 		}
 	}
 }
@@ -77,38 +54,38 @@ void vfs_register_callback(const char* filename, read_callback_t fn, void* userd
 	cbck.fn = fn;
 	cbck.userdata = userdata;
 
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		if (strcmp(filename, file_table[i].simplename) == 0)
+		if (strcmp(filename, vfs_global->file_table[i].simplename) == 0)
 		{
-			stb_arr_push(file_table[i].read_callbacks, cbck);
+			stb_arr_push(vfs_global->file_table[i].read_callbacks, cbck);
 			added = 1;
 		}
 	}
 
 	if (!added)
 	{
-		file_table[file_count].data = 0;
-		file_table[file_count].file = 0;
-		file_table[file_count].lastChange = 0;
-		strcpy(file_table[file_count].name, filename);
-		strcpy(file_table[file_count].simplename, filename);
-		file_table[file_count].size = 0;
-		stb_arr_push(file_table[file_count].read_callbacks, cbck);
-		file_count++;
+		vfs_global->file_table[vfs_global->file_count].data = 0;
+		vfs_global->file_table[vfs_global->file_count].file = 0;
+		vfs_global->file_table[vfs_global->file_count].lastChange = 0;
+		strcpy(vfs_global->file_table[vfs_global->file_count].name, filename);
+		strcpy(vfs_global->file_table[vfs_global->file_count].simplename, filename);
+		vfs_global->file_table[vfs_global->file_count].size = 0;
+		stb_arr_push(vfs_global->file_table[vfs_global->file_count].read_callbacks, cbck);
+		vfs_global->file_count++;
 	}
 }
 
 void vfs_register_callback_filter(const char* filter, read_callback_t fn, void* userdata)
 {
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		if (strstr(file_table[i].name, filter) != 0)
+		if (strstr(vfs_global->file_table[i].name, filter) != 0)
 		{
 			struct read_callback cbck;
 			cbck.fn = fn;
 			cbck.userdata = userdata;
-			stb_arr_push(file_table[i].read_callbacks, cbck);
+			stb_arr_push(vfs_global->file_table[i].read_callbacks, cbck);
 		}
 	}
 }
@@ -116,39 +93,39 @@ void vfs_register_callback_filter(const char* filter, read_callback_t fn, void* 
 #ifdef VFS_ENABLE_FILEWATCH
 void vfs_filewatch()
 {
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		time_t lastChange = stb_ftimestamp(file_table[i].name);
-		if (file_table[i].lastChange != lastChange)
+		time_t lastChange = stb_ftimestamp(vfs_global->file_table[i].name);
+		if (vfs_global->file_table[i].lastChange != lastChange)
 		{
-			file_table[i].file = stb_fopen(file_table[i].name, "rb");
+			vfs_global->file_table[i].file = stb_fopen(vfs_global->file_table[i].name, "rb");
 
-			if (file_table[i].file == 0)
+			if (vfs_global->file_table[i].file == 0)
 			{
 				continue;
 			}
 
-			fseek(file_table[i].file, 0, SEEK_SET);
+			fseek(vfs_global->file_table[i].file, 0, SEEK_SET);
 
-			free(file_table[i].data);
-			file_table[i].lastChange = lastChange;
+			free(vfs_global->file_table[i].data);
+			vfs_global->file_table[i].lastChange = lastChange;
 
 			// Hacky solution to make sure the OS is finished with the fseek call
 			// How can this be solved better?
-			file_table[i].size = 0;
-			while (file_table[i].size == 0)
+			vfs_global->file_table[i].size = 0;
+			while (vfs_global->file_table[i].size == 0)
 			{
-				file_table[i].size = stb_filelen(file_table[i].file);
+				vfs_global->file_table[i].size = stb_filelen(vfs_global->file_table[i].file);
 			}
 
-			file_table[i].data = malloc(file_table[i].size);
-			fread(file_table[i].data, 1, file_table[i].size, file_table[i].file);
-			stb_fclose(file_table[i].file, 0);
+			vfs_global->file_table[i].data = malloc(vfs_global->file_table[i].size);
+			fread(vfs_global->file_table[i].data, 1, vfs_global->file_table[i].size, vfs_global->file_table[i].file);
+			stb_fclose(vfs_global->file_table[i].file, 0);
 
-			for (int j = 0, j_size = stb_arr_len(file_table[i].read_callbacks); j < j_size; j++)
+			for (int j = 0, j_size = stb_arr_len(vfs_global->file_table[i].read_callbacks); j < j_size; j++)
 			{
-				read_callback_t cbck = file_table[i].read_callbacks[j].fn;
-				cbck(file_table[i].simplename, file_table[i].size, file_table[i].data, file_table[i].read_callbacks[j].userdata);
+				read_callback_t cbck = vfs_global->file_table[i].read_callbacks[j].fn;
+				cbck(vfs_global->file_table[i].simplename, vfs_global->file_table[i].size, vfs_global->file_table[i].data, vfs_global->file_table[i].read_callbacks[j].userdata);
 			}
 		}
 	}
@@ -157,12 +134,12 @@ void vfs_filewatch()
 
 void vfs_run_callbacks()
 {
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		for (int j = 0, j_size = stb_arr_len(file_table[i].read_callbacks); j < j_size; j++)
+		for (int j = 0, j_size = stb_arr_len(vfs_global->file_table[i].read_callbacks); j < j_size; j++)
 		{
-			read_callback_t cbck = file_table[i].read_callbacks[j].fn;
-			cbck(file_table[i].simplename, file_table[i].size, file_table[i].data, file_table[i].read_callbacks[j].userdata);
+			read_callback_t cbck = vfs_global->file_table[i].read_callbacks[j].fn;
+			cbck(vfs_global->file_table[i].simplename, vfs_global->file_table[i].size, vfs_global->file_table[i].data, vfs_global->file_table[i].read_callbacks[j].userdata);
 		}
 	}
 }
@@ -191,20 +168,20 @@ void vfs_mount(const char* dir)
 		strcpy(new_file.simplename, filenames[i] + strlen(dir) + 1);
 
 		int replaced = 0;
-		for (int j = 0; j < file_count; j++)
+		for (int j = 0; j < vfs_global->file_count; j++)
 		{
-			if (strcmp(file_table[j].simplename, new_file.simplename) == 0)
+			if (strcmp(vfs_global->file_table[j].simplename, new_file.simplename) == 0)
 			{
-				stb_fclose(file_table[j].file, 0);
-				free(file_table[j].data);
+				stb_fclose(vfs_global->file_table[j].file, 0);
+				free(vfs_global->file_table[j].data);
 
-				strcpy(file_table[j].name, new_file.name);
-				file_table[j].file = stb_fopen(file_table[j].name, "rb");
-				file_table[j].lastChange = stb_ftimestamp(file_table[j].name);
-				file_table[j].size = stb_filelen(file_table[j].file);
-				file_table[j].data = malloc(file_table[j].size);
-				fread(file_table[j].data, 1, file_table[j].size, file_table[j].file);
-				stb_fclose(file_table[i].file, 0);
+				strcpy(vfs_global->file_table[j].name, new_file.name);
+				vfs_global->file_table[j].file = stb_fopen(vfs_global->file_table[j].name, "rb");
+				vfs_global->file_table[j].lastChange = stb_ftimestamp(vfs_global->file_table[j].name);
+				vfs_global->file_table[j].size = stb_filelen(vfs_global->file_table[j].file);
+				vfs_global->file_table[j].data = malloc(vfs_global->file_table[j].size);
+				fread(vfs_global->file_table[j].data, 1, vfs_global->file_table[j].size, vfs_global->file_table[j].file);
+				stb_fclose(vfs_global->file_table[i].file, 0);
 
 				replaced = 1;
 				break;
@@ -221,20 +198,20 @@ void vfs_mount(const char* dir)
 			fread(new_file.data, 1, new_file.size, new_file.file);
 			stb_fclose(new_file.file, 0);
 
-			file_table[file_count] = new_file;
-			file_count++;
+			vfs_global->file_table[vfs_global->file_count] = new_file;
+			vfs_global->file_count++;
 		}
 	}
 }
 
 void* vfs_get_file(const char* filename, size_t* out_num_bytes)
 {
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		if (strcmp(filename, file_table[i].simplename) == 0 && file_table[i].data != 0)
+		if (strcmp(filename, vfs_global->file_table[i].simplename) == 0 && vfs_global->file_table[i].data != 0)
 		{
-			*out_num_bytes = file_table[i].size;
-			return file_table[i].data;
+			*out_num_bytes = vfs_global->file_table[i].size;
+			return vfs_global->file_table[i].data;
 		}
 	}
 
@@ -243,33 +220,33 @@ void* vfs_get_file(const char* filename, size_t* out_num_bytes)
 
 void vfs_free_memory(const char* filename)
 {
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		if (strcmp(filename, file_table[i].simplename) == 0)
+		if (strcmp(filename, vfs_global->file_table[i].simplename) == 0)
 		{
-			free(file_table[i].data);
-			file_table[i].data = 0;
+			free(vfs_global->file_table[i].data);
+			vfs_global->file_table[i].data = 0;
 		}
 	}
 }
 
 int vfs_file_count()
 {
-	return file_count;
+	return vfs_global->file_count;
 }
 
 const char* vfs_get_simple_name(const int index)
 {
-	return file_table[index].simplename;
+	return vfs_global->file_table[index].simplename;
 }
 
 const char* vfs_get_absolute_path(const char* filename)
 {
-	for (int i = 0; i < file_count; i++)
+	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		if (strcmp(filename, file_table[i].simplename) == 0 && file_table[i].data != 0)
+		if (strcmp(filename, vfs_global->file_table[i].simplename) == 0 && vfs_global->file_table[i].data != 0)
 		{
-			return file_table[i].name;
+			return vfs_global->file_table[i].name;
 		}
 	}
 

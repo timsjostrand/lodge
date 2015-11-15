@@ -237,14 +237,13 @@ printf("shader_uniform 3\n");
 	s->uniforms[index] = u;
 
 printf("shader_uniform 4\n");
-	glUseProgram(s->program);
 
 printf("shader_uniform 5\n");
 	u->name = name;
 	u->datatype = type;
 	u->data = data;
 printf("shader_uniform 6\n");
-	u->id = glGetUniformLocation(s->program, u->name);
+	u->id = -1;
 
 printf("shader_uniform 7\n");
 	return SHADER_OK;

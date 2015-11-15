@@ -5,6 +5,9 @@
 #include "vfs.h"
 #include "alist.h"
 
+struct vfs vfs_mem = { { 0 } };
+struct vfs *vfs_global = &vfs_mem;
+
 struct alist* assets_list;
 struct alist* assets_list_textures;
 struct alist* assets_list_sounds;

@@ -115,6 +115,7 @@ struct game {
 struct game* game = 0;
 struct core* core_pointer = 0;
 struct assets* assets_pointer = 0;
+struct vfs* vfs = NULL;
 
 void print_stats()
 {
@@ -588,7 +589,7 @@ void game_init()
 	game->vivaldi_src = sound_buf_play_music(&core_pointer->sound, assets_pointer->sounds.vivaldi, 1.0f);
 }
 
-void game_init_memory(struct shared_memory* shared_memory, int reload)
+void game_init_memory(struct shared_memory* shared_memory, struct vfs *engine_vfs, int reload)
 {
 	if (!reload)
 	{
@@ -599,6 +600,7 @@ void game_init_memory(struct shared_memory* shared_memory, int reload)
 	game = (struct game*)shared_memory->game_memory;
 	core_pointer = (struct core*)shared_memory->core;
 	assets_pointer = (struct assets*)shared_memory->assets;
+	vfs_global = engine_vfs;
 }
 
 void game_assets_load()

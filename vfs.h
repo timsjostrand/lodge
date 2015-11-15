@@ -2,8 +2,37 @@
 #define _VFS_H
 
 #include <stdlib.h>
+#include <stdio.h>
+
+#define MAX_FILENAME_LEN 256
+#define MAX_NUM_FILES 256
 
 typedef void(*read_callback_t)(const char* filename, unsigned int size, void* data, void* userdata);
+
+struct read_callback
+{
+	read_callback_t fn;
+	void* userdata;
+};
+
+struct vfs_file
+{
+	FILE* file;
+	char name[MAX_FILENAME_LEN];
+	char simplename[MAX_FILENAME_LEN];
+	time_t lastChange;
+	struct read_callback* read_callbacks;
+	size_t size;
+	void* data;
+};
+
+struct vfs
+{
+	struct vfs_file	file_table[MAX_NUM_FILES];
+	int				file_count;
+};
+
+struct vfs* vfs_global;
 
 void	vfs_init(const char *mount_path);
 void	vfs_shutdown();

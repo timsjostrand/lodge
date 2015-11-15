@@ -20,6 +20,10 @@ static const int VIEW_HEIGHT = 480;
 
 struct core core = { 0 };
 
+/* VFS singleton. */
+struct vfs vfs_mem = { 0 };
+struct vfs *vfs_global = &vfs_mem;
+
 void* game_library = 0;
 
 core_init_t game_init_fn = 0;

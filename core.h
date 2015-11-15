@@ -16,7 +16,7 @@ struct core;
 
 typedef void (*core_load_t)(void);
 typedef void (*core_init_t)(void);
-typedef void (*core_init_memory_t)(struct shared_memory*, int);
+typedef void (*core_init_memory_t)(struct shared_memory* shared, struct vfs *engine_vfs, int reload);
 typedef void(*core_release_t)(void);
 typedef void (*core_console_init_t)(struct console *);
 
