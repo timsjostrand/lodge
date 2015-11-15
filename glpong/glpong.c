@@ -33,8 +33,8 @@
 
 #include "assets.h"
 
-const int VIEW_WIDTH = 640;
-const int VIEW_HEIGHT = 360;	/* 16:9 aspect ratio */
+static const int VIEW_WIDTH = 640;
+static const int VIEW_HEIGHT = 360;	/* 16:9 aspect ratio */
 
 #define BOARD_TOP		VIEW_HEIGHT
 #define BOARD_BOTTOM	0
@@ -475,18 +475,32 @@ void load_sounds()
 
 void load_shaders()
 {
+	printf("1 got to load_shaders()\n");
+	printf("2 global assets: %p\n", assets_pointer);
+	printf("3 global core: %p\n", core_pointer);
+	printf("4 core.view_width: %f\n", core_pointer->view_width);
+	printf("5 assets.basic_shader: %f\n", assets_pointer->shaders.basic_shader);
+
 	/* Sprite shader: set up uniforms */
 	shader_uniform1f(&assets_pointer->shaders.basic_shader, "time", &game->time);
+	printf("6\n");
 	shader_uniform1f(&assets_pointer->shaders.basic_shader, "ball_last_hit_x", &game->ball.last_hit_x);
+	printf("7\n");
 	shader_uniform1f(&assets_pointer->shaders.basic_shader, "ball_last_hit_y", &game->ball.last_hit_y);
 
 	/* Effects shader: set up uniforms */
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "time", &game->time);
+	printf("8\n");
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "ball_last_hit_x", &game->ball.last_hit_x);
+	printf("9\n");
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "ball_last_hit_y", &game->ball.last_hit_y);
+	printf("10\n");
 	shader_uniform4f(&assets_pointer->shaders.ball_trail, "ball_pos", &game->ball.sprite.pos);
+	printf("11\n");
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "view_width", &core_pointer->view_width);
+	printf("12\n");
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "view_height", &core_pointer->view_height);
+	printf("last\n");
 }
 
 void load_atlases()
