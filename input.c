@@ -18,9 +18,10 @@ struct input *input_global = NULL;
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods);
 void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods);
 
-int input_init(struct input *input, GLFWwindow *window,
+int input_init(struct core* core, struct input *input, GLFWwindow *window,
 		input_callback_t key_callback, input_char_callback_t char_callback)
 {
+	input->core = core;
 	input->enabled = 1;
 	input->callback = key_callback;
 	input->char_callback = char_callback;
@@ -64,7 +65,7 @@ void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, 
 	}
 
 	if(input_global->callback) {
-		input_global->callback(input_global, window, key, scancode, action, mods);
+		input_global->callback(input_global->core, input_global, window, key, scancode, action, mods);
 	}
 }
 
@@ -75,7 +76,7 @@ void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods)
 		return;
 	}
 	if(input_global->char_callback) {
-		input_global->char_callback(input_global, window, key, mods);
+		input_global->char_callback(input_global->core, input_global, window, key, mods);
 	}
 }
 

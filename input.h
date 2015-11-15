@@ -5,13 +5,14 @@
 
 struct input;
 
-typedef void (*input_callback_t)(struct input *input, GLFWwindow *window,
+typedef void(*input_callback_t)(struct core* core, struct input *input, GLFWwindow *window,
 		int key, int scancode, int action, int mods);
 
-typedef void (*input_char_callback_t)(struct input *input, GLFWwindow *window,
+typedef void(*input_char_callback_t)(struct core* core, struct input *input, GLFWwindow *window,
 		unsigned int key, int mods);
 
 struct input {
+	struct core*				core;
 	int							enabled;
 	input_callback_t			callback;
 	input_char_callback_t		char_callback;
@@ -19,7 +20,7 @@ struct input {
 	int							last_keys[GLFW_KEY_LAST];	/* Key status of last frame. */
 };
 
-int		input_init(struct input *input, GLFWwindow *window,
+int		input_init(struct core* core, struct input *input, GLFWwindow *window,
 				input_callback_t key_callback, input_char_callback_t char_callback);
 void	input_think(struct input *input, float delta_time);
 
