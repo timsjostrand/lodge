@@ -3,7 +3,7 @@
 #include "log.h"
 
 #ifdef _WIN32
-#include "windows.h"
+#include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
@@ -14,6 +14,8 @@
 #include "core.h"
 #include "core_argv.h"
 #include "core_reload.h"
+
+struct core core = { 0 };
 
 void* game_library = 0;
 
@@ -119,17 +121,17 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 			game_console_init_fn &&
 			game_init_memory_fn)
 		{
-			core_set_asset_callbacks(game_assets_load_fn, game_init_fn, game_assets_release_fn);
-			core_set_key_callback(game_key_callback_fn);
-			core_set_fps_callback(game_fps_callback_fn);
-			core_set_console_init_callback(game_console_init_fn);
-			core_set_think_callback(game_think_fn);
-			core_set_render_callback(game_render_fn);
-			core_set_init_memory_callback(game_init_memory_fn);
+			core_set_asset_callbacks(&core, game_assets_load_fn, game_init_fn, game_assets_release_fn);
+			core_set_key_callback(&core, game_key_callback_fn);
+			core_set_fps_callback(&core, game_fps_callback_fn);
+			core_set_console_init_callback(&core, game_console_init_fn);
+			core_set_think_callback(&core, game_think_fn);
+			core_set_render_callback(&core, game_render_fn);
+			core_set_init_memory_callback(&core, game_init_memory_fn);
 
 			if (!first_load)
 			{
-				core_reload();
+				core_reload(&core);
 			}
 		}
 	}
@@ -148,7 +150,7 @@ int main(int argc, char **argv)
 	set3f(sound_listener, VIEW_WIDTH / 2.0f, VIEW_HEIGHT / 2.0f, 0);
 	vec3 sound_audible_max = { VIEW_WIDTH, VIEW_HEIGHT, 0.0f };
 	float sound_distance_max = distance3f(sound_listener, sound_audible_max);
-	core_set_up_sound(&sound_listener, sound_distance_max);
+	core_set_up_sound(&core, &sound_listener, sound_distance_max);
 
 #ifdef LOAD_SHARED
 	/* Load game library */
@@ -162,25 +164,25 @@ int main(int argc, char **argv)
 		return 0;
 	}
 #else
-	core_set_think_callback(&game_think);
-	core_set_render_callback(&game_render);
-	core_set_asset_callbacks(&game_assets_load, &game_init, &game_assets_release);
-	core_set_key_callback(&game_key_callback);
-	core_set_fps_callback(&game_fps_callback);
-	core_set_init_memory_callback(&game_init_memory);
-	core_set_up_console(&game_console_init, &assets.shaders.basic_shader);
+	core_set_think_callback(&core, &game_think);
+	core_set_render_callback(&core, &game_render);
+	core_set_asset_callbacks(&core, &game_assets_load, &game_init, &game_assets_release);
+	core_set_key_callback(&core, &game_key_callback);
+	core_set_fps_callback(&core, &game_fps_callback);
+	core_set_init_memory_callback(&core, &game_init_memory);
+	core_set_up_console(&core, &game_console_init, &assets.shaders.basic_shader);
 #endif
 
 	/* Initialize subsystems and run main loop. */
-	core_setup("glpong", VIEW_WIDTH, VIEW_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT, args.windowed, 1000000000);
+	core_setup(&core, "glpong", VIEW_WIDTH, VIEW_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT, args.windowed, 1000000000);
 	vfs_run_callbacks();
 
-#ifdef ENABLE_SHARED
+#ifdef LOAD_SHARED
 	/* Register game reload callback */
 	vfs_register_callback(args.game, &load_game, 0);
 #endif
 
-	core_run();
+	core_run(&core);
 
 	vfs_shutdown();
 	return 0;
