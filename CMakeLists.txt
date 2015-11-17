@@ -44,7 +44,6 @@ if(NOT EMSCRIPTEN)
     set(glew-cmake_BUILD_SHARED OFF CACHE BOOL "Build the shared glew library")
     add_subdirectory(lib/glew)
     list(APPEND ENGINE_INCLUDES lib/glew/include)
-    add_definitions(-DGLEW_STATIC)
     list(APPEND ENGINE_EXTRA_LIBS libglew_static ${GL_LIBRARY}
         ${PLATFORM_SPECIFIC_LIBRARIES})
 
@@ -165,6 +164,11 @@ function(add_game_library game_name)
     # Compile with C99.
     set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
 
+    # Defines for GLEW.
+    target_compile_definitions(${game_name}_obj PRIVATE GLEW_STATIC)
+    target_compile_definitions(${game_name} PRIVATE GLEW_STATIC)
+    target_compile_definitions(${game_name}_static PRIVATE GLEW_STATIC)
+
     # Compile with correct flags.
     set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
 
@@ -227,38 +231,15 @@ if(CMAKE_COMPILER_IS_GNUCC)
     set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
 endif()
 
-# MSVC compiler settings.
-if(MSVC)
-    # More warnings.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/W3 ")
-    # Disable "unsafe" functions that redirects to Microsoft-specific
-    # implementations.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/D_CRT_SECURE_NO_WARNINGS ")
-    # Enable error C4020: 'function': too many actual parameters
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/we4020 ")
-    # Enable error C4022: 'function' : pointer mismatch for actual parameter 'number'
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/we4022 ")
-    # Enable error C4024: 'function' : different types for formal and actual parameter 'number'
-    #set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "/we4024 ")
-endif()
-
-# Compiling with Clang?
-if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
-    set(CLANG 1)
-endif()
-
-# Clang compiler settings.
-if(CLANG)
-    # DEBUG: Bounds checking.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG "-fsanitize=address ")
-    set_property(TARGET engine APPEND_STRING PROPERTY LINK_FLAGS_DEBUG "-fsanitize=address ")
-endif()
+# Set compiler flags.
+set_property(TARGET engine generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
 
 # Link.
 if(NOT EMSCRIPTEN)
     # Build the engine using the C99 standard.
     set_property(TARGET engine PROPERTY C_STANDARD 99)
-    target_link_libraries(engine ${ENGINE_EXTRA_LIBS})
+    #    target_link_libraries(engine ${ENGINE_EXTRA_LIBS})
+    target_link_libraries(engine glpong)
 else()
     target_link_libraries(engine)
 endif()

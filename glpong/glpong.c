@@ -113,7 +113,6 @@ struct game {
 };
 
 struct game* game = 0;
-struct core* core_pointer = 0;
 struct assets* assets_pointer = 0;
 struct vfs* vfs = NULL;
 
@@ -141,7 +140,7 @@ void basic_particle_init(struct basic_particle *p, float x, float y, float w, fl
 	p->va = va;
 	p->sprite.type = SPRITE_TYPE_PARTICLE;
 	p->sprite.rotation = angle;
-	p->sprite.texture = &core_pointer->textures.none;
+	p->sprite.texture = &core_global->textures.none;
 
 	set4f(p->sprite.pos, x, y, 0.0f, 1.0f);
 	set4f(p->sprite.color, rgb(COLOR_WHITE), PARTICLE_ALPHA);
@@ -211,7 +210,7 @@ void ball_player_bounce(struct ball *ball, struct player *p)
 
 	p->charge = 0.0f;
 
-	sound_buf_play_pitched(&core_pointer->sound, game->tone_hit, ball->sprite.pos, 0.05f);
+	sound_buf_play_pitched(&core_global->sound, game->tone_hit, ball->sprite.pos, 0.05f);
 }
 
 void ball_think(float dt)
@@ -253,13 +252,13 @@ void ball_think(float dt)
 		game->ball.sprite.pos[1] = BOARD_TOP - BALL_HEIGHT / 2;
 		game->ball.vy *= -1.0f;
 		game->ball.last_hit_y = 0.0f;
-		sound_buf_play_pitched(&core_pointer->sound, game->tone_bounce, game->ball.sprite.pos, 0.05f);
+		sound_buf_play_pitched(&core_global->sound, game->tone_bounce, game->ball.sprite.pos, 0.05f);
 	}
 	else if (game->ball.sprite.pos[1] < BOARD_BOTTOM + BALL_HEIGHT / 2) {
 		game->ball.sprite.pos[1] = BOARD_BOTTOM + BALL_HEIGHT / 2;
 		game->ball.vy *= -1.0f;
 		game->ball.last_hit_y = 0.0f;
-		sound_buf_play_pitched(&core_pointer->sound, game->tone_bounce, game->ball.sprite.pos, 0.05f);
+		sound_buf_play_pitched(&core_global->sound, game->tone_bounce, game->ball.sprite.pos, 0.05f);
 	}
 
 	// Ball: move
@@ -363,7 +362,7 @@ void basic_particles_think(float dt)
 void init_effectslayer(struct basic_sprite* b)
 {
 	b->type = SPRITE_TYPE_UNKNOWN;
-	b->texture = &core_pointer->textures.none;
+	b->texture = &core_global->textures.none;
 	set4f(b->pos, VIEW_WIDTH / 2, VIEW_HEIGHT / 2, 0.5f, 1.0f);
 	set4f(b->scale, VIEW_WIDTH, VIEW_HEIGHT, 1.0f, 1.0f);
 	copyv(b->color, COLOR_BLACK);
@@ -406,7 +405,7 @@ void init_ball(struct ball *ball)
 
 void load_console_conf()
 {
-	vfs_register_callback("glpong.rc", &core_reload_console_conf, &core_pointer->console);
+	vfs_register_callback("glpong.rc", &core_reload_console_conf, &core_global->console);
 }
 
 static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
@@ -422,7 +421,7 @@ static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mo
 		game->mouse_pos[0] = x * (VIEW_WIDTH / (float)win_w);
 		game->mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float)win_h);
 
-		sound_buf_play_pitched(&core_pointer->sound, game->tone_hit, game->mouse_pos, 0.2f);
+		sound_buf_play_pitched(&core_global->sound, game->tone_hit, game->mouse_pos, 0.2f);
 		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
 			game->mouse_pos[0], game->mouse_pos[1],
 			distance3f(sound_listener, game->mouse_pos));
@@ -441,14 +440,14 @@ void game_key_callback(struct core* core, struct input* input, GLFWwindow* windo
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_O:
-			core_pointer->graphics.delta_time_factor *= 2.0f;
-			sound_src_pitch(game->vivaldi_src->src, core_pointer->graphics.delta_time_factor);
-			printf("time_mod=%f\n", core_pointer->graphics.delta_time_factor);
+			core_global->graphics.delta_time_factor *= 2.0f;
+			sound_src_pitch(game->vivaldi_src->src, core_global->graphics.delta_time_factor);
+			printf("time_mod=%f\n", core_global->graphics.delta_time_factor);
 			break;
 		case GLFW_KEY_P:
-			core_pointer->graphics.delta_time_factor /= 2.0f;
-			sound_src_pitch(game->vivaldi_src->src, core_pointer->graphics.delta_time_factor);
-			printf("time_mod=%f\n", core_pointer->graphics.delta_time_factor);
+			core_global->graphics.delta_time_factor /= 2.0f;
+			sound_src_pitch(game->vivaldi_src->src, core_global->graphics.delta_time_factor);
+			printf("time_mod=%f\n", core_global->graphics.delta_time_factor);
 			break;
 		case GLFW_KEY_ESCAPE:
 			glfwSetWindowShouldClose(window, 1);
@@ -476,32 +475,18 @@ void load_sounds()
 
 void load_shaders()
 {
-	printf("1 got to load_shaders()\n");
-	printf("2 global assets: %p\n", assets_pointer);
-	printf("3 global core: %p\n", core_pointer);
-	printf("4 core.view_width: %f\n", core_pointer->view_width);
-	printf("5 assets.basic_shader: %f\n", assets_pointer->shaders.basic_shader);
-
 	/* Sprite shader: set up uniforms */
 	shader_uniform1f(&assets_pointer->shaders.basic_shader, "time", &game->time);
-	printf("6\n");
 	shader_uniform1f(&assets_pointer->shaders.basic_shader, "ball_last_hit_x", &game->ball.last_hit_x);
-	printf("7\n");
 	shader_uniform1f(&assets_pointer->shaders.basic_shader, "ball_last_hit_y", &game->ball.last_hit_y);
 
 	/* Effects shader: set up uniforms */
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "time", &game->time);
-	printf("8\n");
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "ball_last_hit_x", &game->ball.last_hit_x);
-	printf("9\n");
 	shader_uniform1f(&assets_pointer->shaders.ball_trail, "ball_last_hit_y", &game->ball.last_hit_y);
-	printf("10\n");
 	shader_uniform4f(&assets_pointer->shaders.ball_trail, "ball_pos", &game->ball.sprite.pos);
-	printf("11\n");
-	shader_uniform1f(&assets_pointer->shaders.ball_trail, "view_width", &core_pointer->view_width);
-	printf("12\n");
-	shader_uniform1f(&assets_pointer->shaders.ball_trail, "view_height", &core_pointer->view_height);
-	printf("last\n");
+	shader_uniform1f(&assets_pointer->shaders.ball_trail, "view_width", &core_global->view_width);
+	shader_uniform1f(&assets_pointer->shaders.ball_trail, "view_height", &core_global->view_height);
 }
 
 void load_atlases()
@@ -567,7 +552,7 @@ void game_render(struct core* core, struct graphics* g, float delta_time)
 
 	/* Effectslayer */
 	if (game->graphics_detail <= 0) {
-		sprite_render(&game->effectslayer, &assets_pointer->shaders.ball_trail, &core_pointer->graphics);
+		sprite_render(&game->effectslayer, &assets_pointer->shaders.ball_trail, &core_global->graphics);
 	}
 
 	/* Text. */
@@ -577,7 +562,7 @@ void game_render(struct core* core, struct graphics* g, float delta_time)
 void game_init()
 {
 	/* FIXME: hack... */
-	glfwSetMouseButtonCallback(core_pointer->graphics.window, &glfw_mouse_button);
+	glfwSetMouseButtonCallback(core_global->graphics.window, &glfw_mouse_button);
 
 	/* Entities. */
 	init_effectslayer(&game->effectslayer);
@@ -586,7 +571,8 @@ void game_init()
 	init_ball(&game->ball);
 	monotext_new(&game->txt_debug, "FPS: 0", COLOR_WHITE, &game->font, 16.0f,
 		VIEW_HEIGHT - 16.0f);
-	game->vivaldi_src = sound_buf_play_music(&core_pointer->sound, assets_pointer->sounds.vivaldi, 1.0f);
+	game->vivaldi_src = sound_buf_play_music(&core_global->sound, assets_pointer->sounds.vivaldi, 1.0f);
+}
 }
 
 void game_init_memory(struct shared_memory* shared_memory, struct vfs *engine_vfs, int reload)
@@ -598,7 +584,7 @@ void game_init_memory(struct shared_memory* shared_memory, struct vfs *engine_vf
 	}
 
 	game = (struct game*)shared_memory->game_memory;
-	core_pointer = (struct core*)shared_memory->core;
+	core_global = (struct core*)shared_memory->core;
 	assets_pointer = (struct assets*)shared_memory->assets;
 	vfs_global = engine_vfs;
 }

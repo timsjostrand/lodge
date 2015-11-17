@@ -56,7 +56,7 @@ struct core {
 	struct shared_memory	shared_memory;
 };
 
-struct core* get_core();
+struct core *core_global;
 
 /* Pre-init. */
 void core_set_init_memory_callback(struct core* core, core_init_memory_t init_memory_callback);
