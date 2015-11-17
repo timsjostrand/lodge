@@ -7,6 +7,9 @@ include(cmake_user.txt)
 message(STATUS "GAME_PATH=${GAME_PATH}")
 message(STATUS "ASSET_PATH=${ASSET_PATH}")
 
+# Import compiler flags defined in another file.
+include(build/cmake/engine-compiler-flags.cmake)
+
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
 
@@ -162,6 +165,9 @@ function(add_game_library game_name)
     # Compile with C99.
     set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
 
+    # Compile with correct flags.
+    set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+
     # Output shared library into asset path.
     set_target_properties(${game_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${ASSET_PATH}"
@@ -206,14 +212,6 @@ endif()
 
 # GCC compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
-    # More warnings.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "-Wall -Wpedantic -fdiagnostics-show-option ")
-    # Do not allow declaring functions without implementing them.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror-implicit-function-declaration ")
-    # Force casting of pointer types.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=strict-aliasing ")
-    # Force correct return type.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS "-Werror=return-type ")
     # DEBUG: Lightweight buffer overflow detection.
     target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:-O2>)
     target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
