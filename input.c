@@ -13,8 +13,6 @@
 #include "graphics.h"
 #include "input.h"
 
-struct input *input_global = NULL;
-
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods);
 void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods);
 

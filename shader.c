@@ -219,13 +219,11 @@ int shader_uniform_idx_next(struct shader *s)
 int shader_uniform(struct shader *s, const char *name, void *data, int type)
 {
 	int index = shader_uniform_idx_next(s);
-printf("shader_uniform 1\n");
 	if(index < 0) {
 		shader_error("UNIFORMS_MAX reached\n");
 		return SHADER_UNIFORMS_MAX_ERROR;
 	}
 
-printf("shader_uniform 2\n");
 	struct uniform *u = (struct uniform *) malloc(sizeof(struct uniform));
 
 	if(u == NULL) {
@@ -233,19 +231,15 @@ printf("shader_uniform 2\n");
 		return SHADER_OOM_ERROR;
 	}
 
-printf("shader_uniform 3\n");
 	s->uniforms[index] = u;
 
-printf("shader_uniform 4\n");
+	glUseProgram(s->program);
 
-printf("shader_uniform 5\n");
 	u->name = name;
 	u->datatype = type;
 	u->data = data;
-printf("shader_uniform 6\n");
-	u->id = -1;
+	u->id = glGetUniformLocation(s->program, u->name);
 
-printf("shader_uniform 7\n");
 	return SHADER_OK;
 }
 

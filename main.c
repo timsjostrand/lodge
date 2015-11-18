@@ -16,7 +16,7 @@
 #include "core_reload.h"
 
 static const int VIEW_WIDTH = 640;
-static const int VIEW_HEIGHT = 480;
+static const int VIEW_HEIGHT = 360;
 
 /* Core singleton. */
 struct core core_mem = { 0 };
@@ -25,6 +25,13 @@ struct core *core_global = &core_mem;
 /* VFS singleton. */
 struct vfs vfs_mem = { 0 };
 struct vfs *vfs_global = &vfs_mem;
+
+/* Input singleton. */
+struct input *input_global = NULL;
+
+/* Assets singleton. */
+struct assets assets_mem = { 0 };
+struct assets *assets = &assets_mem;
 
 void* game_library = 0;
 
@@ -179,7 +186,7 @@ int main(int argc, char **argv)
 	core_set_key_callback(core_global, &game_key_callback);
 	core_set_fps_callback(core_global, &game_fps_callback);
 	core_set_init_memory_callback(core_global, &game_init_memory);
-	core_set_up_console(core_global, &game_console_init, &assets.shaders.basic_shader);
+	core_set_up_console(core_global, &game_console_init, &assets->shaders.basic_shader);
 #endif
 
 	/* Initialize subsystems and run main loop. */

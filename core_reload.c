@@ -109,9 +109,9 @@ void core_reload_atlas(const char *filename, unsigned int size, void *data, void
 	if(ret != ATLAS_OK) {
 		atlas_error("Error %d when loading atlas %s (%u bytes)\n", ret, filename, size);
 	} else {
-		/* Delete the old shader. */
+		/* Delete the old atlas. */
 		atlas_free(dst);
-		/* Assign the new shader only if compilation succeeded. */
+		/* Assign the new atlas only if parsing succeeded. */
 		(*dst) = tmp;
 		/* DEBUG: Dump debug information about atlas to stdout. */
 		atlas_print(dst);

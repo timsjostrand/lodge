@@ -16,7 +16,7 @@ struct core;
 
 typedef void (*core_load_t)(void);
 typedef void (*core_init_t)(void);
-typedef void (*core_init_memory_t)(struct shared_memory* shared, struct vfs *engine_vfs, int reload);
+typedef void (*core_init_memory_t)(struct shared_memory* shared, int reload);
 typedef void(*core_release_t)(void);
 typedef void (*core_console_init_t)(struct console *);
 
@@ -69,8 +69,6 @@ void core_set_asset_callbacks(struct core* core, core_load_t load_callback,
 void core_set_fps_callback(struct core* core, fps_func_t fps_callback);
 void core_set_console_init_callback(struct core* core, core_console_init_t console_init_callback);
 void core_set_up_sound(struct core* core, vec3 *sound_listener, float distance_max);
-void core_set_up_console(struct core* core, core_console_init_t console_init_callback,
-		struct shader *console_shader);
 
 void core_setup(struct core* core, const char *title, int view_width, int view_height,
 	int window_width, int window_height, int windowed, size_t game_memory_size);

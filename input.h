@@ -34,4 +34,6 @@ int		key_down(int key);
 int		key_pressed(int key);
 int		key_released(int key);
 
+struct input *input_global;
+
 #endif

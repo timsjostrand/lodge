@@ -154,12 +154,6 @@ void core_set_up_sound(struct core* core, vec3 *listener, float distance_max)
 	core->sound_distance_max = distance_max;
 }
 
-void core_set_up_console(struct core* core, core_console_init_t console_init_callback, struct shader *console_shader)
-{
-	core->console_init_callback = console_init_callback;
-	core->console_shader = console_shader;
-}
-
 void core_set_console_init_callback(struct core* core, core_console_init_t console_init_callback)
 {
 	core->console_init_callback = console_init_callback;
@@ -195,12 +189,16 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 	/* Store global references. */
 	core->view_width = view_width;
 	core->view_height = view_height;
+	/* FIXME: nice way to set this pointer from game library OR engine specific console shader. */
+	core->console_shader = &assets->shaders.basic_shader;
 
 	/* Allocate game memory */
 	core->shared_memory.game_memory = malloc(game_memory_size);
 	core->shared_memory.core = core;
-	core->shared_memory.assets = &assets;
-	core->init_memory_callback(&core->shared_memory, vfs_global, 0);
+	core->shared_memory.assets = assets;
+	core->shared_memory.vfs = vfs_global;
+	core->shared_memory.input = &core->input;
+	core->init_memory_callback(&core->shared_memory, 0);
 
 	/* Seed random number generator. */
 	srand(time(NULL));
@@ -256,6 +254,6 @@ void core_run(struct core* core)
 
 void core_reload(struct core* core)
 {
-	core->init_memory_callback(&core->shared_memory, vfs_global, 1);
+	core->init_memory_callback(&core->shared_memory, 1);
 	core->load_callback();
 }

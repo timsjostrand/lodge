@@ -57,21 +57,13 @@ void write_assets_c()
 	fprintf(fp, "#include \"core_reload.h\"\n");
 	fprintf(fp, "\n");
 
-	fprintf(fp, "struct assets assets = { { 0 } };\n");
-	fprintf(fp, "\n");
-
-	fprintf(fp, "struct assets* assets_get()\n");
-	fprintf(fp, "{\n");
-	fprintf(fp, "\treturn &assets;\n");
-	fprintf(fp, "}\n\n");
-
 	fprintf(fp, "void assets_load()\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\t// Textures\n");
 	foreach_alist(char*, asset, i, assets_list_textures)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_texture, &assets.textures.", asset);
+		fprintf(fp, "%s\", &core_reload_texture, &assets->textures.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -79,7 +71,7 @@ void write_assets_c()
 	foreach_alist(char*, asset, i, assets_list_sounds)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_sound, &assets.sounds.", asset);
+		fprintf(fp, "%s\", &core_reload_sound, &assets->sounds.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -87,7 +79,7 @@ void write_assets_c()
 	foreach_alist(char*, asset, i, assets_list_shaders)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_shader, &assets.shaders.", asset);
+		fprintf(fp, "%s\", &core_reload_shader, &assets->shaders.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -98,21 +90,21 @@ void write_assets_c()
 	fprintf(fp, "\t// Textures\n");
 	foreach_alist(char*, asset, i, assets_list_textures)
 	{
-		fprintf(fp, "\ttexture_free(assets.textures.");
+		fprintf(fp, "\ttexture_free(assets->textures.");
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
 	fprintf(fp, "\n\t// Sounds\n");
 	foreach_alist(char*, asset, i, assets_list_sounds)
 	{
-		fprintf(fp, "\tsound_buf_free(assets.sounds.");
+		fprintf(fp, "\tsound_buf_free(assets->sounds.");
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
 	fprintf(fp, "\n\t// Shaders\n");
 	foreach_alist(char*, asset, i, assets_list_shaders)
 	{
-		fprintf(fp, "\tshader_free(&assets.shaders.");
+		fprintf(fp, "\tshader_free(&assets->shaders.");
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -202,9 +194,8 @@ void write_assets_h()
 	fprintf(fp, "\t struct shaders shaders;\n");
 	fprintf(fp, "};\n\n");
 
-	fprintf(fp, "struct assets assets;\n\n");
+	fprintf(fp, "struct assets* assets;\n\n");
 
-	fprintf(fp, "struct assets* assets_get();\n");
 	fprintf(fp, "void assets_load();\n");
 	fprintf(fp, "void assets_release();\n");
 

@@ -255,7 +255,7 @@ int sound_buf_load_pcm(sound_buf_t *buf, ALshort *data, size_t len)
 
 	/* Generate PCM buffers. */
 	alGenBuffers(1, buf);
-	AL_TEST("generate buffer");
+	AL_TEST("sound_buf_load_pcm: generate buffer");
 
 	/* Bind buffer. */
 	alBufferData((*buf),
@@ -289,7 +289,7 @@ int sound_buf_load_vorbis_header(sound_buf_t *buf, stb_vorbis *header)
 
 	/* Generate PCM buffers. */
 	alGenBuffers(1, (ALuint *) buf);
-	AL_TEST("generate buffer");
+	AL_TEST("sound_buf_load_vorbis_header: generate buffer");
 
 	/* Bind buffer. */
 	alBufferData((*buf), format, data, size*sizeof(ALshort), info.sample_rate);
@@ -478,7 +478,7 @@ int sound_buf_load_filter(sound_buf_t *buf, size_t samples_count,
 
 	/* Generate PCM buffers. */
 	alGenBuffers(1, buf);
-	AL_TEST("generate buffer");
+	AL_TEST("sound_buf_load_filter: generate buffer");
 
 	/* Bind buffer. */
 	alBufferData((*buf),

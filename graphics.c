@@ -126,6 +126,11 @@ void graphics_glfw_resize_callback(GLFWwindow *window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
+static void graphics_glfw_error_callback(int error_code, const char *msg)
+{
+	graphics_error("GLFW Error %d: %s\n", error_code, msg);
+}
+
 int graphics_libraries_init(struct graphics *g, int window_width, int window_height,
 		int windowed, const char *title)
 {
@@ -163,6 +168,7 @@ int graphics_libraries_init(struct graphics *g, int window_width, int window_hei
 #endif
 
 	/* Be notified when window size changes. */
+	glfwSetErrorCallback(&graphics_glfw_error_callback);
 	glfwSetFramebufferSizeCallback(g->window, &graphics_glfw_resize_callback);
 
 	/* Select the current OpenGL context. */
