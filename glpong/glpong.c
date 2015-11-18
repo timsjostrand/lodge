@@ -573,7 +573,6 @@ void game_init()
 		VIEW_HEIGHT - 16.0f);
 	game->vivaldi_src = sound_buf_play_music(&core_global->sound, assets->sounds.vivaldi, 1.0f);
 }
-}
 
 void game_init_memory(struct shared_memory* shared_memory, int reload)
 {
