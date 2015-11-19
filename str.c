@@ -21,6 +21,7 @@
 /**
  * An implementation of the standard strnlen, if it is not already implemented.
  */
+#ifndef HAVE_STRNLEN
 size_t strnlen(const char *s, size_t s_size)
 {
 	const char *e;
@@ -29,6 +30,7 @@ size_t strnlen(const char *s, size_t s_size)
 	for(e = s, n = 0; *e && n < s_size; e++, n++);
 	return n;
 }
+#endif
 
 /**
  * Insert a character into a given position in a string, and move any adjacent

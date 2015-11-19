@@ -26,6 +26,9 @@ add_definitions(-DVFS_ENABLE_FILEWATCH)
 # Check for compatibility.
 include(CheckFunctionExists)
 check_function_exists(strnlen HAVE_STRNLEN)
+if(HAVE_STRNLEN)
+    add_definitions(-DHAVE_STRNLEN)
+endif()
 
 set(ENGINE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(ENGINE_INCLUDES ${ENGINE_PATH})
