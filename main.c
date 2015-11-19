@@ -81,10 +81,13 @@ void* load_function(void* library, const char* function_name)
 	return function;
 }
 
-void free_shared_library(void* library)
+/**
+ * @return 0 on success, non-zero on failure.
+ */
+int free_shared_library(void* library)
 {
 #ifdef _WIN32
-	return FreeLibrary((HINSTANCE)library);
+	return FreeLibrary((HINSTANCE)library) == 0;
 #else
 	return dlclose(library);
 #endif

@@ -30,6 +30,8 @@ if(MSVC)
     set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4020")
     # Enable error C4022: 'function' : pointer mismatch for actual parameter 'number'
     set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4022")
+    # Enable error CC4098: 'function': 'void' function returning a value
+    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4098")
     # Enable error C4024: 'function' : different types for formal and actual parameter 'number'
     #set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4024")
 endif()
