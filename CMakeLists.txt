@@ -138,6 +138,9 @@ add_custom_target(assets_check_update ALL
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Calculating assets checksum...")
 
+# Mark asset files as "generated" so cmake doesn't complain.
+set_source_files_properties(${ASSETS_C} ${ASSETS_H} PROPERTIES GENERATED TRUE)
+
 # Creates assets.{c,h} if ASSETS_STAMP_FILE was changed.
 add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
     COMMAND generate_assets ${ASSET_PATH}
@@ -146,8 +149,8 @@ add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
     DEPENDS ${ASSETS_STAMP_FILE}
     COMMENT "Generating assets.c")
 
-# Mark asset files as "generated" so cmake doesn't complain.
-set_source_files_properties(${ASSETS_C} ${ASSETS_H} PROPERTIES GENERATED TRUE)
+# Targets can depend on this target to generate assets.{c,h}.
+add_custom_target(generate_assets_do DEPENDS ${ASSETS_C} ${ASSETS_H})
 
 # Add a game library.
 function(add_game_library game_name)
@@ -159,8 +162,14 @@ function(add_game_library game_name)
     add_library(${game_name} SHARED $<TARGET_OBJECTS:${game_name}_obj>)
     add_library(${game_name}_static STATIC $<TARGET_OBJECTS:${game_name}_obj>)
 
-    target_compile_definitions(${game_name}_obj PRIVATE ENABLE_SHARED)
-    target_compile_definitions(${game_name} PRIVATE ENABLE_SHARED)
+    # Generate assets.{c,h} if necessary.
+    add_dependencies(${game_name}_obj generate_assets_do)
+
+    # Compile as shared library.
+    if(ENABLE_SHARED)
+        target_compile_definitions(${game_name}_obj PRIVATE ENABLE_SHARED)
+        target_compile_definitions(${game_name} PRIVATE ENABLE_SHARED)
+    endif()
 
     # Compile with C99.
     set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
@@ -203,7 +212,10 @@ include_directories(${GAME_PATH})
 add_executable(engine main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 #add_executable(engine main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 
+# Engine depends on game library.
+# FIXME: solve in generic way
 add_dependencies(engine glpong)
+add_dependencies(engine glpong_static)
 
 # Add DEBUG define when building debug executables.
 target_compile_definitions(engine PRIVATE LOAD_SHARED)
