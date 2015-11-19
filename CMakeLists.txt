@@ -35,7 +35,7 @@ set(ENGINE_INCLUDES ${ENGINE_PATH})
 
 if(NOT EMSCRIPTEN)
     # Build GLFW.
-    set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries" FORCE)
+    set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
     set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
@@ -45,19 +45,29 @@ if(NOT EMSCRIPTEN)
     list(APPEND ENGINE_EXTRA_LIBS glfw ${GLFW_LIBRARIES})
 
     # Build glew.
-    set(glew-cmake_BUILD_SHARED OFF CACHE BOOL "Build the shared glew library" FORCE)
-    add_subdirectory(lib/glew)
+    if(ENABLE_SHARED)
+        list(APPEND ENGINE_EXTRA_LIBS glew ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES})
+    else()
+        list(APPEND ENGINE_EXTRA_LIBS glew_s ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES})
+    endif()
+    add_subdirectory(lib/glew/build/cmake)
     list(APPEND ENGINE_INCLUDES lib/glew/include)
-    list(APPEND ENGINE_EXTRA_LIBS libglew_static ${GL_LIBRARY}
-        ${PLATFORM_SPECIFIC_LIBRARIES})
 
     # Build cJSON.
     add_subdirectory(lib/cjson)
-    list(APPEND ENGINE_EXTRA_LIBS cJSON)
+    if(ENABLE_SHARED)
+        list(APPEND ENGINE_EXTRA_LIBS cJSON.shared)
+    else()
+        list(APPEND ENGINE_EXTRA_LIBS cJSON)
+    endif()
 
     if(NOT APPLE)
         # Build OpenAL-Soft.
-        set(LIBTYPE "STATIC" CACHE STRING "Build static library" FORCE)
+        if(ENABLE_SHARED)
+            set(LIBTYPE "SHARED" CACHE STRING "Build static library" FORCE)
+        else()
+            set(LIBTYPE "STATIC" CACHE STRING "Build static library" FORCE)
+        endif()
         set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs" FORCE)
         set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
         set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs" FORCE)
@@ -177,11 +187,6 @@ function(add_game_library game_name)
     # Compile with C99.
     set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
 
-    # Defines for GLEW.
-    target_compile_definitions(${game_name}_obj PRIVATE GLEW_STATIC)
-    target_compile_definitions(${game_name} PRIVATE GLEW_STATIC)
-    target_compile_definitions(${game_name}_static PRIVATE GLEW_STATIC)
-
     # Compile with correct flags.
     set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
 
@@ -194,9 +199,7 @@ function(add_game_library game_name)
     target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
     target_link_libraries(${game_name}_static ${ENGINE_EXTRA_LIBS})
 
-    if(ENABLE_SHARED)
-        list(APPEND ENGINE_EXTRA_LIBS ${game_name})
-    elseif()
+    if(NOT ENABLE_SHARED)
         list(APPEND ENGINE_EXTRA_LIBS ${game_name}_static)
     endif()
 
@@ -221,7 +224,9 @@ add_dependencies(engine glpong)
 add_dependencies(engine glpong_static)
 
 # Add DEBUG define when building debug executables.
-target_compile_definitions(engine PRIVATE LOAD_SHARED)
+if(ENABLE_SHARED)
+    target_compile_definitions(engine PRIVATE LOAD_SHARED)
+endif()
 target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
@@ -254,8 +259,7 @@ set_property(TARGET engine generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMP
 if(NOT EMSCRIPTEN)
     # Build the engine using the C99 standard.
     set_property(TARGET engine PROPERTY C_STANDARD 99)
-    #    target_link_libraries(engine ${ENGINE_EXTRA_LIBS})
-    target_link_libraries(engine glpong glfw)
+    target_link_libraries(engine ${ENGINE_EXTRA_LIBS})
 else()
     target_link_libraries(engine)
 endif()
