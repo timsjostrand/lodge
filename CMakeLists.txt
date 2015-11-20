@@ -175,6 +175,9 @@ function(add_game_library game_name)
     add_library(${game_name} SHARED $<TARGET_OBJECTS:${game_name}_obj>)
     add_library(${game_name}_static STATIC $<TARGET_OBJECTS:${game_name}_obj>)
 
+    # Store as dependencies that will be applied to the 'engine' target later.
+    set(ENGINE_DEPS ${game_name}_obj ${game_name} ${game_name}_static CACHE INTERNAL "Engine dependencies" FORCE)
+
     # Generate assets.{c,h} if necessary.
     add_dependencies(${game_name}_obj generate_assets_do)
 
@@ -219,9 +222,7 @@ add_executable(engine main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_
 #add_executable(engine main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 
 # Engine depends on game library.
-# FIXME: solve in generic way
-add_dependencies(engine glpong)
-add_dependencies(engine glpong_static)
+add_dependencies(engine ${ENGINE_DEPS})
 
 # Add DEBUG define when building debug executables.
 if(ENABLE_SHARED)
