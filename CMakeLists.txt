@@ -83,6 +83,8 @@ if(NOT EMSCRIPTEN)
         set(ALSOFT_CONFIG OFF CACHE BOOL "Install alsoft.conf sample configuration file" FORCE)
         set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files" FORCE)
         set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries" FORCE)
+        # .lib-generation requires GNU 'sed' but MinGW usually ships with old version.
+        set(ALSOFT_BUILD_IMPORT_LIB OFF CACHE BOOL "Build an import .lib using dlltool (requires sed)" FORCE)
         add_subdirectory(lib/openal)
         list(APPEND ENGINE_INCLUDES lib/openal/include/AL)
 
