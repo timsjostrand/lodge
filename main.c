@@ -15,8 +15,7 @@
 #include "core_argv.h"
 #include "core_reload.h"
 
-static const int VIEW_WIDTH = 640;
-static const int VIEW_HEIGHT = 360;
+typedef struct game_settings* (*game_get_settings_fn_t)();
 
 /* Core singleton. */
 struct core core_mem = { 0 };
@@ -44,6 +43,7 @@ input_callback_t game_key_callback_fn = 0;
 fps_func_t game_fps_callback_fn = 0;
 core_console_init_t game_console_init_fn = 0;
 core_init_memory_t game_init_memory_fn = 0;
+game_get_settings_fn_t game_get_settings_fn = NULL;
 
 void* load_shared_library(const char* filename)
 {
@@ -129,6 +129,7 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 		game_fps_callback_fn = load_function(game_library, "game_fps_callback");
 		game_console_init_fn = load_function(game_library, "game_console_init");
 		game_init_memory_fn = load_function(game_library, "game_init_memory");
+		game_get_settings_fn = load_function(game_library, "game_get_settings");
 
 		if (game_init_fn &&
 			game_assets_load_fn &&
@@ -165,12 +166,6 @@ int main(int argc, char **argv)
 	/* Start the virtual file system */
 	vfs_init(args.mount);
 
-	/* Sound setup */
-	set3f(sound_listener, VIEW_WIDTH / 2.0f, VIEW_HEIGHT / 2.0f, 0);
-	vec3 sound_audible_max = { VIEW_WIDTH, VIEW_HEIGHT, 0.0f };
-	float sound_distance_max = distance3f(sound_listener, sound_audible_max);
-	core_set_up_sound(core_global, &sound_listener, sound_distance_max);
-
 #ifdef LOAD_SHARED
 	/* Load game library */
 	size_t filesize;
@@ -182,6 +177,9 @@ int main(int argc, char **argv)
 	{
 		return 0;
 	}
+
+	/* Get game settings. */
+	struct game_settings *settings = game_get_settings_fn();
 #else
 	core_set_think_callback(core_global, &game_think);
 	core_set_render_callback(core_global, &game_render);
@@ -190,10 +188,17 @@ int main(int argc, char **argv)
 	core_set_fps_callback(core_global, &game_fps_callback);
 	core_set_init_memory_callback(core_global, &game_init_memory);
 	core_set_up_console(core_global, &game_console_init, &assets->shaders.basic_shader);
+	struct game_settings *settings = game_get_settings();
 #endif
 
+	/* Sound setup */
+	core_set_up_sound(core_global, &settings->sound_listener, settings->sound_distance_max);
+
 	/* Initialize subsystems and run main loop. */
-	core_setup(core_global, "glpong", VIEW_WIDTH, VIEW_HEIGHT, VIEW_WIDTH, VIEW_HEIGHT, args.windowed, 1000000000);
+	core_setup(core_global, settings->window_title,
+		settings->view_width, settings->view_height,
+		settings->window_width, settings->window_height,
+		args.windowed, 1000000000);
 	vfs_run_callbacks();
 
 #ifdef LOAD_SHARED

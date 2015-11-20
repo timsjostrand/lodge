@@ -1,9 +1,9 @@
 /**
-* OpenGL Pong!
-*
-* Authors: Tim Sjöstrand <tim.sjostrand@gmail.com>
-*			Johan Yngman <johan.yngman@gmail.com>
-*/
+ * OpenGL Pong!
+ *
+ * Authors: Tim Sjöstrand <tim.sjostrand@gmail.com>
+ *			Johan Yngman <johan.yngman@gmail.com>
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,8 +33,8 @@
 
 #include "assets.h"
 
-static const int VIEW_WIDTH = 640;
-static const int VIEW_HEIGHT = 360;	/* 16:9 aspect ratio */
+#define VIEW_WIDTH		640
+#define VIEW_HEIGHT		360	/* 16:9 aspect ratio */
 
 #define BOARD_TOP		VIEW_HEIGHT
 #define BOARD_BOTTOM	0
@@ -57,6 +57,16 @@ static const int VIEW_HEIGHT = 360;	/* 16:9 aspect ratio */
 #define SPRITE_TYPE_BALL		1
 #define SPRITE_TYPE_PLAYER		2
 #define SPRITE_TYPE_PARTICLE	3
+
+struct game_settings settings = {
+	.view_width = VIEW_WIDTH,
+	.view_height = VIEW_HEIGHT,
+	.window_width = VIEW_WIDTH,
+	.window_height = VIEW_HEIGHT,
+	.window_title = "glpong",
+	.sound_listener = { VIEW_WIDTH / 2.0f, VIEW_HEIGHT / 2.0f, 0.0f },
+	.sound_distance_max = 500.0f, // distance3f(vec3(0), sound_listener)
+};
 
 struct stats {
 	int points;
@@ -115,6 +125,11 @@ struct game {
 struct game* game = 0;
 struct vfs* vfs = NULL;
 struct input* input_global = NULL;
+
+struct game_settings* game_get_settings()
+{
+	return &settings;
+}
 
 void print_stats()
 {

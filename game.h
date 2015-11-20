@@ -51,6 +51,16 @@ extern "C"
 {
 #endif
 
+struct game_settings {
+	int			window_width;
+	int			window_height;
+	const char	*window_title;
+	int			view_width;
+	int			view_height;
+	vec3		sound_listener;
+	float		sound_distance_max;
+};
+
 SHARED_SYMBOL void game_init();
 
 SHARED_SYMBOL void game_init_memory(struct shared_memory* shared_memory, int reload);
@@ -66,7 +76,7 @@ SHARED_SYMBOL void game_fps_callback(struct frames* f);
 
 SHARED_SYMBOL void game_console_init(struct console* c);
 
-vec3 sound_listener;
+SHARED_SYMBOL struct game_settings* game_get_settings();
 
 #ifdef __cplusplus
 }
