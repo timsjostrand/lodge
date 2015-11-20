@@ -33,8 +33,16 @@ endif()
 set(ENGINE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(ENGINE_INCLUDES ${ENGINE_PATH})
 
+# Store DLLs alongside engine.exe.
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    CACHE STRING "Static Library output directory" FORCE)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    CACHE STRING "Shared Library output directory" FORCE)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    CACHE STRING "Executable output directory" FORCE)
+
 if(NOT EMSCRIPTEN)
-    # Build GLFW.
+    # Library: GLFW.
     set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
@@ -44,7 +52,7 @@ if(NOT EMSCRIPTEN)
     list(APPEND ENGINE_INCLUDES lib/glfw/include)
     list(APPEND ENGINE_EXTRA_LIBS glfw ${GLFW_LIBRARIES})
 
-    # Build glew.
+    # Library: glew.
     if(ENABLE_SHARED)
         list(APPEND ENGINE_EXTRA_LIBS glew ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES})
     else()
@@ -53,7 +61,7 @@ if(NOT EMSCRIPTEN)
     add_subdirectory(lib/glew/build/cmake)
     list(APPEND ENGINE_INCLUDES lib/glew/include)
 
-    # Build cJSON.
+    # Library: cJSON.
     add_subdirectory(lib/cjson)
     if(ENABLE_SHARED)
         list(APPEND ENGINE_EXTRA_LIBS cJSON.shared)
@@ -61,6 +69,7 @@ if(NOT EMSCRIPTEN)
         list(APPEND ENGINE_EXTRA_LIBS cJSON)
     endif()
 
+    # Library: OpenAL.
     if(NOT APPLE)
         # Build OpenAL-Soft.
         if(ENABLE_SHARED)
