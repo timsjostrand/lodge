@@ -51,7 +51,7 @@ int		str_parse_1f(const char *s, float *dst);
  */
 #define foreach_line(s, size) \
 	for(size_t start = 0, next_start = 0, end = 0, len = 0, i = 0; \
-			i <= size+1; \
+			i <= size; \
 			end = (i == size \
 				|| s[i] == '\n' \
 				|| s[i] == '\0') ? (i > 0 && s[i-1] == '\r' ? i-1 : i) : 0, \

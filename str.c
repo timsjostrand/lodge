@@ -264,6 +264,9 @@ char* str_prev_word(char *s, const size_t s_size, const size_t offset, const cha
 char* str_search_reverse(char *s, const size_t s_size, const char needle,
 		int needle_count)
 {
+	if(s == NULL) {
+		return NULL;
+	}
 	char *tmp = s;
 	for(int i=s_size; i>=0; i--) {
 		if(needle_count <= 0) {

@@ -222,7 +222,7 @@ void console_print(struct console *c, const char *text, size_t text_len)
 	c->history_cur += text_len;
 
 	/* Display only subsection of history. */
-	char *display = str_search_reverse(c->history, c->history_len, '\n', c->display_lines + 1);
+	char *display = str_search_reverse(c->history, c->history_len - 1, '\n', c->display_lines + 1);
 	/* Not enough to form a subsection? Display entire history. */
 	if(display == NULL) {
 		display = c->history;
