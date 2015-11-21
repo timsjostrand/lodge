@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #define MAX_FILENAME_LEN 256
 #define MAX_NUM_FILES 256
