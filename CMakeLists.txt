@@ -203,6 +203,7 @@ function(add_game_library game_name)
 
     # Compile with correct flags.
     set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Output shared library into asset path.
     set_target_properties(${game_name} PROPERTIES
@@ -266,6 +267,7 @@ endif()
 
 # Set compiler flags.
 set_property(TARGET engine generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+set_property(TARGET engine generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
 # Link.
 if(NOT EMSCRIPTEN)

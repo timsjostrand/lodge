@@ -39,6 +39,6 @@ endif()
 # Clang compiler settings.
 if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     # DEBUG: Bounds checking.
-    set_property(TARGET engine APPEND_STRING PROPERTY COMPILE_FLAGS_DEBUG "-fsanitize=address ")
-    set_property(TARGET engine APPEND_STRING PROPERTY LINK_FLAGS_DEBUG "-fsanitize=address ")
+    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -fsanitize=address")
+    set(ENGINE_LINKER_FLAGS "${ENGINE_LINKER_FLAGS} -fsanitize=address")
 endif()
