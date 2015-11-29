@@ -49,7 +49,7 @@ int key_released(int key)
 
 void input_glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
 {
-	input_global->mousebutton_callback(window, button, action, mods);
+	input_global->mousebutton_callback(input_global->core, window, button, action, mods);
 }
 
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods)

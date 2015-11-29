@@ -423,7 +423,7 @@ void load_console_conf()
 	vfs_register_callback("glpong.rc", &core_reload_console_conf, &core_global->console);
 }
 
-void game_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
+void game_mousebutton_callback(struct core* core, GLFWwindow *window, int button, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		double x = 0;

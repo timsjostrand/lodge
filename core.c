@@ -106,6 +106,13 @@ static void core_key_callback(struct core* core, struct input *input, GLFWwindow
 	}
 }
 
+static void core_mousebutton_callback(struct core* core, GLFWwindow *window, int button, int action, int mods)
+{
+	if (core->mousebutton_callback != NULL) {
+		core->mousebutton_callback(core, window, button, action, mods);
+	}
+}
+
 static void core_char_callback(struct core* core, struct input *input, GLFWwindow *window,
 		unsigned int key, int mods)
 {
@@ -225,7 +232,7 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 
 	/* Get input events. */
 	ret = input_init(core, &core->input, core->graphics.window, &core_key_callback,
-			&core_char_callback, core->mousebutton_callback);
+		&core_char_callback, &core_mousebutton_callback);
 
 	if(ret != GRAPHICS_OK) {
 		core_error("Input initialization failed (%d)\n", ret);

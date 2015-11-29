@@ -5,7 +5,7 @@
 
 struct input;
 
-typedef void(*mousebutton_callback_t)(GLFWwindow *window, int button, int action, int mods);
+typedef void(*mousebutton_callback_t)(struct core* core, GLFWwindow *window, int button, int action, int mods);
 
 typedef void(*input_callback_t)(struct core* core, struct input *input, GLFWwindow *window,
 		int key, int scancode, int action, int mods);

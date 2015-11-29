@@ -72,7 +72,7 @@ SHARED_SYMBOL void game_think(struct core* core, struct graphics* g, float delta
 SHARED_SYMBOL void game_render(struct core* core, struct graphics* g, float delta_time);
 
 SHARED_SYMBOL void game_key_callback(struct core* core, struct input* input, struct GLFWwindow* window, int key, int scancode, int action, int mods);
-SHARED_SYMBOL void game_mousebutton_callback(struct GLFWwindow *window, int button, int action, int mods);
+SHARED_SYMBOL void game_mousebutton_callback(struct core* core, struct GLFWwindow *window, int button, int action, int mods);
 SHARED_SYMBOL void game_fps_callback(struct frames* f);
 
 SHARED_SYMBOL void game_console_init(struct console* c);
