@@ -15,17 +15,20 @@
 
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods);
 void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods);
+void input_glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods);
 
 int input_init(struct core* core, struct input *input, GLFWwindow *window,
-		input_callback_t key_callback, input_char_callback_t char_callback)
+	input_callback_t key_callback, input_char_callback_t char_callback, mousebutton_callback_t mousebutton_callback)
 {
 	input->core = core;
 	input->enabled = 1;
 	input->callback = key_callback;
 	input->char_callback = char_callback;
+	input->mousebutton_callback = mousebutton_callback;
 	input_global = input;
 	glfwSetKeyCallback(window, &input_glfw_key_func);
 	glfwSetCharModsCallback(window, &input_glfw_char_func);
+	glfwSetMouseButtonCallback(window, &input_glfw_mousebutton_callback);
 	return GRAPHICS_OK;
 }
 
@@ -42,6 +45,11 @@ int key_pressed(int key)
 int key_released(int key)
 {
 	return input_global && (!input_global->keys[key] && input_global->last_keys[key]);
+}
+
+void input_glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
+{
+	input_global->mousebutton_callback(window, button, action, mods);
 }
 
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods)

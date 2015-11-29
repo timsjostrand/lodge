@@ -144,6 +144,11 @@ void core_set_key_callback(struct core* core, input_callback_t key_callback)
 	core->key_callback = key_callback;
 }
 
+void core_set_mousebutton_callback(struct core* core, mousebutton_callback_t mousebutton_callback)
+{
+	core->mousebutton_callback = mousebutton_callback;
+}
+
 void core_set_char_callback(struct core* core, input_char_callback_t char_callback)
 {
 	core->char_callback = char_callback;
@@ -220,7 +225,7 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 
 	/* Get input events. */
 	ret = input_init(core, &core->input, core->graphics.window, &core_key_callback,
-			&core_char_callback);
+			&core_char_callback, core->mousebutton_callback);
 
 	if(ret != GRAPHICS_OK) {
 		core_error("Input initialization failed (%d)\n", ret);

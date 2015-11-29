@@ -40,6 +40,7 @@ core_release_t game_assets_release_fn = 0;
 think_func_t game_think_fn = 0;
 render_func_t game_render_fn = 0;
 input_callback_t game_key_callback_fn = 0;
+mousebutton_callback_t game_mousebutton_callback_fn = 0;
 fps_func_t game_fps_callback_fn = 0;
 core_console_init_t game_console_init_fn = 0;
 core_init_memory_t game_init_memory_fn = 0;
@@ -151,6 +152,7 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 		game_think_fn = load_function(game_library, "game_think");
 		game_render_fn = load_function(game_library, "game_render");
 		game_key_callback_fn = load_function(game_library, "game_key_callback");
+		game_mousebutton_callback_fn = load_function(game_library, "game_mousebutton_callback");
 		game_fps_callback_fn = load_function(game_library, "game_fps_callback");
 		game_console_init_fn = load_function(game_library, "game_console_init");
 		game_init_memory_fn = load_function(game_library, "game_init_memory");
@@ -162,12 +164,14 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 			game_think_fn &&
 			game_render_fn &&
 			game_key_callback_fn &&
+			game_mousebutton_callback_fn &&
 			game_fps_callback_fn &&
 			game_console_init_fn &&
 			game_init_memory_fn)
 		{
 			core_set_asset_callbacks(core_global, game_assets_load_fn, game_init_fn, game_assets_release_fn);
 			core_set_key_callback(core_global, game_key_callback_fn);
+			core_set_mousebutton_callback(core_global, game_mousebutton_callback_fn);
 			core_set_fps_callback(core_global, game_fps_callback_fn);
 			core_set_console_init_callback(core_global, game_console_init_fn);
 			core_set_think_callback(core_global, game_think_fn);
@@ -210,6 +214,7 @@ int main(int argc, char **argv)
 	core_set_render_callback(core_global, &game_render);
 	core_set_asset_callbacks(core_global, &game_assets_load, &game_init, &game_assets_release);
 	core_set_key_callback(core_global, &game_key_callback);
+	core_set_mousebutton_callback(core_global, &game_mousebutton_callback);
 	core_set_fps_callback(core_global, &game_fps_callback);
 	core_set_init_memory_callback(core_global, &game_init_memory);
 	core_set_up_console(core_global, &game_console_init, &assets->shaders.basic_shader);

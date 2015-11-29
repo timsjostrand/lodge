@@ -5,6 +5,8 @@
 
 struct input;
 
+typedef void(*mousebutton_callback_t)(GLFWwindow *window, int button, int action, int mods);
+
 typedef void(*input_callback_t)(struct core* core, struct input *input, GLFWwindow *window,
 		int key, int scancode, int action, int mods);
 
@@ -15,13 +17,14 @@ struct input {
 	struct core*				core;
 	int							enabled;
 	input_callback_t			callback;
+	mousebutton_callback_t		mousebutton_callback;
 	input_char_callback_t		char_callback;
 	int							keys[GLFW_KEY_LAST];		/* Key status of current frame. */
 	int							last_keys[GLFW_KEY_LAST];	/* Key status of last frame. */
 };
 
 int		input_init(struct core* core, struct input *input, GLFWwindow *window,
-				input_callback_t key_callback, input_char_callback_t char_callback);
+	input_callback_t key_callback, input_char_callback_t char_callback, mousebutton_callback_t mousebutton_callback);
 void	input_think(struct input *input, float delta_time);
 
 void	input_window_to_view(float win_x, float win_y, float win_w, float win_h,

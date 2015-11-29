@@ -45,6 +45,7 @@ struct core {
 	render_func_t			render_callback;
 	input_callback_t		key_callback;
 	input_char_callback_t	char_callback;
+	mousebutton_callback_t	mousebutton_callback;
 	fps_func_t				fps_callback;
 	/* Console. */
 	core_console_init_t		console_init_callback;
@@ -63,6 +64,7 @@ void core_set_init_memory_callback(struct core* core, core_init_memory_t init_me
 void core_set_think_callback(struct core* core, think_func_t think_callback);
 void core_set_render_callback(struct core* core, render_func_t render_callback);
 void core_set_key_callback(struct core* core, input_callback_t key_callback);
+void core_set_mousebutton_callback(struct core* core, mousebutton_callback_t key_callback);
 void core_set_char_callback(struct core* core, input_char_callback_t char_callback);
 void core_set_asset_callbacks(struct core* core, core_load_t load_callback,
 		core_init_t init_callback, core_release_t release_callback);

@@ -423,7 +423,7 @@ void load_console_conf()
 	vfs_register_callback("glpong.rc", &core_reload_console_conf, &core_global->console);
 }
 
-static void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
+void game_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		double x = 0;
@@ -576,9 +576,6 @@ void game_render(struct core* core, struct graphics* g, float delta_time)
 
 void game_init()
 {
-	/* FIXME: hack... */
-	glfwSetMouseButtonCallback(core_global->graphics.window, &glfw_mouse_button);
-
 	/* Entities. */
 	init_effectslayer(&game->effectslayer);
 	init_player1(&game->player1);
