@@ -128,6 +128,7 @@ static void core_char_callback(struct core* core, struct input *input, GLFWwindo
 void core_set_fps_callback(struct core* core, fps_func_t fps_callback)
 {
 	core->fps_callback = fps_callback;
+	core->graphics.frames.callback = fps_callback;
 }
 
 void core_set_asset_callbacks(struct core* core, core_load_t load_callback,
@@ -255,5 +256,4 @@ void core_run(struct core* core)
 void core_reload(struct core* core)
 {
 	core->init_memory_callback(&core->shared_memory, 1);
-	core->load_callback();
 }

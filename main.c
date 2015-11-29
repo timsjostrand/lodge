@@ -93,20 +93,43 @@ int free_shared_library(void* library)
 #endif
 }
 
+void* load_copy(const char* filename, unsigned int size, void* data)
+{
+	char name[256];
+
+	char* tmp = strrchr(filename, (int)'/');
+	if (tmp)
+	{
+		tmp++;
+		int namebegin = strlen(filename) - strlen(tmp);
+		strcpy(name, filename);
+		strcpy(&name[namebegin], "runtime_");
+		strcpy(&name[namebegin + 8], tmp);
+	}
+	else
+	{
+		strcpy(name, "runtime_");
+		strcpy(name, filename);
+	}
+
+	FILE *fp;
+	fp = fopen(name, "wb+");
+	fwrite(data, sizeof(char), (size_t)size, fp);
+	fclose(fp);
+
+	return load_shared_library(name);
+}
+
 int first_load = 1;
 
 void load_game(const char* filename, unsigned int size, void* data, void* userdata)
 {
-	debugf("Main", "Loading game library %s\n", filename);
+	debugf("Main", "Reloading game library %s\n", filename);
 
 	if (game_library)
 	{
-		if (game_assets_release_fn)
-		{
-			game_assets_release_fn();
-		}
-
 		free_shared_library(game_library);
+		debugf("Main", "Freeing old game library %s\n", filename);
 		game_library = 0;
 	}
 
@@ -117,7 +140,9 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 		return;
 	}
 
-	game_library = load_shared_library(absolute_path);
+
+	game_library = load_copy(absolute_path, size, data);
+	debugf("Main", "Load successful %s\n", filename);
 	if (game_library)
 	{
 		game_init_fn = load_function(game_library, "game_init");
