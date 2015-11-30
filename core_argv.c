@@ -65,8 +65,9 @@ int core_argv_parse(struct core_argv *dst, int argc, char **argv)
 			i++;
 		}
 
-		if (core_argv_is_arg(argv[i], "game") == 0) {
-			if (core_argv_get_value(i, dst->game, argc, argv) != 0) {
+		/* --game <PATH> */
+		if(core_argv_is_arg(argv[i], "game") == 0) {
+			if(core_argv_get_value(i, dst->game, argc, argv) != 0) {
 				core_argv_error("Usage: --game <PATH>\n");
 				return -1;
 			}
@@ -78,6 +79,17 @@ int core_argv_parse(struct core_argv *dst, int argc, char **argv)
 			dst->windowed = 1;
 		}
 	}
+
+	/* Default values. */
+	if(str_empty(dst->mount, CORE_ARGV_VALUE_MAX)) {
+		str_set(dst->mount, CORE_ARGV_VALUE_MAX, "assets");
+	}
+
+#if 0
+	if(str_empty(dst->game, CORE_ARGV_VALUE_MAX)) {
+		str_set(dst->game, CORE_ARGV_VALUE_MAX, "game.dll");
+	}
+#endif
 
 	return 0;
 }

@@ -12,4 +12,3 @@ struct core_argv {
 };
 
 int core_argv_parse(struct core_argv *dst, int argc, char **argv);
-
