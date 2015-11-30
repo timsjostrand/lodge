@@ -319,3 +319,67 @@ void str_print_hex(const char *s)
 {
 	while(*s) printf("%02x ", (unsigned int) *s++);
 }
+
+/**
+ * @return 1 if 'a' is equal to 'b'.
+ */
+int str_equals(const char *a, const char *b)
+{
+	size_t a_len = strlen(a);
+	size_t b_len = strlen(b);
+
+	if(a_len != b_len) {
+		return 0;
+	}
+
+	/* a_len == b_len here. */
+	return strncmp(a, b, a_len) == 0;
+}
+
+/**
+ * @return 1 if 'a' is equal to 'b', ignoring case.
+ */
+int str_equals_ignore_case(const char *a, const char *b)
+{
+	size_t a_len = strlen(a);
+	size_t b_len = strlen(b);
+
+	if(a_len != b_len) {
+		return 0;
+	}
+
+	/* a_len == b_len here. */
+#ifndef WIN32
+	return strncasecmp(a, b, a_len) == 0;
+#else
+	return _strnicmp(a, b, a_len) == 0;
+#endif
+}
+
+/**
+ * Set target string 'dst' with a known buffer size 'dst_size' to the string
+ * 'src'. If src cannot fit in the buffer of dst, as many characters as
+ * possible will be copied.
+ *
+ * @return The number of characters excluded from the copy, if any.
+ */
+int str_set(char *dst, size_t dst_size, const char *src)
+{
+	size_t src_size = strlen(src) + 1;
+	size_t end = src_size > dst_size ? dst_size : src_size;
+	memcpy(dst, src, end);
+	dst[end+1 < dst_size ? end+1 : dst_size] = '\0';
+	return src_size - end;
+}
+
+/**
+ * @return True if the string is NULL or has the length 0.
+ */
+int str_empty(const char *s, size_t s_size)
+{
+	if(s == NULL || s_size == 0) {
+		return 1;
+	}
+
+	return strnlen(s, s_size) == 0;
+}
