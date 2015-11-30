@@ -56,27 +56,27 @@ void game_init_memory(struct shared_memory *shared_memory, int reload)
 		memset(shared_memory->game_memory, 0, sizeof(struct game));
 	}
 
-	game = (struct game*) shared_memory->game_memory;
+	game = (struct game *) shared_memory->game_memory;
 	core_global = shared_memory->core;
 	assets = shared_memory->assets;
 	vfs_global = shared_memory->vfs;
 	input_global = shared_memory->input;
 }
 
-void game_think(struct core* core, struct graphics* g, float dt)
+void game_think(struct core *core, struct graphics *g, float dt)
 {
 	animatedsprites_update(game->batcher, &game->atlas, dt);
 	shader_uniforms_think(&assets->shaders.basic_shader, dt);
 }
 
-void game_render(struct core* core, struct graphics* g, float dt)
+void game_render(struct core *core, struct graphics *g, float dt)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	animatedsprites_render(game->batcher, &assets->shaders.basic_shader, g, assets->textures.textures);
 }
 
-void glfw_mouse_button(GLFWwindow *window, int button, int action, int mods)
+void game_mousebutton_callback(struct core *core, GLFWwindow *window, int button, int action, int mods)
 {
 	if(action == GLFW_PRESS) {
 		float x = 0, y = 0;
@@ -100,12 +100,9 @@ void game_init()
 	set2f(game->sprite.scale, 1.0f, 1.0f);
 	animatedsprites_playanimation(&game->sprite, &ANIM_SPRITE);
 	animatedsprites_add(game->batcher, &game->sprite);
-
-    /* Register mouse callback. */
-	glfwSetMouseButtonCallback(core_global->graphics.window, &glfw_mouse_button);
 }
 
-void game_key_callback(struct core* core, struct input* input, GLFWwindow* window, int key,
+void game_key_callback(struct core *core, struct input *input, GLFWwindow *window, int key,
 	int scancode, int action, int mods)
 {
 	if(action == GLFW_PRESS) {
