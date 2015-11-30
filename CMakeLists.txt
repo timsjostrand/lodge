@@ -192,6 +192,13 @@ function(add_game_library game_name)
     # Generate assets.{c,h} if necessary.
     add_dependencies(${game_name}_obj generate_assets_do)
 
+	# Compile with console output support.
+	if(ENABLE_CONSOLE)
+		target_compile_definitions(${game_name}_obj PRIVATE CONSOLE_ENABLE)
+		target_compile_definitions(${game_name} PRIVATE CONSOLE_ENABLE)
+		#target_compile_definitions(${game_name}_shared PRIVATE CONSOLE_ENABLE)
+	endif()
+
     # Compile as shared library.
     if(ENABLE_SHARED)
         target_compile_definitions(${game_name}_obj PRIVATE ENABLE_SHARED)
