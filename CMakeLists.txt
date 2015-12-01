@@ -196,7 +196,7 @@ function(add_game_library game_name)
 	if(ENABLE_CONSOLE)
 		target_compile_definitions(${game_name}_obj PRIVATE CONSOLE_ENABLE)
 		target_compile_definitions(${game_name} PRIVATE CONSOLE_ENABLE)
-		#target_compile_definitions(${game_name}_shared PRIVATE CONSOLE_ENABLE)
+		target_compile_definitions(${game_name}_static PRIVATE CONSOLE_ENABLE)
 	endif()
 
     # Compile as shared library.
@@ -213,9 +213,9 @@ function(add_game_library game_name)
     set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Output shared library into asset path.
-    set_target_properties(${game_name} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY "${ASSET_PATH}"
-        LIBRARY_OUTPUT_DIRECTORY "${ASSET_PATH}")
+	add_custom_command(TARGET ${game_name} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${game_name}>" ${ASSET_PATH}
+		COMMENT "Copying ${game_name} shared library to ASSET_PATH")
 
     # Link libraries.
     target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
