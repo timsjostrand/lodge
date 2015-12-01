@@ -19,16 +19,16 @@
 #include "atlas.h"
 #include "animatedsprites.h"
 
-#define VIEW_WIDTH      640
+#define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360
 
 struct game_settings settings = {
-	.view_width         = VIEW_WIDTH,
-	.view_height        = VIEW_HEIGHT,
-	.window_width       = VIEW_WIDTH,
-	.window_height      = VIEW_HEIGHT,
-	.window_title       = "@GAME_NAME@",
-	.sound_listener     = { VIEW_WIDTH / 2.0f, VIEW_HEIGHT / 2.0f, 0.0f },
+	.view_width			= VIEW_WIDTH,
+	.view_height		= VIEW_HEIGHT,
+	.window_width		= VIEW_WIDTH,
+	.window_height		= VIEW_HEIGHT,
+	.window_title		= "@GAME_NAME@",
+	.sound_listener		= { VIEW_WIDTH / 2.0f, VIEW_HEIGHT / 2.0f, 0.0f },
 	.sound_distance_max = 500.0f, // distance3f(vec3(0), sound_listener)
 };
 
@@ -40,8 +40,8 @@ struct anim ANIM_SPRITE = {
 };
 
 struct game {
-    struct sprite           sprite;
-    struct atlas            atlas;
+	struct sprite			sprite;
+	struct atlas			atlas;
 	struct animatedsprites	*batcher;
 } *game = NULL;
 
@@ -92,10 +92,10 @@ void game_console_init(struct console *c)
 
 void game_init()
 {
-    /* Create animated sprite batcher. */
+	/* Create animated sprite batcher. */
 	game->batcher = animatedsprites_create();
 
-    /* Create sprite. */
+	/* Create sprite. */
 	set3f(game->sprite.position, VIEW_WIDTH/2.0f, VIEW_HEIGHT/2.0f, 0);
 	set2f(game->sprite.scale, 1.0f, 1.0f);
 	animatedsprites_playanimation(&game->sprite, &ANIM_SPRITE);
@@ -117,17 +117,17 @@ void game_key_callback(struct core *core, struct input *input, GLFWwindow *windo
 void game_assets_load()
 {
 	assets_load();
-    vfs_register_callback("textures.json", core_reload_atlas, &game->atlas);
+	vfs_register_callback("textures.json", core_reload_atlas, &game->atlas);
 }
 
 void game_assets_release()
 {
 	assets_release();
-    atlas_free(&game->atlas);
+	atlas_free(&game->atlas);
 }
 
 void game_fps_callback(struct frames *f)
 {
-    core_debug("FPS:% 5d, MS:% 3.1f/% 3.1f/% 3.1f\n", f->frames,
-            f->frame_time_min, f->frame_time_avg, f->frame_time_max);
+	core_debug("FPS:% 5d, MS:% 3.1f/% 3.1f/% 3.1f\n", f->frames,
+			f->frame_time_min, f->frame_time_avg, f->frame_time_max);
 }
