@@ -79,9 +79,9 @@ void animatedsprites_update(struct animatedsprites* animatedsprites, struct atla
 	spritebatch_end(&animatedsprites->spritebatch);
 }
 
-void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s, struct graphics *g, GLuint tex)
+void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
 {
-	spritebatch_render(&animatedsprites->spritebatch, s, g, tex);
+	spritebatch_render(&animatedsprites->spritebatch, s, g, tex, transform);
 }
 
 void animatedsprites_add(struct animatedsprites* animatedsprites, struct sprite* sprite)

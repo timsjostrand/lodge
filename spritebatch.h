@@ -33,6 +33,6 @@ void spritebatch_destroy(struct spritebatch* batch);
 void spritebatch_begin(struct spritebatch* batch);
 void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_pos, vec2 tex_bounds);
 void spritebatch_end(struct spritebatch* batch);
-void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex);
+void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex, mat4 transform);
 
 #endif //_SPRITEBATCH_H

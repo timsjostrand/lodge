@@ -128,7 +128,7 @@ void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_p
 	batch->sprite_count++;
 }
 
-void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex)
+void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
 {
 	glUseProgram(s->program);
 
@@ -152,23 +152,8 @@ void spritebatch_render(struct spritebatch* batch, struct shader *s, struct grap
 	glEnableVertexAttribArray(texcoordAttrib);
 	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) (sizeof(GLfloat) * 3));
 
-	/* Position, rotation and scale. */
-	mat4 transform_position;
-	translate(transform_position, 0, 0, 0);
-
-	mat4 transform_scale;
-	scale(transform_scale, 1, 1, 1);
-
-	mat4 transform_rotation;
-	rotate_z(transform_rotation, 0);
-
-	mat4 transform_final;
-	mult(transform_final, transform_position, transform_rotation);
-	mult(transform_final, transform_final, transform_scale);
-	transpose_same(transform_final);
-
 	/* Upload matrices and color. */
-	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
+	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform);
 	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
 
 	/* Shader settings for all characters sprites. */

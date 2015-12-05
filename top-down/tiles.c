@@ -127,9 +127,9 @@ void tiles_think(struct tiles *tiles, vec2 view_offset, struct atlas *atlas, flo
 	animatedsprites_update(tiles->batcher, atlas, dt);
 }
 
-void tiles_render(struct tiles *tiles, struct shader *s, struct graphics *g, GLuint tex)
+void tiles_render(struct tiles *tiles, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
 {
-	animatedsprites_render(tiles->batcher, s, g, tex);
+	animatedsprites_render(tiles->batcher, s, g, tex, transform);
 }
 
 struct anim* tiles_get_data_at_pixel(struct anim **data, float x, float y,
