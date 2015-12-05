@@ -55,4 +55,6 @@ void animatedsprites_render(struct animatedsprites* animatedsprites, struct shad
 void animatedsprites_add(struct animatedsprites* animatedsprites, struct sprite* sprite);
 void animatedsprites_clear(struct animatedsprites* animatedsprites);
 
+void animatedsprites_setanim(struct anim* anim, int looping, int frame_start, int frame_count, float frame_length);
+
 #endif //_ANIMATEDSPRITES_H

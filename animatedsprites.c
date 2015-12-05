@@ -110,3 +110,11 @@ void animatedsprites_playanimation(struct sprite* sprite, struct anim* anim)
 	sprite->state.frame_current = anim != NULL ? anim->frame_start : 0;
 	sprite->state.frame_time = 0;
 }
+
+void animatedsprites_setanim(struct anim* anim, int looping, int frame_start, int frame_count, float frame_length)
+{
+	anim->looping = looping;
+	anim->frame_start = frame_start;
+	anim->frame_count = frame_count;
+	anim->frame_length = frame_length;
+}
