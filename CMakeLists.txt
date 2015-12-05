@@ -118,11 +118,11 @@ list(APPEND ENGINE_INCLUDES lib/)
 set(ENGINE_SOURCES_LOCAL math4.c core_console.c graphics.c shader.c input.c texture.c
         color.c sound.c vfs.c atlas.c monotext.c str.c list.c console.c
         spritebatch.c animatedsprites.c alist.c core.c core_argv.c core_reload.c
-        particles.c)
+        particles.c collide.c)
 set(ENGINE_HEADERS_LOCAL math4.h core_console.h graphics.h shader.h input.h texture.h
         color.h sound.h vfs.h atlas.h monotext.h str.h list.h console.h
         spritebatch.h animatedsprites.h alist.h core.h core_argv.h core_reload.h
-        particles.h game.h)
+        particles.h game.h collide.h)
 
 # Top-down sources
 set(ENGINE_SOURCES_TOP_DOWN top-down/tiles.c)
