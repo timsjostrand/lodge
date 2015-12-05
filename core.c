@@ -256,7 +256,11 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 	}
 
 	glfwSetFramebufferSizeCallback(core->graphics.window, &core_glfw_resize_callback);
-	core_glfw_resize_callback( core->graphics.window, window_width, window_height);
+
+	/* Set up ratio. */
+	int w, h;
+	glfwGetWindowSize(core->graphics.window, &w, &h);
+	core_glfw_resize_callback(core->graphics.window, w, h);
 
 	/* Get input events. */
 	ret = input_init(core, &core->input, core->graphics.window, &core_key_callback,
