@@ -212,10 +212,24 @@ function(add_game_library game_name)
     set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
     set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
+    # Need HACK_POST_BUILD for Visual Studio 2013.
+    if(MSVC12)
+        set(HACK_POST_BUILD 1)
+    endif()
+
     # Output shared library into asset path.
-	add_custom_command(TARGET ${game_name} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${game_name}>" ${ASSET_PATH}
-		COMMENT "Copying ${game_name} shared library to ASSET_PATH")
+    if(HACK_POST_BUILD)
+        message("With HACK_POST_BUILD")
+        # HACK: On some platforms, this method works best for hotswapping the
+        # shared library.
+        set_target_properties(${game_name} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${ASSET_PATH}"
+            LIBRARY_OUTPUT_DIRECTORY "${ASSET_PATH}")
+    else()
+        add_custom_command(TARGET ${game_name} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${game_name}>" ${ASSET_PATH}
+            COMMENT "Copying ${game_name} shared library to ASSET_PATH")
+    endif()
 
     # Link libraries.
     target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
