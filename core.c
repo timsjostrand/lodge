@@ -187,6 +187,31 @@ void core_set_init_memory_callback(struct core* core, core_init_memory_t init_me
 	core->init_memory_callback = init_memory_callback;
 }
 
+void core_glfw_resize_callback(GLFWwindow *window, int width, int height)
+{
+	float ax = width;
+	float ay = height;
+	float ratio = core_global->view_height / core_global->view_width;
+	
+	float max_width = height / ratio;
+
+	if (width < max_width)
+	{
+		ax = width;
+		ay = ax*ratio;
+	}
+	else
+	{
+		ax = ay/ratio;
+		ay = height;
+	}
+
+	float rest_width = width - ax;
+	float rest_height = height - ay;
+
+	glViewport(rest_width / 2.0f, rest_height / 2.0f, ax, ay);
+}
+
 /**
  * @param load_callback		Responsible for registering all the VFS callbacks
  *							required for the game. After load_callback has been
@@ -229,6 +254,9 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 		graphics_free(core, &core->graphics);
 		exit(ret);
 	}
+
+	glfwSetFramebufferSizeCallback(core->graphics.window, &core_glfw_resize_callback);
+	core_glfw_resize_callback( core->graphics.window, window_width, window_height);
 
 	/* Get input events. */
 	ret = input_init(core, &core->input, core->graphics.window, &core_key_callback,
