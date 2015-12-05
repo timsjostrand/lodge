@@ -165,8 +165,10 @@ int graphics_libraries_init(struct graphics *g, int window_width, int window_hei
 		glfwWindowHint(GLFW_BLUE_BITS, video_mode->blueBits);
 		glfwWindowHint(GLFW_REFRESH_RATE, video_mode->refreshRate);
 		glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
+		glfwWindowHint(GLFW_FLOATING, GL_TRUE);
+		glfwWindowHint(GLFW_DECORATED, GL_FALSE);
 
-		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, NULL);
+		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, NULL, NULL);
 	}
 	else {
 		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
