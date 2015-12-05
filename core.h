@@ -73,7 +73,7 @@ void core_set_console_init_callback(struct core* core, core_console_init_t conso
 void core_set_up_sound(struct core* core, vec3 *sound_listener, float distance_max);
 
 void core_setup(struct core* core, const char *title, int view_width, int view_height,
-	int window_width, int window_height, int windowed, size_t game_memory_size);
+	int window_width, int window_height, int window_mode, size_t game_memory_size);
 
 void core_run(struct core* core);
 void core_reload(struct core* core);

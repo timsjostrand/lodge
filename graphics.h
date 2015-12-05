@@ -16,6 +16,10 @@
 #define GRAPHICS_IMAGE_LOAD_ERROR	-5
 #define GRAPHICS_TEXTURE_LOAD_ERROR -6
 
+#define GRAPHICS_MODE_FULLSCREEN 0
+#define GRAPHICS_MODE_BORDERLESS 1
+#define GRAPHICS_MODE_WINDOWED 2
+
 /* Number of components in a vertex (x,y,z,u,v). */
 #define VBO_VERTEX_LEN			5
 /* Number of vertices in a quad. */
@@ -69,7 +73,7 @@ struct graphics {
 };
 
 int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-				fps_func_t fps_callback, int view_width, int view_height, int windowed,
+				fps_func_t fps_callback, int view_width, int view_height, int window_mode,
 				const char *title, int window_width, int window_height);
 void	graphics_free(struct core* core, struct graphics *g);
 void	graphics_loop();

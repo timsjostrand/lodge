@@ -6,7 +6,7 @@
 #define CORE_ARGV_VALUE_MAX 256
 
 struct core_argv {
-	int		windowed;
+	int		window_mode;
 	char	mount[CORE_ARGV_VALUE_MAX];
 	char	game[CORE_ARGV_VALUE_MAX];
 };

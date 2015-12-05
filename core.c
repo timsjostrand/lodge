@@ -197,7 +197,7 @@ void core_set_init_memory_callback(struct core* core, core_init_memory_t init_me
  *							all assets and free dynamically allocated memory.
  */
 void core_setup(struct core* core, const char *title, int view_width, int view_height,
-		int window_width, int window_height, int windowed, size_t game_memory_size)
+		int window_width, int window_height, int window_mode, size_t game_memory_size)
 {
 	/* Store global references. */
 	core->view_width = view_width;
@@ -221,7 +221,7 @@ void core_setup(struct core* core, const char *title, int view_width, int view_h
 
 	/* Set up graphics. */
 	int ret = graphics_init(&core->graphics, &core_think, &core_render,
-			core->fps_callback, view_width, view_height, windowed, title,
+			core->fps_callback, view_width, view_height, window_mode, title,
 			window_width, window_height);
 
 	if(ret != GRAPHICS_OK) {

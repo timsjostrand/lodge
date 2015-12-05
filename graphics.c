@@ -132,7 +132,7 @@ static void graphics_glfw_error_callback(int error_code, const char *msg)
 }
 
 int graphics_libraries_init(struct graphics *g, int window_width, int window_height,
-		int windowed, const char *title)
+		int window_mode, const char *title)
 {
 	/* Initialize the library */
 	if(!glfwInit()) {
@@ -152,13 +152,25 @@ int graphics_libraries_init(struct graphics *g, int window_width, int window_hei
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-	const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
-
 	/* Create a windowed mode window and its OpenGL context */
-	if(windowed) {
+	if (window_mode == GRAPHICS_MODE_WINDOWED) {
 		g->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
-	} else {
+	}
+	else if (window_mode == GRAPHICS_MODE_BORDERLESS) {
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
+
+		glfwWindowHint(GLFW_RED_BITS, video_mode->redBits);
+		glfwWindowHint(GLFW_GREEN_BITS, video_mode->greenBits);
+		glfwWindowHint(GLFW_BLUE_BITS, video_mode->blueBits);
+		glfwWindowHint(GLFW_REFRESH_RATE, video_mode->refreshRate);
+		glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
+
+		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, NULL);
+	}
+	else {
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
 		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, NULL);
 	}
 	if(!g->window) {
@@ -191,7 +203,7 @@ int graphics_libraries_init(struct graphics *g, int window_width, int window_hei
  * @param windowed				If applicable, whether to start in windowed mode.
  */
 int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-		fps_func_t fps_callback, int view_width, int view_height, int windowed,
+		fps_func_t fps_callback, int view_width, int view_height, int window_mode,
 		const char *title, int window_width, int window_height)
 {
 	int ret = 0;
@@ -208,7 +220,7 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	g->frames.callback = fps_callback;
 
 	/* Set up GLEW and glfw. */
-	ret = graphics_libraries_init(g, window_width, window_height, windowed, title);
+	ret = graphics_libraries_init(g, window_width, window_height, window_mode, title);
 
 	if(ret != GRAPHICS_OK) {
 		return ret;
