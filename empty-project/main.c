@@ -32,17 +32,11 @@ struct game_settings settings = {
 	.sound_distance_max = 500.0f, // distance3f(vec3(0), sound_listener)
 };
 
-struct anim ANIM_SPRITE = {
-	.looping = 1,
-	.frame_start = 0,
-	.frame_count = 1,
-	.frame_length = 300.0f
-};
-
 struct game {
 	struct sprite			sprite;
 	struct atlas			atlas;
 	struct animatedsprites	*batcher;
+	struct anim				anim_sprite;
 } *game = NULL;
 
 struct game_settings* game_get_settings()
@@ -95,10 +89,13 @@ void game_init()
 	/* Create animated sprite batcher. */
 	game->batcher = animatedsprites_create();
 
+	/* Create sprite animation. */
+	animatedsprites_setanim(&game->anim_sprite, 1, 0, 1, 300.0f);
+
 	/* Create sprite. */
 	set3f(game->sprite.position, VIEW_WIDTH/2.0f, VIEW_HEIGHT/2.0f, 0);
 	set2f(game->sprite.scale, 1.0f, 1.0f);
-	animatedsprites_playanimation(&game->sprite, &ANIM_SPRITE);
+	animatedsprites_playanimation(&game->sprite, &game->anim_sprite);
 	animatedsprites_add(game->batcher, &game->sprite);
 }
 
