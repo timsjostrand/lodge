@@ -40,12 +40,12 @@ static int monofont_atlas_coords(float *tx, float *ty, float *tw, float *th,
 
 	/* Invalid char. */
 	if(letter > c) {
-		return TEXT_ERROR;
+		return MONOTEXT_ERROR;
 	}
 	/* Font not loaded. */
 	if(!font->loaded) {
 		monotext_error("Font not loaded: \"%s\"\n", font->name);
-		return TEXT_ERROR;
+		return MONOTEXT_ERROR;
 	}
 
 	int grid_y = letter / font->grids_x;
@@ -57,7 +57,7 @@ static int monofont_atlas_coords(float *tx, float *ty, float *tw, float *th,
 	*(tw) = font->letter_width / (float) font->width;
 	*(th) = font->letter_height / (float) font->height;
 
-	return TEXT_OK;
+	return MONOTEXT_OK;
 }
 
 /**
@@ -101,7 +101,7 @@ static void monofont_reload(const char *filename, unsigned int size, void *data,
 	int height;
 	int ret = texture_load(&tmp, &width, &height, data, size);
 
-	if(ret != TEXT_OK) {
+	if(ret != MONOTEXT_OK) {
 		monotext_error("Texture load failed: %s (%u bytes)\n", filename, size);
 	} else {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -129,7 +129,7 @@ int monofont_new(struct monofont *font, const char *name,
 	/* Load font texture. */
 	vfs_register_callback(name, &monofont_reload, font);
 
-	return TEXT_OK;
+	return MONOTEXT_OK;
 }
 
 void monofont_free(struct monofont *font)
@@ -341,7 +341,7 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 				break;
 			default: {
 					float tx, ty, tw, th;
-					if(monofont_atlas_coords(&tx, &ty, &tw, &th, f, c) != TEXT_OK) {
+					if(monofont_atlas_coords(&tx, &ty, &tw, &th, f, c) != MONOTEXT_OK) {
 						monotext_error("Could not get atlas coords for \"%c\"\n", c);
 						continue;
 					}

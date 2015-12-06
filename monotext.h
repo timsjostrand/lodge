@@ -10,8 +10,8 @@
 #define monotext_debug(...) debugf("Monotext", __VA_ARGS__)
 #define monotext_error(...) errorf("Monotext", __VA_ARGS__)
 
-#define TEXT_OK				0
-#define TEXT_ERROR			-1
+#define MONOTEXT_OK			0
+#define MONOTEXT_ERROR		-1
 
 #define MONOTEXT_STR_MAX	1024*10
 
