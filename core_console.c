@@ -9,53 +9,30 @@
 #include <math.h>
 #include <GLFW/glfw3.h>
 
+#include "core_console.h"
 #include "sound.h"
 #include "console.h"
 #include "graphics.h"
 #include "vfs.h"
-#include "core_console.h"
+#include "core.h"
 
-struct commands_meta {
-	struct console_cmd root;
-	struct console_cmd lines;
-};
-
-struct commands_sound {
-	struct console_cmd root;
-	struct console_cmd volume;
-};
-
-struct commands_graphics {
-	struct console_cmd root;
-	struct console_cmd dt;
-	struct console_cmd quit;
-};
-
-struct commands_vfs {
-	struct console_cmd root;
-	struct console_cmd list;
-	struct console_cmd reload;
-	struct console_cmd mount;
-};
-
-static struct state {
-	struct graphics				*graphics;
-	struct console				*console;
-	struct commands_meta		cmd_meta;
-	struct commands_sound		cmd_sound;
-	struct commands_graphics	cmd_graphics;
-	struct commands_vfs			cmd_vfs;
-} state = { 0 };
-
-void core_console_printf(const char *fmt, ...)
+/**
+ * Convenience function to malloc, set up and add a new console command to the
+ * command tree.
+ */
+static struct console_cmd* cmd_new(struct console_cmd *parent, const char *name, int argc,
+		console_cmd_func_t callback, console_cmd_autocomplete_t autocomplete)
 {
-	if(state.console == NULL) {
-		return;
+	/* Allocate and init the command. */
+	struct console_cmd *cmd = (struct console_cmd *) calloc(1, sizeof(struct console_cmd));
+	console_cmd_new(cmd, name, argc, callback, autocomplete);
+
+	/* Register command in parent. */
+	if(parent != NULL) {
+		console_cmd_add(cmd, parent);
 	}
-	va_list args;
-	va_start(args, fmt);
-	console_vprintf(state.console, fmt, args);
-	va_end(args);
+
+	return cmd;
 }
 
 /* Meta */
@@ -78,21 +55,10 @@ static void core_console_meta_lines(struct console *c, struct console_cmd *cmd, 
 	console_print(c, "", 0);
 }
 
-static void core_console_meta_free(struct commands_meta *cmd)
+static void core_console_meta_init(struct console *c)
 {
-	console_cmd_free(&cmd->root);
-	console_cmd_free(&cmd->lines);
-}
-
-static void core_console_meta_init(struct console *c, struct commands_meta *cmd)
-{
-	/* Create commands. */
-	console_cmd_new(&cmd->root, "console", 0, NULL, NULL);
-	console_cmd_new(&cmd->lines, "lines", 1, &core_console_meta_lines, NULL);
-
-	/* Register command tree. */
-	console_cmd_add(&cmd->root, &c->root_cmd);
-	console_cmd_add(&cmd->lines, &cmd->root);
+	struct console_cmd *root = cmd_new(&c->root_cmd, "console", 0, NULL, NULL);
+	cmd_new(root, "lines", 1, &core_console_meta_lines, NULL);
 }
 
 /* Sound */
@@ -106,21 +72,11 @@ static void core_console_sound_volume(struct console *c, struct console_cmd *cmd
 	sound_master_gain(f);
 }
 
-static void core_console_sound_free(struct commands_sound *cmd)
-{
-	console_cmd_free(&cmd->root);
-	console_cmd_free(&cmd->volume);
-}
-
-static void core_console_sound_init(struct console *c, struct commands_sound *cmd)
+static void core_console_sound_init(struct console *c)
 {
 	/* Create commands. */
-	console_cmd_new(&cmd->root, "sound", 0, NULL, NULL);
-	console_cmd_new(&cmd->volume, "volume", 1, &core_console_sound_volume, NULL);
-
-	/* Register command tree. */
-	console_cmd_add(&cmd->root, &c->root_cmd);
-	console_cmd_add(&cmd->volume, &cmd->root);
+	struct console_cmd *root = cmd_new(&c->root_cmd, "sound", 0, NULL, NULL);
+	cmd_new(root, "volume", 1, &core_console_sound_volume, NULL);
 }
 
 /* Graphics */
@@ -128,30 +84,17 @@ static void core_console_sound_init(struct console *c, struct commands_sound *cm
 static void core_console_graphics_quit(struct console *c, struct console_cmd *cmd,
 		struct list *argv)
 {
-	glfwSetWindowShouldClose(state.graphics->window, 1);
+	glfwSetWindowShouldClose(core_global->graphics.window, 1);
 }
 
-static void core_console_graphics_free(struct commands_graphics *cmd)
-{
-	console_cmd_free(&cmd->root);
-	console_cmd_free(&cmd->dt);
-	console_cmd_free(&cmd->quit);
-}
-
-static void core_console_graphics_init(struct console *c, struct commands_graphics *cmd)
+static void core_console_graphics_init(struct console *c)
 {
 	/* Create commands. */
-	console_cmd_new(&cmd->quit, "quit", 0, &core_console_graphics_quit, NULL);
-	console_cmd_new(&cmd->root, "graphics", 0, NULL, NULL);
-
-	/* Register command tree. */
-	console_cmd_add(&cmd->quit,		&c->root_cmd);
-#if 0
-	console_cmd_add(&cmd->root,		&c->root_cmd);
-#endif
+	cmd_new(&c->root_cmd, "quit", 0, &core_console_graphics_quit, NULL);
+	//struct console *cmd root = cmd_new(&c->root_cmd, "graphics", 0, NULL, NULL);
 
 	/* Bind variables. */
-	console_env_bind_1f(c, "dt", &(state.graphics->delta_time_factor));
+	console_env_bind_1f(c, "dt", &(core_global->graphics.delta_time_factor));
 }
 
 /* VFS */
@@ -195,48 +138,31 @@ static void core_console_vfs_autocomplete_simplename(struct console *c, struct c
 	}
 }
 
-static void core_console_vfs_init(struct console *c, struct commands_vfs *cmd)
+static void core_console_vfs_init(struct console *c)
 {
-	console_cmd_new(&cmd->root, "vfs", 0, NULL, NULL);
-	console_cmd_new(&cmd->list, "list", 0, &core_console_vfs_list, NULL);
-	console_cmd_new(&cmd->reload, "reload", 1, &core_console_vfs_reload, core_console_vfs_autocomplete_simplename);
-	console_cmd_new(&cmd->mount, "mount", 1, &core_console_vfs_mount, core_console_vfs_autocomplete_simplename);
-
-	console_cmd_add(&cmd->root,		&c->root_cmd);
-	console_cmd_add(&cmd->list,		&cmd->root);
-	console_cmd_add(&cmd->reload,	&cmd->root);
-	console_cmd_add(&cmd->mount,	&cmd->root);
-}
-
-static void core_console_vfs_free(struct commands_vfs *cmd)
-{
-	console_cmd_free(&cmd->root);
-	console_cmd_free(&cmd->list);
-	console_cmd_free(&cmd->reload);
-	console_cmd_free(&cmd->mount);
+	struct console_cmd *root = cmd_new(&c->root_cmd, "vfs", 0, NULL, NULL);
+	cmd_new(root, "list", 0, &core_console_vfs_list, NULL);
+	cmd_new(root, "reload", 1, &core_console_vfs_reload, core_console_vfs_autocomplete_simplename);
+	cmd_new(root, "mount", 1, &core_console_vfs_mount, core_console_vfs_autocomplete_simplename);
 }
 
 /* Main API */
 
-void core_console_init(struct graphics *g, struct console *c)
+void core_console_new(struct console *c)
 {
-	/* Global state. */
-	state.graphics = g;
-	state.console = c;
-
-	core_console_meta_init(c, &state.cmd_meta);
-	core_console_sound_init(c, &state.cmd_sound);
-	core_console_graphics_init(c, &state.cmd_graphics);
-	core_console_vfs_init(c, &state.cmd_vfs);
+	core_console_meta_init(c);
+	core_console_sound_init(c);
+	core_console_graphics_init(c);
+	core_console_vfs_init(c);
 }
 
-void core_console_free()
+void core_console_printf(const char *fmt, ...)
 {
-	core_console_meta_free(&state.cmd_meta);
-	core_console_sound_free(&state.cmd_sound);
-	core_console_graphics_free(&state.cmd_graphics);
-	core_console_vfs_free(&state.cmd_vfs);
-
-	console_free(state.console);
+	if(core_global == NULL || !core_global->console.initialized) {
+		return;
+	}
+	va_list args;
+	va_start(args, fmt);
+	console_vprintf(&core_global->console, fmt, args);
+	va_end(args);
 }
-

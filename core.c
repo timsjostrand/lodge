@@ -51,7 +51,11 @@ static void core_assets_init(struct core* core)
 {
 	/* Load console. */
 	console_new(&core->console, &core->font_console, core->view_width, 16, &core->textures.none);
-	core_console_init(&core->graphics, &core->console);
+
+	/* Create core commands. */
+	core_console_new(&core->console);
+
+	/* Create game-specific commands. */
 	if (core->console_init_callback != NULL) {
 		core->console_init_callback(&core->console);
 	}
@@ -74,7 +78,7 @@ static void core_think(struct core* core, struct graphics *g, float delta_time)
 	if(core->think_callback != NULL) {
 		core->think_callback(core, g, delta_time);
 	}
-	
+
 	/* Input must think after game logic. */
 	input_think(&core->input, delta_time);
 }
@@ -192,7 +196,7 @@ void core_glfw_resize_callback(GLFWwindow *window, int width, int height)
 	float ax = width;
 	float ay = height;
 	float ratio = core_global->view_height / core_global->view_width;
-	
+
 	float max_width = height / ratio;
 
 	if (width < max_width)
