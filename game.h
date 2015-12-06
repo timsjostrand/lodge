@@ -27,11 +27,11 @@ struct shared_memory
 //#define LOAD_SHARED
 
 #ifdef _WIN32
-#define EXPORT __declspec( dllexport ) 
-#define IMPORT __declspec( dllimport ) 
+#define EXPORT __declspec( dllexport )
+#define IMPORT __declspec( dllimport )
 #else
-#define EXPORT 
-#define IMPORT 
+#define EXPORT
+#define IMPORT
 #endif
 
 #ifdef ENABLE_SHARED
