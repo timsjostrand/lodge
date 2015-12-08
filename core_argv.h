@@ -1,3 +1,6 @@
+#ifndef _CORE_ARGV_H
+#define _CORE_ARGV_H
+
 #include "log.h"
 
 #define core_argv_error(...) errorf("Argv", __VA_ARGS__)
@@ -12,3 +15,5 @@ struct core_argv {
 };
 
 int core_argv_parse(struct core_argv *dst, int argc, char **argv);
+
+#endif

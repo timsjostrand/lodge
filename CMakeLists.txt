@@ -192,18 +192,18 @@ function(add_game_library game_name)
     # Generate assets.{c,h} if necessary.
     add_dependencies(${game_name}_obj generate_assets_do)
 
-	# Compile with console output support.
-	if(ENABLE_CONSOLE)
-		target_compile_definitions(${game_name}_obj PRIVATE CONSOLE_ENABLE)
-		target_compile_definitions(${game_name} PRIVATE CONSOLE_ENABLE)
-		target_compile_definitions(${game_name}_static PRIVATE CONSOLE_ENABLE)
-	endif()
+    # Compile with console output support?
+    if(ENABLE_CONSOLE)
+        target_compile_definitions(${game_name}_obj PRIVATE CONSOLE_ENABLE)
+    endif()
 
-    # Compile as shared library.
+    # Compile as shared library?
     if(ENABLE_SHARED)
         target_compile_definitions(${game_name}_obj PRIVATE ENABLE_SHARED)
-        target_compile_definitions(${game_name} PRIVATE ENABLE_SHARED)
     endif()
+
+    # Compile with DEBUG flag?
+    target_compile_definitions(${game_name}_obj PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
     # Compile with C99.
     set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
@@ -266,7 +266,7 @@ target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
 # Console capture stdout support
 if(ENABLE_CONSOLE)
-	target_compile_definitions(engine PRIVATE CONSOLE_ENABLE)
+    target_compile_definitions(engine PRIVATE CONSOLE_ENABLE)
 endif()
 
 # GCC compiler settings.
