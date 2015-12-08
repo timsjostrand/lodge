@@ -13,6 +13,8 @@ typedef float mat4[16];
 typedef float vec3[3];
 typedef float vec2[2];
 
+typedef void(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b);
+
 struct spritebatch
 {
 	GLuint texture;
@@ -23,9 +25,9 @@ struct spritebatch
 	GLuint offset_stream;
 	GLuint offset_draw;
 
-	GLfloat* gpu_vertices;
-
 	unsigned int sprite_count;
+
+	GLfloat* gpu_vertices;
 };
 
 void spritebatch_create(struct spritebatch* batch);
@@ -34,5 +36,6 @@ void spritebatch_begin(struct spritebatch* batch);
 void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_pos, vec2 tex_bounds);
 void spritebatch_end(struct spritebatch* batch);
 void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex, mat4 transform);
+void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_function);
 
 #endif //_SPRITEBATCH_H

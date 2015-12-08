@@ -128,6 +128,11 @@ void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_p
 	batch->sprite_count++;
 }
 
+void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_function)
+{
+	qsort(batch->gpu_vertices, batch->sprite_count, sizeof(GLfloat) * 30, sorting_function);
+}
+
 void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
 {
 	glUseProgram(s->program);

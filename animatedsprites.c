@@ -79,6 +79,11 @@ void animatedsprites_update(struct animatedsprites* animatedsprites, struct atla
 	spritebatch_end(&animatedsprites->spritebatch);
 }
 
+void animatedsprites_sort(struct animatedsprites* animatedsprites, spritebatch_sort_fn sorting_function)
+{
+	spritebatch_sort(&animatedsprites->spritebatch, sorting_function);
+}
+
 void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
 {
 	spritebatch_render(&animatedsprites->spritebatch, s, g, tex, transform);
