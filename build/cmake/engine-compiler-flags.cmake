@@ -8,7 +8,9 @@
 # GCC compiler settings.
 if(CMAKE_COMPILER_IS_GNUCC)
     # More warnings.
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Wall -Wpedantic -fdiagnostics-show-option")
+    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Wall -fdiagnostics-show-option")
+    # Strict ISO C.
+    #set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Wpedantic")
     # Do not allow declaring functions without implementing them.
     set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Werror-implicit-function-declaration")
     # Force casting of pointer types.
