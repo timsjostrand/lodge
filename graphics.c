@@ -22,65 +22,19 @@
 #include "texture.h"
 #include "color.h"
 
-const float vertices_rect[] = {
+static const float rect_vertices[] = {
 	// Vertex			 // Texcoord
-	-0.5f,	0.5f,  0.0f, 0.0f, 0.0f, // Top-left?
-	-0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left ?
-	 0.5f,	0.5f,  0.0f, 1.0f, 0.0f, // Top-right ?
-	 0.5f,	0.5f,  0.0f, 1.0f, 0.0f, // Top-right ?
-	-0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left ?
-	 0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right ?
+	-0.5f,	0.5f,  0.0f, 0.0f, 0.0f, // Top-left
+	-0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left
+	 0.5f,	0.5f,  0.0f, 1.0f, 0.0f, // Top-right
+	 0.5f,	0.5f,  0.0f, 1.0f, 0.0f, // Top-right
+	-0.5f, -0.5f,  0.0f, 0.0f, 1.0f, // Bottom-left
+	 0.5f, -0.5f,  0.0f, 1.0f, 1.0f, // Bottom-right
 };
 
 #ifdef EMSCRIPTEN
 struct graphics* graphics_global;
 #endif
-
-/* TODO: separate into sprite.c */
-void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g)
-{
-	glUseProgram(s->program);
-	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-	glBindVertexArray(g->vao_rect);
-
-	// Position, rotation and scale
-	mat4 transform_position;
-	translate(transform_position, xyz(sprite->pos));
-
-	mat4 transform_scale;
-	scale(transform_scale, xyz(sprite->scale));
-
-	mat4 transform_rotation;
-	rotate_z(transform_rotation, sprite->rotation);
-
-	mat4 transform_final;
-	mult(transform_final, transform_position, transform_rotation);
-	mult(transform_final, transform_final, transform_scale);
-	transpose_same(transform_final);
-
-	// Upload matrices and color
-	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
-	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
-	glUniform4fv(s->uniform_color, 1, sprite->color);
-	glUniform1i(s->uniform_sprite_type, sprite->type);
-	glUniform1i(s->uniform_tex, 0);
-
-	// Render it!
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, *(sprite->texture));
-	glDrawArrays(GL_TRIANGLES, 0, VBO_QUAD_VERTEX_COUNT);
-}
-
-void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-				float w, float h, const vec4 color, float rotation, GLuint *texture)
-{
-	sprite->type = type;
-	set4f(sprite->pos, x, y, z, 0.0f);
-	set4f(sprite->scale, w, h, 1.0f, 1.0f);
-	set4f(sprite->color, rgba(color));
-	sprite->rotation = rotation;
-	sprite->texture = texture;
-}
 
 static int graphics_opengl_init(struct graphics *g, int view_width, int view_height)
 {
@@ -112,11 +66,13 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
 	glGenBuffers(1, &g->vbo_rect);
 	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
 	glBufferData(GL_ARRAY_BUFFER, VBO_QUAD_LEN * sizeof(float),
-			vertices_rect, GL_STATIC_DRAW);
+			rect_vertices, GL_STATIC_DRAW);
 
 	/* Vertex array. */
 	glGenVertexArrays(1, &g->vao_rect);
 	glBindVertexArray(g->vao_rect);
+
+	GL_OK_OR_RETURN_NONZERO;
 
 	return GRAPHICS_OK;
 }
@@ -187,6 +143,15 @@ int graphics_libraries_init(struct graphics *g, int window_width, int window_hei
 	GLenum err = glewInit();
 	if(err != GLEW_OK) {
 		return GRAPHICS_GLEW_ERROR;
+	}
+
+	/* NOTE: Something in the init code above is causing an 0x0500 OpenGL error,
+	 * and it will linger in the error queue until the application pops it.
+	 * Assuming the aforementioned init code does it's error checking properly,
+	 * we can safely exhaust the error queue here to avoid ugly debug print
+	 * statements later. */
+	while(glGetError() != GL_NO_ERROR) {
+		/* Ignore this error. */
 	}
 
 	return GRAPHICS_OK;

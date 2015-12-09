@@ -17,6 +17,7 @@
 #include "math4.h"
 #include "color.h"
 #include "graphics.h"
+#include "drawable.h"
 #include "shader.h"
 #include "input.h"
 #include "texture.h"

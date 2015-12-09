@@ -359,53 +359,55 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 			}
 		}
 
+		/* Bind vertex array. */
+		glBindVertexArray(dst->vao);
+		GL_OK_OR_RETURN;
+
 		/* glBufferData reallocates memory if necessary. */
 		glBindBuffer(GL_ARRAY_BUFFER, dst->vbo);
-		glBindVertexArray(dst->vao);
 		glBufferData(GL_ARRAY_BUFFER, dst->verts_len * sizeof(GLfloat),
 				dst->verts, GL_DYNAMIC_DRAW);
+		GL_OK_OR_RETURN;
+
+		/* Position stream. */
+		//GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
+		/* FIXME: assumes posAttrib == 0 */
+		GLint posAttrib = 1;
+		glEnableVertexAttribArray(posAttrib);
+		glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+		GL_OK_OR_RETURN;
+
+		/* Texcoord stream. */
+		//GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
+		/* FIXME: assumes texcoordAttrib == 0 */
+		GLint texcoordAttrib = 0;
+		glEnableVertexAttribArray(texcoordAttrib);
+		glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
+				(void*) (3 * sizeof(GLfloat)));
+		GL_OK_OR_RETURN;
 	}
 }
 
 /**
  * FIXME: optimize:
  *
- * - Attribs should be fetched once and stored in vao.
  * - transform_final is not really used but required for current sprite shader.
  * - use DrawElements instead of DrawArrays (requires indices array).
  */
 void monotext_render(struct monotext *text, struct shader *s, struct graphics *g)
 {
+	if(text == NULL || text->vao == 0) {
+		return;
+	}
+
 	glUseProgram(s->program);
-	/* FIXME: do attribs once */
-	glBindBuffer(GL_ARRAY_BUFFER, text->vbo);
+
+	/* Bind vertex array. */
 	glBindVertexArray(text->vao);
 
-	/* Position stream. */
-	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-
-	/* Texcoord stream. */
-	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
-	glEnableVertexAttribArray(texcoordAttrib);
-	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-			(void*) (3 * sizeof(float)));
-
-	/* Position, rotation and scale. */
-	mat4 transform_position;
-	translate(transform_position, 0, 0, 0);
-
-	mat4 transform_scale;
-	scale(transform_scale, 1, 1, 1);
-
-	mat4 transform_rotation;
-	rotate_z(transform_rotation, 0);
-
+	/* Dummy transform. */
 	mat4 transform_final;
-	mult(transform_final, transform_position, transform_rotation);
-	mult(transform_final, transform_final, transform_scale);
-	transpose_same(transform_final);
+	identity(transform_final);
 
 	/* Upload matrices and color. */
 	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
@@ -420,4 +422,5 @@ void monotext_render(struct monotext *text, struct shader *s, struct graphics *g
 
 	/* Render it! */
 	glDrawArrays(GL_TRIANGLES, 0, text->verts_count);
+	GL_OK_OR_RETURN;
 }

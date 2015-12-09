@@ -8,6 +8,22 @@
 #define graphics_debug(...) debugf("Graphics", __VA_ARGS__)
 #define graphics_error(...) errorf("Graphics", __VA_ARGS__)
 
+#define GL_OK_OR_RETURN { \
+		GLenum err = GL_NO_ERROR; \
+		while((err = glGetError()) != GL_NO_ERROR) { \
+			errorf("OpenGL", "Error 0x%04x in %s:%s:%d\n", err, __FILE__, __FUNCTION__, __LINE__); \
+			return; \
+		} \
+	}
+
+#define GL_OK_OR_RETURN_NONZERO { \
+		GLenum err = GL_NO_ERROR; \
+		while((err = glGetError()) != GL_NO_ERROR) { \
+			errorf("OpenGL", "Error 0x%04x in %s:%s:%d\n", err, __FILE__, __FUNCTION__, __LINE__); \
+			return GRAPHICS_ERROR; \
+		} \
+	}
+
 #define GRAPHICS_OK					 0
 #define GRAPHICS_ERROR				-1
 #define GRAPHICS_SHADER_ERROR		-2
@@ -26,15 +42,6 @@
 #define VBO_QUAD_VERTEX_COUNT	6
 /* Number of components in a quad. */
 #define VBO_QUAD_LEN			(VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
-
-struct basic_sprite {
-	int		type;
-	vec4	pos;
-	vec4	scale;
-	vec4	color;
-	float	rotation;
-	GLuint	*texture;
-};
 
 struct frames;
 
@@ -79,9 +86,5 @@ void	graphics_free(struct core* core, struct graphics *g);
 void	graphics_loop();
 
 double	now();
-
-void	sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-				float w, float h, const vec4 color, float rotation, GLuint *texture);
-void	sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g);
 
 #endif
