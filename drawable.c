@@ -356,6 +356,13 @@ void drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, floa
 	free(vertices);
 }
 
+void drawable_free(struct drawable *d)
+{
+	glDeleteVertexArrays(1, &d->vao);
+	glDeleteBuffers(1, &d->vbo);
+	d->vertex_count = 0;
+}
+
 /**** DEPRECATED STUFF ****/
 
 void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g)

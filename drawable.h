@@ -13,6 +13,8 @@ struct drawable {
 	GLuint	vao;
 };
 
+void	drawable_free(struct drawable *d);
+
 void	drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments, struct shader *s);
 void	drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments, struct shader *s);
 
