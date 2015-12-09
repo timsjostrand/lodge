@@ -18,6 +18,7 @@
 #include "str.h"
 #include "math4.h"
 #include "graphics.h"
+#include "drawable.h"
 
 static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };

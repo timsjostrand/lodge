@@ -217,7 +217,7 @@ int main(int argc, char **argv)
 	core_set_mousebutton_callback(core_global, &game_mousebutton_callback);
 	core_set_fps_callback(core_global, &game_fps_callback);
 	core_set_init_memory_callback(core_global, &game_init_memory);
-	core_set_up_console(core_global, &game_console_init, &assets->shaders.basic_shader);
+	core_set_console_init_callback(core_global, &game_console_init);
 	struct game_settings *settings = game_get_settings();
 #endif
 

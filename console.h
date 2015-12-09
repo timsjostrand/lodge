@@ -5,6 +5,7 @@
 
 #include "list.h"
 #include "graphics.h"
+#include "drawable.h"
 #include "monotext.h"
 #include "log.h"
 

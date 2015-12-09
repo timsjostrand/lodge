@@ -2,18 +2,9 @@
 #define _COLLIDE_H
 
 #include "math4.h"
+#include "geometry.h"
 
 #define xywh(pos, size) pos[0], pos[1], size[0], size[1]
-
-struct rect {
-	vec2	*pos;
-	vec2	*size;
-};
-
-struct circle {
-	vec2	*pos;
-	float	r;
-};
 
 int collide_rect(const struct rect *a, const struct rect *b);
 int collide_circle(const struct circle *a, const struct circle *b);
