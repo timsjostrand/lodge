@@ -54,9 +54,9 @@ if(NOT EMSCRIPTEN)
 
     # Library: glew.
     if(ENABLE_SHARED)
-        list(APPEND ENGINE_EXTRA_LIBS glew ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES})
+        list(APPEND ENGINE_EXTRA_LIBS glew ${GLEW_LIBRARIES})
     else()
-        list(APPEND ENGINE_EXTRA_LIBS glew_s ${GL_LIBRARY} ${PLATFORM_SPECIFIC_LIBRARIES})
+        list(APPEND ENGINE_EXTRA_LIBS glew_s ${GLEW_LIBRARIES})
     endif()
     add_subdirectory(lib/glew/build/cmake)
     list(APPEND ENGINE_INCLUDES lib/glew/include)
@@ -183,11 +183,34 @@ function(add_game_library game_name)
 
     # Create library.
     add_library(${game_name}_obj OBJECT ${ARGN} ${ASSETS_C} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-    add_library(${game_name} SHARED $<TARGET_OBJECTS:${game_name}_obj>)
-    add_library(${game_name}_static STATIC $<TARGET_OBJECTS:${game_name}_obj>)
 
     # Store as dependencies that will be applied to the 'engine' target later.
-    set(ENGINE_DEPS ${game_name}_obj ${game_name} ${game_name}_static CACHE INTERNAL "Engine dependencies" FORCE)
+    if(ENABLE_SHARED)
+        add_library(${game_name} SHARED $<TARGET_OBJECTS:${game_name}_obj>)
+        set(ENGINE_DEPS ${game_name}_obj ${game_name} CACHE INTERNAL "Engine dependencies" FORCE)
+
+        # Need HACK_POST_BUILD for Visual Studio 2013.
+        if(MSVC12)
+            set(HACK_POST_BUILD 1)
+        endif()
+
+        # Output shared library into asset path.
+        if(HACK_POST_BUILD)
+            message("With HACK_POST_BUILD")
+            # HACK: On some platforms, this method works best for hotswapping the
+            # shared library.
+            set_target_properties(${game_name} PROPERTIES
+                RUNTIME_OUTPUT_DIRECTORY "${ASSET_PATH}"
+                LIBRARY_OUTPUT_DIRECTORY "${ASSET_PATH}")
+        else()
+            add_custom_command(TARGET ${game_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${game_name}>" ${ASSET_PATH}
+                COMMENT "Copying ${game_name} shared library to ASSET_PATH")
+        endif()
+    else()
+        add_library(${game_name}_static STATIC $<TARGET_OBJECTS:${game_name}_obj>)
+        set(ENGINE_DEPS ${game_name}_obj ${game_name}_static CACHE INTERNAL "Engine dependencies" FORCE)
+    endif()
 
     # Generate assets.{c,h} if necessary.
     add_dependencies(${game_name}_obj generate_assets_do)
@@ -209,41 +232,29 @@ function(add_game_library game_name)
     set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
 
     # Compile with correct flags.
-    set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET ${game_name}_obj ${game_name} ${game_name}_static PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-
-    # Need HACK_POST_BUILD for Visual Studio 2013.
-    if(MSVC12)
-        set(HACK_POST_BUILD 1)
-    endif()
-
-    # Output shared library into asset path.
-    if(HACK_POST_BUILD)
-        message("With HACK_POST_BUILD")
-        # HACK: On some platforms, this method works best for hotswapping the
-        # shared library.
-        set_target_properties(${game_name} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${ASSET_PATH}"
-            LIBRARY_OUTPUT_DIRECTORY "${ASSET_PATH}")
-    else()
-        add_custom_command(TARGET ${game_name} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${game_name}>" ${ASSET_PATH}
-            COMMENT "Copying ${game_name} shared library to ASSET_PATH")
-    endif()
+    set_property(TARGET ${game_name}_obj PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET ${game_name}_obj PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Link libraries.
-    target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
-    target_link_libraries(${game_name}_static ${ENGINE_EXTRA_LIBS})
+    if(ENABLE_SHARED)
+        target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
+        set(ENGINE_GAME_LIBRARY "" CACHE INTERNAL "Do not link against game library" FORCE)
 
-    if(NOT ENABLE_SHARED)
-        list(APPEND ENGINE_EXTRA_LIBS ${game_name}_static)
+        # Convenience target to compile and run the engine executable with the same
+        # asset path as in cmake_user.
+        add_custom_target(run_${game_name}
+            COMMAND engine --windowed --mount "${ASSET_PATH}" --game "$<TARGET_FILE_NAME:${game_name}>"
+            DEPENDS ${game_name} engine)
+    else()
+        target_link_libraries(${game_name}_static ${ENGINE_EXTRA_LIBS})
+        set(ENGINE_GAME_LIBRARY "${game_name}_static" CACHE INTERNAL "Link against game library" FORCE)
+
+        # Convenience target to compile and run the engine executable with the same
+        # asset path as in cmake_user.
+        add_custom_target(run_${game_name}
+            COMMAND engine --windowed --mount "${ASSET_PATH}"
+            DEPENDS ${game_name}_static engine)
     endif()
-
-    # Convenience target to compile and run the engine executable with the same
-    # asset path as in cmake_user.
-    add_custom_target(run_${game_name}
-        COMMAND engine --windowed --mount "${ASSET_PATH}" --game "$<TARGET_FILE_NAME:${game_name}>"
-        DEPENDS ${game_name} engine)
 endfunction()
 
 # Build game library.
@@ -294,7 +305,7 @@ set_property(TARGET engine generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_
 if(NOT EMSCRIPTEN)
     # Build the engine using the C99 standard.
     set_property(TARGET engine PROPERTY C_STANDARD 99)
-    target_link_libraries(engine ${ENGINE_EXTRA_LIBS})
+    target_link_libraries(engine ${ENGINE_EXTRA_LIBS} ${ENGINE_GAME_LIBRARY})
 else()
     target_link_libraries(engine)
 endif()
