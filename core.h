@@ -71,6 +71,7 @@ void core_set_asset_callbacks(struct core* core, core_load_t load_callback,
 void core_set_fps_callback(struct core* core, fps_func_t fps_callback);
 void core_set_console_init_callback(struct core* core, core_console_init_t console_init_callback);
 void core_set_up_sound(struct core* core, vec3 *sound_listener, float distance_max);
+void core_get_viewport(struct core* core, float* x, float* y, float* w, float* h);
 
 void core_setup(struct core* core, const char *title, int view_width, int view_height,
 	int window_width, int window_height, int window_mode, size_t game_memory_size);

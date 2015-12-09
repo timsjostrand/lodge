@@ -191,6 +191,17 @@ void core_set_init_memory_callback(struct core* core, core_init_memory_t init_me
 	core->init_memory_callback = init_memory_callback;
 }
 
+void core_get_viewport(struct core* core, float* x, float* y, float* w, float* h)
+{
+	float buffer[4];
+	glGetFloatv(GL_VIEWPORT, buffer);
+
+	*x = buffer[0];
+	*y = buffer[1];
+	*w = buffer[2];
+	*h = buffer[3];
+}
+
 void core_glfw_resize_callback(GLFWwindow *window, int width, int height)
 {
 	float ax = width;
