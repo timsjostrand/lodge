@@ -12,6 +12,7 @@
 #include "log.h"
 #include "graphics.h"
 #include "input.h"
+#include "core.h"
 
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods);
 void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods);
@@ -97,28 +98,49 @@ void input_think(struct input *input, float delta_time)
 /**
  * Converts window corrdinates to view coordinates.
  */
-void input_window_to_view(float win_x, float win_y, float win_w, float win_h,
-		float view_w, float view_h, float *x, float *y)
+void input_window_to_view(float win_x, float win_y, float win_w, float win_h, float *x, float *y)
 {
-	*x = (float) (win_x * (view_w / win_w));
-	*y = (float) (view_h - win_y * (view_h / win_h));
+	float vx, vy, vw, vh;
+	core_get_viewport(input_global->core, &vx, &vy, &vw, &vh);
+
+	float dw = vw - win_w;
+	float dh = vh - win_h;
+
+	win_x = win_x + vx + dw;
+	win_y = win_y + vy + dh;
+	win_w = vw;
+	win_h = vh;
+
+	mat4 projection;
+	inverse(projection, input_global->core->graphics.projection);
+
+	vec4 in_pos;
+	in_pos[0] = 2.0f * win_x / win_w;
+	in_pos[1] = 2.0f * (1.0f - win_y / win_h);
+	in_pos[2] = 0.0f;
+	in_pos[3] = 1.0f;
+
+	vec4 out_pos;
+	mult_vec4(out_pos, projection, in_pos);
+	*x = out_pos[0];
+	*y = out_pos[1];
 }
 
 void input_window_get_cursor(GLFWwindow *window, float *x, float *y)
 {
+	
 	double tmp_x = 0, tmp_y = 0;
 	glfwGetCursorPos(window, &tmp_x, &tmp_y);
 	*x = (float) tmp_x;
 	*y = (float) tmp_y;
 }
 
-void input_view_get_cursor(GLFWwindow *window, const float view_w,
-		const float view_h, float *x, float *y)
+void input_view_get_cursor(GLFWwindow *window, float *x, float *y)
 {
 	float win_x = 0, win_y = 0;
 	input_window_get_cursor(window, &win_x, &win_y);
 	int win_w = 0, win_h = 0;
 	glfwGetWindowSize(window, &win_w, &win_h);
 	/* Convert screen space => game space. */
-	input_window_to_view(win_x, win_y, win_w, win_h, view_w, view_h, x, y);
+	input_window_to_view(win_x, win_y, win_w, win_h, x, y);
 }
