@@ -61,6 +61,14 @@ void translate(mat4 m, float x, float y, float z)
 	m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
 }
 
+void mult_vec4(vec4 v, const mat4 m, const vec4 a)
+{
+	v[0] = m[0]  * a[0] + m[1]  * a[1] + m[2]  * a[2] + m[3]  * a[3];
+	v[1] = m[4]  * a[0] + m[5]  * a[1] + m[6]  * a[2] + m[7]  * a[3];
+	v[2] = m[8]  * a[0] + m[9]  * a[1] + m[10] * a[2] + m[11] * a[3];
+	v[3] = m[12] * a[0] + m[13] * a[1] + m[14] * a[2] + m[15] * a[3];
+}
+
 void translatev(mat4 m, vec4 v)
 {
 	translate(m, xyz(v));

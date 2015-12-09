@@ -19,6 +19,7 @@ typedef float vec4[4];
 
 void ortho(mat4 m, float left, float right, float top, float bottom, float near, float far);
 void mult(mat4 m, const mat4 a, const mat4 b);
+void mult_vec4(vec4 v, const mat4 m, const vec4 a);
 void mult_same(mat4 a, const mat4 b);
 void mult_scalar(mat4 m, const mat4 a, const float s);
 void mult_scalar_same(mat4 m, const float s);
