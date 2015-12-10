@@ -1,9 +1,0 @@
-Bugs
-------------
-
-
-Features
-------------
-- WebGL support with Emscripten compiler
-- Generating empty projects with script
-
