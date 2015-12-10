@@ -132,7 +132,7 @@ float console_height(struct console *c, int display_lines)
 }
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex)
+		int padding, GLuint *white_tex, struct shader *shader)
 {
 	c->display_lines = CONSOLE_DISPLAY_LINES;
 	c->font = font;
@@ -160,8 +160,8 @@ void console_new(struct console *c, struct monofont *font, int view_width,
 			0.0f,
 			white_tex);
 
-	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, padding, padding);
-	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, padding, padding);
+	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, padding, padding, shader);
+	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, padding, padding, shader);
 
 	console_cursor_init(&c->cursor, &c->txt_input, white_tex);
 	console_cmd_new(&c->root_cmd, "root", 0, NULL, NULL);

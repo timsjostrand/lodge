@@ -50,10 +50,11 @@ struct monotext {
 	int				quads_count;				/* The number of quads required (text_len - newlines). */
 	GLuint			vbo;						/* VBO for the vertex array. */
 	GLuint			vao;
+	struct shader	*shader;
 };
 
 void monotext_new(struct monotext *dst, const char *text, const vec4 color,
-		struct monofont *font, const float blx, const float bly);
+		struct monofont *font, const float blx, const float bly, struct shader *shader);
 void monotext_updatef(struct monotext *dst, const char *fmt, ...);
 void monotext_update(struct monotext *dst, const char *text, const size_t len);
 void monotext_render(struct monotext *text, struct shader *s, struct graphics *g);

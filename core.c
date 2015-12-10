@@ -50,7 +50,8 @@ static void core_release(struct core* core)
 static void core_assets_init(struct core* core)
 {
 	/* Load console. */
-	console_new(&core->console, &core->font_console, core->view_width, 16, &core->textures.none);
+	console_new(&core->console, &core->font_console, core->view_width, 16, &core->textures.none,
+			core->console_shader);
 
 	/* Create core commands. */
 	core_console_new(&core->console);

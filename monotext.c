@@ -234,13 +234,14 @@ static void monotext_print_quad(float *verts, int quad)
  * @param font	The font to render with.
  */
 void monotext_new(struct monotext *dst, const char *text, const vec4 color,
-		struct monofont *font, const float blx, const float bly)
+		struct monofont *font, const float blx, const float bly, struct shader *shader)
 {
 	if(!font->loaded) {
 		monotext_error("Font not loaded!\n");
 		return;
 	}
 	dst->font = font;
+	dst->shader = shader;
 	set3f(dst->bottom_left, blx, bly, 0.2f);
 	copyv(dst->color, color);
 	monotext_update(dst, text, strnlen(text, MONOTEXT_STR_MAX));
@@ -370,17 +371,13 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 		GL_OK_OR_RETURN;
 
 		/* Position stream. */
-		//GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
-		/* FIXME: assumes posAttrib == 0 */
-		GLint posAttrib = 1;
+		GLint posAttrib = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_POSITION);
 		glEnableVertexAttribArray(posAttrib);
 		glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
 		GL_OK_OR_RETURN;
 
 		/* Texcoord stream. */
-		//GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
-		/* FIXME: assumes texcoordAttrib == 0 */
-		GLint texcoordAttrib = 0;
+		GLint texcoordAttrib = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_TEXCOORD);
 		glEnableVertexAttribArray(texcoordAttrib);
 		glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
 				(void*) (3 * sizeof(GLfloat)));

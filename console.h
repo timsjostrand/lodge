@@ -91,7 +91,7 @@ struct console {
 };
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex);
+		int padding, GLuint *white_tex, struct shader *shader);
 void console_free(struct console *c);
 void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
