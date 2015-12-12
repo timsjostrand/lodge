@@ -1,13 +1,13 @@
-﻿#include "game.h"
-
-#include "log.h"
-
+﻿#include <stdlib.h>
+#include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
 
+#include "game.h"
+#include "log.h"
 #include "vfs.h"
 #include "assets.h"
 

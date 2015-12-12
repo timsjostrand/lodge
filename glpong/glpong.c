@@ -125,7 +125,6 @@ struct game {
 
 struct game* game = 0;
 struct vfs* vfs = NULL;
-struct input* input_global = NULL;
 
 struct game_settings* game_get_settings()
 {
@@ -438,9 +437,11 @@ void game_mousebutton_callback(struct core* core, GLFWwindow *window, int button
 		game->mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float)win_h);
 
 		sound_buf_play_pitched(&core_global->sound, game->tone_hit, game->mouse_pos, 0.2f);
+#if 0
 		console_debug("Click at %.0fx%.0f (distance to listener: %.0f)\n",
 			game->mouse_pos[0], game->mouse_pos[1],
-			distance3f(sound_listener, game->mouse_pos));
+			distance3f(game->sound_listener, game->mouse_pos));
+#endif
 	}
 }
 
@@ -583,7 +584,7 @@ void game_init()
 	init_player2(&game->player2);
 	init_ball(&game->ball);
 	monotext_new(&game->txt_debug, "FPS: 0", COLOR_WHITE, &game->font, 16.0f,
-		VIEW_HEIGHT - 16.0f);
+		VIEW_HEIGHT - 16.0f, &assets->shaders.basic_shader);
 	game->vivaldi_src = sound_buf_play_music(&core_global->sound, assets->sounds.vivaldi, 1.0f);
 }
 
