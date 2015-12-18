@@ -1,0 +1,20 @@
+CC = /Users/tim/Code/emscripten/emcc
+
+DIR = emscripten
+SOURCES = main.c math4.c
+FILES = $(SOURCES:%.c=../%.c)
+OBJS = $(SOURCES:%.c=%.o)
+
+EOPT = USE_GLFW=3 LEGACY_GL_EMULATION=1
+EOPTS = $(addprefix -s $(EMPTY), $(EOPT))
+
+build:
+	mkdir -p $(DIR)
+	$(CC) $(FILES) -O2 $(EOPTS) -o $(DIR)/glpong.html
+
+dist: build
+	rm $(OBJS)
+
+clean:
+	rm i-rf $(DIR)
+	rm $(OBJS)
