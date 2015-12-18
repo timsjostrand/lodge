@@ -1,2 +1,0 @@
-set(GAME_PATH "/path/to/game/sources")
-set(ASSET_PATH "/path/to/your/assets")

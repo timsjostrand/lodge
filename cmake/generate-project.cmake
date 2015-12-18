@@ -8,9 +8,12 @@
 #
 
 if(DEFINED GAME_NAME)
-	set(ENGINE_PATH ${CMAKE_CURRENT_LIST_DIR}/../../)
-	set(GAME_PATH ${GAME_NAME})
-	string(TIMESTAMP YEAR "%Y")
+	set(ENGINE_PATH ${CMAKE_CURRENT_LIST_DIR}/../)
+    get_filename_component(DEFAULT_ENGINE_PATH ${ENGINE_PATH} ABSOLUTE)
+    get_filename_component(GAME_PATH ${GAME_NAME} ABSOLUTE)
+    get_filename_component(DEFAULT_ASSET_PATH ${GAME_NAME}/assets ABSOLUTE)
+	
+    string(TIMESTAMP YEAR "%Y")
 
 	# Copy template project.
 	file(COPY ${ENGINE_PATH}/empty-project/ DESTINATION ${GAME_NAME})
@@ -22,7 +25,7 @@ if(DEFINED GAME_NAME)
 	# Perform variable substitution.
 	foreach(game_file ${GAME_FILES})
 		message("Preparing ${game_file}...")
-		configure_file(${game_file} ${game_file})
+		configure_file(${game_file} ${game_file} @ONLY)
 	endforeach()
 
 	message("Project ${GAME_NAME} generated")

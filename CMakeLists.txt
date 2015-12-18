@@ -2,13 +2,8 @@ project(engine)
 
 cmake_minimum_required(VERSION 3.1)
 
-# Include local settings.
-include(cmake_user.txt)
-message(STATUS "GAME_PATH=${GAME_PATH}")
-message(STATUS "ASSET_PATH=${ASSET_PATH}")
-
 # Import compiler flags defined in another file.
-include(build/cmake/engine-compiler-flags.cmake)
+include(${ENGINE_PATH}/cmake/engine-compiler-flags.cmake)
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
@@ -30,7 +25,6 @@ if(HAVE_STRNLEN)
     add_definitions(-DHAVE_STRNLEN)
 endif()
 
-set(ENGINE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 set(ENGINE_INCLUDES ${ENGINE_PATH})
 
 # Store DLLs alongside engine.exe.
@@ -48,8 +42,8 @@ if(NOT EMSCRIPTEN)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
     set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
     set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target" FORCE)
-    add_subdirectory(lib/glfw)
-    list(APPEND ENGINE_INCLUDES lib/glfw/include)
+    add_subdirectory(${ENGINE_PATH}/lib/glfw ${CMAKE_BINARY_DIR}/lib/glfw)
+    list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/glfw/include)
     list(APPEND ENGINE_EXTRA_LIBS glfw ${GLFW_LIBRARIES})
 
     # Library: glew.
@@ -58,11 +52,11 @@ if(NOT EMSCRIPTEN)
     else()
         list(APPEND ENGINE_EXTRA_LIBS glew_s ${GLEW_LIBRARIES})
     endif()
-    add_subdirectory(lib/glew/build/cmake)
-    list(APPEND ENGINE_INCLUDES lib/glew/include)
+    add_subdirectory(${ENGINE_PATH}/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
+    list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/glew/include)
 
     # Library: cJSON.
-    add_subdirectory(lib/cjson)
+    add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
     if(ENABLE_SHARED)
         list(APPEND ENGINE_EXTRA_LIBS cJSON.shared)
     else()
@@ -85,8 +79,8 @@ if(NOT EMSCRIPTEN)
         set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries" FORCE)
         # .lib-generation requires GNU 'sed' but MinGW usually ships with old version.
         set(ALSOFT_BUILD_IMPORT_LIB OFF CACHE BOOL "Build an import .lib using dlltool (requires sed)" FORCE)
-        add_subdirectory(lib/openal)
-        list(APPEND ENGINE_INCLUDES lib/openal/include/AL)
+        add_subdirectory(${ENGINE_PATH}/lib/openal ${CMAKE_BINARY_DIR}/lib/openal)
+        list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/openal/include/AL)
 
         # OpenAL has different names on different platforms.
         if(WIN32)
@@ -113,7 +107,7 @@ else()
 endif()
 
 # Include stb.h
-list(APPEND ENGINE_INCLUDES lib/)
+list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/)
 
 set(ENGINE_SOURCES_LOCAL math4.c core_console.c graphics.c shader.c input.c texture.c
         color.c sound.c vfs.c atlas.c monotext.c str.c list.c console.c
@@ -158,7 +152,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Compare assets directory, maybe regenerate assets.c
 add_custom_target(assets_check_update ALL
-    COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${ASSET_PATH} -DSTAMP_FILE=${ASSETS_STAMP_FILE} -P ${ENGINE_PATH}/build/cmake/dir_checksum.cmake
+    COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${ASSET_PATH} -DSTAMP_FILE=${ASSETS_STAMP_FILE} -P ${ENGINE_PATH}/cmake/dir_checksum.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Calculating assets checksum...")
 
@@ -242,7 +236,7 @@ function(add_game_library game_name)
 
         # Convenience target to compile and run the engine executable with the same
         # asset path as in cmake_user.
-        add_custom_target(run_${game_name}
+        add_custom_target(run
             COMMAND engine --windowed --mount "${ASSET_PATH}" --game "$<TARGET_FILE_NAME:${game_name}>"
             DEPENDS ${game_name} engine)
     else()
@@ -251,61 +245,56 @@ function(add_game_library game_name)
 
         # Convenience target to compile and run the engine executable with the same
         # asset path as in cmake_user.
-        add_custom_target(run_${game_name}
+        add_custom_target(run
             COMMAND engine --windowed --mount "${ASSET_PATH}"
             DEPENDS ${game_name}_static engine)
     endif()
+    
+    # Main executable.
+    add_executable(engine ${ENGINE_PATH}/main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+
+    # Engine depends on game library.
+    add_dependencies(engine ${ENGINE_DEPS})
+
+    # Add DEBUG define when building debug executables.
+    if(ENABLE_SHARED)
+        target_compile_definitions(engine PRIVATE LOAD_SHARED)
+    endif()
+    target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+    target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+
+    # Console capture stdout support
+    if(ENABLE_CONSOLE)
+        target_compile_definitions(engine PRIVATE CONSOLE_ENABLE)
+    endif()
+
+    # GCC compiler settings.
+    if(CMAKE_COMPILER_IS_GNUCC)
+        # DEBUG: Lightweight buffer overflow detection.
+        target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:-O2>)
+        target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
+        target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
+
+        # QUIRK: stb.h requires all these warnings to be silenced, but it seems
+        # warnings have to be set for the source file including the header...
+        set(STB_HEADER vfs.c)
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-maybe-uninitialized ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-strict-aliasing ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-but-set-variable ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-value ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
+    endif()
+
+    # Set compiler flags.
+    set_property(TARGET engine generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET engine generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+
+    # Link.
+    if(NOT EMSCRIPTEN)
+        # Build the engine using the C99 standard.
+        set_property(TARGET engine PROPERTY C_STANDARD 99)
+        target_link_libraries(engine ${ENGINE_GAME_LIBRARY} ${ENGINE_EXTRA_LIBS})
+    else()
+        target_link_libraries(engine)
+    endif()
 endfunction()
-
-# Build game library.
-add_subdirectory(${GAME_PATH})
-
-# Main executable.
-include_directories(${GAME_PATH})
-add_executable(engine main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-#add_executable(engine main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-
-# Engine depends on game library.
-add_dependencies(engine ${ENGINE_DEPS})
-
-# Add DEBUG define when building debug executables.
-if(ENABLE_SHARED)
-    target_compile_definitions(engine PRIVATE LOAD_SHARED)
-endif()
-target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-
-# Console capture stdout support
-if(ENABLE_CONSOLE)
-    target_compile_definitions(engine PRIVATE CONSOLE_ENABLE)
-endif()
-
-# GCC compiler settings.
-if(CMAKE_COMPILER_IS_GNUCC)
-    # DEBUG: Lightweight buffer overflow detection.
-    target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:-O2>)
-    target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-    target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-
-    # QUIRK: stb.h requires all these warnings to be silenced, but it seems
-    # warnings have to be set for the source file including the header...
-    set(STB_HEADER vfs.c)
-    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-maybe-uninitialized ")
-    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-strict-aliasing ")
-    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-but-set-variable ")
-    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-value ")
-    set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
-endif()
-
-# Set compiler flags.
-set_property(TARGET engine generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-set_property(TARGET engine generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-
-# Link.
-if(NOT EMSCRIPTEN)
-    # Build the engine using the C99 standard.
-    set_property(TARGET engine PROPERTY C_STANDARD 99)
-    target_link_libraries(engine ${ENGINE_EXTRA_LIBS} ${ENGINE_GAME_LIBRARY})
-else()
-    target_link_libraries(engine)
-endif()

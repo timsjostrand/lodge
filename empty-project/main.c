@@ -67,14 +67,16 @@ void game_render(struct core *core, struct graphics *g, float dt)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	animatedsprites_render(game->batcher, &assets->shaders.basic_shader, g, assets->textures.textures);
+	mat4 transform;
+	identity(transform);
+	animatedsprites_render(game->batcher, &assets->shaders.basic_shader, g, assets->textures.textures, transform);
 }
 
 void game_mousebutton_callback(struct core *core, GLFWwindow *window, int button, int action, int mods)
 {
 	if(action == GLFW_PRESS) {
 		float x = 0, y = 0;
-		input_view_get_cursor(window, VIEW_WIDTH, VIEW_HEIGHT, &x, &y);
+		input_view_get_cursor(window, &x, &y);
 		console_debug("Click at %.0fx%.0f\n", x, y);
 	}
 }

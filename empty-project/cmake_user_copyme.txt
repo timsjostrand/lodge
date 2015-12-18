@@ -1,0 +1,11 @@
+# Enable or disable game hotswapping.
+#set(ENABLE_SHARED ON CACHE BOOL "Disable game hotswapping" FORCE)
+
+# Set to true if shared libraries do not hotswap correctly in Visual Studio.
+#set(HACK_POST_LIB OFF)
+
+# Path to engine sources are stored (using forward slashes).
+set(ENGINE_PATH "")
+
+# Path to where assets are stored (using forward slashes).
+set(ASSET_PATH "")

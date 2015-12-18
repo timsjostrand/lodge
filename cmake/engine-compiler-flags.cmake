@@ -14,7 +14,8 @@ if(CMAKE_COMPILER_IS_GNUCC)
     # Do not allow declaring functions without implementing them.
     set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Werror-implicit-function-declaration")
     # Force casting of pointer types.
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Werror=strict-aliasing")
+    # DISABLED BECAUSE STB.H
+    #set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Werror=strict-aliasing")
     # Force correct return type.
     set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} -Werror=return-type")
 endif()
