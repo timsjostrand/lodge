@@ -20,8 +20,8 @@ struct atlas_frame {
 	int		height;
 	int		rotated;
 	int		trimmed;
-#ifdef ATLAS_FATTY
 	char	name[ATLAS_STR_MAX];
+#ifdef ATLAS_FATTY
 	int		src_size_w;
 	int		src_size_h;
 	int		sprite_src_x;
@@ -54,5 +54,6 @@ struct atlas {
 int		atlas_load(struct atlas *atlas, void *data, size_t data_len);
 void	atlas_free(struct atlas *atlas);
 void	atlas_print(struct atlas *atlas);
+int		atlas_frame_index(struct atlas *atlas, const char *name);
 
 #endif

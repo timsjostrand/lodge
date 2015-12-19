@@ -15,6 +15,7 @@
 #include <cjson/cJSON.h>
 
 #include "atlas.h"
+#include "str.h"
 
 static int atlas_parse_str(char *dst, cJSON *item, const char *key);
 static int atlas_parse_int(int *dst, cJSON *item, const char *key);
@@ -133,9 +134,9 @@ int atlas_load(struct atlas *atlas, void *data, size_t data_len)
 		ATLAS_TRY(atlas_parse_int(&f->rotated, elem, "rotated"));
 		ATLAS_TRY(atlas_parse_int(&f->trimmed, elem, "trimmed"));
 
-#ifdef ATLAS_FATTY
 		ATLAS_TRY(atlas_parse_str(f->name, elem, "filename"));
 
+#ifdef ATLAS_FATTY
 		/* "sourceSize" leaf. */
 		cJSON *elem_src = cJSON_GetObjectItem(elem, "sourceSize");
 		ATLAS_TRY(atlas_parse_int(&f->src_size_w, elem_src, "w"));
@@ -167,4 +168,18 @@ void atlas_free(struct atlas *atlas)
 		return;
 	}
 	free(atlas->frames);
+}
+
+/**
+ * Looks for a frame name in the given atlas. If it is not found, -1 is returned.
+ */
+int atlas_frame_index(struct atlas *atlas, const char *name)
+{
+	for(int i=0; i<atlas->frames_count; i++) {
+		if(str_equals(atlas->frames[i].name, name)) {
+			return i;
+		}
+	}
+	atlas_debug("Could not find frame \"%s\"\n", name);
+	return -1;
 }
