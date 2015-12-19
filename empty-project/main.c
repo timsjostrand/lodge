@@ -22,7 +22,7 @@
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360
 
-struct game_settings settings = {
+const struct game_settings settings = {
 	.view_width			= VIEW_WIDTH,
 	.view_height		= VIEW_HEIGHT,
 	.window_width		= VIEW_WIDTH,
