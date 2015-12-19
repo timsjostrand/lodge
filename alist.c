@@ -176,7 +176,7 @@ void alist_clear(struct alist *alist, int free_data)
 	if(free_data) {
 		alist_free_data_elements(alist);
 	}
-	alist->size = 0;
+	alist->count = 0;
 }
 
 int alist_prepend(struct alist *alist, alist_data_t *data)
