@@ -116,6 +116,24 @@ void animatedsprites_playanimation(struct sprite* sprite, struct anim* anim)
 	sprite->state.frame_time = 0;
 }
 
+void animatedsprites_switchanim(struct sprite* sprite, struct anim* anim)
+{
+	/* Sanity check */
+	/* NOTE: anim == NULL is legal! */
+	if(sprite == NULL) {
+		return;
+	}
+
+	/* Reset animation state if changing animation. */
+	if(sprite->anim != anim) {
+		sprite->state.done = 0;
+		sprite->state.frame_current = anim != NULL ? anim->frame_start : 0;
+		sprite->state.frame_time = 0;
+	}
+
+	sprite->anim = anim;
+}
+
 void animatedsprites_setanim(struct anim* anim, int looping, int frame_start, int frame_count, float frame_length)
 {
 	anim->looping = looping;

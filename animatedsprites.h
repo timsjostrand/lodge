@@ -49,6 +49,7 @@ void animatedsprites_init(struct animatedsprites* animatedsprites);
 void animatedsprites_destroy(struct animatedsprites* animatedsprites);
 
 void animatedsprites_playanimation(struct sprite* sprite, struct anim* anim);
+void animatedsprites_switchanim(struct sprite* sprite, struct anim* anim);
 void animatedsprites_update(struct animatedsprites* animatedsprites, struct atlas* atlas, float delta_time);
 void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s, struct graphics *g, GLuint tex, mat4 transform);
 
