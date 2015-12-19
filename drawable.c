@@ -252,6 +252,11 @@ void drawable_render(struct drawable *d, struct shader *s, struct graphics *g, G
 	drawable_render_detailed(d->draw_mode, d->vbo, d->vertex_count, d->vao, tex, color, s, g, transform);
 }
 
+void drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s)
+{
+	drawable_new_rect_outlinef(dst, rect->pos[0], rect->pos[1], rect->size[0], rect->size[1], s);
+}
+
 void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s)
 {
 	dst->draw_mode = GL_LINE_STRIP;

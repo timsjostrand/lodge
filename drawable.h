@@ -18,6 +18,7 @@ void	drawable_free(struct drawable *d);
 void	drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments, struct shader *s);
 void	drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments, struct shader *s);
 
+void	drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s);
 void	drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
 void	drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
 
