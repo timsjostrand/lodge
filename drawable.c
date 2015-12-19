@@ -116,37 +116,37 @@ static void drawable_get_vertices_rect_solid(GLfloat *dst, float x, float y, flo
 
 	/* Top-left */
 	dst[0 * VBO_VERTEX_LEN + 0] = x - w;	// x
-	dst[0 * VBO_VERTEX_LEN + 1] = y + w;	// y
+	dst[0 * VBO_VERTEX_LEN + 1] = y + h;	// y
 	dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Bottom-Left */
 	dst[1 * VBO_VERTEX_LEN + 0] = x - w;	// x
-	dst[1 * VBO_VERTEX_LEN + 1] = y - w;	// y
+	dst[1 * VBO_VERTEX_LEN + 1] = y - h;	// y
 	dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[1 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
 	/* Top-right */
 	dst[2 * VBO_VERTEX_LEN + 0] = x + w;	// x
-	dst[2 * VBO_VERTEX_LEN + 1] = y + w;	// y
+	dst[2 * VBO_VERTEX_LEN + 1] = y + h;	// y
 	dst[2 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[2 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
 	dst[2 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Top-right */
 	dst[3 * VBO_VERTEX_LEN + 0] = x + w;	// x
-	dst[3 * VBO_VERTEX_LEN + 1] = y + w;	// y
+	dst[3 * VBO_VERTEX_LEN + 1] = y + h;	// y
 	dst[3 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[3 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
 	dst[3 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Bottom-left */
 	dst[4 * VBO_VERTEX_LEN + 0] = x - w;	// x
-	dst[4 * VBO_VERTEX_LEN + 1] = y - w;	// y
+	dst[4 * VBO_VERTEX_LEN + 1] = y - h;	// y
 	dst[4 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[4 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[4 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
 	/* Bottom-right */
 	dst[5 * VBO_VERTEX_LEN + 0] = x + w;	// x
-	dst[5 * VBO_VERTEX_LEN + 1] = y - w;	// y
+	dst[5 * VBO_VERTEX_LEN + 1] = y - h;	// y
 	dst[5 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[5 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
 	dst[5 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
@@ -170,31 +170,31 @@ static void drawable_get_vertices_rect_outline(GLfloat *dst, float x, float y, f
 
 	/* Top-left */
 	dst[0 * VBO_VERTEX_LEN + 0] = x - w;	// x
-	dst[0 * VBO_VERTEX_LEN + 1] = y + w;	// y
+	dst[0 * VBO_VERTEX_LEN + 1] = y + h;	// y
 	dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Top-right */
 	dst[1 * VBO_VERTEX_LEN + 0] = x + w;	// x
-	dst[1 * VBO_VERTEX_LEN + 1] = y + w;	// y
+	dst[1 * VBO_VERTEX_LEN + 1] = y + h;	// y
 	dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[1 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Bottom-right */
 	dst[2 * VBO_VERTEX_LEN + 0] = x + w;	// x
-	dst[2 * VBO_VERTEX_LEN + 1] = y - w;	// y
+	dst[2 * VBO_VERTEX_LEN + 1] = y - h;	// y
 	dst[2 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[2 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[2 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Bottom-left */
 	dst[3 * VBO_VERTEX_LEN + 0] = x - w;	// x
-	dst[3 * VBO_VERTEX_LEN + 1] = y - w;	// y
+	dst[3 * VBO_VERTEX_LEN + 1] = y - h;	// y
 	dst[3 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[3 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[3 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 	/* Top-left */
 	dst[4 * VBO_VERTEX_LEN + 0] = x - w;	// x
-	dst[4 * VBO_VERTEX_LEN + 1] = y + w;	// y
+	dst[4 * VBO_VERTEX_LEN + 1] = y + h;	// y
 	dst[4 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
 	dst[4 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
 	dst[4 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
