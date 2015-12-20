@@ -212,6 +212,7 @@ struct sound_emitter* sound_buf_play_detailed(struct sound *s, const sound_buf_t
 
 	/* Start playing source. */
 	alSourcePlay(em->src);
+	al_test("play source");
 
 	return em;
 }

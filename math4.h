@@ -39,6 +39,8 @@ void cross(vec4 v, vec4 a, vec4 b);
 int inverse(mat4 m, const mat4 a);
 float determinant(const mat4 m);
 void adjugate(mat4 m, const mat4 a);
+float distancef(float x, float y);
+float distance2f(vec2 a, vec2 b);
 float distance3f(const vec3 a, const vec3 b);
 
 float length2f(const vec2 v);
@@ -52,6 +54,7 @@ int imax(int a, int b);
 int imin(int a, int b);
 float clamp(float f, float min, float max);
 float randr(float min, float max);
+float angle_from_to(vec2 a, vec2 b);
 
 void printm(mat4 m);
 void printv(vec4 v);

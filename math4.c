@@ -314,6 +314,16 @@ int inverse(mat4 m, const mat4 a)
 	return 0;
 }
 
+float distancef(float x, float y)
+{
+	return sqrtf((x*x) + (y*y));
+}
+
+float distance2f(vec2 a, vec2 b)
+{
+	return distancef(b[0]-a[0], b[0]-a[0]);
+}
+
 /**
  * Calculate the distance between two 3D points.
  **/
@@ -410,4 +420,12 @@ void set3f(vec3 v, const float x, const float y, const float z)
 void set4f(vec4 v, const float x, const float y, const float z, const float w)
 {
 	v[0] = x; v[1] = y; v[2] = z; v[3] = w;
+}
+
+/**
+ * @return	The angle between the first and second point in radians.
+ */
+float angle_from_to(vec2 a, vec2 b)
+{
+	return atan2f(a[0]-b[0], a[1]-b[1]);
 }
