@@ -1,17 +1,14 @@
 #ifndef _SPRITEBATCH_H
 #define _SPRITEBATCH_H
 
+#include <GLFW/glfw3.h>
+
+#include "math4.h"
 #include "graphics.h"
 
 #define SPRITEBATCH_BUFFER_CAPACITY 30720000
 #define SPRITEBATCH_CHUNK 3072000
 #define SPRITEBATCH_VERTEX_SIZE (5 * sizeof(GLfloat))
-
-typedef float GLfloat;
-typedef unsigned int GLuint;
-typedef float mat4[16];
-typedef float vec3[3];
-typedef float vec2[2];
 
 typedef void(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b);
 

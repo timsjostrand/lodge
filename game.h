@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#include "math4.h"
 #include "vfs.h"
 
 struct graphics;
@@ -12,8 +13,6 @@ struct frames;
 struct console;
 struct core;
 struct assets;
-
-typedef float vec3[3];
 
 struct shared_memory
 {

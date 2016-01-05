@@ -1,6 +1,7 @@
 #ifndef _ANIMATEDSPRITES_H
 #define _ANIMATEDSPRITES_H
 
+#include "math4.h"
 #include "graphics.h"
 #include "spritebatch.h"
 #include "atlas.h"
@@ -9,9 +10,6 @@
 
 typedef float GLfloat;
 typedef unsigned int GLuint;
-typedef float mat4[16];
-typedef float vec3[3];
-typedef float vec2[2];
 
 struct anim
 {
