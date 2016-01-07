@@ -13,3 +13,9 @@
 [submodule "lib/cjson"]
 	path = lib/cjson
 	url = https://github.com/kbranigan/cJSON.git
+[submodule "lib/libarchive"]
+	path = lib/libarchive
+	url = https://github.com/libarchive/libarchive.git
+[submodule "lib/zlib"]
+	path = lib/zlib
+	url = https://github.com/madler/zlib.git

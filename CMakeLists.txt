@@ -63,6 +63,25 @@ if(NOT EMSCRIPTEN)
         list(APPEND ENGINE_EXTRA_LIBS cJSON)
     endif()
 
+    # Library: zlib.
+    set(SKIP_INSTALL_ALL ON)
+    set(ZLIB_INCLUDE_DIR "${ENGINE_PATH}/lib/zlib" "${CMAKE_BINARY_DIR}/lib/zlib")
+    if(ENABLE_SHARED)
+        set(ZLIB_LIBRARY zlib)
+    else()
+        set(ZLIB_LIBRARY zlibstatic)
+    endif()
+    add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
+
+    # Library: libarchive.
+    add_subdirectory(${ENGINE_PATH}/lib/libarchive ${CMAKE_BINARY_DIR}/lib/libarchive)
+    if(ENABLE_SHARED)
+        list(APPEND ENGINE_EXTRA_LIBS archive)
+    else()
+        list(APPEND ENGINE_EXTRA_LIBS archive_static)
+    endif()
+    list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/libarchive)
+
     # Library: OpenAL.
     if(NOT APPLE)
         # Build OpenAL-Soft.

@@ -18,8 +18,10 @@ struct animatedsprites* animatedsprites_create()
 
 void animatedsprites_destroy(struct animatedsprites* animatedsprites)
 {
-	spritebatch_destroy(&animatedsprites->spritebatch);
-	free(animatedsprites);
+	if(animatedsprites != NULL) {
+		spritebatch_destroy(&animatedsprites->spritebatch);
+		free(animatedsprites);
+	}
 }
 
 void animatedsprites_update(struct animatedsprites* animatedsprites, struct atlas* atlas, float delta_time)
