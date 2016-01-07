@@ -26,5 +26,6 @@ void tiles_init(struct tiles *tiles, tiles_get_data_at_pixel_t get_data_at_pixel
 		int view_width, int view_height, int tiles_x, int tiles_y);
 void tiles_render(struct tiles *tiles, struct shader *s, struct graphics *g, GLuint tex, mat4 transform);
 void tiles_think(struct tiles *tiles, vec2 view_offset, struct atlas *atlas, float dt);
+void tiles_free(struct tiles *tiles);
 
 #endif

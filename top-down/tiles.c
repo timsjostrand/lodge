@@ -58,8 +58,10 @@ void tiles_init(struct tiles *tiles, tiles_get_data_at_pixel_t get_data_at_pixel
 
 void tiles_free(struct tiles *tiles)
 {
-	free(tiles->draw_tiles);
-	animatedsprites_destroy(tiles->batcher);
+	if(tiles != NULL) {
+		free(tiles->draw_tiles);
+		animatedsprites_destroy(tiles->batcher);
+	}
 }
 
 /**
