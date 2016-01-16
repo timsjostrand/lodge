@@ -71,13 +71,25 @@ if(NOT EMSCRIPTEN)
     else()
         set(ZLIB_LIBRARY zlibstatic)
     endif()
+    list(APPEND ENGINE_EXTRA_LIBS ${ZLIB_LIBRARY})
     add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
 
     # Library: libarchive.
+    set(ENABLE_NETTLE OFF CACHE BOOL "Enable use of Nettle" FORCE)
+    set(ENABLE_OPENSSL OFF CACHE BOOL "Enable use of OpenSSL" FORCE)
+    set(ENABLE_TAR OFF CACHE BOOL "Enable tar building" FORCE)
+    set(ENABLE_CPIO OFF CACHE BOOL "Enable cpio building" FORCE)
+    set(ENABLE_XATTR OFF CACHE BOOL "Enable extended attribute support" FORCE)
+    set(ENABLE_ACL OFF CACHE BOOL "Enable ACL support" FORCE)
+    set(ENABLE_ICONV OFF CACHE BOOL "Enable iconv support" FORCE)
+    set(ENABLE_TEST OFF CACHE BOOL "Enable unit and regression tests" FORCE)
     add_subdirectory(${ENGINE_PATH}/lib/libarchive ${CMAKE_BINARY_DIR}/lib/libarchive)
     if(ENABLE_SHARED)
         list(APPEND ENGINE_EXTRA_LIBS archive)
     else()
+        # NOTE: Bug where LIBARCHIVE_STATIC is not applied for the
+        # archive_static target in Visual Studio. Force define here.
+        add_definitions(-DLIBARCHIVE_STATIC)
         list(APPEND ENGINE_EXTRA_LIBS archive_static)
     endif()
     list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/libarchive)
@@ -268,7 +280,7 @@ function(add_game_library game_name)
             COMMAND engine --windowed --mount "${ASSET_PATH}"
             DEPENDS ${game_name}_static engine)
     endif()
-    
+
     # Main executable.
     add_executable(engine ${ENGINE_PATH}/main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 
