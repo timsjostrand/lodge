@@ -120,11 +120,11 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 	}
 	atlas_print(&asset->atlas);
 
-	pyxel_free(&pyxel);
+	//pyxel_free(&pyxel);
 	return PYXEL_OK;
 
 bail:
-	pyxel_free(&pyxel);
+	//pyxel_free(&pyxel);
 
 	if(tex_buf != NULL) {
 		free(tex_buf);
