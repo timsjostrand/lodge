@@ -40,8 +40,8 @@ struct atlas_frame {
 struct atlas {
 	int					width;
 	int					height;
-	char				image[ATLAS_STR_MAX];
-	char				format[ATLAS_STR_MAX];
+	char				image[ATLAS_STR_MAX];			/* FIXME: is this an ATLAS_FATTY feature? Atlas is not related with texture image at the moment. */
+	char				format[ATLAS_STR_MAX];			/* FIXME: is this an ATLAS_FATTY feature? Format will be decided by img format anyways. */
 	int					frames_count;
 	struct atlas_frame	*frames;
 #ifdef ATLAS_FATTY

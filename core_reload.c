@@ -12,6 +12,7 @@
 #include "atlas.h"
 #include "texture.h"
 #include "console.h"
+#include "pyxel_asset.h"
 
 void core_reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
 {
@@ -161,5 +162,30 @@ void core_reload_console_conf(const char *filename, unsigned int size, void *dat
 	 * be parsed after initializing the console for the first time. */
 	if(dst->initialized) {
 		console_parse_conf(dst, &dst->conf);
+	}
+}
+
+void core_reload_pyxel_asset(const char *filename, unsigned int size, void *data, void *userdata)
+{
+	if(size == 0) {
+		pyxel_debug("Skipped reload of %s (%u bytes)\n", filename, size);
+		return;
+	}
+
+	struct pyxel_asset *dst = (struct pyxel_asset *) userdata;
+
+	if(!dst) {
+		pyxel_error("Invalid argument to core_reload_pyxel()\n");
+		return;
+	}
+
+	struct pyxel_asset tmp = { 0 };
+
+	int ret = pyxel_asset_load(&tmp, data, size);
+	if(ret != PYXEL_OK) {
+		pyxel_error("Error %d when loading pyxel %s (%u bytes)\n", ret, filename, size);
+	} else {
+		pyxel_asset_free(dst);
+		(*dst) = tmp;
 	}
 }

@@ -12,6 +12,7 @@ struct alist* assets_list;
 struct alist* assets_list_textures;
 struct alist* assets_list_sounds;
 struct alist* assets_list_shaders;
+struct alist* assets_list_pyxels;
 struct alist* assets_list_misc;
 
 #define MAX_ASSETS 512
@@ -83,6 +84,14 @@ void write_assets_c()
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
+	fprintf(fp, "\n\t// Pyxel files\n");
+	foreach_alist(char*, asset, i, assets_list_pyxels)
+	{
+		fprintf(fp, "\tvfs_register_callback(\"");
+		fprintf(fp, "%s\", &core_reload_pyxel_asset, &assets->pyxels.", asset);
+		write_clean_name(fp, asset);
+		fprintf(fp, ");\n");
+	}
 	fprintf(fp, "}\n\n");
 
 	fprintf(fp, "void assets_release()\n");
@@ -108,6 +117,13 @@ void write_assets_c()
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
+	fprintf(fp, "\n\t// Pyxel files\n");
+	foreach_alist(char*, asset, i, assets_list_pyxels)
+	{
+		fprintf(fp, "\tpyxel_asset_free(&assets->pyxels.");
+		write_clean_name(fp, asset);
+		fprintf(fp, ");\n");
+	}
 	fprintf(fp, "}\n");
 	fclose(fp);
 }
@@ -122,9 +138,9 @@ void write_assets_h()
 	fprintf(fp, "#include \"game.h\"\n");
 	fprintf(fp, "#include \"shader.h\"\n");
 	fprintf(fp, "#include \"sound.h\"\n\n");
+	fprintf(fp, "#include \"pyxel_asset.h\"\n\n");
 
-	fprintf(fp, "struct shader;\n");
-
+	// Textures
 	fprintf(fp, "struct textures\n");
 	fprintf(fp, "{\n");
 	if(alist_count(assets_list_textures) > 0)
@@ -144,6 +160,7 @@ void write_assets_h()
 	}
 	fprintf(fp, "};\n\n");
 
+	// Sounds
 	fprintf(fp, "struct sounds\n");
 	fprintf(fp, "{\n");
 	if(alist_count(assets_list_sounds) > 0)
@@ -163,6 +180,7 @@ void write_assets_h()
 	}
 	fprintf(fp, "};\n\n");
 
+	// Shaders
 	fprintf(fp, "struct shaders\n");
 	fprintf(fp, "{\n");
 	if(alist_count(assets_list_shaders) > 0)
@@ -187,11 +205,37 @@ void write_assets_h()
 	}
 	fprintf(fp, "};\n\n");
 
+	// Pyxel files
+	fprintf(fp, "struct pyxels\n");
+	fprintf(fp, "{\n");
+	if(alist_count(assets_list_pyxels) > 0)
+	{
+		foreach_alist(char*, asset, i, assets_list_pyxels)
+		{
+			if (strstr(asset, ".pyxel") == 0)
+			{
+				continue;
+			}
+
+			fprintf(fp, "\t");
+			fprintf(fp, "struct pyxel_asset ");
+			write_clean_name(fp, asset);
+			fprintf(fp, ";");
+			fprintf(fp, "\n");
+		}
+	}
+	else
+	{
+		fprintf(fp, "\tint\t__none;\n");
+	}
+	fprintf(fp, "};\n\n");
+
 	fprintf(fp, "struct assets\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\t struct textures textures;\n");
 	fprintf(fp, "\t struct sounds sounds;\n");
 	fprintf(fp, "\t struct shaders shaders;\n");
+	fprintf(fp, "\t struct pyxels pyxels;\n");
 	fprintf(fp, "};\n\n");
 
 	fprintf(fp, "struct assets* assets;\n\n");
@@ -214,11 +258,13 @@ void add_assets()
 	const char* ext_texture[] = { ".png", ".tga", ".jpeg", ".jpg", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
 	const char* ext_sounds[] = { ".ogg" };
 	const char* ext_shaders[] = { ".frag", ".vert" };
+	const char* ext_pyxels[] = { ".pyxel" };
 
 	foreach_alist(char*, asset, index, assets_list)
 	{
 		int added = 0;
 
+		// Textures
 		for (int i = 0, i_size = sizeof(ext_texture) / sizeof(ext_texture[0]); i < i_size; i++)
 		{
 			if (strstr(asset, ext_texture[i]) != 0)
@@ -234,6 +280,7 @@ void add_assets()
 			continue;
 		}
 
+		// Sounds
 		for (int i = 0, i_size = sizeof(ext_sounds) / sizeof(ext_sounds[0]); i < i_size; i++)
 		{
 			if (strstr(asset, ext_sounds[i]) != 0)
@@ -249,11 +296,28 @@ void add_assets()
 			continue;
 		}
 
+		// Shaders
 		for (int i = 0, i_size = sizeof(ext_shaders) / sizeof(ext_shaders[0]); i < i_size; i++)
 		{
 			if (strstr(asset, ext_shaders[i]) != 0)
 			{
 				alist_append(assets_list_shaders, asset);
+				added = 1;
+				break;
+			}
+		}
+
+		if (added)
+		{
+			continue;
+		}
+
+		// Pyxel files
+		for (int i = 0, i_size = sizeof(ext_pyxels) / sizeof(ext_pyxels[0]); i < i_size; i++)
+		{
+			if (strstr(asset, ext_pyxels[i]) != 0)
+			{
+				alist_append(assets_list_pyxels, asset);
 				added = 1;
 				break;
 			}
@@ -280,6 +344,7 @@ int main(int argc, char* argv[])
 	assets_list_textures = alist_new(MAX_ASSETS);
 	assets_list_sounds = alist_new(MAX_ASSETS);
 	assets_list_shaders = alist_new(MAX_ASSETS);
+	assets_list_pyxels = alist_new(MAX_ASSETS);
 	assets_list_misc = alist_new(MAX_ASSETS);
 
 	vfs_init(argv[1]);
