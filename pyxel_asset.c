@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "str.h"
 #include "pyxel_asset.h"
 #include "texture.h"
 #include "core_reload.h"
@@ -33,7 +34,7 @@ static int pyxel_asset_init_atlas(struct atlas *atlas, struct pyxel *pyxel)
 	/* Calculate frames from sprite information. */
 	for(int y=0; y<tile_row_count; y++) {
 		for(int x=0; x<tile_col_count; x++) {
-			struct atlas_frame *f = &atlas->frames[y * tile_row_count + x];
+			struct atlas_frame *f = &atlas->frames[y * tile_col_count + x];
 
 			f->x = x * pyxel->tile_width;
 			f->y = y * pyxel->tile_height;
@@ -83,7 +84,7 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 
 		/* Texture file names are not equal to layer names! */
 		char tex_filename[PYXEL_STR_MAX];
-		snprintf(&tex_filename, PYXEL_STR_MAX, "layer%d.png", i);
+		str_snprintf(&tex_filename, PYXEL_STR_MAX, "layer%d.png", i);
 
 		/* Get size of texture file. */
 		size_t tex_size;

@@ -7,6 +7,9 @@
 size_t	strnlen(const char *s, size_t maxlen);
 #endif
 
+int		str_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap);
+int		str_snprintf(char *outBuf, size_t size, const char *format, ...);
+
 int		str_insert(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
 int		str_replace_into(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
 int		str_delete(char *s, size_t s_size, size_t index, size_t count);

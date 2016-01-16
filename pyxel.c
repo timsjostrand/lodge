@@ -110,12 +110,12 @@ static int pyxel_archive_find(struct archive *archive, const char *filename, str
 
 int pyxel_archive_extract(void *data, size_t data_len, char *filename, char *dst, size_t dst_len)
 {
-	struct archive *a;
+	struct archive *a = 0;
 	if(pyxel_archive_open(data, data_len, &a) != PYXEL_OK) {
 		goto error;
 	}
 
-	struct archive_entry *entry;
+	struct archive_entry *entry = 0;
 	if(pyxel_archive_find(a, filename, &entry) != PYXEL_OK) {
 		goto error;
 	}

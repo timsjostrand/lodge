@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 	core_setup(core_global, settings->window_title,
 		settings->view_width, settings->view_height,
 		settings->window_width, settings->window_height,
-		args.window_mode, 1000000000);
+		args.window_mode, 1000000);
 	vfs_run_callbacks();
 
 #ifdef LOAD_SHARED
