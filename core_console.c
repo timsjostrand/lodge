@@ -114,7 +114,11 @@ static void core_console_vfs_reload(struct console *c, struct console_cmd *cmd, 
 	if(asset == NULL) {
 		console_printf(c, "ERROR: No asset specified\n");
 	} else {
-		console_printf(c, "TODO: Reload asset: \"%s\"\n", asset->data);
+		if(vfs_reload_file(asset->data) != VFS_OK) {
+			console_printf(c, "ERROR: Could not reload asset: \"%s\"\n", asset->data);
+		} else {
+			console_printf(c, "Reloaded asset: \"%s\"\n", asset->data);
+		}
 	}
 }
 

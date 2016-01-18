@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <time.h>
 
+#define VFS_OK 0
+#define VFS_ERROR -1
+
 #define MAX_FILENAME_LEN 256
 #define MAX_NUM_FILES 256
 
@@ -41,6 +44,7 @@ void	vfs_mount(const char* dir);
 void	vfs_register_callback(const char* filename, read_callback_t fn, void* userdata);
 void	vfs_register_callback_filter(const char* filter, read_callback_t fn, void* userdata);
 void	vfs_run_callbacks();
+int		vfs_reload_file(const char *filename);
 #ifdef VFS_ENABLE_FILEWATCH
 void	vfs_filewatch();
 #else

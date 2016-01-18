@@ -12,11 +12,10 @@
 
 #include "vfs.h"
 #include "log.h"
+#define STB_DEFINE
+#include "stb/stb.h"
 
 typedef unsigned long DWORD;
-
-#define STB_DEFINE
-#include <stb/stb.h>
 
 #define vfs_error(...) errorf("VFS", __VA_ARGS__)
 
@@ -90,44 +89,77 @@ void vfs_register_callback_filter(const char* filter, read_callback_t fn, void* 
 	}
 }
 
+static void vfs_reload(struct vfs_file *f, int force)
+{
+	time_t lastChange = stb_ftimestamp(f->name);
+	if (f->lastChange != lastChange || force)
+	{
+		f->file = stb_fopen(f->name, "rb");
+
+		if (f->file == 0)
+		{
+			return;
+		}
+
+		fseek(f->file, 0, SEEK_SET);
+
+		free(f->data);
+		f->lastChange = lastChange;
+
+		// Hacky solution to make sure the OS is finished with the fseek call
+		// How can this be solved better?
+		f->size = 0;
+		while (f->size == 0)
+		{
+			f->size = stb_filelen(f->file);
+		}
+
+		f->data = malloc(f->size);
+		fread(f->data, 1, f->size, f->file);
+		stb_fclose(f->file, 0);
+
+		for (int j = 0, j_size = stb_arr_len(f->read_callbacks); j < j_size; j++)
+		{
+			read_callback_t cbck = f->read_callbacks[j].fn;
+			cbck(f->simplename, f->size, f->data, f->read_callbacks[j].userdata);
+		}
+	}
+}
+
+static struct vfs_file* vfs_get_file_entry(const char *filename)
+{
+	for (int i = 0; i < vfs_global->file_count; i++)
+	{
+		struct vfs_file *f = &vfs_global->file_table[i];
+
+		if (strcmp(filename, f->simplename) == 0)
+		{
+			return f;
+		}
+	}
+
+	return NULL;
+}
+
+int vfs_reload_file(const char *filename)
+{
+	struct vfs_file *f = vfs_get_file_entry(filename);
+
+	if(f == NULL)
+	{
+		return VFS_ERROR;
+	}
+
+	vfs_reload(f, 1);
+	return VFS_OK;
+}
+
 #ifdef VFS_ENABLE_FILEWATCH
 void vfs_filewatch()
 {
 	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		time_t lastChange = stb_ftimestamp(vfs_global->file_table[i].name);
-		if (vfs_global->file_table[i].lastChange != lastChange)
-		{
-			vfs_global->file_table[i].file = stb_fopen(vfs_global->file_table[i].name, "rb");
-
-			if (vfs_global->file_table[i].file == 0)
-			{
-				continue;
-			}
-
-			fseek(vfs_global->file_table[i].file, 0, SEEK_SET);
-
-			free(vfs_global->file_table[i].data);
-			vfs_global->file_table[i].lastChange = lastChange;
-
-			// Hacky solution to make sure the OS is finished with the fseek call
-			// How can this be solved better?
-			vfs_global->file_table[i].size = 0;
-			while (vfs_global->file_table[i].size == 0)
-			{
-				vfs_global->file_table[i].size = stb_filelen(vfs_global->file_table[i].file);
-			}
-
-			vfs_global->file_table[i].data = malloc(vfs_global->file_table[i].size);
-			fread(vfs_global->file_table[i].data, 1, vfs_global->file_table[i].size, vfs_global->file_table[i].file);
-			stb_fclose(vfs_global->file_table[i].file, 0);
-
-			for (int j = 0, j_size = stb_arr_len(vfs_global->file_table[i].read_callbacks); j < j_size; j++)
-			{
-				read_callback_t cbck = vfs_global->file_table[i].read_callbacks[j].fn;
-				cbck(vfs_global->file_table[i].simplename, vfs_global->file_table[i].size, vfs_global->file_table[i].data, vfs_global->file_table[i].read_callbacks[j].userdata);
-			}
-		}
+		vfs_reload(&vfs_global->file_table[i], 0);
 	}
 }
 #endif
