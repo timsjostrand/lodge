@@ -2,13 +2,19 @@
 #define _STR_H
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #ifndef HAVE_STRNLEN
 size_t	strnlen(const char *s, size_t maxlen);
 #endif
 
-int		str_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap);
-int		str_snprintf(char *outBuf, size_t size, const char *format, ...);
+#ifndef HAVE_VSNPRINTF
+int		vsnprintf(char *outBuf, size_t size, const char *format, va_list ap);
+#endif
+
+#ifndef HAVE_SNPRINTF
+int		snprintf(char *outBuf, size_t size, const char *format, ...);
+#endif
 
 int		str_insert(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
 int		str_replace_into(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);

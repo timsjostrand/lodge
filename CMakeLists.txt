@@ -20,11 +20,23 @@ add_definitions(-DVFS_ENABLE_FILEWATCH)
 
 # Check for compatibility.
 include(CheckFunctionExists)
+
 check_function_exists(strnlen HAVE_STRNLEN)
 if(HAVE_STRNLEN)
     add_definitions(-DHAVE_STRNLEN)
 endif()
 
+check_function_exists(vsnprintf HAVE_VSNPRINTF)
+if(HAVE_VSNPRINTF)
+    add_definitions(-DHAVE_VSNPRINTF)
+endif()
+
+check_function_exists(snprintf HAVE_SNPRINTF)
+if(HAVE_SNPRINTF)
+    add_definitions(-DHAVE_SNPRINTF)
+endif()
+
+# Include engine sources.
 set(ENGINE_INCLUDES ${ENGINE_PATH})
 
 # Store DLLs alongside engine.exe.

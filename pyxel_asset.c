@@ -84,7 +84,7 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 
 		/* Texture file names are not equal to layer names! */
 		char tex_filename[PYXEL_STR_MAX];
-		str_snprintf(&tex_filename, PYXEL_STR_MAX, "layer%d.png", i);
+		snprintf(&tex_filename, PYXEL_STR_MAX, "layer%d.png", i);
 
 		/* Get size of texture file. */
 		size_t tex_size;

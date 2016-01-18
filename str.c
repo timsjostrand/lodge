@@ -385,6 +385,7 @@ int str_empty(const char *s, size_t s_size)
 	return strnlen(s, s_size) == 0;
 }
 
+#ifndef HAVE_VSNPRINTF
 int str_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
 {
 	int count = -1;
@@ -396,15 +397,18 @@ int str_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
 
 	return count;
 }
+#endif
 
-int str_snprintf(char *outBuf, size_t size, const char *format, ...)
+#ifndef HAVE_SNPRINTF
+int snprintf(char *outBuf, size_t size, const char *format, ...)
 {
 	int count;
 	va_list ap;
 
 	va_start(ap, format);
-	count = str_vsnprintf(outBuf, size, format, ap);
+	count = vsnprintf(outBuf, size, format, ap);
 	va_end(ap);
 
 	return count;
 }
+#endif
