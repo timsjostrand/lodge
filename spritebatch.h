@@ -10,7 +10,7 @@
 #define SPRITEBATCH_CHUNK 3072000
 #define SPRITEBATCH_VERTEX_SIZE (5 * sizeof(GLfloat))
 
-typedef void(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b);
+typedef int(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b);
 
 struct spritebatch
 {
