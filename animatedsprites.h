@@ -5,8 +5,12 @@
 #include "graphics.h"
 #include "spritebatch.h"
 #include "atlas.h"
+#include "log.h"
 
-#define ANIMATEDSPRITES_MAX_SPRITES 10000
+#define ANIMATEDSPRITES_MAX_SPRITES	10000
+
+#define animatedsprites_debug(...) debugf("Animbatch", __VA_ARGS__)
+#define animatedsprites_error(...) errorf("Animbatch", __VA_ARGS__)
 
 typedef float GLfloat;
 typedef unsigned int GLuint;

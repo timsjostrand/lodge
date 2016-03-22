@@ -93,6 +93,12 @@ void animatedsprites_render(struct animatedsprites* animatedsprites, struct shad
 
 void animatedsprites_add(struct animatedsprites* animatedsprites, struct sprite* sprite)
 {
+	/* Sanity check. */
+	if(animatedsprites->sprite_todraw_count >= ANIMATEDSPRITES_MAX_SPRITES) {
+		animatedsprites_error("Too many sprites (max=%d)\n", ANIMATEDSPRITES_MAX_SPRITES);
+		return;
+	}
+
 	animatedsprites->sprites_todraw[animatedsprites->sprite_todraw_count] = sprite;
 	animatedsprites->sprite_todraw_count++;
 }
