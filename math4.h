@@ -5,6 +5,7 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
+#define xy_of(v) v[0], v[1]
 #define xyz(v) v[0], v[1], v[2]
 #define xyzw(v) v[0], v[1], v[2], v[3]
 
@@ -42,6 +43,14 @@ void adjugate(mat4 m, const mat4 a);
 float distancef(float x, float y);
 float distance2f(vec2 a, vec2 b);
 float distance3f(const vec3 a, const vec3 b);
+
+void add2f(vec2 dst, const float x, const float y);
+void sub2f(vec2 dst, const float x, const float y);
+void mult2f(vec2 dst, const float x, const float y);
+
+void add3f(vec3 dst, const float x, const float y, const float z);
+void sub3f(vec3 dst, const float x, const float y, const float z);
+void mult3f(vec3 dst, const float x, const float y, const float z);
 
 float length2f(const vec2 v);
 float length3f(const vec3 v);

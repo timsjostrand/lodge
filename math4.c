@@ -429,3 +429,60 @@ float angle_from_to(vec2 a, vec2 b)
 {
 	return atan2f(a[0]-b[0], a[1]-b[1]);
 }
+
+/**
+ * NOTE: To add with another vector struct, simply: add3f(dst, xyz(src)).
+ */
+void add3f(vec3 dst, const float x, const float y, const float z)
+{
+	dst[0] += x;
+	dst[1] += y;
+	dst[2] += z;
+}
+
+/**
+ * NOTE: To add with another vector struct, simply: sub3f(dst, xyz(src)).
+ */
+void sub3f(vec3 dst, const float x, const float y, const float z)
+{
+	dst[0] -= x;
+	dst[1] -= y;
+	dst[2] -= z;
+}
+
+/**
+ * NOTE: To add with another vector struct, simply: mult3f(dst, xyz(src)).
+ */
+void mult3f(vec3 dst, const float x, const float y, const float z)
+{
+	dst[0] *= x;
+	dst[1] *= y;
+	dst[2] *= z;
+}
+
+/**
+ * NOTE: To use with another vector struct, simply: add2f(dst, xy_of(src)).
+ */
+void add2f(vec2 dst, const float x, const float y)
+{
+	dst[0] += x;
+	dst[1] += y;
+}
+
+/**
+ * NOTE: To use with another vector struct, simply: sub2f(dst, xy_of(src)).
+ */
+void sub2f(vec2 dst, const float x, const float y)
+{
+	dst[0] -= x;
+	dst[1] -= y;
+}
+
+/**
+ * NOTE: To use with another vector struct, simply: mult2f(dst, xy_of(src)).
+ */
+void mult2f(vec2 dst, const float x, const float y)
+{
+	dst[0] *= x;
+	dst[1] *= y;
+}
