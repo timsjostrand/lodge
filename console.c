@@ -421,6 +421,19 @@ static void console_env_set(struct console *c, const char *name,
 			}
 			break;
 		}
+		case CONSOLE_VAR_TYPE_2F: {
+			vec2 v;
+			if(str_parse_2f(value, ',', &v[0], &v[1]) != 0) {
+				console_printf(c, "Usage: %s=<FLOAT>,<FLOAT> (now: %g,%g)\n", name,
+						((float *) var->value)[0],
+						((float *) var->value)[1]
+				);
+				return;
+			} else {
+				console_env_set_2f(c, name, v);
+			}
+			break;
+		}
 		default:
 			console_printf(c, "TODO: Variable type not implemented %d\n", var->type);
 			break;
@@ -897,6 +910,39 @@ int console_env_set_1f(struct console *c, const char *name, const float value)
 	}
 
 	(*((float *) var->value)) = value;
+	return 0;
+}
+
+int console_env_bind_2f(struct console *c, const char *name, vec2 v)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_2F, v,
+					sizeof(vec2), &var) != 0) {
+			console_printf(c, "ERROR: Too many variables in environment\n");
+			return -1;
+		}
+	}
+
+	console_var_set(var, name, CONSOLE_VAR_TYPE_2F, v, sizeof(vec2));
+	return 0;
+}
+
+int console_env_set_2f(struct console *c, const char *name, const vec2 v)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
+		return -1;
+	} else if(var->type != CONSOLE_VAR_TYPE_2F) {
+		console_printf(c, "ERROR: Not a vec2 variable: \"%s\"\n", name);
+		return -1;
+	}
+
+	((float *) var->value)[0] = v[0];
+	((float *) var->value)[1] = v[1];
 	return 0;
 }
 

@@ -40,7 +40,8 @@ define_element(struct cmd_element, struct console_cmd*);
 #define CONSOLE_VAR_TYPE_UNKNOWN	0
 #define CONSOLE_VAR_TYPE_STR		1
 #define CONSOLE_VAR_TYPE_1F			2
-#define CONSOLE_VAR_TYPE_3F			3
+#define CONSOLE_VAR_TYPE_2F			3
+#define CONSOLE_VAR_TYPE_3F			4
 
 struct console_var {
 	char		name[CONSOLE_VAR_NAME_MAX];		/* Variable name. */
@@ -119,5 +120,7 @@ int  console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
 
 int  console_env_bind_1f(struct console *c, const char *name, float *value);
 int  console_env_set_1f(struct console *c, const char *name, const float value);
+int  console_env_bind_2f(struct console *c, const char *name, vec2 v);
+int  console_env_set_2f(struct console *c, const char *name, const vec2 v);
 
 #endif
