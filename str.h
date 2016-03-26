@@ -31,6 +31,7 @@ int		str_set(char *dst, size_t dst_size, const char *src);
 int		str_empty(const char *s, size_t s_size);
 
 int		str_parse_1f(const char *s, float *dst);
+int		str_parse_2f(const char *s, const char delimiter, float *dst_x, float *dst_y);
 
 /**
  * Easily iterate over lines in a string.
