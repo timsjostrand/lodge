@@ -434,6 +434,20 @@ static void console_env_set(struct console *c, const char *name,
 			}
 			break;
 		}
+		case CONSOLE_VAR_TYPE_3F: {
+			vec3 v;
+			if(str_parse_3f(value, ',', &v[0], &v[1], &v[2]) != 0) {
+				console_printf(c, "Usage: %s=<F>,<F>,<F> (now: %g,%g,%g)\n", name,
+						((float *) var->value)[0],
+						((float *) var->value)[1],
+						((float *) var->value)[2]
+				);
+				return;
+			} else {
+				console_env_set_3f(c, name, v);
+			}
+			break;
+		}
 		default:
 			console_printf(c, "TODO: Variable type not implemented %d\n", var->type);
 			break;
@@ -943,6 +957,40 @@ int console_env_set_2f(struct console *c, const char *name, const vec2 v)
 
 	((float *) var->value)[0] = v[0];
 	((float *) var->value)[1] = v[1];
+	return 0;
+}
+
+int console_env_bind_3f(struct console *c, const char *name, vec3 v)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_3F, v,
+					sizeof(vec3), &var) != 0) {
+			console_printf(c, "ERROR: Too many variables in environment\n");
+			return -1;
+		}
+	}
+
+	console_var_set(var, name, CONSOLE_VAR_TYPE_3F, v, sizeof(vec3));
+	return 0;
+}
+
+int console_env_set_3f(struct console *c, const char *name, const vec3 v)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
+		return -1;
+	} else if(var->type != CONSOLE_VAR_TYPE_3F) {
+		console_printf(c, "ERROR: Not a vec3 variable: \"%s\"\n", name);
+		return -1;
+	}
+
+	((float *) var->value)[0] = v[0];
+	((float *) var->value)[1] = v[1];
+	((float *) var->value)[2] = v[2];
 	return 0;
 }
 

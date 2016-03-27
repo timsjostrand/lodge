@@ -122,5 +122,7 @@ int  console_env_bind_1f(struct console *c, const char *name, float *value);
 int  console_env_set_1f(struct console *c, const char *name, const float value);
 int  console_env_bind_2f(struct console *c, const char *name, vec2 v);
 int  console_env_set_2f(struct console *c, const char *name, const vec2 v);
+int  console_env_bind_3f(struct console *c, const char *name, vec3 v);
+int  console_env_set_3f(struct console *c, const char *name, const vec3 v);
 
 #endif
