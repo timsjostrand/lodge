@@ -751,6 +751,80 @@ static void console_common_chars_in_list(char *out, size_t out_size, struct list
 	}
 }
 
+/**
+ * Attempts to fit the specified strings in 'columns' number of columns, and
+ * store the width of those columns into the 'widths' array.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+static int console_fit_columns(struct console *c, struct list *strings, int columns,
+		int widths[CONSOLE_COLUMNS_MAX])
+{
+	/* Reset widths table. */
+	memset(widths, 0, CONSOLE_COLUMNS_MAX);
+
+	int row_count = (int) ceilf(list_count(strings) / (float) columns);
+	for(int row=0; row < row_count; row++) {
+		int widths_sum = 0;
+
+		for(int col=0; col < columns; col++) {
+			struct str_element *str = (struct str_element *) list_element_at(strings, row + row_count * col);
+			int str_len = str == NULL ? 0 : strnlen(str->data, CONSOLE_CMD_NAME_MAX);
+			widths[col] = imax(str_len, widths[col]);
+
+			widths_sum += widths[col];
+
+			/* NOTE: subtract one padding char (space) for each column! */
+			if(widths_sum >= (c->chars_per_line - columns)) {
+				return -1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+static void console_print_completions(struct console *c, struct list *completions)
+{
+	int column_widths[CONSOLE_COLUMNS_MAX] = { 0 };
+	int column_count = CONSOLE_COLUMNS_MAX;
+
+	/* Attempt to fit data in 1 to CONSOLE_COLUMNS_MAX columns. */
+	for(; column_count >= 0; column_count--) {
+		if(console_fit_columns(c, completions, column_count, column_widths) == 0) {
+			break;
+		}
+	}
+
+	/* One "screen" of text. */
+	int tmp_size = c->display_lines * c->chars_per_line;
+	char *tmp = malloc(16 * 1024);
+
+	/* Now print into those columns. */
+	int row_count = (int) ceilf(list_count(completions) / (float) column_count);
+	for(int row=0; row < row_count; row++) {
+		memset(tmp, '\0', 16 * 1024);
+		char *tmp_cur = tmp;
+
+		for(int col=0; col < column_count; col++) {
+			struct str_element *str = (struct str_element *) list_element_at(completions, row + row_count * col);
+
+			tmp_cur += sprintf(tmp_cur, "%-*s", column_widths[col], str != NULL ? str->data : "");
+
+			/* Append space or newline. */
+			if(col+1 < column_count) {
+				tmp_cur += sprintf(tmp_cur, " ");
+			}
+		}
+
+		tmp_cur += sprintf(tmp_cur, "\n");
+
+		console_print(c, tmp, (tmp_cur - tmp));
+	}
+
+	free(tmp);
+}
+
 void console_cmd_autocomplete(struct console *c, const char *input,
 		const size_t input_len, const size_t cursor_pos)
 {
@@ -831,9 +905,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		}
 
 		/* Print completions */
-		foreach_list(struct str_element*, e, completions) {
-			console_printf(c, "%s\n", e->data);
-		}
+		console_print_completions(c, completions);
 	}
 
 	list_free(completions, 0);

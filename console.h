@@ -19,6 +19,7 @@
 #define CONSOLE_CMD_NAME_MAX		32	/* Max length of a console_cmd name. */
 #define CONSOLE_INPUT_HISTORY_MAX	128	/* Number of command input stored in console->input_history. */
 #define CONSOLE_ENV_MAX				255 /* Number of environment variables. */
+#define CONSOLE_COLUMNS_MAX			4 /* Number of columns that can be printed into. */
 
 struct console;
 struct console_cmd;
