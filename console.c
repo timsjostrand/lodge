@@ -940,6 +940,18 @@ int console_env_bind_2f(struct console *c, const char *name, vec2 v)
 	}
 
 	console_var_set(var, name, CONSOLE_VAR_TYPE_2F, v, sizeof(vec2));
+
+	/* Utility setters. */
+	char cmd_name[CONSOLE_CMD_NAME_MAX] = { 0 };
+
+	/* "name".x utility setter. */
+	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.x", name);
+	console_env_bind_1f(c, cmd_name, &v[0]);
+
+	/* "name".y utility setter. */
+	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.y", name);
+	console_env_bind_1f(c, cmd_name, &v[1]);
+
 	return 0;
 }
 
@@ -971,6 +983,21 @@ int console_env_bind_3f(struct console *c, const char *name, vec3 v)
 			return -1;
 		}
 	}
+
+	/* Utility setters. */
+	char cmd_name[CONSOLE_CMD_NAME_MAX] = { 0 };
+
+	/* "name".x utility setter. */
+	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.x", name);
+	console_env_bind_1f(c, cmd_name, &v[0]);
+
+	/* "name".y utility setter. */
+	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.y", name);
+	console_env_bind_1f(c, cmd_name, &v[1]);
+
+	/* "name".z utility setter. */
+	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.z", name);
+	console_env_bind_1f(c, cmd_name, &v[2]);
 
 	console_var_set(var, name, CONSOLE_VAR_TYPE_3F, v, sizeof(vec3));
 	return 0;
