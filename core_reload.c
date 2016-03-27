@@ -147,6 +147,29 @@ void core_reload_texture(const char *filename, unsigned int size, void *data, vo
 	}
 }
 
+void core_reload_texture_pixels(const char *filename, unsigned int size, void *data, void* userdata, int width, int height)
+{
+	if(size == 0) {
+		core_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
+		return;
+	}
+
+	GLuint tmp;
+
+	int ret = texture_load_pixels(&tmp, data, width, height);
+
+	if(ret != GRAPHICS_OK) {
+		core_error("Texture load failed: %s (%u bytes)\n", filename, size);
+	} else {
+		if(userdata) {
+			(*(GLuint *) userdata) = tmp;
+		} else {
+			core_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
+			texture_free(tmp);
+		}
+	}
+}
+
 void core_reload_console_conf(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {

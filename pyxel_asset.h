@@ -14,6 +14,7 @@ struct pyxel_asset {
 	char			anim_names[PYXEL_ANIMS_MAX][PYXEL_ANIM_NAME_MAX];
 	GLuint			layers[PYXEL_LAYERS_MAX];
 	int				layers_count;
+	GLuint			layers_blended;
 	char			layer_names[PYXEL_LAYERS_MAX][PYXEL_LAYER_NAME_MAX];
 };
 
