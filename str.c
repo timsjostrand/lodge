@@ -343,6 +343,40 @@ int str_parse_2f(const char *s, const char delimiter, float *dst_x, float *dst_y
 	return 0;
 }
 
+/**
+ * Parses three floats from a string on the format "%f,%f,%f" if delimiter is ','.
+ *
+ * @return -1 on error, 0 on success.
+ */
+int str_parse_3f(const char *s, const char delimiter, float *dst_x, float *dst_y, float *dst_z)
+{
+	char *end;
+
+	/* Parse x component. */
+	float x = strtof(s, &end);
+	if(end == NULL || s == end || (*end) != delimiter) {
+		return -1;
+	}
+	(*dst_x) = x;
+
+	/* Parse y component. */
+	s = end + 1;
+	float y = strtof(s, &end);
+	if(end == NULL || s == end || (*end) != delimiter) {
+		return -1;
+	}
+	(*dst_y) = y;
+
+	/* Parse z component. */
+	s = end + 1;
+	float z = strtof(s, &end);
+	if(end == NULL || s == end || (*end) != '\0') {
+		return -1;
+	}
+	(*dst_z) = z;
+
+	return 0;
+}
 
 void str_print_hex(const char *s)
 {
