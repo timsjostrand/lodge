@@ -60,23 +60,23 @@ struct core {
 struct core *core_global;
 
 /* Pre-init. */
-void core_set_init_memory_callback(struct core* core, core_init_memory_t init_memory_callback);
-void core_set_think_callback(struct core* core, think_func_t think_callback);
-void core_set_render_callback(struct core* core, render_func_t render_callback);
-void core_set_key_callback(struct core* core, input_callback_t key_callback);
-void core_set_mousebutton_callback(struct core* core, mousebutton_callback_t key_callback);
-void core_set_char_callback(struct core* core, input_char_callback_t char_callback);
-void core_set_asset_callbacks(struct core* core, core_load_t load_callback,
+void core_set_init_memory_callback(core_init_memory_t init_memory_callback);
+void core_set_think_callback(think_func_t think_callback);
+void core_set_render_callback(render_func_t render_callback);
+void core_set_key_callback(input_callback_t key_callback);
+void core_set_mousebutton_callback(mousebutton_callback_t key_callback);
+void core_set_char_callback(input_char_callback_t char_callback);
+void core_set_asset_callbacks(core_load_t load_callback,
 		core_init_t init_callback, core_release_t release_callback);
-void core_set_fps_callback(struct core* core, fps_func_t fps_callback);
-void core_set_console_init_callback(struct core* core, core_console_init_t console_init_callback);
-void core_set_up_sound(struct core* core, vec3 *sound_listener, float distance_max);
-void core_get_viewport(struct core* core, float* x, float* y, float* w, float* h);
+void core_set_fps_callback(fps_func_t fps_callback);
+void core_set_console_init_callback(core_console_init_t console_init_callback);
+void core_set_up_sound(vec3 *sound_listener, float distance_max);
+void core_get_viewport(float* x, float* y, float* w, float* h);
 
-void core_setup(struct core* core, const char *title, int view_width, int view_height,
+void core_setup(const char *title, int view_width, int view_height,
 	int window_width, int window_height, int window_mode, size_t game_memory_size);
 
-void core_run(struct core* core);
-void core_reload(struct core* core);
+void core_run();
+void core_reload();
 
 #endif

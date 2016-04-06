@@ -197,7 +197,7 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	return GRAPHICS_OK;
 }
 
-void graphics_free(struct core *core, struct graphics *g)
+void graphics_free(struct graphics *g)
 {
 	/* Free resources. */
 	glDeleteVertexArrays(1, &g->vao_rect);
@@ -235,7 +235,7 @@ double now()
 	return glfwGetTime() * 1000.0;
 }
 
-void graphics_do_frame(struct core* core, struct graphics *g)
+void graphics_do_frame(struct graphics *g)
 {
 	double before = now();
 
@@ -247,8 +247,8 @@ void graphics_do_frame(struct core* core, struct graphics *g)
 	g->frames.last_frame = now();
 
 	/* Game loop. */
-	g->think(core, g, delta_time);
-	g->render(core, g, delta_time);
+	g->think(g, delta_time);
+	g->render(g, delta_time);
 
 	/* Swap front and back buffers */
 	glfwSwapBuffers(g->window);
@@ -267,7 +267,7 @@ void graphics_do_frame_emscripten()
 }
 #endif
 
-void graphics_loop(struct core* core, struct graphics *g)
+void graphics_loop(struct graphics *g)
 {
 	/* Sanity check. */
 	if(!g->render || !g->think) {
@@ -279,7 +279,7 @@ void graphics_loop(struct core* core, struct graphics *g)
 	emscripten_set_main_loop(graphics_do_frame_emscripten, 0, 1);
 #else
 	while(!glfwWindowShouldClose(g->window)) {
-		graphics_do_frame(core, g);
+		graphics_do_frame(g);
 	}
 #endif
 }

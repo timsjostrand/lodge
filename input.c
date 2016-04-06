@@ -18,10 +18,9 @@ void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, 
 void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods);
 void input_glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods);
 
-int input_init(struct core* core, struct input *input, GLFWwindow *window,
+int input_init(struct input *input, GLFWwindow *window,
 	input_callback_t key_callback, input_char_callback_t char_callback, mousebutton_callback_t mousebutton_callback)
 {
-	input->core = core;
 	input->enabled = 1;
 	input->callback = key_callback;
 	input->char_callback = char_callback;
@@ -50,7 +49,7 @@ int key_released(int key)
 
 void input_glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
 {
-	input_global->mousebutton_callback(input_global->core, window, button, action, mods);
+	input_global->mousebutton_callback(window, button, action, mods);
 }
 
 void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -72,7 +71,7 @@ void input_glfw_key_func(GLFWwindow *window, int key, int scancode, int action, 
 	}
 
 	if(input_global->callback) {
-		input_global->callback(input_global->core, input_global, window, key, scancode, action, mods);
+		input_global->callback(input_global, window, key, scancode, action, mods);
 	}
 }
 
@@ -83,7 +82,7 @@ void input_glfw_char_func(GLFWwindow *window, unsigned int key, int mods)
 		return;
 	}
 	if(input_global->char_callback) {
-		input_global->char_callback(input_global->core, input_global, window, key, mods);
+		input_global->char_callback(input_global, window, key, mods);
 	}
 }
 
@@ -101,7 +100,7 @@ void input_think(struct input *input, float delta_time)
 void input_window_to_view(float win_x, float win_y, float win_w, float win_h, float *x, float *y)
 {
 	float vx, vy, vw, vh;
-	core_get_viewport(input_global->core, &vx, &vy, &vw, &vh);
+	core_get_viewport(&vx, &vy, &vw, &vh);
 
 	float dw = vw - win_w;
 	float dh = vh - win_h;
@@ -112,7 +111,7 @@ void input_window_to_view(float win_x, float win_y, float win_w, float win_h, fl
 	win_h = vh;
 
 	mat4 projection;
-	inverse(projection, input_global->core->graphics.projection);
+	inverse(projection, core_global->graphics.projection);
 
 	vec4 in_pos;
 	in_pos[0] = 2.0f * win_x / win_w;

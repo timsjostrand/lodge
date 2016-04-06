@@ -62,8 +62,8 @@ struct frames {
 
 struct graphics;
 
-typedef void(*think_func_t)(struct core* core, struct graphics *g, float delta_time);
-typedef void(*render_func_t)(struct core* core, struct graphics *g, float delta_time);
+typedef void(*think_func_t)(struct graphics *g, float delta_time);
+typedef void(*render_func_t)(struct graphics *g, float delta_time);
 
 struct graphics {
 	GLFWwindow		*window;					/* The window handle created by GLFW. */
@@ -82,7 +82,7 @@ struct graphics {
 int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 				fps_func_t fps_callback, int view_width, int view_height, int window_mode,
 				const char *title, int window_width, int window_height);
-void	graphics_free(struct core* core, struct graphics *g);
+void	graphics_free(struct graphics *g);
 void	graphics_loop();
 
 double	now();

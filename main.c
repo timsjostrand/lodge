@@ -169,18 +169,18 @@ void load_game(const char* filename, unsigned int size, void* data, void* userda
 			game_console_init_fn &&
 			game_init_memory_fn)
 		{
-			core_set_asset_callbacks(core_global, game_assets_load_fn, game_init_fn, game_assets_release_fn);
-			core_set_key_callback(core_global, game_key_callback_fn);
-			core_set_mousebutton_callback(core_global, game_mousebutton_callback_fn);
-			core_set_fps_callback(core_global, game_fps_callback_fn);
-			core_set_console_init_callback(core_global, game_console_init_fn);
-			core_set_think_callback(core_global, game_think_fn);
-			core_set_render_callback(core_global, game_render_fn);
-			core_set_init_memory_callback(core_global, game_init_memory_fn);
+			core_set_asset_callbacks(game_assets_load_fn, game_init_fn, game_assets_release_fn);
+			core_set_key_callback(game_key_callback_fn);
+			core_set_mousebutton_callback(game_mousebutton_callback_fn);
+			core_set_fps_callback(game_fps_callback_fn);
+			core_set_console_init_callback(game_console_init_fn);
+			core_set_think_callback(game_think_fn);
+			core_set_render_callback(game_render_fn);
+			core_set_init_memory_callback(game_init_memory_fn);
 
 			if (!first_load)
 			{
-				core_reload(core_global);
+				core_reload();
 			}
 		}
 	}
@@ -222,10 +222,10 @@ int main(int argc, char **argv)
 #endif
 
 	/* Sound setup */
-	core_set_up_sound(core_global, &settings->sound_listener, settings->sound_distance_max);
+	core_set_up_sound(&settings->sound_listener, settings->sound_distance_max);
 
 	/* Initialize subsystems and run main loop. */
-	core_setup(core_global, settings->window_title,
+	core_setup(settings->window_title,
 		settings->view_width, settings->view_height,
 		settings->window_width, settings->window_height,
 		args.window_mode, 1000000);
