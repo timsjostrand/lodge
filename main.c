@@ -210,14 +210,14 @@ int main(int argc, char **argv)
 	/* Get game settings. */
 	struct game_settings *settings = game_get_settings_fn();
 #else
-	core_set_think_callback(core_global, &game_think);
-	core_set_render_callback(core_global, &game_render);
-	core_set_asset_callbacks(core_global, &game_assets_load, &game_init, &game_assets_release);
-	core_set_key_callback(core_global, &game_key_callback);
-	core_set_mousebutton_callback(core_global, &game_mousebutton_callback);
-	core_set_fps_callback(core_global, &game_fps_callback);
-	core_set_init_memory_callback(core_global, &game_init_memory);
-	core_set_console_init_callback(core_global, &game_console_init);
+	core_set_think_callback(&game_think);
+	core_set_render_callback(&game_render);
+	core_set_asset_callbacks(&game_assets_load, &game_init, &game_assets_release);
+	core_set_key_callback(&game_key_callback);
+	core_set_mousebutton_callback(&game_mousebutton_callback);
+	core_set_fps_callback(&game_fps_callback);
+	core_set_init_memory_callback(&game_init_memory);
+	core_set_console_init_callback(&game_console_init);
 	struct game_settings *settings = game_get_settings();
 #endif
 
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
 	vfs_register_callback(args.game, &load_game, 0);
 #endif
 
-	core_run(core_global);
+	core_run();
 
 	vfs_shutdown();
 	return 0;
