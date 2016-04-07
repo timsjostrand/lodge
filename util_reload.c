@@ -14,7 +14,7 @@
 #include "console.h"
 #include "pyxel_asset.h"
 
-void core_reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
+void util_reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
 		sound_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -36,7 +36,7 @@ void core_reload_sound(const char *filename, unsigned int size, void *data, void
 	}
 }
 
-void core_reload_shader(const char *filename, unsigned int size, void *data, void *userdata)
+void util_reload_shader(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
 		shader_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -46,7 +46,7 @@ void core_reload_shader(const char *filename, unsigned int size, void *data, voi
 	struct shader *dst = (struct shader *) userdata;
 
 	if(!dst) {
-		shader_error("Invalid argument to core_reload_shader()\n");
+		shader_error("Invalid argument to util_reload_shader()\n");
 		return;
 	}
 
@@ -90,7 +90,7 @@ void core_reload_shader(const char *filename, unsigned int size, void *data, voi
 	}
 }
 
-void core_reload_atlas(const char *filename, unsigned int size, void *data, void *userdata)
+void util_reload_atlas(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
 		atlas_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -100,7 +100,7 @@ void core_reload_atlas(const char *filename, unsigned int size, void *data, void
 	struct atlas *dst = (struct atlas *) userdata;
 
 	if(!dst) {
-		atlas_error("Invalid argument to core_reload_atlas()\n");
+		atlas_error("Invalid argument to util_reload_atlas()\n");
 		return;
 	}
 
@@ -119,7 +119,7 @@ void core_reload_atlas(const char *filename, unsigned int size, void *data, void
 	}
 }
 
-void core_reload_texture(const char *filename, unsigned int size, void *data, void* userdata)
+void util_reload_texture(const char *filename, unsigned int size, void *data, void* userdata)
 {
 	if(size == 0) {
 		core_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
@@ -147,7 +147,7 @@ void core_reload_texture(const char *filename, unsigned int size, void *data, vo
 	}
 }
 
-void core_reload_texture_pixels(const char *filename, unsigned int size, void *data, void* userdata, int width, int height)
+void util_reload_texture_pixels(const char *filename, unsigned int size, void *data, void* userdata, int width, int height)
 {
 	if(size == 0) {
 		core_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
@@ -170,7 +170,7 @@ void core_reload_texture_pixels(const char *filename, unsigned int size, void *d
 	}
 }
 
-void core_reload_console_conf(const char *filename, unsigned int size, void *data, void *userdata)
+void util_reload_console_conf(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
 		console_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -188,7 +188,7 @@ void core_reload_console_conf(const char *filename, unsigned int size, void *dat
 	}
 }
 
-void core_reload_pyxel_asset(const char *filename, unsigned int size, void *data, void *userdata)
+void util_reload_pyxel_asset(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
 		pyxel_debug("Skipped reload of %s (%u bytes)\n", filename, size);
@@ -198,7 +198,7 @@ void core_reload_pyxel_asset(const char *filename, unsigned int size, void *data
 	struct pyxel_asset *dst = (struct pyxel_asset *) userdata;
 
 	if(!dst) {
-		pyxel_error("Invalid argument to core_reload_pyxel()\n");
+		pyxel_error("Invalid argument to util_reload_pyxel()\n");
 		return;
 	}
 

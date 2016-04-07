@@ -13,7 +13,7 @@
 
 #include "core.h"
 #include "core_argv.h"
-#include "core_reload.h"
+#include "util_reload.h"
 
 typedef struct game_settings* (*game_get_settings_fn_t)();
 

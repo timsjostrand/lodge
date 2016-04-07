@@ -55,7 +55,7 @@ void write_assets_c()
 	fprintf(fp, "#include \"assets.h\"\n\n");
 	fprintf(fp, "#include \"vfs.h\"\n");
 	fprintf(fp, "#include \"texture.h\"\n");
-	fprintf(fp, "#include \"core_reload.h\"\n");
+	fprintf(fp, "#include \"util_reload.h\"\n");
 	fprintf(fp, "\n");
 
 	fprintf(fp, "void assets_load()\n");
@@ -64,7 +64,7 @@ void write_assets_c()
 	foreach_alist(char*, asset, i, assets_list_textures)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_texture, &assets->textures.", asset);
+		fprintf(fp, "%s\", &util_reload_texture, &assets->textures.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -72,7 +72,7 @@ void write_assets_c()
 	foreach_alist(char*, asset, i, assets_list_sounds)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_sound, &assets->sounds.", asset);
+		fprintf(fp, "%s\", &util_reload_sound, &assets->sounds.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -80,7 +80,7 @@ void write_assets_c()
 	foreach_alist(char*, asset, i, assets_list_shaders)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_shader, &assets->shaders.", asset);
+		fprintf(fp, "%s\", &util_reload_shader, &assets->shaders.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -88,7 +88,7 @@ void write_assets_c()
 	foreach_alist(char*, asset, i, assets_list_pyxels)
 	{
 		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &core_reload_pyxel_asset, &assets->pyxels.", asset);
+		fprintf(fp, "%s\", &util_reload_pyxel_asset, &assets->pyxels.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
