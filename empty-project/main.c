@@ -14,7 +14,8 @@
 #include "assets.h"
 #include "game.h"
 #include "core.h"
-#include "core_reload.h"
+#include "util_reload.h"
+#include "util_graphics.h"
 #include "input.h"
 #include "atlas.h"
 #include "animatedsprites.h"
@@ -57,13 +58,13 @@ void game_init_memory(struct shared_memory *shared_memory, int reload)
 	input_global = shared_memory->input;
 }
 
-void game_think(struct core *core, struct graphics *g, float dt)
+void game_think(struct graphics *g, float dt)
 {
 	animatedsprites_update(game->batcher, &game->atlas, dt);
 	shader_uniforms_think(&assets->shaders.basic_shader, dt);
 }
 
-void game_render(struct core *core, struct graphics *g, float dt)
+void game_render(struct graphics *g, float dt)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -72,11 +73,11 @@ void game_render(struct core *core, struct graphics *g, float dt)
 	animatedsprites_render(game->batcher, &assets->shaders.basic_shader, g, assets->textures.textures, transform);
 }
 
-void game_mousebutton_callback(struct core *core, GLFWwindow *window, int button, int action, int mods)
+void game_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
 {
 	if(action == GLFW_PRESS) {
 		float x = 0, y = 0;
-		input_view_get_cursor(window, &x, &y);
+		util_view_get_cursor(window, &x, &y, core_global->graphics.projection);
 		console_debug("Click at %.0fx%.0f\n", x, y);
 	}
 }
@@ -101,7 +102,7 @@ void game_init()
 	animatedsprites_add(game->batcher, &game->sprite);
 }
 
-void game_key_callback(struct core *core, struct input *input, GLFWwindow *window, int key,
+void game_key_callback(struct input *input, GLFWwindow *window, int key,
 	int scancode, int action, int mods)
 {
 	if(action == GLFW_PRESS) {
@@ -116,7 +117,7 @@ void game_key_callback(struct core *core, struct input *input, GLFWwindow *windo
 void game_assets_load()
 {
 	assets_load();
-	vfs_register_callback("textures.json", core_reload_atlas, &game->atlas);
+	vfs_register_callback("textures.json", util_reload_atlas, &game->atlas);
 }
 
 void game_assets_release()
