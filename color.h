@@ -5,6 +5,7 @@
 
 #define rgb(v) xyz(v)
 #define rgba(v) xyzw(v)
+#define COLOR_FORMAT "r=%.1f g=%.1f b=%.1f a=%.1f"
 
 const vec4 COLOR_RED;
 const vec4 COLOR_GREEN;
