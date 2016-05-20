@@ -448,6 +448,16 @@ static void console_env_set(struct console *c, const char *name,
 			}
 			break;
 		}
+		case CONSOLE_VAR_TYPE_BOOL: {
+			int b;
+			if(str_parse_bool(value, &b) != 0) {
+				console_printf(c, "Usage: %s=<BOOL> (now: %s)\n", name, (*((int *) var->value)) ? "true" : "false");
+				return;
+			} else {
+				console_env_set_bool(c, name, b);
+			}
+			break;
+		}
 		default:
 			console_printf(c, "TODO: Variable type not implemented %d\n", var->type);
 			break;
@@ -1090,6 +1100,38 @@ int console_env_set_3f(struct console *c, const char *name, const vec3 v)
 	((float *) var->value)[0] = v[0];
 	((float *) var->value)[1] = v[1];
 	((float *) var->value)[2] = v[2];
+	return 0;
+}
+
+int console_env_bind_bool(struct console *c, const char *name, int *value)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_BOOL, value,
+					sizeof(int), &var) != 0) {
+			console_printf(c, "ERROR: Too many variables in environment\n");
+			return -1;
+		}
+	}
+
+	console_var_set(var, name, CONSOLE_VAR_TYPE_BOOL, value, sizeof(int));
+	return 0;
+}
+
+int console_env_set_bool(struct console *c, const char *name, const int value)
+{
+	struct console_var *var = console_var_get_by_name(&c->env, name);
+
+	if(var == NULL) {
+		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
+		return -1;
+	} else if(var->type != CONSOLE_VAR_TYPE_BOOL) {
+		console_printf(c, "ERROR: Not a boolean variable: \"%s\"\n", name);
+		return -1;
+	}
+
+	(*((int *) var->value)) = value;
 	return 0;
 }
 

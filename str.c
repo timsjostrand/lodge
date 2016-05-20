@@ -378,6 +378,30 @@ int str_parse_3f(const char *s, const char delimiter, float *dst_x, float *dst_y
 	return 0;
 }
 
+/**
+ * Parses a boolean from a string.
+ *
+ * The strings "true" (case insensitive) or "1" will result in 'dst' being
+ * true, otherwise false.
+ *
+ * If the input 's' is null or empty, -1 is returned.
+ *
+ * @return -1 on error, 0 on success.
+ */
+int str_parse_bool(const char *s, int *dst)
+{
+	if(str_empty(s, 1)) {
+		return -1;
+	} else if(str_equals_ignore_case(s, "true")) {
+		*dst = 1;
+	} else if(str_equals_ignore_case(s, "1")) {
+		*dst = 1;
+	} else {
+		*dst = 0;
+	}
+	return 0;
+}
+
 void str_print_hex(const char *s)
 {
 	while(*s) printf("%02x ", (unsigned int) *s++);
