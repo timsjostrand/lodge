@@ -27,4 +27,13 @@
 	fprintf(stderr, "ERROR @ " module ": " __VA_ARGS__)
 #endif
 
+#ifdef CONSOLE_ENABLE
+#define warnf(module, ...) \
+	fprintf(stderr, "WARN @ " module ": " __VA_ARGS__); \
+	core_console_printf("WARN @ " module ": " __VA_ARGS__)
+#else
+#define warnf(module, ...) \
+	fprintf(stderr, "WARN @ " module ": " __VA_ARGS__)
+#endif
+
 #endif
