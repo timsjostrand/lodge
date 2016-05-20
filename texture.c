@@ -11,6 +11,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
+#include "texture.h"
 #include "graphics.h"
 #include "color.h"
 
@@ -75,23 +76,59 @@ int texture_load_pixels(GLuint *tex, const uint8_t *data,
 }
 
 /**
+ * Generates a new texture filled with only one color.
+ *
+ * @param tex	Where to store the texture.
+ * @param w		The width of the texture.
+ * @param h		The height of the texture.
+ * @param color	The color of the texture.
+ */
+int texture_solid_color(GLuint *tex, int w, int h, const GLfloat color[4])
+{
+	glGenTextures(1, tex);
+	glBindTexture(GL_TEXTURE_2D, *tex);
+
+	/* Generate the buffer containing pixel data. */
+	GLfloat *buf = (GLfloat *) malloc(sizeof(color) * w * h);
+
+	/* OOM */
+	if(buf == NULL) {
+		return TEXTURE_ERROR;
+	}
+
+	for(GLfloat *cur = buf, *end = buf + sizeof(color) * w * h;
+			cur < end;
+			cur += sizeof(color)) {
+		cur[0] = color[0];
+		cur[1] = color[1];
+		cur[2] = color[2];
+		cur[3] = color[3];
+	}
+
+	/* Upload texture. */
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+			GL_FLOAT, buf);
+
+	/* Wrapping. */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	/* Filter. */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	free(buf);
+	return TEXTURE_OK;
+}
+
+/**
  * Creates an empty texture, a white square. If a sprite does not have a
  * texture, the fragment shader can still multiply this texture with a sprite
  * color to produce the correct fragment color.
  */
 void texture_white(GLuint *tex)
 {
-	glGenTextures(1, tex);
-	glBindTexture(GL_TEXTURE_2D, *tex);
-	/* Upload texture. */
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA,
-			GL_FLOAT, COLOR_WHITE);
-	/* Wrapping. */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	/* Filter. */
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	texture_solid_color(tex, 1, 1, COLOR_WHITE);
 }
 
 void texture_free(const GLuint tex)
