@@ -7,6 +7,7 @@
 
 #define pyxel_debug(...) debugf("PyxelFormat", __VA_ARGS__)
 #define pyxel_error(...) errorf("PyxelFormat", __VA_ARGS__)
+#define pyxel_warn(...) warnf("PyxelFormat", __VA_ARGS__)
 
 #define PYXEL_OK		0
 #define PYXEL_ERROR		-1

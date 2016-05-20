@@ -282,6 +282,7 @@ struct anim* pyxel_asset_get_anim(struct pyxel_asset *asset, const char *anim_na
 			return &asset->anims[i];
 		}
 	}
+	pyxel_warn("Could not find anim: %s\n", anim_name);
 	return NULL;
 }
 
@@ -296,5 +297,6 @@ GLuint* pyxel_asset_get_layer(struct pyxel_asset *asset, const char *layer_name)
 			return &asset->layers[i];
 		}
 	}
+	pyxel_warn("Could not find layer: %s\n", layer_name);
 	return NULL;
 }
