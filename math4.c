@@ -486,3 +486,8 @@ void mult2f(vec2 dst, const float x, const float y)
 	dst[0] *= x;
 	dst[1] *= y;
 }
+
+int sign(int x)
+{
+	return (x > 0) - (x < 0);
+}

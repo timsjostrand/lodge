@@ -74,4 +74,6 @@ void set2f(vec2 v, const float x, const float y);
 void set3f(vec3 v, const float x, const float y, const float z);
 void set4f(vec4 v, const float x, const float y, const float z, const float w);
 
+int sign(int x);
+
 #endif
