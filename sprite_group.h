@@ -14,11 +14,12 @@ struct sprite_group
 	unsigned int	sprites_count;
 };
 
-void			animatedsprites_add_group(struct animatedsprites* animatedsprites, struct sprite_group* group);
+void			animatedsprites_add_group(struct animatedsprites *animatedsprites, struct sprite_group *group);
 
-void			sprite_group_get_size(struct sprite_group* group);
-void			sprite_group_update(struct sprite_group* group);
-struct sprite*	sprite_group_add_sprite(struct sprite_group* group, struct anim *anim, float relx, float rely,
-		float relz, float sx, float sy);
+void			sprite_group_get_size(struct sprite_group *group);
+void			sprite_group_update(struct sprite_group *group);
+struct sprite*	sprite_group_add_sprite(struct sprite_group *group, struct anim *anim, float relx, float rely,
+						float relz, float sx, float sy);
+void			sprite_group_clear(struct sprite_group *group);
 
 #endif

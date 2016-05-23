@@ -60,6 +60,11 @@ struct sprite* sprite_group_add_sprite(struct sprite_group* group, struct anim *
 	return sprite;
 }
 
+void sprite_group_clear(struct sprite_group *group)
+{
+	group->sprites_count = 0;
+}
+
 void animatedsprites_add_group(struct animatedsprites* as, struct sprite_group* group)
 {
 	if(as == NULL || group == NULL) {
