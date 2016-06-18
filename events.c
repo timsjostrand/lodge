@@ -1,20 +1,19 @@
 #include "events.h"
 #include "math4.h"
+#include "log.h"
 
-static struct events_data_playsound {
-	struct sound *sound;
-	sound_buf_t buf;
-	vec3 pos;
-	vec3 velocity;
-	ALboolean loop;
-	float gain;
-	float pitch;
-	int uninterruptable;
-};
+static void events_noop_callback(void *data, unsigned int data_len)
+{
+	errorf("Events", "NOOP event with length %u\n", data_len);
+}
 
 void events_init(struct events* events)
 {
 	events->events_count = 0;
+	events->registered_count = 0;
+
+	/* Reserve event ID 0 */
+	events_register(events, "noop", &events_noop_callback);
 }
 
 void events_send(struct events* events, const struct event* event)
@@ -24,47 +23,22 @@ void events_send(struct events* events, const struct event* event)
 	events->events_count++;
 }
 
-void events_send_playsound(struct events *events, struct sound *sound,
-	const sound_buf_t buf, vec3 pos, vec3 velocity, ALboolean loop, float gain,
-	float pitch, int uninterruptable)
-{
-	struct event event = { 0 };
-	event.type = EVENT_PLAYSOUND;
-	event.data_length = sizeof(struct events_data_playsound);
-
-	struct events_data_playsound *sound_data = (struct events_data_playsound *) event.data;
-	sound_data->sound = sound;
-	sound_data->buf = buf;
-	set3f(sound_data->pos, xyz(pos));
-	set3f(sound_data->velocity, xyz(velocity));
-	sound_data->loop = loop;
-	sound_data->gain = gain;
-	sound_data->pitch = pitch;
-	sound_data->uninterruptable = uninterruptable;
-
-	events_send(events, &event);
-}
-
-
-static void event_handle_playsound(void *data)
-{
-	struct events_data_playsound *d = (struct events_data_playsound *) data;
-	sound_buf_play_detailed(d->sound, d->buf, d->pos, d->velocity, d->loop, d->gain, d->pitch, d->uninterruptable);
-}
-
 void events_update(struct events* events)
 {
 	for (int i = 0; i < events->events_count; i++)
 	{
 		struct event* event = &events->events[i];
-
-		switch (event->type)
-		{
-		case EVENT_PLAYSOUND:
-			event_handle_playsound(event->data);
-			break;
-		}
+		events->registered[event->id].callback(event->data, event->data_length);
 	}
 
 	events->events_count = 0;
+}
+
+unsigned int events_register(struct events *events, char *name, events_handle_callback_t callback)
+{
+	struct events_registered_event *reg = &events->registered[events->registered_count];
+	strncpy(reg->name, name, EVENTS_NAME_MAX);
+	reg->callback = callback;
+	reg->id = events->registered_count;
+	return events->registered_count++;
 }

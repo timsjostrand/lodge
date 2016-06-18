@@ -5,30 +5,33 @@
 
 #define EVENTS_DATA_MAX 1024
 #define EVENTS_MAX 256
-
-enum event_type {
-	EVENT_PLAYSOUND = 0
-};
+#define EVENTS_NAME_MAX 256
+#define EVENTS_REGISTER_MAX 2048
 
 struct event {
 	char data[EVENTS_DATA_MAX];
-	enum event_type type;
-	int data_length;
+	unsigned int id;
+	unsigned int data_length;
 };
 
-struct events{
+typedef void(*events_handle_callback_t)(void *data, unsigned int data_len);
+
+struct events_registered_event {
+	char						name[EVENTS_NAME_MAX];
+	unsigned int				id;
+	events_handle_callback_t	callback;
+};
+
+struct events {
 	struct event events[EVENTS_MAX];
+	struct events_registered_event registered[EVENTS_REGISTER_MAX];
 	int events_count;
+	int registered_count;
 };
 
 void events_init(struct events* events);
 void events_send(struct events* events, struct event* event);
 void events_update(struct events* events);
-
-/* Helpers. */
-
-void events_send_playsound(struct events *events, struct sound *sound,
-	const sound_buf_t buf, vec3 pos, vec3 velocity, ALboolean loop, float gain,
-	float pitch, int uninterruptable);
+unsigned int events_register(struct events *events, char *name, events_handle_callback_t callback);
 
 #endif // _EVENTS_H
