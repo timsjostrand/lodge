@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "events.h"
 #include "math4.h"
 #include "log.h"
@@ -16,7 +18,7 @@ void events_init(struct events* events)
 	events_register(events, "noop", &events_noop_callback);
 }
 
-void events_send(struct events* events, const struct event* event)
+void events_send(struct events* events, struct event* event)
 {
 	struct event *new_event = &events->events[events->events_count];
 	memcpy(new_event, event, sizeof(struct event));
