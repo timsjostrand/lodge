@@ -1,0 +1,27 @@
+/* Event: @NAME@ */
+
+struct events_data_@NAME@ {
+@STRUCT_MEMBERS@};
+
+void events_send_@NAME@(@ARGS_TO_SEND@)
+{
+	struct event event = { 0 };
+	event.id = events_ids.@NAME@;
+	event.data_length = sizeof(struct events_data_@NAME@);
+
+	struct events_data_@NAME@ *d = (struct events_data_@NAME@ *) event.data;
+@ARGS_TO_STRUCT@
+	events_send(events, &event);
+}
+
+static void events_handle_@NAME@(void *data, unsigned int data_len)
+{
+	struct events_data_@NAME@ *d = (struct events_data_@NAME@ *) data;
+	@EVENT_FUNCTION@(@ARGS_FROM_STRUCT@);
+}
+
+void events_register_@NAME@(struct events *events)
+{
+	events_ids.@NAME@ = events_register(events, "@NAME@", &events_handle_@NAME@);
+}
+

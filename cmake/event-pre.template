@@ -1,0 +1,20 @@
+/**
+ * Automatically generated events.
+ *
+ * DO NOT EDIT DIRECTLY. See 'cmake/generate-events.cmake'.
+ */
+
+#include <string.h>
+
+#include "events_generated.h"
+
+static struct {
+@ID_STRUCT@} events_ids = { 0 };
+
+/**
+ * Register all automatically generated events.
+ */
+void events_register_generated(struct events *events)
+{
+@REGISTER_GENERATED@}
+

@@ -30,7 +30,7 @@
 
 #include "core.h"
 #include "core_argv.h"
-#include "core_reload.h"
+#include "util_reload.h"
 
 #include "assets.h"
 
@@ -420,10 +420,10 @@ void init_ball(struct ball *ball)
 
 void load_console_conf()
 {
-	vfs_register_callback("glpong.rc", &core_reload_console_conf, &core_global->console);
+	vfs_register_callback("glpong.rc", &util_reload_console_conf, &core_global->console);
 }
 
-void game_mousebutton_callback(struct core* core, GLFWwindow *window, int button, int action, int mods)
+void game_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		double x = 0;
@@ -451,7 +451,7 @@ void game_console_init(struct console* c)
 	console_env_bind_1f(c, "graphics_detail", &(game->graphics_detail));
 }
 
-void game_key_callback(struct core* core, struct input* input, GLFWwindow* window, int key,
+void game_key_callback(struct input* input, GLFWwindow* window, int key,
 	int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
@@ -509,7 +509,7 @@ void load_shaders()
 void load_atlases()
 {
 	/* Register asset callbacks */
-	vfs_register_callback("earl.json", core_reload_atlas, &game->atlas_earl);
+	vfs_register_callback("earl.json", util_reload_atlas, &game->atlas_earl);
 }
 
 void release_sounds()
@@ -539,7 +539,7 @@ void game_fps_callback(struct frames *f)
 		f->frames, f->frame_time_min, f->frame_time_avg, f->frame_time_max);
 }
 
-void game_think(struct core* core, struct graphics* g, float delta_time)
+void game_think(struct graphics* g, float delta_time)
 {
 	game->time = (float)glfwGetTime();
 	glpong_think(delta_time);
@@ -548,7 +548,7 @@ void game_think(struct core* core, struct graphics* g, float delta_time)
 	shader_uniforms_think(&assets->shaders.ball_trail, delta_time);
 }
 
-void game_render(struct core* core, struct graphics* g, float delta_time)
+void game_render(struct graphics* g, float delta_time)
 {
 	/* Clear. */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
