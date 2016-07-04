@@ -17,21 +17,6 @@
 
 typedef struct lodge_settings* (*game_get_settings_fn_t)();
 
-/* Core singleton. */
-struct core core_mem = { 0 };
-struct core *core_global = &core_mem;
-
-/* VFS singleton. */
-struct vfs vfs_mem = { 0 };
-struct vfs *vfs_global = &vfs_mem;
-
-/* Input singleton. */
-struct input *input_global = NULL;
-
-/* Assets singleton. */
-struct assets assets_mem = { 0 };
-struct assets *assets = &assets_mem;
-
 void* game_library = 0;
 
 core_init_t game_init_fn = 0;
@@ -207,6 +192,8 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	struct lodge_settings *settings = game_get_settings_fn();
+
 #else
 	core_set_think_callback(&game_think);
 	core_set_render_callback(&game_render);
@@ -219,13 +206,24 @@ int main(int argc, char **argv)
 	struct lodge_settings *settings = game_get_settings();
 #endif
 
-	lodge_start(game_get_settings_fn(), args.window_mode);
+	/* Sound setup */
+	core_set_up_sound(&settings->sound_listener, settings->sound_distance_max);
+
+	/* Initialize subsystems and run main loop. */
+	core_setup(settings->window_title,
+		settings->view_width, settings->view_height,
+		settings->window_width, settings->window_height,
+		args.window_mode, 1000000);
+
+	vfs_run_callbacks();
 
 #ifdef LOAD_SHARED
 	/* Register game reload callback */
 	vfs_register_callback(args.game, &load_game, 0);
 #endif
 
+	core_run();
 	vfs_shutdown();
+
 	return 0;
 }

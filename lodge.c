@@ -1,16 +1,18 @@
-#include "lodge.h"
+#include "vfs.h"
+#include "core.h"
+#include "assets.h"
 
-void lodge_start(struct lodge_settings* settings, int window_mode)
-{
-	/* Sound setup */
-	core_set_up_sound(&settings->sound_listener, settings->sound_distance_max);
+/* Core singleton. */
+struct core core_mem = { 0 };
+struct core *core_global = &core_mem;
 
-	/* Initialize subsystems and run main loop. */
-	core_setup(settings->window_title,
-		settings->view_width, settings->view_height,
-		settings->window_width, settings->window_height,
-		window_mode, 1000000);
-	vfs_run_callbacks();
+/* VFS singleton. */
+struct vfs vfs_mem = { 0 };
+struct vfs *vfs_global = &vfs_mem;
 
-	core_run();
-}
+/* Input singleton. */
+struct input *input_global = NULL;
+
+/* Assets singleton. */
+struct assets assets_mem = { 0 };
+struct assets *assets = &assets_mem;

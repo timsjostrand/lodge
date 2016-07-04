@@ -33,6 +33,4 @@ struct lodge_settings {
 	float		sound_distance_max;
 };
 
-EXPORT void lodge_start(struct lodge_settings* lodge_settings, int window_mode);
-
 #endif

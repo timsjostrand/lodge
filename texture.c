@@ -117,7 +117,7 @@ int texture_solid_color(GLuint *tex, int w, int h, const GLfloat color[4])
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	free(buf);
+	//free(buf);
 	return TEXTURE_OK;
 }
 
