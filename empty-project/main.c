@@ -82,9 +82,9 @@ void game_mousebutton_callback(GLFWwindow *window, int button, int action, int m
 	}
 }
 
-void game_console_init(struct console *c)
+void game_console_init(struct console *c, struct env *env)
 {
-	/* console_env_bind_1f(c, "print_fps", &(game->print_fps)); */
+	/* env_bind_1f(c, "print_fps", &(game->print_fps)); */
 }
 
 void game_init()

@@ -26,6 +26,7 @@
 #include "atlas.h"
 #include "monotext.h"
 #include "console.h"
+#include "env.h"
 #include "str.h"
 
 #include "core.h"
@@ -445,10 +446,10 @@ void game_mousebutton_callback(GLFWwindow *window, int button, int action, int m
 	}
 }
 
-void game_console_init(struct console* c)
+void game_console_init(struct console* c, struct env *env)
 {
 	/* Set up game-specific console variables. */
-	console_env_bind_1f(c, "graphics_detail", &(game->graphics_detail));
+	env_bind_1f(c, "graphics_detail", &(game->graphics_detail));
 }
 
 void game_key_callback(struct input* input, GLFWwindow* window, int key,
