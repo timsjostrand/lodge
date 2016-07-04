@@ -24,28 +24,6 @@ struct shared_memory
 	struct input* input;
 };
 
-//#define LOAD_SHARED
-
-#ifdef _WIN32
-#define EXPORT __declspec( dllexport )
-#define IMPORT __declspec( dllimport )
-#else
-#define EXPORT
-#define IMPORT
-#endif
-
-#ifdef ENABLE_SHARED
-	#define SHARED_SYMBOL EXPORT
-#else
-
-#ifdef LOAD_SHARED
-#define SHARED_SYMBOL IMPORT
-#else
-#define SHARED_SYMBOL
-#endif
-
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
