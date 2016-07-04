@@ -207,8 +207,6 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	/* Get game settings. */
-	struct game_settings *settings = game_get_settings_fn();
 #else
 	core_set_think_callback(&game_think);
 	core_set_render_callback(&game_render);
@@ -221,22 +219,12 @@ int main(int argc, char **argv)
 	struct game_settings *settings = game_get_settings();
 #endif
 
-	/* Sound setup */
-	core_set_up_sound(&settings->sound_listener, settings->sound_distance_max);
-
-	/* Initialize subsystems and run main loop. */
-	core_setup(settings->window_title,
-		settings->view_width, settings->view_height,
-		settings->window_width, settings->window_height,
-		args.window_mode, 1000000);
-	vfs_run_callbacks();
+	lodge_start(game_get_settings_fn(), args.window_mode);
 
 #ifdef LOAD_SHARED
 	/* Register game reload callback */
 	vfs_register_callback(args.game, &load_game, 0);
 #endif
-
-	core_run();
 
 	vfs_shutdown();
 	return 0;
