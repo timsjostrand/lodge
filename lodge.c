@@ -1,6 +1,6 @@
 #include "lodge.h"
 
-void lodge_start(struct game_settings* settings, int window_mode)
+void lodge_start(struct lodge_settings* settings, int window_mode)
 {
 	/* Sound setup */
 	core_set_up_sound(&settings->sound_listener, settings->sound_distance_max);

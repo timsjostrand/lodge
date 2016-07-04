@@ -23,7 +23,7 @@
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360
 
-const struct game_settings settings = {
+const struct lodge_settings settings = {
 	.view_width			= VIEW_WIDTH,
 	.view_height		= VIEW_HEIGHT,
 	.window_width		= VIEW_WIDTH,
@@ -40,7 +40,7 @@ struct game {
 	struct anim				anim_sprite;
 } *game = NULL;
 
-struct game_settings* game_get_settings()
+struct lodge_settings* game_get_settings()
 {
 	return &settings;
 }

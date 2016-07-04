@@ -15,7 +15,7 @@
 #include "core_argv.h"
 #include "util_reload.h"
 
-typedef struct game_settings* (*game_get_settings_fn_t)();
+typedef struct lodge_settings* (*game_get_settings_fn_t)();
 
 /* Core singleton. */
 struct core core_mem = { 0 };
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 	core_set_fps_callback(&game_fps_callback);
 	core_set_init_memory_callback(&game_init_memory);
 	core_set_console_init_callback(&game_console_init);
-	struct game_settings *settings = game_get_settings();
+	struct lodge_settings *settings = game_get_settings();
 #endif
 
 	lodge_start(game_get_settings_fn(), args.window_mode);

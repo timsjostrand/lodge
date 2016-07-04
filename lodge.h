@@ -3,7 +3,7 @@
 
 #include "math4.h"
 
-struct game_settings {
+struct lodge_settings {
 	int			window_width;
 	int			window_height;
 	const char	*window_title;
@@ -13,6 +13,6 @@ struct game_settings {
 	float		sound_distance_max;
 };
 
-void lodge_start(struct game_settings* game_settings, int window_mode);
+void lodge_start(struct lodge_settings* lodge_settings, int window_mode);
 
 #endif

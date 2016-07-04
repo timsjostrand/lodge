@@ -67,7 +67,7 @@ SHARED_SYMBOL void game_fps_callback(struct frames* f);
 
 SHARED_SYMBOL void game_console_init(struct console* c);
 
-SHARED_SYMBOL struct game_settings* game_get_settings();
+SHARED_SYMBOL struct lodge_settings* game_get_settings();
 
 #ifdef __cplusplus
 }
