@@ -19,13 +19,12 @@
 #include "math4.h"
 #include "graphics.h"
 #include "drawable.h"
+#include "env.h"
 
 static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };
 static const vec4 CONSOLE_COLOR_CURSOR		= { 0.0f, 0.0f, 0.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_BG			= { 0.0f, 0.0f, 0.0f, 0.75f };
-
-static struct console_var* console_var_get_by_name(struct console_env *e, const char *name);
 
 static void console_cursor_init(struct console_cursor *cur, struct monotext *txt, GLuint *white_tex)
 {
@@ -132,8 +131,9 @@ float console_height(struct console *c, int display_lines)
 }
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex, struct shader *shader)
+		int padding, GLuint *white_tex, struct shader *shader, struct env *env)
 {
+	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;
 	c->font = font;
 	c->padding = padding;
@@ -403,7 +403,7 @@ static void console_parse_cmd(struct console *c, struct list *argv)
 static void console_env_set(struct console *c, const char *name,
 		const char *value)
 {
-	struct console_var *var = console_var_get_by_name(&c->env, name);
+	struct env_var *var = env_var_get_by_name(c->env, name);
 
 	if(var == NULL) {
 		console_printf(c, "Unknown variable: \"%s\"\n", name);
@@ -411,17 +411,17 @@ static void console_env_set(struct console *c, const char *name,
 	}
 
 	switch(var->type) {
-		case CONSOLE_VAR_TYPE_1F: {
+		case ENV_VAR_TYPE_1F: {
 			float f;
 			if(str_parse_1f(value, &f) != 0) {
 				console_printf(c, "Usage: %s=<FLOAT> (now: %g)\n", name, (*((float *) var->value)));
 				return;
 			} else {
-				console_env_set_1f(c, name, f);
+				env_set_1f(c->env, name, f);
 			}
 			break;
 		}
-		case CONSOLE_VAR_TYPE_2F: {
+		case ENV_VAR_TYPE_2F: {
 			vec2 v;
 			if(str_parse_2f(value, ',', &v[0], &v[1]) != 0) {
 				console_printf(c, "Usage: %s=<FLOAT>,<FLOAT> (now: %g,%g)\n", name,
@@ -430,11 +430,11 @@ static void console_env_set(struct console *c, const char *name,
 				);
 				return;
 			} else {
-				console_env_set_2f(c, name, v);
+				env_set_2f(c->env, name, v);
 			}
 			break;
 		}
-		case CONSOLE_VAR_TYPE_3F: {
+		case ENV_VAR_TYPE_3F: {
 			vec3 v;
 			if(str_parse_3f(value, ',', &v[0], &v[1], &v[2]) != 0) {
 				console_printf(c, "Usage: %s=<F>,<F>,<F> (now: %g,%g,%g)\n", name,
@@ -444,17 +444,17 @@ static void console_env_set(struct console *c, const char *name,
 				);
 				return;
 			} else {
-				console_env_set_3f(c, name, v);
+				env_set_3f(c->env, name, v);
 			}
 			break;
 		}
-		case CONSOLE_VAR_TYPE_BOOL: {
+		case ENV_VAR_TYPE_BOOL: {
 			int b;
 			if(str_parse_bool(value, &b) != 0) {
 				console_printf(c, "Usage: %s=<BOOL> (now: %s)\n", name, (*((int *) var->value)) ? "true" : "false");
 				return;
 			} else {
-				console_env_set_bool(c, name, b);
+				env_set_bool(c->env, name, b);
 			}
 			break;
 		}
@@ -495,11 +495,11 @@ static void console_parse_var(struct console *c, struct list *argv)
 	size_t name_len = input_equal_sign - input->data;
 	size_t value_len = input_len - name_len - 1;
 
-	char name[CONSOLE_VAR_NAME_MAX] = { 0 };
-	char value[CONSOLE_VAR_NAME_MAX] = { 0 };
+	char name[ENV_VAR_NAME_MAX] = { 0 };
+	char value[ENV_VAR_NAME_MAX] = { 0 };
 
-	strncpy(name, input->data, imin(name_len, CONSOLE_VAR_NAME_MAX));
-	strncpy(value, input_equal_sign + 1, imin(value_len, CONSOLE_VAR_NAME_MAX));
+	strncpy(name, input->data, imin(name_len, ENV_VAR_NAME_MAX));
+	strncpy(value, input_equal_sign + 1, imin(value_len, ENV_VAR_NAME_MAX));
 
 	console_env_set(c, name, value);
 }
@@ -726,7 +726,7 @@ static void console_filter_list(struct list *out, struct list *in, const char *m
 	}
 }
 
-static void console_env_autocomplete(struct console_env *env, struct list *completions)
+static void console_env_autocomplete(struct env *env, struct list *completions)
 {
 	for(int i=0; i<env->len; i++) {
 		list_append(completions, env->vars[i].name);
@@ -862,7 +862,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 
 	/* Autocomplete variables? */
 	if(cmd_index < 0) {
-		console_env_autocomplete(&c->env, completions);
+		console_env_autocomplete(c->env, completions);
 	}
 
 	/* Filter completions to match currently typed command. */
@@ -892,7 +892,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		c->input_len += added - leaf_len;
 		c->cursor.pos += added - leaf_len;
 		/* Add a convience character based on completed type. */
-		if(list_count(argv) == 1 && console_var_get_by_name(&c->env, head)) {
+		if(list_count(argv) == 1 && env_var_get_by_name(c->env, head)) {
 			/* Is variable: append equal sign. */
 			added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos, "=", 1);
 		} else {
@@ -937,202 +937,6 @@ int console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
 		return -1;
 	}
 	return str_parse_1f(elem->data, dst);
-}
-
-static struct console_var* console_var_get_by_name(struct console_env *e,
-		const char *name)
-{
-	int name_len = strnlen(name, CONSOLE_VAR_NAME_MAX);
-
-	for(int i=0; i<e->len; i++) {
-		struct console_var *var = (struct console_var *) &(e->vars[i]);
-		int var_name_len = strnlen(var->name, CONSOLE_VAR_NAME_MAX);
-		if(strncmp(var->name, name, imax(var_name_len, name_len)) == 0) {
-			return var;
-		}
-	}
-
-	return NULL;
-}
-
-static void console_var_set(struct console_var *var, const char *name, int type,
-		void *value, size_t value_size)
-{
-	strncpy(var->name, name, CONSOLE_VAR_NAME_MAX);
-	var->type = type;
-	var->value = value;
-	var->value_size = value_size;
-}
-
-static int console_var_new(struct console_env *e, const char *name, int type,
-		void *value, size_t value_size, struct console_var **dst)
-{
-	if(e->len >= CONSOLE_ENV_MAX) {
-		return -1;
-	}
-	struct console_var *var = &(e->vars[e->len]);
-	console_var_set(var, name, type, value, value_size);
-	(*dst) = var;
-	e->len ++;
-	return 0;
-}
-
-int console_env_bind_1f(struct console *c, const char *name, float *value)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_1F, value,
-					sizeof(float), &var) != 0) {
-			console_printf(c, "ERROR: Too many variables in environment\n");
-			return -1;
-		}
-	}
-
-	console_var_set(var, name, CONSOLE_VAR_TYPE_1F, value, sizeof(float));
-	return 0;
-}
-
-int console_env_set_1f(struct console *c, const char *name, const float value)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
-		return -1;
-	} else if(var->type != CONSOLE_VAR_TYPE_1F) {
-		console_printf(c, "ERROR: Not a float variable: \"%s\"\n", name);
-		return -1;
-	}
-
-	(*((float *) var->value)) = value;
-	return 0;
-}
-
-int console_env_bind_2f(struct console *c, const char *name, vec2 v)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_2F, v,
-					sizeof(vec2), &var) != 0) {
-			console_printf(c, "ERROR: Too many variables in environment\n");
-			return -1;
-		}
-	}
-
-	console_var_set(var, name, CONSOLE_VAR_TYPE_2F, v, sizeof(vec2));
-
-	/* Utility setters. */
-	char cmd_name[CONSOLE_CMD_NAME_MAX] = { 0 };
-
-	/* "name".x utility setter. */
-	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.x", name);
-	console_env_bind_1f(c, cmd_name, &v[0]);
-
-	/* "name".y utility setter. */
-	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.y", name);
-	console_env_bind_1f(c, cmd_name, &v[1]);
-
-	return 0;
-}
-
-int console_env_set_2f(struct console *c, const char *name, const vec2 v)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
-		return -1;
-	} else if(var->type != CONSOLE_VAR_TYPE_2F) {
-		console_printf(c, "ERROR: Not a vec2 variable: \"%s\"\n", name);
-		return -1;
-	}
-
-	((float *) var->value)[0] = v[0];
-	((float *) var->value)[1] = v[1];
-	return 0;
-}
-
-int console_env_bind_3f(struct console *c, const char *name, vec3 v)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_3F, v,
-					sizeof(vec3), &var) != 0) {
-			console_printf(c, "ERROR: Too many variables in environment\n");
-			return -1;
-		}
-	}
-
-	/* Utility setters. */
-	char cmd_name[CONSOLE_CMD_NAME_MAX] = { 0 };
-
-	/* "name".x utility setter. */
-	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.x", name);
-	console_env_bind_1f(c, cmd_name, &v[0]);
-
-	/* "name".y utility setter. */
-	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.y", name);
-	console_env_bind_1f(c, cmd_name, &v[1]);
-
-	/* "name".z utility setter. */
-	snprintf(cmd_name, CONSOLE_CMD_NAME_MAX, "%s.z", name);
-	console_env_bind_1f(c, cmd_name, &v[2]);
-
-	console_var_set(var, name, CONSOLE_VAR_TYPE_3F, v, sizeof(vec3));
-	return 0;
-}
-
-int console_env_set_3f(struct console *c, const char *name, const vec3 v)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
-		return -1;
-	} else if(var->type != CONSOLE_VAR_TYPE_3F) {
-		console_printf(c, "ERROR: Not a vec3 variable: \"%s\"\n", name);
-		return -1;
-	}
-
-	((float *) var->value)[0] = v[0];
-	((float *) var->value)[1] = v[1];
-	((float *) var->value)[2] = v[2];
-	return 0;
-}
-
-int console_env_bind_bool(struct console *c, const char *name, int *value)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		if(console_var_new(&c->env, name, CONSOLE_VAR_TYPE_BOOL, value,
-					sizeof(int), &var) != 0) {
-			console_printf(c, "ERROR: Too many variables in environment\n");
-			return -1;
-		}
-	}
-
-	console_var_set(var, name, CONSOLE_VAR_TYPE_BOOL, value, sizeof(int));
-	return 0;
-}
-
-int console_env_set_bool(struct console *c, const char *name, const int value)
-{
-	struct console_var *var = console_var_get_by_name(&c->env, name);
-
-	if(var == NULL) {
-		console_printf(c, "ERROR: Unknown variable: \"%s\"\n", name);
-		return -1;
-	} else if(var->type != CONSOLE_VAR_TYPE_BOOL) {
-		console_printf(c, "ERROR: Not a boolean variable: \"%s\"\n", name);
-		return -1;
-	}
-
-	(*((int *) var->value)) = value;
-	return 0;
 }
 
 void console_parse_conf(struct console *console, struct console_conf *conf)

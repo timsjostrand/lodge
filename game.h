@@ -11,6 +11,7 @@ struct input;
 struct GLFWwindow;
 struct frames;
 struct console;
+struct env;
 struct core;
 struct assets;
 
@@ -43,7 +44,7 @@ SHARED_SYMBOL void game_key_callback(struct input* input, struct GLFWwindow* win
 SHARED_SYMBOL void game_mousebutton_callback(struct GLFWwindow *window, int button, int action, int mods);
 SHARED_SYMBOL void game_fps_callback(struct frames* f);
 
-SHARED_SYMBOL void game_console_init(struct console* c);
+SHARED_SYMBOL void game_console_init(struct console *c, struct env* env);
 
 SHARED_SYMBOL struct lodge_settings* game_get_settings();
 

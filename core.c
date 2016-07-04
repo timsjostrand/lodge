@@ -16,6 +16,7 @@
 #include "texture.h"
 #include "assets.h"
 #include "vfs.h"
+#include "env.h"
 
 #include "core.h"
 #include "core_argv.h"
@@ -51,14 +52,14 @@ static void core_assets_init()
 {
 	/* Load console. */
 	console_new(&core_global->console, &core_global->font_console, core_global->view_width, 16, &core_global->textures.none,
-			core_global->console_shader);
+			core_global->console_shader, &core_global->env);
 
 	/* Create core commands. */
-	core_console_new(&core_global->console);
+	core_console_new(&core_global->console, &core_global->env);
 
 	/* Create game-specific commands. */
 	if (core_global->console_init_callback != NULL) {
-		core_global->console_init_callback(&core_global->console);
+		core_global->console_init_callback(&core_global->console, &core_global->env);
 	}
 	console_parse_conf(&core_global->console, &core_global->console.conf);
 

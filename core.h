@@ -9,6 +9,7 @@
 #include "sound.h"
 #include "monotext.h"
 #include "console.h"
+#include "env.h"
 
 #include "graphics.h"
 
@@ -18,7 +19,7 @@ typedef void (*core_load_t)(void);
 typedef void (*core_init_t)(void);
 typedef void (*core_init_memory_t)(struct shared_memory* shared, int reload);
 typedef void(*core_release_t)(void);
-typedef void (*core_console_init_t)(struct console *);
+typedef void (*core_console_init_t)(struct console *c, struct env *env);
 
 #define core_debug(...) debugf("Core", __VA_ARGS__)
 #define core_error(...) errorf("Core", __VA_ARGS__)
@@ -47,6 +48,8 @@ struct core {
 	input_char_callback_t	char_callback;
 	mousebutton_callback_t	mousebutton_callback;
 	fps_func_t				fps_callback;
+	/* Variable environment. */
+	struct env				env;
 	/* Console. */
 	core_console_init_t		console_init_callback;
 	struct shader			*console_shader;

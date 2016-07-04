@@ -15,6 +15,7 @@
 #include "graphics.h"
 #include "vfs.h"
 #include "core.h"
+#include "env.h"
 
 /**
  * Convenience function to malloc, set up and add a new console command to the
@@ -87,14 +88,14 @@ static void core_console_graphics_quit(struct console *c, struct console_cmd *cm
 	glfwSetWindowShouldClose(core_global->graphics.window, 1);
 }
 
-static void core_console_graphics_init(struct console *c)
+static void core_console_graphics_init(struct console *c, struct env *env)
 {
 	/* Create commands. */
 	cmd_new(&c->root_cmd, "quit", 0, &core_console_graphics_quit, NULL);
 	//struct console *cmd root = cmd_new(&c->root_cmd, "graphics", 0, NULL, NULL);
 
 	/* Bind variables. */
-	console_env_bind_1f(c, "dt", &(core_global->graphics.delta_time_factor));
+	env_bind_1f(env, "dt", &(core_global->graphics.delta_time_factor));
 }
 
 /* VFS */
@@ -152,11 +153,11 @@ static void core_console_vfs_init(struct console *c)
 
 /* Main API */
 
-void core_console_new(struct console *c)
+void core_console_new(struct console *c, struct env *env)
 {
 	core_console_meta_init(c);
 	core_console_sound_init(c);
-	core_console_graphics_init(c);
+	core_console_graphics_init(c, env);
 	core_console_vfs_init(c);
 }
 

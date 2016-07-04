@@ -18,7 +18,6 @@
 #define CONSOLE_INPUT_MAX			256	/* Max number of chars user is allowed to input. */
 #define CONSOLE_CMD_NAME_MAX		32	/* Max length of a console_cmd name. */
 #define CONSOLE_INPUT_HISTORY_MAX	128	/* Number of command input stored in console->input_history. */
-#define CONSOLE_ENV_MAX				255 /* Number of environment variables. */
 #define CONSOLE_COLUMNS_MAX			4 /* Number of columns that can be printed into. */
 
 struct console;
@@ -37,32 +36,12 @@ struct console_cmd {
 
 define_element(struct cmd_element, struct console_cmd*);
 
-#define CONSOLE_VAR_NAME_MAX		255
-#define CONSOLE_VAR_TYPE_UNKNOWN	0
-#define CONSOLE_VAR_TYPE_STR		1
-#define CONSOLE_VAR_TYPE_1F			2
-#define CONSOLE_VAR_TYPE_2F			3
-#define CONSOLE_VAR_TYPE_3F			4
-#define CONSOLE_VAR_TYPE_BOOL		5
-
-struct console_var {
-	char		name[CONSOLE_VAR_NAME_MAX];		/* Variable name. */
-	void		*value;							/* Variable value. */
-	int			type;							/* The type of data pointed to by .value: one of CONSOLE_VAR_TYPE_*. */
-	size_t		value_size;						/* The size in bytes of the value data. */
-};
-
 struct console_cursor {
 	size_t				pos;				/* Input cursor position. */
 	double				time_input;			/* When input was last entered. */
 	double				time_blink;			/* When the cursor was last blinked. */
 	struct basic_sprite	sprite;				/* Sprite used for rendering the cursor. */
 	struct monotext*	txt;				/* Text sprite used for rendering input text. */
-};
-
-struct console_env {
-	struct console_var	vars[CONSOLE_ENV_MAX];
-	int					len;
 };
 
 struct console_conf {
@@ -72,6 +51,7 @@ struct console_conf {
 
 struct console {
 	int						initialized;
+	struct env				*env;
 	int						padding;
 	int						display_lines;				/* Number of lines to display. */
 	int						focused;					/* Use console_toggle_focus() to set. */
@@ -89,12 +69,11 @@ struct console {
 	struct console_cursor	cursor;
 	struct console_cmd		root_cmd;
 	struct basic_sprite		background;
-	struct console_env		env;
 	struct console_conf		conf;
 };
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex, struct shader *shader);
+		int padding, GLuint *white_tex, struct shader *shader, struct env *env);
 void console_free(struct console *c);
 void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
@@ -119,14 +98,5 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 void console_parse(struct console *c, const char *in_str, size_t in_str_len);
 int  console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
 		struct list *argv, float *dst);
-
-int  console_env_bind_1f(struct console *c, const char *name, float *value);
-int  console_env_set_1f(struct console *c, const char *name, const float value);
-int  console_env_bind_2f(struct console *c, const char *name, vec2 v);
-int  console_env_set_2f(struct console *c, const char *name, const vec2 v);
-int  console_env_bind_3f(struct console *c, const char *name, vec3 v);
-int  console_env_set_3f(struct console *c, const char *name, const vec3 v);
-int  console_env_bind_bool(struct console *c, const char *name, int *value);
-int  console_env_set_bool(struct console *c, const char *name, const int value);
 
 #endif
