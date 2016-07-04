@@ -1,6 +1,8 @@
 #ifndef _LOG_H
 #define _LOG_H
 
+#include <stdio.h>
+
 #ifdef CONSOLE_ENABLE
 #include "core_console.h"
 #endif
