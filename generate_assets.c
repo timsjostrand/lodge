@@ -113,9 +113,12 @@ void write_assets_c()
 	fprintf(fp, "\n\t// Shaders\n");
 	foreach_alist(char*, asset, i, assets_list_shaders)
 	{
-		fprintf(fp, "\tshader_free(&assets->shaders.");
-		write_clean_name(fp, asset);
-		fprintf(fp, ");\n");
+		if (strstr(asset, ".frag") != 0)
+		{
+			fprintf(fp, "\tshader_free(&assets->shaders.");
+			write_clean_name(fp, asset);
+			fprintf(fp, ");\n");
+		}
 	}
 	fprintf(fp, "\n\t// Pyxel files\n");
 	foreach_alist(char*, asset, i, assets_list_pyxels)
