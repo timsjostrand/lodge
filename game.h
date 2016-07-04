@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#include "math4.h"
+#include "lodge.h"
 #include "vfs.h"
 
 struct graphics;
@@ -50,16 +50,6 @@ struct shared_memory
 extern "C"
 {
 #endif
-
-struct game_settings {
-	int			window_width;
-	int			window_height;
-	const char	*window_title;
-	int			view_width;
-	int			view_height;
-	vec3		sound_listener;
-	float		sound_distance_max;
-};
 
 SHARED_SYMBOL void game_init();
 

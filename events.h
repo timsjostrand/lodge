@@ -1,8 +1,6 @@
 #ifndef _EVENTS_H
 #define _EVENTS_H
 
-#include "sound.h"
-
 #define EVENTS_DATA_MAX 1024
 #define EVENTS_MAX 256
 #define EVENTS_NAME_MAX 256
