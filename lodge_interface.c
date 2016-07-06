@@ -1,15 +1,23 @@
 #include "lodge_interface.h"
 
+#include <string.h>
+
 #include "core.h"
 #include "vfs.h"
 #include "assets.h"
 #include "events.h"
 #include "util_reload.h"
+#include "util_graphics.h"
+#include "events_generated.h"
 
 #define VIEW_WIDTH		640
 #define VIEW_HEIGHT		360
 
-struct lodgei{
+// temporary flag to enable building of other projects until lodgei does not
+// depend on existing assets
+//#define FIXME_BUILD_LODGEI
+
+struct lodgei {
 	struct sprite			sprite;
 	struct atlas			atlas;
 	struct animatedsprites	*batcher;
@@ -34,7 +42,9 @@ void lodgei_think(struct graphics *g, float dt)
 {
 	events_update(&lodgei->events);
 	animatedsprites_update(lodgei->batcher, &lodgei->atlas, dt);
+#ifdef FIXME_BUILD_LODGEI
 	shader_uniforms_think(&assets->shaders.basic_shader, dt);
+#endif
 }
 
 void lodgei_render(struct graphics *g, float dt)
@@ -43,7 +53,9 @@ void lodgei_render(struct graphics *g, float dt)
 
 	mat4 transform;
 	identity(transform);
+#ifdef FIXME_BUILD_LODGEI
 	animatedsprites_render(lodgei->batcher, &assets->shaders.basic_shader, g, assets->textures.textures, transform);
+#endif
 }
 
 void lodgei_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
@@ -58,12 +70,14 @@ void lodgei_mousebutton_callback(GLFWwindow *window, int button, int action, int
 		vec3 vel2 = { randr(0.1f, 10.0f), randr(0.1f, 10.0f), randr(0.1f, 10.0f) };
 		vec3 vel3 = { randr(0.1f, 10.0f), randr(0.1f, 10.0f), randr(0.1f, 10.0f) };
 
+#ifdef FIXME_BUILD_LODGEI
 		events_send_sound_play(&lodgei->events, &core_global->sound, assets->sounds.pickup,
 			pos, vel1, 0, 1.0f, randr(0.1f, 10.0f), 0);
 		events_send_sound_play(&lodgei->events, &core_global->sound, assets->sounds.pickup,
 			pos, vel2, 0, 1.0f, randr(0.1f, 10.0f), 0);
 		events_send_sound_play(&lodgei->events, &core_global->sound, assets->sounds.pickup,
 			pos, vel3, 0, 1.0f, randr(0.1f, 10.0f), 0);
+#endif
 
 		set3f(lodgei->sprite.position, xyz(pos));
 
@@ -71,16 +85,18 @@ void lodgei_mousebutton_callback(GLFWwindow *window, int button, int action, int
 	}
 }
 
-void lodgei_console_init(struct console *c)
+void lodgei_console_init(struct console *c, struct env *env)
 {
-	/* console_env_bind_1f(c, "print_fps", &(game->print_fps)); */
-	console_env_bind_3f(c, "sprite_pos", &lodgei->sprite.position);
+	/* env_bind_1f(env, "print_fps", &(game->print_fps)); */
+	env_bind_3f(env, "sprite_pos", &lodgei->sprite.position);
 }
 
 void lodgei_init()
 {
 	events_init(&lodgei->events);
+#ifdef FIXME_BUILD_LODGEI
 	events_register_generated(&lodgei->events);
+#endif
 
 	/* Create animated sprite batcher. */
 	lodgei->batcher = animatedsprites_create();

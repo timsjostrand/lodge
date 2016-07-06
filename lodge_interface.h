@@ -3,6 +3,6 @@
 
 #include "lodge.h"
 
-EXPORT void lodgei_start(struct lodge_settings* lodge_settings, int window_mode);
+EXPORT void lodgei_start(struct lodge_settings* settings, const char* mount_path, int window_mode);
 
 #endif
