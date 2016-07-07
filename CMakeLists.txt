@@ -158,13 +158,14 @@ endif()
 # Include stb.h
 list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/)
 
+# Engine sources
 list(APPEND ENGINE_SOURCES_LOCAL math4.c core_console.c events.c graphics.c shader.c input.c texture.c
-        color.c sound.c vfs.c atlas.c monotext.c str.c list.c lodge.c lodge_interface.c console.c
+        color.c sound.c vfs.c atlas.c monotext.c str.c list.c lodge.c console.c
         spritebatch.c animatedsprites.c alist.c core.c core_argv.c util_reload.c
         particles.c collide.c drawable.c pyxel.c pyxel_asset.c sprite_group.c
         util_graphics.c rqueue.c env.c)
 list(APPEND ENGINE_HEADERS_LOCAL math4.h core_console.h events.h graphics.h shader.h input.h texture.h
-        color.h sound.h vfs.h atlas.h monotext.h str.h list.h lodge.h lodge_interface.h console.h
+        color.h sound.h vfs.h atlas.h monotext.h str.h list.h lodge.h console.h
         spritebatch.h animatedsprites.h alist.h core.h core_argv.h util_reload.h
         particles.h game.h collide.h geometry.h drawable.h pyxel_asset.h
         sprite_group.h util_graphics.h rqueue.h env.h)
@@ -182,6 +183,18 @@ foreach(src ${ENGINE_SOURCES_LOCAL})
 endforeach()
 foreach(src ${ENGINE_HEADERS_LOCAL})
     list(APPEND ENGINE_HEADERS ${ENGINE_PATH}/${src})
+endforeach()
+
+# Lodge Interface sources.
+list(APPEND LODGEI_SOURCES lodge_interface.c)
+list(APPEND LODGEI_HEADERS lodge_interface.h)
+
+# Prepend all sources with absolute engine path (because of reasons...)
+foreach(src ${LODGEI_SOURCES})
+    list(APPEND LODGEI_SOURCES_HEADERS ${ENGINE_PATH}/${src})
+endforeach()
+foreach(src ${LODGEI_HEADERS})
+    list(APPEND LODGEI_SOURCES_HEADERS ${ENGINE_PATH}/${src})
 endforeach()
 
 # Include all source directories
@@ -219,6 +232,65 @@ add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
 
 # Targets can depend on this target to generate assets.{c,h}.
 add_custom_target(generate_assets_do DEPENDS ${ASSETS_C} ${ASSETS_H})
+
+# Add the lodge engine library.
+function(add_lodgei_library)
+    # Create library.
+    add_library(lodgei SHARED ${ARGN} ${ASSETS_C}
+        ${ENGINE_SOURCES} ${ENGINE_HEADERS}
+        ${LODGEI_SOURCES_HEADERS}
+    )
+
+    # Generate assets.{c,h} if necessary.
+    add_dependencies(lodgei generate_assets_do)
+
+    # Compile with console output support?
+    if(ENABLE_CONSOLE)
+        target_compile_definitions(lodgei PRIVATE CONSOLE_ENABLE)
+    endif()
+
+    # Compile as shared library?
+    if(ENABLE_SHARED)
+        target_compile_definitions(lodgei PRIVATE ENABLE_SHARED)
+    endif()
+
+    # Compile with DEBUG flag?
+    target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+
+    # Compile with C99.
+    set_property(TARGET lodgei PROPERTY C_STANDARD 99)
+
+    # Compile with correct flags.
+    set_property(TARGET lodgei PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET lodgei PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+
+    # GCC compiler settings.
+    if(CMAKE_COMPILER_IS_GNUCC)
+        # DEBUG: Lightweight buffer overflow detection.
+        target_compile_options(lodgei PRIVATE $<$<CONFIG:Debug>:-O2>)
+        target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
+        target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
+
+        # QUIRK: stb.h requires all these warnings to be silenced, but it seems
+        # warnings have to be set for the source file including the header...
+        set(STB_HEADER vfs.c)
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-maybe-uninitialized ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-strict-aliasing ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-but-set-variable ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-value ")
+        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
+
+        # Static STD libs.
+        #set(ENGINE_LINKER_FLAGS "-static-libgcc ${ENGINE_LINKER_FLAGS} ")
+    endif()
+
+    # Set compiler flags.
+    set_property(TARGET lodgei generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET lodgei generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+
+    # Link libraries.
+    target_link_libraries(lodgei ${ENGINE_EXTRA_LIBS})
+endfunction()
 
 # Add a game library.
 function(add_game_library game_name)
