@@ -73,7 +73,7 @@ static void core_think(struct graphics *g, float delta_time)
 {
 	/* Common think functions. */
 	vfs_filewatch();
-	console_think(&core_global->console, delta_time);
+	console_think(&core_global->console);
 	sound_think(&core_global->sound, delta_time);
 
 	/* Game specific think. */

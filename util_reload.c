@@ -106,7 +106,7 @@ void util_reload_atlas(const char *filename, unsigned int size, void *data, void
 
 	struct atlas tmp = { 0 };
 
-	int ret = atlas_load(&tmp, data, size);
+	int ret = atlas_load(&tmp, data);
 	if(ret != ATLAS_OK) {
 		atlas_error("Error %d when loading atlas %s (%u bytes)\n", ret, filename, size);
 	} else {

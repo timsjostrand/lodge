@@ -50,7 +50,7 @@ static double timer_elapsed(double since)
 	return now() - since;
 }
 
-static void console_cursor_think(struct console_cursor *cur, float dt)
+static void console_cursor_think(struct console_cursor *cur)
 {
 	struct basic_sprite *s = &(cur->sprite);
 
@@ -240,9 +240,9 @@ static void console_render_input(struct console *c, struct shader *s, struct gra
 	monotext_render(&c->txt_input, s, g);
 }
 
-void console_think(struct console *c, float dt)
+void console_think(struct console *c)
 {
-	console_cursor_think(&c->cursor, dt);
+	console_cursor_think(&c->cursor);
 }
 
 void console_render(struct console *c, struct shader *s, struct graphics *g)

@@ -43,7 +43,7 @@ struct animatedsprites
 {
 	struct sprite* sprites_todraw[ANIMATEDSPRITES_MAX_SPRITES];
 	struct spritebatch spritebatch;
-	unsigned int sprite_todraw_count;
+	int sprite_todraw_count;
 };
 
 struct animatedsprites* animatedsprites_create();
