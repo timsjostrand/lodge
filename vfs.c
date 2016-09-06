@@ -21,7 +21,7 @@ typedef unsigned long DWORD;
 
 void vfs_init(const char *mount_path)
 {
-	for (int i = 0; i < MAX_NUM_FILES; i++)
+	for (int i = 0; i < VFS_MAX_NUM_FILES; i++)
 	{
 		vfs_global->file_table[i].name[0] = '\0';
 		vfs_global->file_table[i].size = 0;
@@ -36,7 +36,7 @@ void vfs_init(const char *mount_path)
 
 void vfs_shutdown()
 {
-	for (int i = 0; i < MAX_NUM_FILES; i++)
+	for (int i = 0; i < VFS_MAX_NUM_FILES; i++)
 	{
 		stb_fclose(vfs_global->file_table[i].file, 0);
 		if (vfs_global->file_table[i].data != NULL) {
@@ -180,15 +180,30 @@ void vfs_mount(const char* dir)
 {
 	if (dir == NULL)
 	{
-		vfs_error("Invalid mount argument\n");
+		vfs_error("Mount directory is NULL\n");
 		return;
 	}
 
-	char** filenames = stb_readdir_recursive(dir, NULL);
+	char path[VFS_MOUNT_PATH_MAX];
+	strcpy(path, dir);
+	size_t pathlen = strlen(path);
+
+	if (pathlen == 0)
+	{
+		vfs_error("Mount directory is of length 0\n");
+		return;
+	}
+
+	if (path[pathlen - 1] == '\\' || path[pathlen - 1] == '/')
+	{
+		path[pathlen - 1] = '\0';
+	}
+
+	char** filenames = stb_readdir_recursive(path, NULL);
 
 	if (filenames == NULL)
 	{
-		vfs_error("Could not read directory: %s\n", dir);
+		vfs_error("Could not read directory: %s\n", path);
 		return;
 	}
 
@@ -197,7 +212,7 @@ void vfs_mount(const char* dir)
 	{
 		struct vfs_file new_file;
 		strcpy(new_file.name, filenames[i]);
-		strcpy(new_file.simplename, filenames[i] + strlen(dir) + 1);
+		strcpy(new_file.simplename, filenames[i] + strlen(path) + 1);
 
 		int replaced = 0;
 		for (int j = 0; j < vfs_global->file_count; j++)

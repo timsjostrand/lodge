@@ -8,8 +8,9 @@
 #define VFS_OK 0
 #define VFS_ERROR -1
 
-#define MAX_FILENAME_LEN 256
-#define MAX_NUM_FILES 256
+#define VFS_MAX_FILENAME_LEN 256
+#define VFS_MAX_NUM_FILES 256
+#define VFS_MOUNT_PATH_MAX 256
 
 typedef void(*read_callback_t)(const char* filename, unsigned int size, void* data, void* userdata);
 
@@ -22,8 +23,8 @@ struct read_callback
 struct vfs_file
 {
 	FILE* file;
-	char name[MAX_FILENAME_LEN];
-	char simplename[MAX_FILENAME_LEN];
+	char name[VFS_MAX_FILENAME_LEN];
+	char simplename[VFS_MAX_FILENAME_LEN];
 	time_t lastChange;
 	struct read_callback* read_callbacks;
 	size_t size;
@@ -32,7 +33,7 @@ struct vfs_file
 
 struct vfs
 {
-	struct vfs_file	file_table[MAX_NUM_FILES];
+	struct vfs_file	file_table[VFS_MAX_NUM_FILES];
 	int				file_count;
 };
 
