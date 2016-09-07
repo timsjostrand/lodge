@@ -5,6 +5,8 @@
 #include "shader.h"
 #include "log.h"
 
+#include "lodge_window.h"
+
 #define graphics_debug(...) debugf("Graphics", __VA_ARGS__)
 #define graphics_error(...) errorf("Graphics", __VA_ARGS__)
 
@@ -27,7 +29,6 @@
 #define GRAPHICS_OK					 0
 #define GRAPHICS_ERROR				-1
 #define GRAPHICS_SHADER_ERROR		-2
-#define GRAPHICS_GLFW_ERROR			-3
 #define GRAPHICS_GLEW_ERROR			-4
 #define GRAPHICS_IMAGE_LOAD_ERROR	-5
 #define GRAPHICS_TEXTURE_LOAD_ERROR -6
@@ -66,7 +67,7 @@ typedef void(*think_func_t)(struct graphics *g, float delta_time);
 typedef void(*render_func_t)(struct graphics *g, float delta_time);
 
 struct graphics {
-	GLFWwindow		*window;					/* The window handle created by GLFW. */
+	lodge_window_t	window;						/* The lodge_window handle. */
 	think_func_t	think;						/* This function does thinking. */
 	render_func_t	render;						/* This function does rendering. */
 	struct frames	frames;						/* Frame debug information. */
@@ -79,12 +80,11 @@ struct graphics {
 	mat4			scale;						/* Global scale matrix. */
 };
 
+int		graphics_set_callbacks(struct graphics *g, think_func_t think, render_func_t render, fps_func_t fps_callback);
 int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-				fps_func_t fps_callback, int view_width, int view_height, int window_mode,
-				const char *title, int window_width, int window_height);
+				fps_func_t fps_callback, int view_width, int view_height);
+
 void	graphics_free(struct graphics *g);
 void	graphics_loop();
-
-double	now();
 
 #endif

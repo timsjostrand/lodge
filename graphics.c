@@ -12,7 +12,7 @@
 #include <string.h>
 #include <time.h>
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+
 #ifdef EMSCRIPTEN
 	#include <emscripten/emscripten.h>
 #endif
@@ -77,67 +77,8 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
 	return GRAPHICS_OK;
 }
 
-static void graphics_glfw_error_callback(int error_code, const char *msg)
+int graphics_libraries_init(struct graphics *g)
 {
-	graphics_error("GLFW Error %d: %s\n", error_code, msg);
-}
-
-int graphics_libraries_init(struct graphics *g, int window_width, int window_height,
-		int window_mode, const char *title)
-{
-	/* Initialize the library */
-	if(!glfwInit()) {
-		return GRAPHICS_GLFW_ERROR;
-	}
-
-#ifdef EMSCRIPTEN
-	g->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
-	if(!g->window) {
-		glfwTerminate();
-		return GRAPHICS_GLFW_ERROR;
-	}
-#else
-	/* QUIRK: Mac OSX */
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	/* Create a windowed mode window and its OpenGL context */
-	if (window_mode == GRAPHICS_MODE_WINDOWED) {
-		g->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
-	}
-	else if (window_mode == GRAPHICS_MODE_BORDERLESS) {
-		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
-
-		glfwWindowHint(GLFW_RED_BITS, video_mode->redBits);
-		glfwWindowHint(GLFW_GREEN_BITS, video_mode->greenBits);
-		glfwWindowHint(GLFW_BLUE_BITS, video_mode->blueBits);
-		glfwWindowHint(GLFW_REFRESH_RATE, video_mode->refreshRate);
-		glfwWindowHint(GLFW_AUTO_ICONIFY, GL_FALSE);
-		glfwWindowHint(GLFW_FLOATING, GL_TRUE);
-		glfwWindowHint(GLFW_DECORATED, GL_FALSE);
-
-		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, NULL, NULL);
-	}
-	else {
-		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
-		g->window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, NULL);
-	}
-	if(!g->window) {
-		glfwTerminate();
-		return GRAPHICS_GLFW_ERROR;
-	}
-#endif
-
-	/* Be notified when window size changes. */
-	glfwSetErrorCallback(&graphics_glfw_error_callback);
-
-	/* Select the current OpenGL context. */
-	glfwMakeContextCurrent(g->window);
-
 	/* Init GLEW. */
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
@@ -161,11 +102,9 @@ int graphics_libraries_init(struct graphics *g, int window_width, int window_hei
  * @param g						A graphics struct to fill in.
  * @param view_width			The width of the view, used for ortho().
  * @param view_height			The height of the view, used for ortho().
- * @param windowed				If applicable, whether to start in windowed mode.
  */
 int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-		fps_func_t fps_callback, int view_width, int view_height, int window_mode,
-		const char *title, int window_width, int window_height)
+		fps_func_t fps_callback, int view_width, int view_height)
 {
 	int ret = 0;
 
@@ -180,8 +119,8 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	g->render = render;
 	g->frames.callback = fps_callback;
 
-	/* Set up GLEW and glfw. */
-	ret = graphics_libraries_init(g, window_width, window_height, window_mode, title);
+	/* Set up GLEW */
+	ret = graphics_libraries_init(g);
 
 	if(ret != GRAPHICS_OK) {
 		return ret;
@@ -202,9 +141,6 @@ void graphics_free(struct graphics *g)
 	/* Free resources. */
 	glDeleteVertexArrays(1, &g->vao_rect);
 	glDeleteBuffers(1, &g->vbo_rect);
-
-	/* Shut down glfw. */
-	glfwTerminate();
 }
 
 static void graphics_frames_register(struct frames *f, float delta_time)
@@ -214,8 +150,8 @@ static void graphics_frames_register(struct frames *f, float delta_time)
 	f->frame_time_max = fmax(delta_time, f->frame_time_max);
 	f->frame_time_sum += delta_time;
 
-	if(now() - f->last_frame_report >= 1000.0) {
-		f->last_frame_report = now();
+	if (lodge_window_get_time() - f->last_frame_report >= 1000.0) {
+		f->last_frame_report = lodge_window_get_time();
 		f->frame_time_avg = f->frame_time_sum / (float) f->frames;
 		if(f->callback != NULL) {
 			f->callback(f);
@@ -227,37 +163,25 @@ static void graphics_frames_register(struct frames *f, float delta_time)
 	}
 }
 
-/**
- * Returns the number of milliseconds since the program was started.
- */
-double now()
-{
-	return glfwGetTime() * 1000.0;
-}
-
 void graphics_do_frame(struct graphics *g)
 {
-	double before = now();
+	double before = lodge_window_get_time();
 
 	/* Delta-time. */
 	float delta_time = 0;
 	if(g->frames.last_frame != 0) {
-		delta_time = (now() - g->frames.last_frame) * g->delta_time_factor;
+		delta_time = (lodge_window_get_time() - g->frames.last_frame) * g->delta_time_factor;
 	}
-	g->frames.last_frame = now();
+	g->frames.last_frame = lodge_window_get_time();
 
 	/* Game loop. */
 	g->think(g, delta_time);
 	g->render(g, delta_time);
 
-	/* Swap front and back buffers */
-	glfwSwapBuffers(g->window);
-
-	/* Poll for and process events */
-	glfwPollEvents();
+	lodge_window_update(g->window);
 
 	/* Register that a frame has been drawn. */
-	graphics_frames_register(&g->frames, now() - before);
+	graphics_frames_register(&g->frames, lodge_window_get_time() - before);
 }
 
 #ifdef EMSCRIPTEN
@@ -278,7 +202,7 @@ void graphics_loop(struct graphics *g)
 #ifdef EMSCRIPTEN
 	emscripten_set_main_loop(graphics_do_frame_emscripten, 0, 1);
 #else
-	while(!glfwWindowShouldClose(g->window)) {
+	while (lodge_window_is_open(g->window)) {
 		graphics_do_frame(g);
 	}
 #endif
