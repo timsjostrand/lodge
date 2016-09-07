@@ -4,7 +4,7 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
-#include <GLFW/glfw3.h>
+#include <GL/glew.h>
 
 #include "util_graphics.h"
 #include "math4.h"
@@ -22,19 +22,19 @@ void util_get_viewport(float* x, float* y, float* w, float* h)
 	float buffer[4];
 	glGetFloatv(GL_VIEWPORT, buffer);
 
-	if(x != NULL) {
+	if(x != 0) {
 		*x = buffer[0];
 	}
 
-	if(y != NULL) {
+	if(y != 0) {
 		*y = buffer[1];
 	}
 
-	if(w != NULL) {
+	if(w != 0) {
 		*w = buffer[2];
 	}
 
-	if(h != NULL) {
+	if(h != 0) {
 		*h = buffer[3];
 	}
 }

@@ -2,7 +2,6 @@
 #define _TEXTURE_H
 
 #include <stdint.h>
-#include <GLFW/glfw3.h>
 
 #define TEXTURE_OK		0
 #define TEXTURE_ERROR	-1

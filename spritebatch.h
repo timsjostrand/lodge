@@ -1,8 +1,6 @@
 #ifndef _SPRITEBATCH_H
 #define _SPRITEBATCH_H
 
-#include <GLFW/glfw3.h>
-
 #include "math4.h"
 #include "graphics.h"
 

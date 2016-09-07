@@ -1,8 +1,6 @@
 #ifndef _MONOTEXT_H_
 #define _MONOTEXT_H_
 
-#include <GLFW/glfw3.h>
-
 #include "math4.h"
 #include "graphics.h"
 #include "log.h"

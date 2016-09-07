@@ -1,8 +1,6 @@
 #ifndef _PYXEL_ASSET_H
 #define _PYXEL_ASSET_H
 
-#include <GLFW/glfw3.h>
-
 #include "pyxel.h"
 #include "atlas.h"
 #include "animatedsprites.h"

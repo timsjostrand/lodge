@@ -1,7 +1,7 @@
 #ifndef _SHADER_H
 #define _SHADER_H
 
-#include <GLFW/glfw3.h>
+#include <GL/glew.h>
 
 #include "math4.h"
 #include "log.h"
