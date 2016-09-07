@@ -37,6 +37,7 @@ struct core {
 	struct sound			sound;
 	vec3					*sound_listener;
 	float					sound_distance_max;
+
 	/* Callbacks. */
 	core_load_t				load_callback;
 	core_init_t				init_callback;
@@ -44,16 +45,20 @@ struct core {
 	core_release_t			release_callback;
 	think_func_t			think_callback;
 	render_func_t			render_callback;
-	input_callback_t		key_callback;
-	input_char_callback_t	char_callback;
-	mousebutton_callback_t	mousebutton_callback;
-	fps_func_t				fps_callback;
+
+	lodge_window_input_callback_t		key_callback;
+	lodge_window_input_char_callback_t	char_callback;
+	lodge_window_mousebutton_callback_t	mousebutton_callback;
+	fps_func_t							fps_callback;
+
 	/* Variable environment. */
 	struct env				env;
+
 	/* Console. */
 	core_console_init_t		console_init_callback;
 	struct shader			*console_shader;
 	struct console			console;
+
 	/* Resources. */
 	struct monofont			font_console;
 
@@ -66,9 +71,9 @@ struct core *core_global;
 void core_set_init_memory_callback(core_init_memory_t init_memory_callback);
 void core_set_think_callback(think_func_t think_callback);
 void core_set_render_callback(render_func_t render_callback);
-void core_set_key_callback(input_callback_t key_callback);
-void core_set_mousebutton_callback(mousebutton_callback_t key_callback);
-void core_set_char_callback(input_char_callback_t char_callback);
+void core_set_key_callback(lodge_window_input_callback_t key_callback);
+void core_set_mousebutton_callback(lodge_window_mousebutton_callback_t key_callback);
+void core_set_char_callback(lodge_window_input_char_callback_t char_callback);
 void core_set_asset_callbacks(core_load_t load_callback,
 		core_init_t init_callback, core_release_t release_callback);
 void core_set_fps_callback(fps_func_t fps_callback);

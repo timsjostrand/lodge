@@ -46,6 +46,8 @@ static void core_release()
 	if(core_global->release_callback != NULL) {
 		core_global->release_callback();
 	}
+
+	lodge_window_shutdown();
 }
 
 static void core_assets_init()
@@ -98,7 +100,7 @@ static void core_render(struct graphics *g, float delta_time)
 	}
 }
 
-static void core_key_callback(struct input *input, GLFWwindow *window, int key, int scancode, int action, int mods)
+static void core_key_callback(lodge_window_t window, int key, int scancode, int action, int mods)
 {
 	/* Input control characters into console. */
 	if(core_global->console.focused && key >= 256) {
@@ -107,20 +109,19 @@ static void core_key_callback(struct input *input, GLFWwindow *window, int key, 
 
 	if(!core_global->console.focused) {
 		if(core_global->key_callback != NULL) {
-			core_global->key_callback(input, window, key, scancode, action, mods);
+			core_global->key_callback(window, key, scancode, action, mods);
 		}
 	}
 }
 
-static void core_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
+static void core_mousebutton_callback(lodge_window_t window, int button, int action, int mods)
 {
 	if (core_global->mousebutton_callback != NULL) {
 		core_global->mousebutton_callback(window, button, action, mods);
 	}
 }
 
-static void core_char_callback(struct input *input, GLFWwindow *window,
-		unsigned int key, int mods)
+static void core_char_callback(lodge_window_t window, unsigned int key, int mods)
 {
 	/* Input localized text into console. */
 	if(core_global->console.focused) {
@@ -130,11 +131,11 @@ static void core_char_callback(struct input *input, GLFWwindow *window,
 	/* Toggle console. */
 	if(key == CONSOLE_CHAR_FOCUS) {
 		console_toggle_focus(&core_global->console);
-		input->enabled = !core_global->console.focused;
+		core_global->input.enabled = !core_global->console.focused;
 	}
 
 	if(core_global->char_callback != NULL) {
-		core_global->char_callback(input, window, key, mods);
+		core_global->char_callback(window, key, mods);
 	}
 }
 
@@ -152,17 +153,17 @@ void core_set_asset_callbacks(core_load_t load_callback,
 	core_global->release_callback = release_callback;
 }
 
-void core_set_key_callback(input_callback_t key_callback)
+void core_set_key_callback(lodge_window_input_callback_t key_callback)
 {
 	core_global->key_callback = key_callback;
 }
 
-void core_set_mousebutton_callback(mousebutton_callback_t mousebutton_callback)
+void core_set_mousebutton_callback(lodge_window_mousebutton_callback_t mousebutton_callback)
 {
 	core_global->mousebutton_callback = mousebutton_callback;
 }
 
-void core_set_char_callback(input_char_callback_t char_callback)
+void core_set_char_callback(lodge_window_input_char_callback_t char_callback)
 {
 	core_global->char_callback = char_callback;
 }
@@ -193,7 +194,7 @@ void core_set_init_memory_callback(core_init_memory_t init_memory_callback)
 	core_global->init_memory_callback = init_memory_callback;
 }
 
-void core_glfw_resize_callback(GLFWwindow *window, int width, int height)
+void core_resize_callback(lodge_window_t window, int width, int height)
 {
 	float ax = width;
 	float ay = height;
@@ -230,9 +231,12 @@ void core_glfw_resize_callback(GLFWwindow *window, int width, int height)
 void core_setup(const char *title, int view_width, int view_height,
 		int window_width, int window_height, int window_mode, size_t game_memory_size)
 {
+	lodge_window_initialize();
+
 	/* Store global references. */
 	core_global->view_width = view_width;
 	core_global->view_height = view_height;
+
 	/* FIXME: nice way to set this pointer from game library OR engine specific console shader. */
 	core_global->console_shader = &assets->shaders.basic_shader;
 
@@ -251,23 +255,32 @@ void core_setup(const char *title, int view_width, int view_height,
 	/* Seed random number generator. */
 	srand(time(NULL));
 
-	/* Set up graphics. */
-	int ret = graphics_init(&core_global->graphics, &core_think, &core_render,
-			core_global->fps_callback, view_width, view_height, window_mode, title,
-			window_width, window_height);
+	/* Set up window. */
+	core_global->graphics.window = lodge_window_create(title, window_width, window_height, window_mode);
 
-	if(ret != GRAPHICS_OK) {
+	if (!core_global->graphics.window) {
+		core_error("Could not create window \n");
+		exit(-1);
+	}
+	
+	lodge_window_set_mousebutton_callback(core_global->graphics.window, &core_set_mousebutton_callback);
+	lodge_window_set_input_callback(core_global->graphics.window, &core_set_key_callback);
+	lodge_window_set_input_char_callback(core_global->graphics.window, &core_set_char_callback);
+	lodge_window_set_resize_callback(core_global->graphics.window, &core_resize_callback);
+
+	/* Set up graphics. */
+	int ret = graphics_init(&core_global->graphics, &core_think, &core_render, core_global->fps_callback, view_width, view_height);
+
+	if (ret != GRAPHICS_OK) {
 		core_error("Graphics initialization failed (%d)\n", ret);
 		graphics_free(&core_global->graphics);
 		exit(ret);
 	}
 
-	glfwSetFramebufferSizeCallback(core_global->graphics.window, &core_glfw_resize_callback);
-
 	/* Set up ratio. */
 	int w, h;
-	glfwGetWindowSize(core_global->graphics.window, &w, &h);
-	core_glfw_resize_callback(core_global->graphics.window, w, h);
+	lodge_window_get_size(core_global->graphics.window, &w, &h);
+	core_resize_callback(core_global->graphics.window, w, h);
 
 	/* Get input events. */
 	ret = input_init(&core_global->input, core_global->graphics.window, &core_key_callback, &core_char_callback, &core_mousebutton_callback);
