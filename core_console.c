@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
-#include <GLFW/glfw3.h>
 
 #include "core_console.h"
 #include "sound.h"
@@ -16,6 +15,8 @@
 #include "vfs.h"
 #include "core.h"
 #include "env.h"
+
+#include "lodge_window.h"
 
 /**
  * Convenience function to malloc, set up and add a new console command to the
@@ -85,7 +86,7 @@ static void core_console_sound_init(struct console *c)
 static void core_console_graphics_quit(struct console *c, struct console_cmd *cmd,
 		struct list *argv)
 {
-	glfwSetWindowShouldClose(core_global->graphics.window, 1);
+	lodge_window_destroy(core_global->graphics.window);
 }
 
 static void core_console_graphics_init(struct console *c, struct env *env)
