@@ -3,12 +3,16 @@
 #ifdef LODGE_GLFW
 
 #include "lodge_window.h"
+#include "log.h"
 
 #include <GLFW/glfw3.h>
 
 #ifdef EMSCRIPTEN
 #include <emscripten/emscripten.h>
 #endif
+
+#define lodge_window_debug(...) debugf("lodge_window", __VA_ARGS__)
+#define lodge_window_error(...) errorf("lodge_window", __VA_ARGS__)
 
 struct glfw_window
 {
@@ -27,7 +31,7 @@ lodge_window_t		to_handle(struct glfw_window* window)	{ return (lodge_window_t)w
 
 static void glfw_error_callback(int error_code, const char *msg)
 {
-	printf("GLFW Error %d: %s\n", error_code, msg); // TODO: Where to log this?
+	lodge_window_error("GLFW Error %d: %s\n", error_code, msg);
 }
 
 void glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
