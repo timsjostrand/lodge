@@ -424,7 +424,7 @@ void load_console_conf()
 	vfs_register_callback("glpong.rc", &util_reload_console_conf, &core_global->console);
 }
 
-void game_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
+void game_mousebutton_callback(lodge_window_t window, int button, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		double x = 0;
@@ -452,8 +452,7 @@ void game_console_init(struct console* c, struct env *env)
 	env_bind_1f(c, "graphics_detail", &(game->graphics_detail));
 }
 
-void game_key_callback(struct input* input, GLFWwindow* window, int key,
-	int scancode, int action, int mods)
+void game_key_callback(lodge_window_t window, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		switch (key) {
@@ -468,7 +467,7 @@ void game_key_callback(struct input* input, GLFWwindow* window, int key,
 			printf("time_mod=%f\n", core_global->graphics.delta_time_factor);
 			break;
 		case GLFW_KEY_ESCAPE:
-			glfwSetWindowShouldClose(window, 1);
+			lodge_window_destroy(window);
 			break;
 		}
 	}

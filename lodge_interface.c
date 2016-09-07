@@ -58,7 +58,7 @@ void lodgei_render(struct graphics *g, float dt)
 #endif
 }
 
-void lodgei_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
+void lodgei_mousebutton_callback(lodge_window_t window, int button, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		float x = 0, y = 0;
@@ -111,13 +111,12 @@ void lodgei_init()
 	animatedsprites_add(lodgei->batcher, &lodgei->sprite);
 }
 
-void lodgei_key_callback(struct input *input, GLFWwindow *window, int key,
-	int scancode, int action, int mods)
+void lodgei_key_callback(lodge_window_t window, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
 		switch (key) {
 		case GLFW_KEY_ESCAPE:
-			glfwSetWindowShouldClose(window, 1);
+			lodge_window_destroy(window);
 			break;
 		}
 	}

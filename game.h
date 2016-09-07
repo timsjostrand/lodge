@@ -6,9 +6,10 @@
 #include "lodge.h"
 #include "vfs.h"
 
+#include "lodge_window.h"
+
 struct graphics;
 struct input;
-struct GLFWwindow;
 struct frames;
 struct console;
 struct env;
@@ -40,8 +41,8 @@ SHARED_SYMBOL void game_assets_release();
 SHARED_SYMBOL void game_think(struct graphics* g, float delta_time);
 SHARED_SYMBOL void game_render(struct graphics* g, float delta_time);
 
-SHARED_SYMBOL void game_key_callback(struct input* input, struct GLFWwindow* window, int key, int scancode, int action, int mods);
-SHARED_SYMBOL void game_mousebutton_callback(struct GLFWwindow *window, int button, int action, int mods);
+SHARED_SYMBOL void game_key_callback(lodge_window_t window, int key, int scancode, int action, int mods);
+SHARED_SYMBOL void game_mousebutton_callback(lodge_window_t window, int button, int action, int mods);
 SHARED_SYMBOL void game_fps_callback(struct frames* f);
 
 SHARED_SYMBOL void game_console_init(struct console *c, struct env* env);
