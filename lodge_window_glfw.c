@@ -211,4 +211,9 @@ void lodge_window_get_cursor(lodge_window_t window, float* x, float* y)
 	*y = (float)tmp_y;
 }
 
+double lodge_window_get_time()
+{
+	return glfwGetTime() * 1000.0;
+}
+
 #endif

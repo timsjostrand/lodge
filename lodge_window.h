@@ -30,6 +30,8 @@ void*			lodge_window_get_userdata(lodge_window_t window);
 void			lodge_window_get_size(lodge_window_t window, int* width, int* height);
 void			lodge_window_get_cursor(lodge_window_t window, float* x, float* y);
 
+double			lodge_window_get_time();
+
 int				lodge_window_is_open(lodge_window_t window);
 
 #endif
