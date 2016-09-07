@@ -11,7 +11,6 @@
 #include <math.h>
 #include <ctype.h>
 #include <stdarg.h>
-#include <GLFW/glfw3.h>
 
 #include "console.h"
 #include "color.h"
@@ -20,6 +19,7 @@
 #include "graphics.h"
 #include "drawable.h"
 #include "env.h"
+#include "input.h"
 
 static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -47,7 +47,7 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 
 static double timer_elapsed(double since)
 {
-	return now() - since;
+	return lodge_window_get_time() - since;
 }
 
 static void console_cursor_think(struct console_cursor *cur)
@@ -68,7 +68,7 @@ static void console_cursor_think(struct console_cursor *cur)
 		} else if(timer_elapsed(cur->time_blink) <= 250+400) {
 			s->color[3] = 0.0f;
 		} else {
-			cur->time_blink = now();
+			cur->time_blink = lodge_window_get_time();
 		}
 	}
 }
@@ -565,7 +565,7 @@ void console_input_feed_char(struct console *c, unsigned int key, int mods)
 		return;
 	}
 
-	c->cursor.time_input = now();
+	c->cursor.time_input = lodge_window_get_time();
 
 	/* Type char into input if input buffer is not full. */
 	if(c->cursor.pos < CONSOLE_INPUT_MAX-1) {
@@ -605,22 +605,22 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 		return;
 	}
 
-	c->cursor.time_input = now();
+	c->cursor.time_input = lodge_window_get_time();
 
-	if(action == GLFW_PRESS || action == GLFW_REPEAT) {
+	if (action == LODGE_PRESS || action == LODGE_REPEAT) {
 		switch(key) {
-			case GLFW_KEY_ENTER:
+		case LODGE_KEY_ENTER:
 				console_parse(c, c->input, c->input_len);
 				console_input_clear(c);
 				break;
-			case GLFW_KEY_UP:
+			case LODGE_KEY_UP:
 				console_input_history_seek(c, +1);
 				break;
-			case GLFW_KEY_DOWN:
+			case LODGE_KEY_DOWN:
 				console_input_history_seek(c, -1);
 				break;
-			case GLFW_KEY_LEFT:
-				if(mods & GLFW_MOD_CONTROL) {
+			case LODGE_KEY_LEFT:
+				if (mods & LODGE_MOD_CONTROL) {
 					/* Move 1 word. */
 					/* FIXME: per needle cursor behavior: ie after '=' */
 					char *prev_word = str_prev_word(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - 1, " (=");
@@ -636,8 +636,8 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 					c->cursor.pos = imax(c->cursor.pos - 1, 0);
 				}
 				break;
-			case GLFW_KEY_RIGHT:
-				if(mods & GLFW_MOD_CONTROL) {
+			case LODGE_KEY_RIGHT:
+				if(mods & LODGE_MOD_CONTROL) {
 					/* Move 1 word. */
 					/* FIXME: per needle cursor behavior: ie after '=' */
 					char *next_word = str_next_word(c->input, CONSOLE_INPUT_MAX, c->cursor.pos + 1, " )=");
@@ -653,7 +653,7 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 					c->cursor.pos = imin(c->cursor.pos + 1, c->input_len);
 				}
 				break;
-			case GLFW_KEY_BACKSPACE:
+			case LODGE_KEY_BACKSPACE:
 				/* Delete char before cursor. */
 				if(c->cursor.pos >= 1) {
 					int deleted = str_delete(c->input, CONSOLE_INPUT_MAX, c->cursor.pos - 1, 1);
@@ -661,7 +661,7 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 					c->cursor.pos = imax(c->cursor.pos - deleted, 0);
 				}
 				break;
-			case GLFW_KEY_DELETE:
+			case LODGE_KEY_DELETE:
 #if 0
 				/* NOTE: fix implementation, not perfect when input is empty. */
 				/* Delete char under cursor. */
@@ -672,13 +672,13 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 				}
 #endif
 				break;
-			case GLFW_KEY_END:
+			case LODGE_KEY_END:
 				c->cursor.pos = c->input_len;
 				break;
-			case GLFW_KEY_HOME:
+			case LODGE_KEY_HOME:
 				c->cursor.pos = 0;
 				break;
-			case GLFW_KEY_TAB:
+			case LODGE_KEY_TAB:
 				console_cmd_autocomplete(c, c->input, c->input_len, c->cursor.pos);
 				break;
 		}
@@ -688,7 +688,7 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 void console_toggle_focus(struct console *c)
 {
 	c->focused = !c->focused;
-	c->cursor.time_input = now();
+	c->cursor.time_input = lodge_window_get_time();
 }
 
 void console_cmd_new(struct console_cmd *cmd, const char *name, int argc,
