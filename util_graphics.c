@@ -79,34 +79,21 @@ void util_window_to_view(float win_x, float win_y, float win_w, float win_h, flo
 }
 
 /**
- * Retrieve the cursor position in window space.
- *
- * @param window	GLFW window handle.
- * @param x			X coordinate destination.
- * @param y			Y coordinate destination.
- */
-void util_window_get_cursor(GLFWwindow *window, float *x, float *y)
-{
-	double tmp_x = 0, tmp_y = 0;
-	glfwGetCursorPos(window, &tmp_x, &tmp_y);
-	*x = (float) tmp_x;
-	*y = (float) tmp_y;
-}
-
-/**
  * Retrieve cursor position in view space.
  *
- * @param window		GLFW window handle.
+ * @param window		Window handle.
  * @param x				X coordinate destination.
  * @param y				Y coordinate destination.
  * @param projection	View projection matrix.
  */
-void util_view_get_cursor(GLFWwindow *window, float *x, float *y, mat4 projection)
+void util_view_get_cursor(lodge_window_t window, float* x, float* y, mat4 projection)
 {
 	float win_x = 0, win_y = 0;
-	util_window_get_cursor(window, &win_x, &win_y);
+	lodge_window_get_cursor(window, &win_x, &win_y);
+
 	int win_w = 0, win_h = 0;
-	glfwGetWindowSize(window, &win_w, &win_h);
+	lodge_window_get_size(window, &win_w, &win_h);
+
 	/* Convert screen space => game space. */
 	util_window_to_view(win_x, win_y, win_w, win_h, x, y, projection);
 }
