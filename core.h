@@ -80,7 +80,7 @@ void core_set_fps_callback(fps_func_t fps_callback);
 void core_set_console_init_callback(core_console_init_t console_init_callback);
 void core_set_up_sound(vec3 *sound_listener, float distance_max);
 
-void core_setup(const char *title, int view_width, int view_height,
+void core_setup(const char *title, float view_width, float view_height,
 	int window_width, int window_height, int window_mode, size_t game_memory_size);
 
 void core_run();

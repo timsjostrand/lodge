@@ -78,11 +78,12 @@ struct graphics {
 	mat4			translate;					/* Global translation matrix. */
 	mat4			rotate;						/* Global rotation matrix. */
 	mat4			scale;						/* Global scale matrix. */
+	float			view_width;
+	float			view_height;
 };
 
-int		graphics_set_callbacks(struct graphics *g, think_func_t think, render_func_t render, fps_func_t fps_callback);
-int		graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-				fps_func_t fps_callback, int view_width, int view_height);
+int		graphics_init(struct graphics *g, think_func_t think, render_func_t render, fps_func_t fps_callback);
+int		graphics_opengl_init(struct graphics *g);
 
 void	graphics_free(struct graphics *g);
 void	graphics_loop();

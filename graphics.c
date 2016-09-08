@@ -36,13 +36,13 @@ static const float rect_vertices[] = {
 struct graphics* graphics_global;
 #endif
 
-static int graphics_opengl_init(struct graphics *g, int view_width, int view_height)
+int graphics_opengl_init(struct graphics *g)
 {
 	/* Global transforms. */
 	translate(g->translate, 0.0f, 0.0f, 0.0f);
 	scale(g->scale, 10.0f, 10.0f, 1);
 	rotate_z(g->rotate, 0);
-	ortho(g->projection, 0, view_width, view_height, 0, -1.0f, 1.0f);
+	ortho(g->projection, 0, g->view_width, g->view_height, 0, -1.0f, 1.0f);
 	transpose_same(g->projection);
 
 	/* OpenGL. */
@@ -77,34 +77,12 @@ static int graphics_opengl_init(struct graphics *g, int view_width, int view_hei
 	return GRAPHICS_OK;
 }
 
-int graphics_libraries_init(struct graphics *g)
-{
-	/* Init GLEW. */
-	glewExperimental = GL_TRUE;
-	GLenum err = glewInit();
-	if(err != GLEW_OK) {
-		return GRAPHICS_GLEW_ERROR;
-	}
-
-	/* NOTE: Something in the init code above is causing an 0x0500 OpenGL error,
-	 * and it will linger in the error queue until the application pops it.
-	 * Assuming the aforementioned init code does it's error checking properly,
-	 * we can safely exhaust the error queue here to avoid ugly debug print
-	 * statements later. */
-	while(glGetError() != GL_NO_ERROR) {
-		/* Ignore this error. */
-	}
-
-	return GRAPHICS_OK;
-}
-
 /**
  * @param g						A graphics struct to fill in.
  * @param view_width			The width of the view, used for ortho().
  * @param view_height			The height of the view, used for ortho().
  */
-int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
-		fps_func_t fps_callback, int view_width, int view_height)
+int graphics_init(struct graphics *g, think_func_t think, render_func_t render, fps_func_t fps_callback)
 {
 	int ret = 0;
 
@@ -119,18 +97,21 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render,
 	g->render = render;
 	g->frames.callback = fps_callback;
 
-	/* Set up GLEW */
-	ret = graphics_libraries_init(g);
-
-	if(ret != GRAPHICS_OK) {
-		return ret;
+	/* Init GLEW. */
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+	if (err != GLEW_OK) {
+		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		return GRAPHICS_GLEW_ERROR;
 	}
 
-	/* Set up OpenGL. */
-	ret = graphics_opengl_init(g, view_width, view_height);
-
-	if(ret != GRAPHICS_OK) {
-		return ret;
+	/* NOTE: Something in the init code above is causing an 0x0500 OpenGL error,
+	* and it will linger in the error queue until the application pops it.
+	* Assuming the aforementioned init code does it's error checking properly,
+	* we can safely exhaust the error queue here to avoid ugly debug print
+	* statements later. */
+	while (glGetError() != GL_NO_ERROR) {
+		/* Ignore this error. */
 	}
 
 	return GRAPHICS_OK;

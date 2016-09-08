@@ -219,6 +219,31 @@ void core_resize_callback(lodge_window_t window, int width, int height)
 	glViewport(rest_width / 2.0f, rest_height / 2.0f, ax, ay);
 }
 
+void core_window_create(lodge_window_t window)
+{
+	/* Set up ratio. */
+	int w, h;
+	lodge_window_get_size(window, &w, &h);
+	core_resize_callback(window, w, h);
+
+	/* Set up graphics */
+	int ret = graphics_init(&core_global->graphics, &core_think, &core_render, core_global->fps_callback);
+
+	if (ret != GRAPHICS_OK) {
+		core_error("Graphics initialization failed (%d)\n", ret);
+		graphics_free(&core_global->graphics);
+		exit(ret);
+	}
+
+	/* Set up OpenGL. */
+	ret = graphics_opengl_init(&core_global->graphics);
+	
+	if (ret != GRAPHICS_OK) {
+		core_error("opengl initialization failed (%d)\n", ret);
+		exit(ret);
+	}
+}
+
 /**
  * @param load_callback		Responsible for registering all the VFS callbacks
  *							required for the game. After load_callback has been
@@ -228,7 +253,7 @@ void core_resize_callback(lodge_window_t window, int width, int height)
  * @param release_callback	Runs just before the game quits, and should release
  *							all assets and free dynamically allocated memory.
  */
-void core_setup(const char *title, int view_width, int view_height,
+void core_setup(const char *title, float view_width, float view_height,
 		int window_width, int window_height, int window_mode, size_t game_memory_size)
 {
 	lodge_window_initialize();
@@ -256,40 +281,25 @@ void core_setup(const char *title, int view_width, int view_height,
 	srand(time(NULL));
 
 	/* Set up window. */
-	core_global->graphics.window = lodge_window_create(title, window_width, window_height, window_mode);
+	core_global->graphics.view_width = view_width;
+	core_global->graphics.view_height = view_height;
+	core_global->graphics.window = lodge_window_create(title, window_width, window_height, window_mode, &core_window_create);
 
 	if (!core_global->graphics.window) {
-		core_error("Could not create window \n");
-		exit(-1);
+		core_error("Could not create window\n");
+		return;
 	}
-	
-	lodge_window_set_mousebutton_callback(core_global->graphics.window, &core_set_mousebutton_callback);
-	lodge_window_set_input_callback(core_global->graphics.window, &core_set_key_callback);
-	lodge_window_set_input_char_callback(core_global->graphics.window, &core_set_char_callback);
-	lodge_window_set_resize_callback(core_global->graphics.window, &core_resize_callback);
 
-	/* Set up graphics. */
-	int ret = graphics_init(&core_global->graphics, &core_think, &core_render, core_global->fps_callback, view_width, view_height);
+	/* Setup input. */
+	int ret = input_init(&core_global->input, core_global->graphics.window, &core_key_callback, &core_char_callback, &core_mousebutton_callback);
 
 	if (ret != GRAPHICS_OK) {
-		core_error("Graphics initialization failed (%d)\n", ret);
-		graphics_free(&core_global->graphics);
-		exit(ret);
-	}
-
-	/* Set up ratio. */
-	int w, h;
-	lodge_window_get_size(core_global->graphics.window, &w, &h);
-	core_resize_callback(core_global->graphics.window, w, h);
-
-	/* Get input events. */
-	ret = input_init(&core_global->input, core_global->graphics.window, &core_key_callback, &core_char_callback, &core_mousebutton_callback);
-
-	if(ret != GRAPHICS_OK) {
 		core_error("Input initialization failed (%d)\n", ret);
 		graphics_free(&core_global->graphics);
 		exit(ret);
 	}
+
+	lodge_window_set_resize_callback(core_global->graphics.window, &core_resize_callback);
 
 	/* Load all assets */
 	core_load();
