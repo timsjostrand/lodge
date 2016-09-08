@@ -14,10 +14,21 @@
 #define lodge_window_debug(...) debugf("lodge_window", __VA_ARGS__)
 #define lodge_window_error(...) errorf("lodge_window", __VA_ARGS__)
 
+#define WINDOW_TITLE_MAX 256
+
 struct glfw_window
 {
-	GLFWwindow*							window;
+	char								title[WINDOW_TITLE_MAX];
 
+	GLFWwindow*							window;
+	int									window_mode;
+
+	int									windowed_width;
+	int									windowed_height;
+	int									windowed_pos_x;
+	int									windowed_pos_y;
+
+	lodge_window_create_callback_t		callback_create;
 	lodge_window_mousebutton_callback_t callback_mousebutton;
 	lodge_window_input_callback_t		callback_input;
 	lodge_window_input_char_callback_t	callback_char;
@@ -26,7 +37,7 @@ struct glfw_window
 	void*								userdata;
 };
 
-struct glfw_window*	cast_handle(lodge_window_t handle)		{ return (struct glfw_window*)handle; }
+struct glfw_window*	cast_handle(lodge_window_t window)		{ return (struct glfw_window*)window; }
 lodge_window_t		to_handle(struct glfw_window* window)	{ return (lodge_window_t)window; }
 
 static void glfw_error_callback(int error_code, const char *msg)
@@ -75,25 +86,17 @@ void lodge_window_shutdown()
 	glfwTerminate();
 }
 
-lodge_window_t lodge_window_create(const char *title, int window_width, int window_height, int window_mode)
+GLFWwindow* glfw_window_create(const char *title, int window_width, int window_height, int window_mode, GLFWwindow* window_old)
 {
-	struct glfw_window* glfw_window = (struct glfw_window*)malloc(sizeof(struct glfw_window));
-
-	glfw_window->window = 0;
-	glfw_window->callback_mousebutton = 0;
-	glfw_window->callback_input = 0;
-	glfw_window->callback_char = 0;
-	glfw_window->callback_resize;
-	glfw_window->userdata = 0;
+	GLFWwindow* window;
 
 #ifdef EMSCRIPTEN
-	glfw_window->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
-	if (!glfw_window->window) 
+	window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
+	if (!window)
 	{
 		return 0;
 	}
 #else
-	glfwDestroyWindow(glfw_window->window);
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -102,12 +105,12 @@ lodge_window_t lodge_window_create(const char *title, int window_width, int wind
 
 	if (window_mode == LODGE_WINDOW_MODE_WINDOWED)
 	{
-		glfw_window->window = glfwCreateWindow(window_width, window_height, title, NULL, NULL);
+		window = glfwCreateWindow(window_width, window_height, title, NULL, window_old);
 	}
 	else if (window_mode == LODGE_WINDOW_MODE_BORDERLESS)
 	{
-		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
 
 		glfwWindowHint(GLFW_RED_BITS, video_mode->redBits);
 		glfwWindowHint(GLFW_GREEN_BITS, video_mode->greenBits);
@@ -117,36 +120,59 @@ lodge_window_t lodge_window_create(const char *title, int window_width, int wind
 		glfwWindowHint(GLFW_FLOATING, GL_TRUE);
 		glfwWindowHint(GLFW_DECORATED, GL_FALSE);
 
-		glfw_window->window = glfwCreateWindow(video_mode->width, video_mode->height, title, NULL, NULL);
+		window = glfwCreateWindow(video_mode->width, video_mode->height, title, NULL, window_old);
 	}
 	else
 	{
-		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-		const GLFWvidmode *video_mode = glfwGetVideoMode(monitor);
-		glfw_window->window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, NULL);
+		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
+		window = glfwCreateWindow(video_mode->width, video_mode->height, title, monitor, window_old);
 	}
 
-	if (!glfw_window->window)
+	if (!window)
 	{
 		return 0;
 	}
 #endif
 
-	glfwSetKeyCallback(glfw_window->window, &glfw_key_callback);
-	glfwSetCharModsCallback(glfw_window->window, &glfw_char_callback);
-	glfwSetMouseButtonCallback(glfw_window->window, &glfw_mousebutton_callback);
-	glfwSetWindowUserPointer(glfw_window->window, (void*)glfw_window);
-	glfwSetFramebufferSizeCallback(glfw_window->window, &glfw_resize_callback);
+	glfwSetKeyCallback(window, &glfw_key_callback);
+	glfwSetCharModsCallback(window, &glfw_char_callback);
+	glfwSetMouseButtonCallback(window, &glfw_mousebutton_callback);
+	glfwSetFramebufferSizeCallback(window, &glfw_resize_callback);
 
+	return window;
+}
+
+lodge_window_t lodge_window_create(const char *title, int window_width, int window_height, int window_mode, lodge_window_create_callback_t create_callback)
+{
+	struct glfw_window* glfw_window = (struct glfw_window*)malloc(sizeof(struct glfw_window));
+
+	glfw_window->window = glfw_window_create(title, window_width, window_height, window_mode, 0);
 	glfwMakeContextCurrent(glfw_window->window);
+	glfwSetWindowUserPointer(glfw_window->window, (void*)glfw_window);
 
-	return to_handle(glfw_window);
+	glfw_window->window_mode = window_mode;
+	glfw_window->callback_mousebutton = 0;
+	glfw_window->callback_input = 0;
+	glfw_window->callback_char = 0;
+	glfw_window->callback_resize;
+	glfw_window->callback_create = create_callback;
+	glfw_window->userdata = 0;
+
+	strcpy(glfw_window->title, title);
+
+	lodge_window_t window = to_handle(glfw_window);
+
+	if (glfw_window->callback_create)
+		glfw_window->callback_create(window);
+
+	return window;
 }
 
 void lodge_window_destroy(lodge_window_t window)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
-	glfwDestroyWindow(glfw_window->window);
+	glfwSetWindowShouldClose(glfw_window->window, 1);
 }
 
 void lodge_window_update(lodge_window_t window)
@@ -154,6 +180,38 @@ void lodge_window_update(lodge_window_t window)
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfwPollEvents();
 	glfwSwapBuffers(glfw_window->window);
+}
+
+void lodge_window_set_mode(lodge_window_t window, int window_mode)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+
+	glfw_window->window_mode = window_mode;
+
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
+
+	if (glfw_window->window_mode == LODGE_WINDOW_MODE_FULLSCREEN)
+	{
+		glfwGetWindowPos(glfw_window->window, &glfw_window->windowed_pos_x, &glfw_window->windowed_pos_y);
+		glfwGetWindowSize(glfw_window->window, &glfw_window->windowed_width, &glfw_window->windowed_height);
+
+		glfwSetWindowMonitor(glfw_window->window, monitor, 0, 0, video_mode->width, video_mode->height, video_mode->refreshRate);
+	}
+	else if (glfw_window->window_mode == LODGE_WINDOW_MODE_WINDOWED)
+	{
+		glfwSetWindowMonitor(	glfw_window->window, 
+								0, 
+								glfw_window->windowed_pos_x, 
+								glfw_window->windowed_pos_y, 
+								glfw_window->windowed_width, 
+								glfw_window->windowed_height, 
+								0);
+	}
+	else if (glfw_window->window_mode == LODGE_WINDOW_MODE_BORDERLESS)
+	{
+		// TODO: We cannot switch to borderless in runtime because glfw only supports window hints for glfwCreateWindow
+	}
 }
 
 int lodge_window_is_open(lodge_window_t window)

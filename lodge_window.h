@@ -7,6 +7,7 @@
 
 typedef int lodge_window_t;
 
+typedef void(*lodge_window_create_callback_t)(lodge_window_t window);
 typedef void(*lodge_window_mousebutton_callback_t)(lodge_window_t window, int button, int action, int mods);
 typedef void(*lodge_window_input_callback_t)(lodge_window_t window, int key, int scancode, int action, int mods);
 typedef void(*lodge_window_input_char_callback_t)(lodge_window_t window, unsigned int key, int mods);
@@ -15,14 +16,17 @@ typedef void(*lodge_window_resize_callback_t)(lodge_window_t window, int width, 
 void			lodge_window_initialize();
 void			lodge_window_shutdown();
 
-lodge_window_t	lodge_window_create(const char *title, int window_width, int window_height, int window_mode);
+lodge_window_t	lodge_window_create(const char *title, int window_width, int window_height, int window_mode, lodge_window_create_callback_t create_callback);
 void			lodge_window_destroy(lodge_window_t window);
 void			lodge_window_update(lodge_window_t window);
+
+void			lodge_window_set_mode(lodge_window_t window, int window_mode);
 
 void			lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback);
 void			lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback);
 void			lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback);
 void			lodge_window_set_resize_callback(lodge_window_t window, lodge_window_resize_callback_t callback);
+void			lodge_window_set_create_callback(lodge_window_t window, lodge_window_resize_callback_t callback);
 
 void			lodge_window_set_userdata(lodge_window_t window, void* userdata);
 void*			lodge_window_get_userdata(lodge_window_t window);
