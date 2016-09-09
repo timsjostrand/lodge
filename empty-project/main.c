@@ -76,7 +76,7 @@ void game_render(struct graphics *g, float dt)
 
 void game_mousebutton_callback(lodge_window_t window, int button, int action, int mods)
 {
-	if(action == GLFW_PRESS) {
+	if(action == LODGE_PRESS) {
 		float x = 0, y = 0;
 		util_view_get_cursor(window, &x, &y, core_global->graphics.projection);
 		console_debug("Click at %.0fx%.0f\n", x, y);
@@ -105,9 +105,9 @@ void game_init()
 
 void game_key_callback(lodge_window_t window, int key, int scancode, int action, int mods)
 {
-	if(action == GLFW_PRESS) {
+	if(action == LODGE_PRESS) {
 		switch(key) {
-			case GLFW_KEY_ESCAPE:
+			case LODGE_KEY_ESCAPE:
 				lodge_window_destroy(window);
 				break;
 		}
