@@ -214,6 +214,18 @@ void lodge_window_set_mode(lodge_window_t window, int window_mode)
 	}
 }
 
+int lodge_window_get_mode(lodge_window_t window)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	return glfw_window->window_mode;
+}
+
+void lodge_window_toggle_fullscreen(lodge_window_t window)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	lodge_window_set_mode(window, glfw_window->window_mode ? LODGE_WINDOW_MODE_FULLSCREEN : LODGE_WINDOW_MODE_WINDOWED);
+}
+
 int lodge_window_is_open(lodge_window_t window)
 {
 	struct glfw_window* glfw_window = cast_handle(window);

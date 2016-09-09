@@ -21,6 +21,8 @@ void			lodge_window_destroy(lodge_window_t window);
 void			lodge_window_update(lodge_window_t window);
 
 void			lodge_window_set_mode(lodge_window_t window, int window_mode);
+int				lodge_window_get_mode(lodge_window_t window);
+void			lodge_window_toggle_fullscreen(lodge_window_t window);
 
 void			lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback);
 void			lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback);
