@@ -4,13 +4,14 @@
 #include "math4.h"
 #include "graphics.h"
 #include "spritebatch.h"
-#include "atlas.h"
 #include "log.h"
 
 #define ANIMATEDSPRITES_MAX_SPRITES	10000
 
 #define animatedsprites_debug(...) debugf("Animbatch", __VA_ARGS__)
 #define animatedsprites_error(...) errorf("Animbatch", __VA_ARGS__)
+
+struct atlas;
 
 typedef float GLfloat;
 typedef unsigned int GLuint;
@@ -47,7 +48,6 @@ struct animatedsprites
 };
 
 struct animatedsprites* animatedsprites_create();
-void animatedsprites_init(struct animatedsprites* animatedsprites);
 void animatedsprites_destroy(struct animatedsprites* animatedsprites);
 
 void animatedsprites_playanimation(struct sprite* sprite, struct anim* anim);
