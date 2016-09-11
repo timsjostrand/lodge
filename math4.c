@@ -422,6 +422,17 @@ void set4f(vec4 v, const float x, const float y, const float z, const float w)
 	v[0] = x; v[1] = y; v[2] = z; v[3] = w;
 }
 
+void norm2f(vec2 v)
+{
+	float length = length2f(v);
+
+	if (length == 0.0f)
+		return;
+
+	v[0] /= length;
+	v[1] /= length;
+}
+
 /**
  * @return	The angle between the first and second point in radians.
  */
