@@ -24,9 +24,8 @@ void	drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, f
 
 void	drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s);
 
-void	drawable_render_detailed(GLenum mode, GLuint vbo, unsigned int vbo_count, GLuint vao, GLuint *tex, vec3 color,
-				struct shader *s, struct graphics *g, mat4 transform);
-void	drawable_render(struct drawable *d, struct shader *s, struct graphics *g, GLuint *tex, vec4 color, mat4 transform);
+void	drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec4 color, struct shader *s, mat4 transform);
+void	drawable_render(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform);
 
 /* FIXME: basic_sprite should be refactored into a drawable of type "rect". */
 struct basic_sprite {
@@ -40,6 +39,6 @@ struct basic_sprite {
 
 void	sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
 				float w, float h, const vec4 color, float rotation, GLuint *texture);
-void	sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g);
+void	sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics* g);
 
 #endif

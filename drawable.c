@@ -226,19 +226,19 @@ static void drawable_get_vertices_line(GLfloat *dst, float x1, float y1, float x
 	dst[1 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 }
 
-void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec3 color,
-		struct shader *s, struct graphics *g, mat4 transform)
+void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec4 color, struct shader *s, mat4 transform)
 {
 	/* Bind vertices. */
 	glUseProgram(s->program);
 	glBindVertexArray(vao);
 
-	/* Upload matrices and color. */
-	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform);
-	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
-	glUniform4fv(s->uniform_color, 1, color);
-	glUniform1i(s->uniform_sprite_type, 0); // FIXME: remove (deprecated)
-	glUniform1i(s->uniform_tex, 0);
+	/* Upload color */
+	GLint uniform_color = glGetUniformLocation(s->program, "color");
+	glUniform4fv(uniform_color, 1, color);
+
+	/* Upload transform */
+	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
+	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, (GLfloat*)transform);
 
 	/* Render it! */
 	glActiveTexture(GL_TEXTURE0);
@@ -246,9 +246,9 @@ void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint 
 	glDrawArrays(mode, 0, vbo_count);
 }
 
-void drawable_render(struct drawable *d, struct shader *s, struct graphics *g, GLuint *tex, vec4 color, mat4 transform)
+void drawable_render(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform)
 {
-	drawable_render_detailed(d->draw_mode, d->vbo, d->vertex_count, d->vao, tex, color, s, g, transform);
+	drawable_render_detailed(d->draw_mode, d->vbo, d->vertex_count, d->vao, tex, color, s, transform);
 }
 
 void drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s)
@@ -369,7 +369,7 @@ void drawable_free(struct drawable *d)
 
 /**** DEPRECATED STUFF ****/
 
-void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g)
+void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics* g)
 {
 	// Position, rotation and scale
 	mat4 transform_position;
@@ -386,8 +386,7 @@ void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphic
 	mult(transform_final, transform_final, transform_scale);
 	transpose_same(transform_final);
 
-	drawable_render_detailed(GL_TRIANGLES, g->vbo_rect, VBO_QUAD_VERTEX_COUNT,
-			g->vao_rect, sprite->texture, sprite->color, s, g, transform_final);
+	drawable_render_detailed(GL_TRIANGLES, g->vbo_rect, VBO_QUAD_VERTEX_COUNT, g->vao_rect, sprite->texture, sprite->color, s, transform_final);
 }
 
 void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
