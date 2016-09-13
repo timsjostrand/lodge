@@ -133,7 +133,7 @@ void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_fun
 	qsort(batch->gpu_vertices, batch->sprite_count, sizeof(GLfloat) * 30, sorting_function);
 }
 
-void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
+void spritebatch_render(struct spritebatch* batch, struct shader *s)
 {
 	glUseProgram(s->program);
 
@@ -143,28 +143,35 @@ void spritebatch_render(struct spritebatch* batch, struct shader *s, struct grap
 	glBindBuffer(GL_ARRAY_BUFFER, batch->vbo);
 	glBindVertexArray(batch->vao);
 
-	/* Texture */
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex);
-
 	/* Position stream. */
 	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
 	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) 0);
+	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *)0);
 
 	/* Texcoord stream. */
 	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
 	glEnableVertexAttribArray(texcoordAttrib);
-	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) (sizeof(GLfloat) * 3));
-
-	/* Upload matrices and color. */
-	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform);
-	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
-
-	/* Shader settings for all characters sprites. */
-	glUniform4fv(s->uniform_color, 1, COLOR_WHITE);
-	glUniform1i(s->uniform_sprite_type, 0);
-	glUniform1i(s->uniform_tex, 0);
+	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *)(sizeof(GLfloat) * 3));
 
 	glDrawArrays(GL_TRIANGLES, batch->offset_draw, batch->sprite_count * 6);
+}
+
+void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, GLuint texture, mat4 projection, mat4 transform)
+{
+	glUseProgram(s->program);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+
+	GLint uniform_projection = glGetUniformLocation(s->program, "projection");
+	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
+	GLint uniform_tex = glGetUniformLocation(s->program, "tex");
+	GLint uniform_color = glGetUniformLocation(s->program, "color");
+
+	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, transform);
+	glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, projection);
+	glUniform1i(uniform_tex, 0);
+	glUniform4fv(uniform_color, 1, COLOR_WHITE);
+
+	spritebatch_render(batch, s);
 }

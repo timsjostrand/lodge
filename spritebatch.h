@@ -12,8 +12,6 @@ typedef int(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b
 
 struct spritebatch
 {
-	GLuint texture;
-
 	GLuint vbo;
 	GLuint vao;
 
@@ -30,7 +28,9 @@ void spritebatch_destroy(struct spritebatch* batch);
 void spritebatch_begin(struct spritebatch* batch);
 void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_pos, vec2 tex_bounds);
 void spritebatch_end(struct spritebatch* batch);
-void spritebatch_render(struct spritebatch* batch, struct shader *s, struct graphics *g, GLuint tex, mat4 transform);
 void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_function);
+
+void spritebatch_render(struct spritebatch* batch, struct shader *s);
+void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, GLuint texture, mat4 projection, mat4 transform);
 
 #endif //_SPRITEBATCH_H

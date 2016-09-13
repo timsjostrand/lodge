@@ -87,9 +87,14 @@ void animatedsprites_sort(struct animatedsprites* animatedsprites, spritebatch_s
 	spritebatch_sort(&animatedsprites->spritebatch, sorting_function);
 }
 
-void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
+void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s)
 {
-	spritebatch_render(&animatedsprites->spritebatch, s, g, tex, transform);
+	spritebatch_render(&animatedsprites->spritebatch, s);
+}
+
+void animatedsprites_render_simple(struct animatedsprites* animatedsprites, struct shader *s, GLuint texture, mat4 projection, mat4 transform)
+{
+	spritebatch_render_simple(&animatedsprites->spritebatch, s, texture, projection, transform);
 }
 
 void animatedsprites_add(struct animatedsprites* animatedsprites, struct sprite* sprite)

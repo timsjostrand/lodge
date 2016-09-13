@@ -62,9 +62,9 @@ void particles_think(struct particles *em, struct atlas *atlas, float dt)
 	animatedsprites_update(em->sprites, atlas, dt);
 }
 
-void particles_render(struct particles *em, struct shader *s, struct graphics *g, GLuint tex, mat4 transform)
+void particles_render(struct particles *em, struct shader *s, GLuint texture, mat4 projection, mat4 transform)
 {
-	animatedsprites_render(em->sprites, s, g, tex, transform);
+	animatedsprites_render_simple(em->sprites, s, texture, projection, transform);
 }
 
 static void particle_init(struct particle *p, struct anim *anim,
