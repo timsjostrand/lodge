@@ -139,18 +139,6 @@ int shader_init(struct shader *s,
 		return ret;
 	}
 
-	/* Set up global uniforms. */
-	s->uniform_transform = glGetUniformLocation(s->program, UNIFORM_NAME_TRANSFORM);
-	shader_debug("uniform: %s=%d\n", UNIFORM_NAME_TRANSFORM, s->uniform_transform);
-	s->uniform_projection = glGetUniformLocation(s->program, UNIFORM_NAME_PROJECTION);
-	shader_debug("uniform: %s=%d\n", UNIFORM_NAME_PROJECTION, s->uniform_projection);
-	s->uniform_color = glGetUniformLocation(s->program, UNIFORM_NAME_COLOR);
-	shader_debug("uniform: %s=%d\n", UNIFORM_NAME_COLOR, s->uniform_color);
-	s->uniform_sprite_type = glGetUniformLocation(s->program, UNIFORM_NAME_SPRITE_TYPE);
-	shader_debug("uniform: %s=%d\n", UNIFORM_NAME_SPRITE_TYPE, s->uniform_sprite_type);
-	s->uniform_tex = glGetUniformLocation(s->program, UNIFORM_NAME_TEX);
-	shader_debug("uniform: %s=%d\n", UNIFORM_NAME_TEX, s->uniform_tex);
-
 	/* Position stream. */
 	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
 	shader_debug("attrib: %s=%d\n", ATTRIB_NAME_POSITION, posAttrib);
@@ -215,31 +203,42 @@ int shader_uniform_idx_next(struct shader *s)
 	return -1;
 }
 
-int shader_uniform(struct shader *s, const char *name, void *data, int type)
+struct uniform* shader_uniform_create(struct shader *s, const char *name)
 {
 	int index = shader_uniform_idx_next(s);
-	if(index < 0) {
+	if (index < 0) {
 		shader_error("UNIFORMS_MAX reached\n");
 		return SHADER_UNIFORMS_MAX_ERROR;
 	}
 
 	struct uniform *u = (struct uniform *) malloc(sizeof(struct uniform));
 
-	if(u == NULL) {
+	if (u == NULL) {
 		shader_error("Out of memory");
 		return SHADER_OOM_ERROR;
 	}
 
+	strcpy(u->name, name);
 	s->uniforms[index] = u;
 
+	return u;
+}
+
+int shader_uniform_init(struct shader *s, struct uniform* uniform, void* data, int type)
+{
 	glUseProgram(s->program);
 
-	u->name = name;
-	u->datatype = type;
-	u->data = data;
-	u->id = glGetUniformLocation(s->program, u->name);
+	uniform->datatype = type;
+	uniform->data = data;
+	uniform->id = glGetUniformLocation(s->program, uniform->name);
 
 	return SHADER_OK;
+}
+
+int shader_uniform(struct shader *s, const char *name, void *data, int type)
+{
+	struct uniform* uniform = shader_uniform_create(s, name);
+	return shader_uniform_init(s, uniform, data, type);
 }
 
 int shader_uniform1f(struct shader *s, const char *name, float *data)
@@ -262,9 +261,28 @@ int shader_uniform4f(struct shader *s, const char *name, vec4 *data)
 	return shader_uniform(s, name, (void *) data, TYPE_VEC_4F);
 }
 
+int shader_uniform1i(struct shader *s, const char *name, int* data)
+{
+	return shader_uniform(s, name, (void *)data, TYPE_VEC_1I);
+}
+
 int shader_uniform_matrix4f(struct shader *s, const char *name, mat4 *data)
 {
 	return shader_uniform(s, name, (void *) data, TYPE_MAT_4F);
+}
+
+void shader_constant_uniform1i(struct shader *s, const char *name, int data)
+{
+	struct uniform* uniform = shader_uniform_create(s, name);
+	memcpy(uniform->constant_data, &data, sizeof(int));
+	shader_uniform_init(s, uniform, (void*)uniform->constant_data, TYPE_VEC_1I);
+}
+
+void shader_constant_uniform4f(struct shader *s, const char *name, vec4 data)
+{
+	struct uniform* uniform = shader_uniform_create(s, name);
+	memcpy(uniform->constant_data, &data, sizeof(float)*4);
+	shader_uniform_init(s, uniform, (void*)uniform->constant_data, TYPE_VEC_4F);
 }
 
 void shader_uniforms_free(struct shader *s)
@@ -308,6 +326,10 @@ void shader_uniforms_think(struct shader *s, float delta_time)
 		}
 		case TYPE_MAT_4F: {
 			glUniformMatrix4fv(u->id, 1, GL_FALSE, (float *) u->data);
+			break;
+		}
+		case TYPE_VEC_1I: {
+			glUniform1i(u->id, *((GLint*)u->data));
 			break;
 		}
 		default:

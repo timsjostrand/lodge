@@ -14,14 +14,9 @@
 #define SHADER_LINK_ERROR			-2
 #define SHADER_OOM_ERROR			-3
 #define SHADER_UNIFORMS_MAX_ERROR	-4
+#define SHADER_UNIFORM_NAME_MAX_LEN	255
 
-#define UNIFORM_NAME_TRANSFORM		"transform"
-#define UNIFORM_NAME_PROJECTION		"projection"
-#define UNIFORM_NAME_COLOR			"color"
-#define UNIFORM_NAME_SPRITE_TYPE	"sprite_type"
-#define UNIFORM_NAME_TEX			"tex"
-
-#define ATTRIB_NAME_POSITION		"vp"
+#define ATTRIB_NAME_POSITION		"vertex_in"
 #define ATTRIB_NAME_TEXCOORD		"texcoord_in"
 
 #define TYPE_VEC_1F	                0
@@ -31,14 +26,17 @@
 //#define TYPE_MAT_2F	            4
 //#define TYPE_MAT_3F               5
 #define TYPE_MAT_4F	                6
+#define TYPE_VEC_1I	                7
 
 #define UNIFORMS_MAX                64
 
 struct uniform {
-    const char  *name;
+	const char  name[SHADER_UNIFORM_NAME_MAX_LEN];
     GLint       id;
     int         datatype;
+
     void        *data;
+	char		constant_data[64];
 };
 
 struct shader {
@@ -47,11 +45,6 @@ struct shader {
 	const char	    *frag_src;
 	int			    frag_src_len;
 	GLuint		    program;
-	GLint		    uniform_transform;
-	GLint		    uniform_projection;
-	GLint		    uniform_color;
-	GLint		    uniform_sprite_type;
-	GLint		    uniform_tex;
 	struct uniform	*uniforms[UNIFORMS_MAX];
 };
 
@@ -66,7 +59,12 @@ int		shader_uniform1f(struct shader *s, const char *name, float *data);
 int		shader_uniform2f(struct shader *s, const char *name, vec2 *data);
 int		shader_uniform3f(struct shader *s, const char *name, vec3 *data);
 int		shader_uniform4f(struct shader *s, const char *name, vec4 *data);
+int		shader_uniform1i(struct shader *s, const char *name, int* data);
+
 int		shader_uniform_matrix4f(struct shader *s, const char *name, mat4 *data);
+
+void	shader_constant_uniform1i(struct shader *s, const char *name, int data);
+void	shader_constant_uniform4f(struct shader *s, const char *name, vec4 data);
 
 void	shader_uniforms_relocate(struct shader *s);
 void	shader_uniforms_free(struct shader *s);
