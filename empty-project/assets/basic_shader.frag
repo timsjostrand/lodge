@@ -3,7 +3,6 @@
 in vec2 texcoord;
 out vec4 frag_color;
 
-uniform float time;
 uniform vec4 color;
 uniform sampler2D tex;
 
