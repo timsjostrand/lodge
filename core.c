@@ -17,6 +17,7 @@
 #include "assets.h"
 #include "vfs.h"
 #include "env.h"
+#include "color.h"
 
 #include "core.h"
 #include "core_argv.h"
@@ -52,6 +53,12 @@ static void core_release()
 
 static void core_assets_init()
 {
+	/* FIXME: nice way to set this pointer from game library OR engine specific console shader. */
+	core_global->console_shader = &assets->shaders.basic_shader;
+	shader_uniform_matrix4f(core_global->console_shader, "projection", &core_global->graphics.projection);
+	shader_constant_uniform1i(core_global->console_shader, "tex", 0);
+	shader_constant_uniform4f(core_global->console_shader, "color", COLOR_WHITE);
+
 	/* Load console. */
 	console_new(&core_global->console, &core_global->font_console, core_global->view_width, 16, &core_global->textures.none,
 			core_global->console_shader, &core_global->env);
@@ -261,9 +268,6 @@ void core_setup(const char *title, float view_width, float view_height,
 	/* Store global references. */
 	core_global->view_width = view_width;
 	core_global->view_height = view_height;
-
-	/* FIXME: nice way to set this pointer from game library OR engine specific console shader. */
-	core_global->console_shader = &assets->shaders.basic_shader;
 
 	/* Set up sound */
 	sound_init(&core_global->sound, (float *)core_global->sound_listener, core_global->sound_distance_max);

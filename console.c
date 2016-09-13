@@ -234,10 +234,10 @@ void console_print(struct console *c, const char *text, size_t text_len)
 	monotext_update(&c->txt_display, display, display_len);
 }
 
-static void console_render_input(struct console *c, struct shader *s, struct graphics *g)
+static void console_render_input(struct console *c, struct shader *s)
 {
 	monotext_update(&c->txt_input, c->input, c->input_len);
-	monotext_render(&c->txt_input, s, g);
+	monotext_render(&c->txt_input, s);
 }
 
 void console_think(struct console *c)
@@ -245,12 +245,13 @@ void console_think(struct console *c)
 	console_cursor_think(&c->cursor);
 }
 
-void console_render(struct console *c, struct shader *s, struct graphics *g)
+void console_render(struct console *c, struct shader *s, struct graphics* g)
 {
+	shader_uniforms_think(s, 1.0f);
 	sprite_render(&c->background, s, g);
 	sprite_render(&c->cursor.sprite, s, g);
-	monotext_render(&c->txt_display, s, g);
-	console_render_input(c, s, g);
+	monotext_render(&c->txt_display, s);
+	console_render_input(c, s);
 }
 
 /**

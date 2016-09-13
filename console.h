@@ -79,7 +79,7 @@ void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
 void console_vprintf(struct console *c, const char *fmt, va_list args);
 void console_think(struct console *c);
-void console_render(struct console *c, struct shader *s, struct graphics *g);
+void console_render(struct console *c, struct shader *s, struct graphics* g);
 void console_toggle_focus(struct console *c);
 void console_parse_conf(struct console *c, struct console_conf *conf);
 float console_height(struct console *c, int display_lines);

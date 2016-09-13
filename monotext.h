@@ -55,7 +55,7 @@ void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 		struct monofont *font, const float blx, const float bly, struct shader *shader);
 void monotext_updatef(struct monotext *dst, const char *fmt, ...);
 void monotext_update(struct monotext *dst, const char *text, const size_t len);
-void monotext_render(struct monotext *text, struct shader *s, struct graphics *g);
+void monotext_render(struct monotext *text, struct shader *s);
 void monotext_free(struct monotext *text);
 
 int  monofont_new(struct monofont *font, const char *name,

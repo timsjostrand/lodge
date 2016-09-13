@@ -390,7 +390,7 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
  * - transform_final is not really used but required for current sprite shader.
  * - use DrawElements instead of DrawArrays (requires indices array).
  */
-void monotext_render(struct monotext *text, struct shader *s, struct graphics *g)
+void monotext_render(struct monotext *text, struct shader *s)
 {
 	if(text == NULL || text->vao == 0) {
 		return;
@@ -398,24 +398,23 @@ void monotext_render(struct monotext *text, struct shader *s, struct graphics *g
 
 	glUseProgram(s->program);
 
-	/* Bind vertex array. */
-	glBindVertexArray(text->vao);
-
 	/* Dummy transform. */
 	mat4 transform_final;
 	identity(transform_final);
 
 	/* Upload matrices and color. */
-	glUniformMatrix4fv(s->uniform_transform, 1, GL_FALSE, transform_final);
-	glUniformMatrix4fv(s->uniform_projection, 1, GL_FALSE, g->projection);
-	glUniform4f(s->uniform_color, rgba(text->color));
+	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
+	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, transform_final);
 
-	/* Shader settings for all characters sprites. */
-	glUniform1i(s->uniform_sprite_type, SPRITE_TYPE_TEXT);
-	glUniform1i(s->uniform_tex, 0);
+	GLint uniform_color = glGetUniformLocation(s->program, "color");
+	glUniform4fv(uniform_color, 1, text->color);
+
+	/* Bind vertex array. */
+	glBindVertexArray(text->vao);
+	
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, text->font->texture);
-
+	
 	/* Render it! */
 	glDrawArrays(GL_TRIANGLES, 0, text->verts_count);
 	GL_OK_OR_RETURN;
