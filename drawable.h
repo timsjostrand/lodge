@@ -21,11 +21,13 @@ void	drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float 
 void	drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s);
 void	drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
 void	drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
+void	drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s);
 
 void	drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s);
 
+void	drawable_render(struct drawable *d);
 void	drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec4 color, struct shader *s, mat4 transform);
-void	drawable_render(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform);
+void	drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform);
 
 /* FIXME: basic_sprite should be refactored into a drawable of type "rect". */
 struct basic_sprite {

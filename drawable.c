@@ -226,6 +226,12 @@ static void drawable_get_vertices_line(GLfloat *dst, float x1, float y1, float x
 	dst[1 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 }
 
+void drawable_render(struct drawable *d)
+{
+	glBindVertexArray(d->vao);
+	glDrawArrays(d->draw_mode, 0, d->vertex_count);
+}
+
 void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec4 color, struct shader *s, mat4 transform)
 {
 	/* Bind vertices. */
@@ -246,7 +252,7 @@ void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint 
 	glDrawArrays(mode, 0, vbo_count);
 }
 
-void drawable_render(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform)
+void drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform)
 {
 	drawable_render_detailed(d->draw_mode, d->vbo, d->vertex_count, d->vao, tex, color, s, transform);
 }
@@ -301,6 +307,69 @@ void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, f
 	/* Cleanup. */
 	free(vertices);
 }
+
+void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
+{
+	dst->draw_mode = GL_TRIANGLES;
+	/* Allocate memory for vertices. */
+	dst->vertex_count = 6;
+	GLfloat *vertices = (GLfloat *)calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
+
+	/* OOM? */
+	if (vertices == NULL) {
+		graphics_error("Out of memory\n");
+		return;
+	}
+
+	/* Top-left */
+	vertices[0 * VBO_VERTEX_LEN + 0] = -1.0f;	// x
+	vertices[0 * VBO_VERTEX_LEN + 1] = 1.0f;	// y
+	vertices[0 * VBO_VERTEX_LEN + 2] = 0.0f;	// z
+	vertices[0 * VBO_VERTEX_LEN + 3] = 0.0f;	// u
+	vertices[0 * VBO_VERTEX_LEN + 4] = 1.0f;	// v
+
+	/* Bottom-right */
+	vertices[1 * VBO_VERTEX_LEN + 0] = 1.0f;	// x
+	vertices[1 * VBO_VERTEX_LEN + 1] = -1.0f;	// y
+	vertices[1 * VBO_VERTEX_LEN + 2] = 0.0f;	// z
+	vertices[1 * VBO_VERTEX_LEN + 3] = 1.0f;	// u
+	vertices[1 * VBO_VERTEX_LEN + 4] = 0.0f;	// v
+
+	/* Top-right */
+	vertices[2 * VBO_VERTEX_LEN + 0] = 1.0f;	// x
+	vertices[2 * VBO_VERTEX_LEN + 1] = 1.0f;	// y
+	vertices[2 * VBO_VERTEX_LEN + 2] = 0.0f;	// z
+	vertices[2 * VBO_VERTEX_LEN + 3] = 1.0f;	// u
+	vertices[2 * VBO_VERTEX_LEN + 4] = 1.0f;	// v
+
+	/* Top-left */
+	vertices[3 * VBO_VERTEX_LEN + 0] = -1.0f;	// x
+	vertices[3 * VBO_VERTEX_LEN + 1] = 1.0f;	// y
+	vertices[3 * VBO_VERTEX_LEN + 2] = 0.0f;	// z
+	vertices[3 * VBO_VERTEX_LEN + 3] = 0.0f;	// u
+	vertices[3 * VBO_VERTEX_LEN + 4] = 1.0f;	// v
+
+	/* Bottom-left */
+	vertices[4 * VBO_VERTEX_LEN + 0] = -1.0f;	// x
+	vertices[4 * VBO_VERTEX_LEN + 1] = -1.0f;	// y
+	vertices[4 * VBO_VERTEX_LEN + 2] = 0.0f;	// z
+	vertices[4 * VBO_VERTEX_LEN + 3] = 0.0f;	// u
+	vertices[4 * VBO_VERTEX_LEN + 4] = 0.0f;	// v
+
+	/* Bottom-right */
+	vertices[5 * VBO_VERTEX_LEN + 0] = 1.0f;	// x
+	vertices[5 * VBO_VERTEX_LEN + 1] = -1.0f;	// y
+	vertices[5 * VBO_VERTEX_LEN + 2] = 0.0f;	// z
+	vertices[5 * VBO_VERTEX_LEN + 3] = 1.0f;	// u
+	vertices[5 * VBO_VERTEX_LEN + 4] = 0.0f;	// v
+
+	/* Upload vertices to GPU. */
+	drawable_set_vbo(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+
+	/* Cleanup. */
+	free(vertices);
+}
+
 
 void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments, struct shader *s)
 {
