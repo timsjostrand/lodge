@@ -1,4 +1,11 @@
 #include "framebuffer.h"
+#include "log.h"
+
+#define texture_debug(...) debugf("texture", __VA_ARGS__)
+#define texture_error(...) errorf("texture", __VA_ARGS__)
+
+#define framebuffer_debug(...) debugf("framebuffer", __VA_ARGS__)
+#define framebuffer_error(...) errorf("framebuffer", __VA_ARGS__)
 
 #include <GL/glew.h>
 
@@ -65,6 +72,10 @@ texture_t texture_create_rgba(int width, int height)
 	glBindTexture(GL_TEXTURE_2D, texture->id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		texture_error("glTexImage2D failed: %s\n", err);
+
 	texture_properties_set_default(texture);
 
 	return texture;
@@ -83,6 +94,24 @@ void texture_set_properties(texture_t texture, struct texture_properties* proper
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture_wrap_opengl(properties->wrap_t));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture_filter_opengl(properties->filter_min));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture_filter_opengl(properties->filter_max));
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		texture_error("glTexParameteri failed: %s\n", err);
+}
+
+void texture_bind(texture_t texture, int slot)
+{
+	GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
+	glActiveTexture(slot_opengl);
+	glBindTexture(GL_TEXTURE_2D, texture->id);
+}
+
+void texture_unbind(int slot)
+{
+	GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
+	glActiveTexture(slot_opengl);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 //
@@ -99,6 +128,10 @@ framebuffer_t framebuffer_create()
 	struct framebuffer* framebuffer = malloc(sizeof(struct framebuffer));
 
 	glGenFramebuffers(1, &framebuffer->id);
+	
+	if (glGetError() == GL_INVALID_VALUE)
+		framebuffer_error("glGenFramebuffers failed\n");
+	
 	return framebuffer;
 }
 
@@ -136,4 +169,8 @@ void framebuffer_attach_texture(framebuffer_t framebuffer, texture_t texture, en
 	}
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, gl_target, GL_TEXTURE_2D, texture->id, 0);
+
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+		texture_error("glFramebufferTexture2D failed: %s\n", err);
 }

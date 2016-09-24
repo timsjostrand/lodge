@@ -40,6 +40,9 @@ texture_t		texture_create_rgba(int width, int height);
 void			texture_destroy(texture_t texture);
 void			texture_set_properties(texture_t texture, struct texture_properties* properties);
 
+void			texture_bind(texture_t texture, int slot);
+void			texture_unbind(int slot);
+
 framebuffer_t	framebuffer_create();
 void			framebuffer_destroy(framebuffer_t framebuffer);
 
