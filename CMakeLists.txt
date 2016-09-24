@@ -20,6 +20,7 @@ add_definitions(-DVFS_ENABLE_FILEWATCH)
 
 # Check for compatibility.
 include(CheckFunctionExists)
+include(CheckSymbolExists)
 
 check_function_exists(strnlen HAVE_STRNLEN)
 if(HAVE_STRNLEN)
@@ -31,7 +32,12 @@ if(HAVE_VSNPRINTF)
     add_definitions(-DHAVE_VSNPRINTF)
 endif()
 
-check_function_exists(snprintf HAVE_SNPRINTF)
+if(MSVC14)
+	check_symbol_exists(snprintf stdio.h HAVE_SNPRINTF)
+else()
+	check_function_exists(snprintf HAVE_SNPRINTF)
+endif()
+
 if(HAVE_SNPRINTF)
     add_definitions(-DHAVE_SNPRINTF)
 endif()
@@ -112,7 +118,11 @@ if(NOT EMSCRIPTEN)
     # Library: OpenAL.
     if(NOT APPLE)
         # MinGW time.h defines 'struct timespec'
-        add_definitions(-D_TIMESPEC_DEFINED)
+        
+		if(MINGW)
+			add_definitions(-D_TIMESPEC_DEFINED)
+		endif()
+		
         # Build OpenAL-Soft.
         if(ENABLE_SHARED)
             set(LIBTYPE "SHARED" CACHE STRING "Build static library" FORCE)
