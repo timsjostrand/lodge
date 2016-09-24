@@ -163,12 +163,12 @@ list(APPEND ENGINE_SOURCES_LOCAL math4.c core_console.c events.c graphics.c shad
         color.c sound.c vfs.c atlas.c monotext.c str.c list.c lodge.c console.c
         spritebatch.c animatedsprites.c alist.c core.c core_argv.c util_reload.c
         particles.c collide.c drawable.c pyxel.c pyxel_asset.c sprite_group.c
-        util_graphics.c rqueue.c env.c lodge_window_glfw.c)
+        util_graphics.c rqueue.c env.c framebuffer.c lodge_window_glfw.c)
 list(APPEND ENGINE_HEADERS_LOCAL math4.h core_console.h events.h graphics.h shader.h input.h texture.h
         color.h sound.h vfs.h atlas.h monotext.h str.h list.h lodge.h console.h
         spritebatch.h animatedsprites.h alist.h core.h core_argv.h util_reload.h
         particles.h game.h collide.h geometry.h drawable.h pyxel_asset.h
-        sprite_group.h util_graphics.h rqueue.h env.h lodge_window.h)
+        sprite_group.h util_graphics.h rqueue.h env.h framebuffer.h lodge_window.h)
 
 # Top-down sources
 set(ENGINE_SOURCES_TOP_DOWN top-down/tiles.c)
