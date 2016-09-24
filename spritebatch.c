@@ -130,7 +130,7 @@ void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_p
 
 void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_function)
 {
-	qsort(batch->gpu_vertices, batch->sprite_count, sizeof(GLfloat) * 30, sorting_function);
+	qsort((void*)batch->gpu_vertices, (size_t)batch->sprite_count, sizeof(GLfloat) * 30, sorting_function);
 }
 
 void spritebatch_render(struct spritebatch* batch, struct shader *s)
