@@ -290,4 +290,13 @@ double lodge_window_get_time()
 	return glfwGetTime() * 1000.0;
 }
 
+void lodge_window_get_screen_size(int* width, int* height)
+{
+	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* video_mode = glfwGetVideoMode(monitor);
+
+	*width = video_mode->width;
+	*height = video_mode->height;
+}
+
 #endif
