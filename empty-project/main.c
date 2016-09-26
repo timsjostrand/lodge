@@ -71,7 +71,7 @@ void game_render(struct graphics *g, float dt)
 
 	mat4 transform;
 	identity(transform);
-	animatedsprites_render(game->batcher, &assets->shaders.basic_shader, g, assets->textures.textures, transform);
+	animatedsprites_render_simple(game->batcher, &assets->shaders.basic_shader, g, assets->textures.textures, transform);
 }
 
 void game_mousebutton_callback(lodge_window_t window, int button, int action, int mods)
