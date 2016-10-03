@@ -2,6 +2,7 @@
 #define _TEXTURE_H
 
 #include <stdint.h>
+#include "math4.h"
 
 #define TEXTURE_OK		0
 #define TEXTURE_ERROR	-1
@@ -14,7 +15,7 @@ int  texture_load(GLuint *tex, int *width, int *height, const uint8_t *data,
 int  texture_load_pixels(GLuint *tex, const uint8_t *data,
 		const int width, const int height);
 void texture_white(GLuint *tex);
-int  texture_solid_color(GLuint *tex, int w, int h, const GLfloat color[4]);
+int  texture_solid_color(GLuint *tex, int w, int h, const vec4 color);
 void texture_free(const GLuint tex);
 
 #endif
