@@ -8,6 +8,7 @@
 #define framebuffer_error(...) errorf("framebuffer", __VA_ARGS__)
 
 #include <GL/glew.h>
+#include <stdlib.h>
 
 //
 // Texture

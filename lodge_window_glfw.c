@@ -6,6 +6,8 @@
 #include "log.h"
 
 #include <GLFW/glfw3.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef EMSCRIPTEN
 #include <emscripten/emscripten.h>
@@ -71,13 +73,14 @@ void glfw_resize_callback(GLFWwindow *window, int width, int height)
 
 void lodge_window_initialize()
 {
-	if (glfwInit()) 
+	int ret = glfwInit();
+	if (ret)
 	{
 		glfwSetErrorCallback(&glfw_error_callback);
 	}
 	else
 	{
-		printf("Could not initialize glfw (%d)\n"); // TODO: Where to log this?
+		printf("Could not initialize glfw (%d)\n", ret); // TODO: Where to log this?
 	}
 }
 
@@ -155,7 +158,7 @@ lodge_window_t lodge_window_create(const char *title, int window_width, int wind
 	glfw_window->callback_mousebutton = 0;
 	glfw_window->callback_input = 0;
 	glfw_window->callback_char = 0;
-	glfw_window->callback_resize;
+	glfw_window->callback_resize = 0;
 	glfw_window->callback_create = create_callback;
 	glfw_window->userdata = 0;
 
