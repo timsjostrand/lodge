@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 3.1)
 # Import compiler flags defined in another file.
 include(${ENGINE_PATH}/cmake/engine-compiler-flags.cmake)
 
+# Default to C99.
+set(CMAKE_C_STANDARD 99)
+
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
 
@@ -53,6 +56,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     CACHE STRING "Executable output directory" FORCE)
 
+if(ENABLE_SHARED)
+    set(BUILD_SHARED_LIBS On)
+endif()
+
 if(NOT EMSCRIPTEN)
     # Library: GLFW.
     set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
@@ -79,10 +86,12 @@ if(NOT EMSCRIPTEN)
     add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
     set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
     if(ENABLE_SHARED)
-        list(APPEND ENGINE_EXTRA_LIBS cJSON.shared)
+        set(CJSON_LIBRARY cJSON.shared)
     else()
-        list(APPEND ENGINE_EXTRA_LIBS cJSON)
+        set(CJSON_LIBRARY cJSON)
     endif()
+    target_include_directories(${CJSON_LIBRARY} PUBLIC "${ENGINE_PATH}/lib")
+    list(APPEND ENGINE_EXTRA_LIBS ${CJSON_LIBRARY}) # NOTE(TS): needed or atlas support, but should be moved to a module
 
     # Library: zlib.
     set(SKIP_INSTALL_ALL ON)
@@ -92,8 +101,8 @@ if(NOT EMSCRIPTEN)
     else()
         set(ZLIB_LIBRARY zlibstatic)
     endif()
-    list(APPEND ENGINE_EXTRA_LIBS ${ZLIB_LIBRARY})
     add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
+    target_include_directories(${ZLIB_LIBRARY} PUBLIC "${ZLIB_INCLUDE_DIR}")
 
     # Library: libarchive.
     set(ENABLE_NETTLE OFF CACHE BOOL "Enable use of Nettle" FORCE)
@@ -106,54 +115,15 @@ if(NOT EMSCRIPTEN)
     set(ENABLE_TEST OFF CACHE BOOL "Enable unit and regression tests" FORCE)
     add_subdirectory(${ENGINE_PATH}/lib/libarchive ${CMAKE_BINARY_DIR}/lib/libarchive)
     if(ENABLE_SHARED)
-        list(APPEND ENGINE_EXTRA_LIBS archive)
+        set(LIBARCHIVE_LIBRARY archive)
     else()
         # NOTE: Bug where LIBARCHIVE_STATIC is not applied for the
         # archive_static target in Visual Studio. Force define here.
         add_definitions(-DLIBARCHIVE_STATIC)
-        list(APPEND ENGINE_EXTRA_LIBS archive_static)
+        set(LIBARCHIVE_LIBRARY archive_static)
     endif()
-    list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/libarchive)
-
-    # Library: OpenAL.
-    if(NOT APPLE)
-        # MinGW time.h defines 'struct timespec'
-        
-		if(MINGW)
-			add_definitions(-D_TIMESPEC_DEFINED)
-		endif()
-		
-        # Build OpenAL-Soft.
-        if(ENABLE_SHARED)
-            set(LIBTYPE "SHARED" CACHE STRING "Build static library" FORCE)
-        else()
-            set(LIBTYPE "STATIC" CACHE STRING "Build static library" FORCE)
-        endif()
-        set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs" FORCE)
-        set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
-        set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs" FORCE)
-        set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
-        set(ALSOFT_CONFIG OFF CACHE BOOL "Install alsoft.conf sample configuration file" FORCE)
-        set(ALSOFT_HRTF_DEFS OFF CACHE BOOL "Install HRTF definition files" FORCE)
-        set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries" FORCE)
-        # .lib-generation requires GNU 'sed' but MinGW usually ships with old version.
-        set(ALSOFT_BUILD_IMPORT_LIB OFF CACHE BOOL "Build an import .lib using dlltool (requires sed)" FORCE)
-        add_subdirectory(${ENGINE_PATH}/lib/openal ${CMAKE_BINARY_DIR}/lib/openal)
-        list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/openal/include/AL)
-
-        # OpenAL has different names on different platforms.
-        if(WIN32)
-            list(APPEND ENGINE_EXTRA_LIBS OpenAL32)
-        else()
-            list(APPEND ENGINE_EXTRA_LIBS openal)
-        endif()
-    else()
-        # Use the OS X OpenAL framework.
-        find_library(OPENAL_LIBRARY OpenAL)
-        find_path(OPENAL_INCLUDE_DIR al.h)
-        list(APPEND ENGINE_INCLUDES ${OPENAL_INCLUDE_DIR})
-        list(APPEND ENGINE_EXTRA_LIBS ${OPENAL_LIBRARY})
-    endif()
+    set(LIBARCHIVE_INCLUDE_DIR ${ENGINE_PATH}/lib/libarchive)
+    target_include_directories(${LIBARCHIVE_LIBRARY} PUBLIC "${LIBARCHIVE_INCLUDE_DIR}")
 else()
     # glfw and glew is provided by emscripten
     option(USE_GLFW_3 "Use glfw3" ON)
@@ -168,24 +138,27 @@ endif()
 # Include stb.h
 list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/)
 
+# Load engine modules
+list(APPEND ENGINE_MODULES_PATH "${ENGINE_PATH}/lodge-*/")
+file(GLOB ENGINE_MODULES_AVAILABLE "${ENGINE_MODULES_PATH}")
+foreach(module ${ENGINE_MODULES_AVAILABLE})
+    get_filename_component(module_name "${module}" NAME)
+    message(STATUS "Found lodge module: ${module_name}")
+    add_subdirectory(${module} ${CMAKE_BINARY_DIR}/module/${module_name})
+endforeach()
+
 # Engine sources
 list(APPEND ENGINE_SOURCES_LOCAL math4.c core_console.c events.c graphics.c shader.c input.c texture.c
-        color.c sound.c vfs.c atlas.c monotext.c str.c list.c lodge.c console.c
-        spritebatch.c animatedsprites.c alist.c core.c core_argv.c util_reload.c
-        particles.c collide.c drawable.c pyxel.c pyxel_asset.c sprite_group.c
-        util_graphics.c rqueue.c env.c framebuffer.c lodge_window_glfw.c)
+        color.c vfs.c atlas.c monotext.c str.c lodge.c console.c
+        spritebatch.c animatedsprites.c core.c core_argv.c util_reload.c
+        particles.c collide.c drawable.c sprite_group.c
+        util_graphics.c env.c framebuffer.c lodge_window_glfw.c)
 list(APPEND ENGINE_HEADERS_LOCAL math4.h core_console.h events.h graphics.h shader.h input.h texture.h
-        color.h sound.h vfs.h atlas.h monotext.h str.h list.h lodge.h console.h
-        spritebatch.h animatedsprites.h alist.h core.h core_argv.h util_reload.h
-        particles.h game.h collide.h geometry.h drawable.h pyxel_asset.h
-        sprite_group.h util_graphics.h rqueue.h env.h framebuffer.h lodge_window.h)
-
-# Top-down sources
-set(ENGINE_SOURCES_TOP_DOWN top-down/tiles.c)
-set(ENGINE_HEADERS_TOP_DOWN top-down/tiles.h)
-
-list(APPEND ENGINE_SOURCES_LOCAL ${ENGINE_SOURCES_TOP_DOWN})
-list(APPEND ENGINE_HEADERS_LOCAL ${ENGINE_HEADERS_TOP_DOWN})
+        color.h vfs.h atlas.h monotext.h str.h lodge.h console.h
+        spritebatch.h animatedsprites.h core.h core_argv.h util_reload.h
+        particles.h game.h collide.h geometry.h drawable.h
+        sprite_group.h util_graphics.h env.h framebuffer.h
+        lodge_window.h)
 
 # Prepend all sources with absolute engine path (because of reasons...)
 foreach(src ${ENGINE_SOURCES_LOCAL})
@@ -211,11 +184,15 @@ endforeach()
 include_directories(${ENGINE_INCLUDES})
 
 # Asset generator executable
-add_executable(generate_assets ${ENGINE_PATH}/generate_assets.c
-    ${ENGINE_PATH}/vfs.c ${ENGINE_PATH}/alist.c ${ENGINE_PATH}/sound.h)
-set_property(TARGET generate_assets PROPERTY C_STANDARD 99)
+# TODO(TS): Move to lodge module
+add_executable(generate_assets
+    ${ENGINE_PATH}/generate_assets.c
+    ${ENGINE_PATH}/vfs.c
+    ${ENGINE_PATH}/lodge-collections/alist.c
+    ${ENGINE_PATH}/lodge-sound/sound.h)
 set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
-target_link_libraries(generate_assets glfw ${ENGINE_EXTRA_LIBS})
+set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${ENGINE_PATH}/lodge-collections)
+target_link_libraries(generate_assets glfw lodge-sound lodge-collections ${ENGINE_EXTRA_LIBS})
 
 # Where to store generated assets files.
 set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
@@ -267,9 +244,6 @@ function(add_lodgei_library)
     # Compile with DEBUG flag?
     target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
-    # Compile with C99.
-    set_property(TARGET lodgei PROPERTY C_STANDARD 99)
-
     # Compile with correct flags.
     set_property(TARGET lodgei PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
     set_property(TARGET lodgei PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
@@ -308,13 +282,27 @@ function(add_game_library game_name)
     set_source_files_properties(${ASSETS_C} ${ASSETS_H} PROPERTIES GENERATED TRUE)
 
     # Create library.
-    add_library(${game_name}_obj OBJECT ${ARGN} ${ASSETS_C} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    add_library(${game_name} ${ARGN} ${ASSETS_C} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    
+    # TODO(TS): The engine depends on these modules, so they are forced to be
+    #           part of the build. Mainly because core.c pulls depends on a lot
+    #           of things, so the proper fix is probably to make core itself into
+    #           a module.
+    list(APPEND ENGINE_MODULES lodge-sound)
+
+    # Engine modules
+    list(REMOVE_DUPLICATES ENGINE_MODULES)
+    foreach(module ${ENGINE_MODULES})
+        list(APPEND ENGINE_EXTRA_LIBS ${module})
+        string(TOUPPER "ENABLE_${module}" module_define)
+        string(REPLACE "-" "_" module_define "${module_define}")
+        message(STATUS "Adding lodge module: ${module} (${module_define})")
+        target_compile_definitions(${game_name} PUBLIC "${module_define}")
+        target_compile_definitions(generate_assets PUBLIC "${module_define}")
+    endforeach()
 
     # Store as dependencies that will be applied to the 'engine' target later.
     if(ENABLE_SHARED)
-        add_library(${game_name} SHARED $<TARGET_OBJECTS:${game_name}_obj>)
-        set(ENGINE_DEPS ${game_name}_obj ${game_name} CACHE INTERNAL "Engine dependencies" FORCE)
-
         # Need HACK_POST_BUILD for Visual Studio 2013.
         if(MSVC12)
             set(HACK_POST_BUILD 1)
@@ -333,37 +321,32 @@ function(add_game_library game_name)
                 COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:${game_name}>" ${ASSET_PATH}
                 COMMENT "Copying ${game_name} shared library to ASSET_PATH")
         endif()
-    else()
-        add_library(${game_name}_static STATIC $<TARGET_OBJECTS:${game_name}_obj>)
-        set(ENGINE_DEPS ${game_name}_obj ${game_name}_static CACHE INTERNAL "Engine dependencies" FORCE)
     endif()
 
     # Generate assets.{c,h} if necessary.
-    add_dependencies(${game_name}_obj generate_assets_do)
+    add_dependencies(${game_name} generate_assets_do)
 
     # Compile with console output support?
     if(ENABLE_CONSOLE)
-        target_compile_definitions(${game_name}_obj PRIVATE CONSOLE_ENABLE)
+        target_compile_definitions(${game_name} PRIVATE CONSOLE_ENABLE)
     endif()
 
     # Compile as shared library?
     if(ENABLE_SHARED)
-        target_compile_definitions(${game_name}_obj PRIVATE ENABLE_SHARED)
+        target_compile_definitions(${game_name} PRIVATE ENABLE_SHARED)
     endif()
 
     # Compile with DEBUG flag?
-    target_compile_definitions(${game_name}_obj PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-
-    # Compile with C99.
-    set_property(TARGET ${game_name}_obj PROPERTY C_STANDARD 99)
+    target_compile_definitions(${game_name} PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
     # Compile with correct flags.
-    set_property(TARGET ${game_name}_obj PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET ${game_name}_obj PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+    set_property(TARGET ${game_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET ${game_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Link libraries.
+    target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
+    
     if(ENABLE_SHARED)
-        target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
         set(ENGINE_GAME_LIBRARY "" CACHE INTERNAL "Do not link against game library" FORCE)
 
         # Convenience target to compile and run the engine executable with the same
@@ -372,14 +355,13 @@ function(add_game_library game_name)
             COMMAND engine --windowed --mount "${ASSET_PATH}" --game "$<TARGET_FILE_NAME:${game_name}>"
             DEPENDS ${game_name} engine)
     else()
-        target_link_libraries(${game_name}_static ${ENGINE_EXTRA_LIBS})
-        set(ENGINE_GAME_LIBRARY "${game_name}_static" CACHE INTERNAL "Link against game library" FORCE)
+        set(ENGINE_GAME_LIBRARY "${game_name}" CACHE INTERNAL "Link against game library" FORCE)
 
         # Convenience target to compile and run the engine executable with the same
         # asset path as in cmake_user.
         add_custom_target(run
             COMMAND engine --windowed --mount "${ASSET_PATH}"
-            DEPENDS ${game_name}_static engine)
+            DEPENDS ${game_name} engine)
     endif()
 
     # Main executable.
@@ -387,7 +369,7 @@ function(add_game_library game_name)
     set_property(TARGET engine PROPERTY OUTPUT_NAME ${game_name})
 
     # Engine depends on game library.
-    add_dependencies(engine ${ENGINE_DEPS})
+    #add_dependencies(engine ${ENGINE_DEPS})
 
     # Add DEBUG define when building debug executables.
     if(ENABLE_SHARED)
@@ -424,8 +406,6 @@ function(add_game_library game_name)
 
     # Link.
     if(NOT EMSCRIPTEN)
-        # Build the engine using the C99 standard.
-        set_property(TARGET engine PROPERTY C_STANDARD 99)
         target_link_libraries(engine ${ENGINE_GAME_LIBRARY} ${ENGINE_EXTRA_LIBS})
     else()
         target_link_libraries(engine)

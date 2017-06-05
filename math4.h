@@ -13,6 +13,13 @@
 	a = b; \
 	b = t;
 
+#ifndef min
+#define min(x, y) ((x) < (y) ? (x) : (y))
+#endif
+#ifndef max
+#define max(x, y) ((x) > (y) ? (x) : (y))
+#endif
+
 typedef float mat4[16];
 typedef float vec2[2];
 typedef float vec3[3];
@@ -36,7 +43,8 @@ void scalev(mat4 m, vec4 v);
 void transpose(mat4 m, mat4 a);
 void transpose_same(mat4 m);
 void transpose_same_copy(mat4 m);
-void cross(vec4 v, vec4 a, vec4 b);
+void cross(vec3 v, const vec3 a, const vec3 b);
+float dot3v(const vec3 left, const vec3 right);
 int inverse(mat4 m, const mat4 a);
 float determinant(const mat4 m);
 void adjugate(mat4 m, const mat4 a);
@@ -51,6 +59,10 @@ void mult2f(vec2 dst, const float x, const float y);
 void add3f(vec3 dst, const float x, const float y, const float z);
 void sub3f(vec3 dst, const float x, const float y, const float z);
 void mult3f(vec3 dst, const float x, const float y, const float z);
+
+void add3v(vec3 dst, const vec3 left, const vec3 right);
+void sub3v(vec3 dst, const vec3 left, const vec3 right);
+void mult3v(vec3 dst, const vec3 left, const vec3 right);
 
 float length2f(const vec2 v);
 float length3f(const vec3 v);
@@ -77,5 +89,8 @@ void set4f(vec4 v, const float x, const float y, const float z, const float w);
 void norm2f(vec2 v);
 
 int sign(int x);
+
+int powi(int base, int exp);
+int log2i(unsigned int val);
 
 #endif

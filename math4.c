@@ -9,6 +9,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include "math4.h"
 
@@ -218,11 +219,23 @@ void transpose_same(mat4 a)
 /**
  * Store the cross product of 'a x b' in 'v'.
  */
-void cross(vec4 v, vec4 a, vec4 b)
+void cross(vec3 v, const vec3 a, const vec3 b)
 {
 	v[0] = a[1]*b[2] - a[2]*b[1];
 	v[1] = a[2]*b[0] - a[0]*b[2];
 	v[2] = a[0]*b[1] - a[1]*b[0];
+}
+
+/**
+ * @return The dot product of 'a . b'.
+ */
+float dot3v(const vec3 a, const vec3 b)
+{
+	float total = 0;
+	total += a[0] * b[0];
+	total += a[1] * b[1];
+	total += a[2] * b[2];
+	return total;
 }
 
 void adjugate(mat4 m, const mat4 a)
@@ -501,4 +514,50 @@ void mult2f(vec2 dst, const float x, const float y)
 int sign(int x)
 {
 	return (x > 0) - (x < 0);
+}
+
+void add3v(vec3 dst, const vec3 left, const vec3 right)
+{
+	dst[0] = left[0] + right[0];
+	dst[1] = left[1] + right[1];
+	dst[2] = left[2] + right[2];
+}
+
+void sub3v(vec3 dst, const vec3 left, const vec3 right)
+{
+	dst[0] = left[0] - right[0];
+	dst[1] = left[1] - right[1];
+	dst[2] = left[2] - right[2];
+}
+
+void mult3v(vec3 dst, const vec3 left, const vec3 right)
+{
+	dst[0] = left[0] * right[0];
+	dst[1] = left[1] * right[1];
+	dst[2] = left[2] * right[2];
+}
+
+int powi(int base, int exp)
+{
+	int result = 1;
+	while (exp) {
+		if(exp & 1) {
+			result *= base;
+		}
+		exp /= 2;
+		base *= base;
+	}
+	return result;
+}
+
+int log2i(unsigned int val)
+{
+	if (val == 0) return UINT_MAX;
+	if (val == 1) return 0;
+	unsigned int ret = 0;
+	while (val > 1) {
+		val >>= 1;
+		ret++;
+	}
+	return ret;
 }

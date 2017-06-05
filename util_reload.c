@@ -12,7 +12,10 @@
 #include "atlas.h"
 #include "texture.h"
 #include "console.h"
+
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 #include "pyxel_asset.h"
+#endif
 
 void util_reload_sound(const char *filename, unsigned int size, void *data, void *userdata)
 {
@@ -188,6 +191,7 @@ void util_reload_console_conf(const char *filename, unsigned int size, void *dat
 	}
 }
 
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 void util_reload_pyxel_asset(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
@@ -212,3 +216,4 @@ void util_reload_pyxel_asset(const char *filename, unsigned int size, void *data
 		(*dst) = tmp;
 	}
 }
+#endif

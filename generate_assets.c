@@ -12,7 +12,9 @@ struct alist* assets_list;
 struct alist* assets_list_textures;
 struct alist* assets_list_sounds;
 struct alist* assets_list_shaders;
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 struct alist* assets_list_pyxels;
+#endif
 struct alist* assets_list_misc;
 
 #define MAX_ASSETS 512
@@ -84,6 +86,7 @@ void write_assets_c()
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "\n\t// Pyxel files\n");
 	foreach_alist(char*, asset, i, assets_list_pyxels)
 	{
@@ -92,6 +95,7 @@ void write_assets_c()
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
+#endif
 	fprintf(fp, "}\n\n");
 
 	fprintf(fp, "void assets_release()\n");
@@ -120,6 +124,7 @@ void write_assets_c()
 			fprintf(fp, ");\n");
 		}
 	}
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "\n\t// Pyxel files\n");
 	foreach_alist(char*, asset, i, assets_list_pyxels)
 	{
@@ -127,6 +132,8 @@ void write_assets_c()
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
+#endif
+
 	fprintf(fp, "}\n");
 	fclose(fp);
 }
@@ -141,7 +148,9 @@ void write_assets_h()
 	fprintf(fp, "#include \"game.h\"\n");
 	fprintf(fp, "#include \"shader.h\"\n");
 	fprintf(fp, "#include \"sound.h\"\n\n");
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "#include \"pyxel_asset.h\"\n\n");
+#endif
 
 	// Textures
 	fprintf(fp, "struct textures\n");
@@ -208,6 +217,7 @@ void write_assets_h()
 	}
 	fprintf(fp, "};\n\n");
 
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	// Pyxel files
 	fprintf(fp, "struct pyxels\n");
 	fprintf(fp, "{\n");
@@ -232,13 +242,16 @@ void write_assets_h()
 		fprintf(fp, "\tint\t__none;\n");
 	}
 	fprintf(fp, "};\n\n");
+#endif
 
 	fprintf(fp, "struct assets\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\t struct textures textures;\n");
 	fprintf(fp, "\t struct sounds sounds;\n");
 	fprintf(fp, "\t struct shaders shaders;\n");
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "\t struct pyxels pyxels;\n");
+#endif
 	fprintf(fp, "};\n\n");
 
 	fprintf(fp, "struct assets* assets;\n\n");
@@ -261,7 +274,9 @@ void add_assets()
 	const char* ext_texture[] = { ".png", ".tga", ".jpeg", ".jpg", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
 	const char* ext_sounds[] = { ".ogg" };
 	const char* ext_shaders[] = { ".frag", ".vert" };
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	const char* ext_pyxels[] = { ".pyxel" };
+#endif
 
 	foreach_alist(char*, asset, index, assets_list)
 	{
@@ -315,6 +330,7 @@ void add_assets()
 			continue;
 		}
 
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 		// Pyxel files
 		for (int i = 0, i_size = sizeof(ext_pyxels) / sizeof(ext_pyxels[0]); i < i_size; i++)
 		{
@@ -330,6 +346,7 @@ void add_assets()
 		{
 			continue;
 		}
+#endif
 
 		alist_append(assets_list_misc, asset);
 	}
@@ -347,7 +364,9 @@ int main(int argc, char* argv[])
 	assets_list_textures = alist_new(MAX_ASSETS);
 	assets_list_sounds = alist_new(MAX_ASSETS);
 	assets_list_shaders = alist_new(MAX_ASSETS);
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 	assets_list_pyxels = alist_new(MAX_ASSETS);
+#endif
 	assets_list_misc = alist_new(MAX_ASSETS);
 
 	vfs_init(argv[1]);

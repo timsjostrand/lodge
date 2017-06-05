@@ -1,13 +1,6 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
-#ifndef EMSCRIPTEN
-#include <al.h>
-#include <alc.h>
-#else
-#include <AL/al.h>
-#include <AL/alc.h>
-#endif
 #include <limits.h>
 #define STB_VORBIS_HEADER_ONLY
 #include <stb/stb_vorbis.c>
@@ -29,8 +22,11 @@
 
 #define AL_TEST(msg) if(al_test(msg) != SOUND_OK) { return SOUND_ERROR; }
 
-typedef ALuint sound_buf_t;
-typedef ALuint sound_src_t;
+typedef unsigned int sound_buf_t;
+typedef unsigned int sound_src_t;
+typedef ALCcontext;
+typedef short ALshort;
+typedef char ALboolean;
 
 struct sound_emitter {
 	sound_src_t		src;				/* OpenAL Source Name assigned to this emitter. */

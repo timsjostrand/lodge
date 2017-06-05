@@ -7,6 +7,9 @@ void util_reload_atlas(const char *filename, unsigned int size, void *data, void
 void util_reload_texture(const char *filename, unsigned int size, void *data, void* userdata);
 void util_reload_texture_pixels(const char *filename, unsigned int size, void *data, void* userdata, int width, int height);
 void util_reload_console_conf(const char *filename, unsigned int size, void *data, void *userdata);
+
+#ifdef ENABLE_LODGE_ASSET_PYXEL
 void util_reload_pyxel_asset(const char *filename, unsigned int size, void *data, void *userdata);
+#endif
 
 #endif
