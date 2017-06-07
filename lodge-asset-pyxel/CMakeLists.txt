@@ -1,6 +1,6 @@
 # lodge-asset-pyxel
 
-add_library(lodge-asset-pyxel "")
+add_library(lodge-asset-pyxel STATIC "")
 
 target_sources(lodge-asset-pyxel
     PRIVATE

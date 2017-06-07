@@ -52,7 +52,6 @@ target_include_directories(lodge-sound
         "${OPENAL_INCLUDE_DIR}"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}"
-        "F:/Banan/"
 )
 
 target_link_libraries(lodge-sound
