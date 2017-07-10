@@ -135,9 +135,6 @@ else()
     SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-warn-absolute-paths")
 endif()
 
-# Include stb.h
-list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/)
-
 # Load engine modules
 list(APPEND ENGINE_MODULES_PATH "${ENGINE_PATH}/lodge-*/")
 file(GLOB ENGINE_MODULES_AVAILABLE "${ENGINE_MODULES_PATH}")
@@ -213,15 +210,6 @@ function(add_lodgei_library)
         # DEBUG: Lightweight buffer overflow detection.
         target_compile_options(lodgei PRIVATE $<$<CONFIG:Debug>:-O2>)
         target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-
-        # QUIRK: stb.h requires all these warnings to be silenced, but it seems
-        # warnings have to be set for the source file including the header...
-        set(STB_HEADER vfs.c)
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-maybe-uninitialized ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-strict-aliasing ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-but-set-variable ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-value ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
 
         # Static STD libs.
         #set(ENGINE_LINKER_FLAGS "-static-libgcc ${ENGINE_LINKER_FLAGS} ")
