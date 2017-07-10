@@ -2,8 +2,6 @@
 #define _SOUND_H
 
 #include <limits.h>
-#define STB_VORBIS_HEADER_ONLY
-#include <stb/stb_vorbis.c>
 
 #include "log.h"
 #include "alist.h"

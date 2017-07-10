@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <limits.h>
-#include <stb/stb_vorbis.c>
+#include <math.h>
 #define AL_LIBTYPE_STATIC
 #ifndef EMSCRIPTEN
 #include <al.h>
@@ -22,6 +22,7 @@
 #endif
 
 #include "sound.h"
+#include "stb_vorbis.h"
 #include "alist.h"
 #include "math4.h"
 

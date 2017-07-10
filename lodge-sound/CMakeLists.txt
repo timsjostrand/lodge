@@ -57,5 +57,6 @@ target_include_directories(lodge-sound
 target_link_libraries(lodge-sound
     PUBLIC
         lodge-collections
+        lodge-stb
         "${OPENAL_LIBRARY}"
 )

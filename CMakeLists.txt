@@ -246,6 +246,7 @@ function(add_game_library game_name)
     #           a module.
     list(APPEND ENGINE_MODULES lodge-assets)
     list(APPEND ENGINE_MODULES lodge-sound)
+    list(APPEND ENGINE_MODULES lodge-stb) # NOTE(TS): needed for texture.c, vfs.c
 
     # Engine modules
     list(REMOVE_DUPLICATES ENGINE_MODULES)

@@ -12,7 +12,6 @@
 
 #include "vfs.h"
 #include "log.h"
-#define STB_DEFINE
 #include "stb/stb.h"
 
 typedef unsigned long DWORD;

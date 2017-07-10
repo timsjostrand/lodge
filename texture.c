@@ -4,10 +4,11 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <inttypes.h>
+#include <string.h>
 #include <GL/glew.h>
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 #include "texture.h"
