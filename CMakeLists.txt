@@ -183,43 +183,6 @@ endforeach()
 # Include all source directories
 include_directories(${ENGINE_INCLUDES})
 
-# Asset generator executable
-# TODO(TS): Move to lodge module
-add_executable(generate_assets
-    ${ENGINE_PATH}/generate_assets.c
-    ${ENGINE_PATH}/vfs.c
-    ${ENGINE_PATH}/lodge-collections/alist.c
-    ${ENGINE_PATH}/lodge-sound/sound.h)
-set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
-set_property(TARGET generate_assets APPEND_STRING PROPERTY INCLUDE_DIRECTORIES ${ENGINE_PATH}/lodge-collections)
-target_link_libraries(generate_assets glfw lodge-sound lodge-collections ${ENGINE_EXTRA_LIBS})
-
-# Where to store generated assets files.
-set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
-set(ASSETS_C ${CMAKE_BINARY_DIR}/assets.c)
-set(ASSETS_H ${CMAKE_BINARY_DIR}/assets.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-# Compare assets directory, maybe regenerate assets.c
-add_custom_target(assets_check_update ALL
-    COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${ASSET_PATH} -DSTAMP_FILE=${ASSETS_STAMP_FILE} -P ${ENGINE_PATH}/cmake/dir_checksum.cmake
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Calculating assets checksum...")
-
-# Mark asset files as "generated" so cmake doesn't complain.
-set_source_files_properties(${ASSETS_C} ${ASSETS_H} PROPERTIES GENERATED TRUE)
-
-# Creates assets.{c,h} if ASSETS_STAMP_FILE was changed.
-add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
-    COMMAND generate_assets ${ASSET_PATH}
-    DEPENDS generate_assets
-    DEPENDS assets_check_update
-    DEPENDS ${ASSETS_STAMP_FILE}
-    COMMENT "Generating assets.c")
-
-# Targets can depend on this target to generate assets.{c,h}.
-add_custom_target(generate_assets_do DEPENDS ${ASSETS_C} ${ASSETS_H})
-
 # Add the lodge engine library.
 function(add_lodgei_library)
     # Create library.
@@ -227,10 +190,7 @@ function(add_lodgei_library)
         ${ENGINE_SOURCES} ${ENGINE_HEADERS}
         ${LODGEI_SOURCES_HEADERS}
     )
-
-    # Generate assets.{c,h} if necessary.
-    add_dependencies(lodgei generate_assets_do)
-
+    
     # Compile with console output support?
     if(ENABLE_CONSOLE)
         target_compile_definitions(lodgei PRIVATE CONSOLE_ENABLE)
@@ -253,7 +213,6 @@ function(add_lodgei_library)
         # DEBUG: Lightweight buffer overflow detection.
         target_compile_options(lodgei PRIVATE $<$<CONFIG:Debug>:-O2>)
         target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-        target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
 
         # QUIRK: stb.h requires all these warnings to be silenced, but it seems
         # warnings have to be set for the source file including the header...
@@ -269,8 +228,8 @@ function(add_lodgei_library)
     endif()
 
     # Set compiler flags.
-    set_property(TARGET lodgei generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET lodgei generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+    set_property(TARGET lodgei PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET lodgei PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Link libraries.
     target_link_libraries(lodgei ${ENGINE_EXTRA_LIBS})
@@ -278,16 +237,14 @@ endfunction()
 
 # Add a game library.
 function(add_game_library game_name)
-    # Mark asset files as "generated".
-    set_source_files_properties(${ASSETS_C} ${ASSETS_H} PROPERTIES GENERATED TRUE)
-
     # Create library.
-    add_library(${game_name} ${ARGN} ${ASSETS_C} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    add_library(${game_name} ${ARGN} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
     
     # TODO(TS): The engine depends on these modules, so they are forced to be
     #           part of the build. Mainly because core.c pulls depends on a lot
     #           of things, so the proper fix is probably to make core itself into
     #           a module.
+    list(APPEND ENGINE_MODULES lodge-assets)
     list(APPEND ENGINE_MODULES lodge-sound)
 
     # Engine modules
@@ -297,8 +254,13 @@ function(add_game_library game_name)
         string(TOUPPER "ENABLE_${module}" module_define)
         string(REPLACE "-" "_" module_define "${module_define}")
         message(STATUS "Adding lodge module: ${module} (${module_define})")
-        target_compile_definitions(${game_name} PUBLIC "${module_define}")
-        target_compile_definitions(generate_assets PUBLIC "${module_define}")
+        list(APPEND ENGINE_DEFINES ${module_define})
+    endforeach()
+    
+    # Update defines for modules
+    target_compile_definitions(${game_name} PUBLIC ${ENGINE_DEFINES})
+    foreach(module ${ENGINE_MODULES})
+        target_compile_definitions(${module} PUBLIC ${ENGINE_DEFINES})
     endforeach()
 
     # Store as dependencies that will be applied to the 'engine' target later.
@@ -347,7 +309,7 @@ function(add_game_library game_name)
     target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
     
     if(ENABLE_SHARED)
-        set(ENGINE_GAME_LIBRARY "" CACHE INTERNAL "Do not link against game library" FORCE)
+        set(ENGINE_GAME_LIBRARY "")
 
         # Convenience target to compile and run the engine executable with the same
         # asset path as in cmake_user.
@@ -355,7 +317,7 @@ function(add_game_library game_name)
             COMMAND engine --windowed --mount "${ASSET_PATH}" --game "$<TARGET_FILE_NAME:${game_name}>"
             DEPENDS ${game_name} engine)
     else()
-        set(ENGINE_GAME_LIBRARY "${game_name}" CACHE INTERNAL "Link against game library" FORCE)
+        set(ENGINE_GAME_LIBRARY "${game_name}")
 
         # Convenience target to compile and run the engine executable with the same
         # asset path as in cmake_user.
@@ -365,7 +327,7 @@ function(add_game_library game_name)
     endif()
 
     # Main executable.
-    add_executable(engine ${ENGINE_PATH}/main.c ${ASSETS_C} ${ASSETS_H} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    add_executable(engine ${ENGINE_PATH}/main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
     set_property(TARGET engine PROPERTY OUTPUT_NAME ${game_name})
 
     # Engine depends on game library.
@@ -376,7 +338,7 @@ function(add_game_library game_name)
         target_compile_definitions(engine PRIVATE LOAD_SHARED)
     endif()
     target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-    target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
+    #target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
     # Console capture stdout support
     if(ENABLE_CONSOLE)
@@ -388,7 +350,7 @@ function(add_game_library game_name)
         # DEBUG: Lightweight buffer overflow detection.
         target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:-O2>)
         target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-        target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
+        #target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
 
         # QUIRK: stb.h requires all these warnings to be silenced, but it seems
         # warnings have to be set for the source file including the header...
@@ -401,8 +363,8 @@ function(add_game_library game_name)
     endif()
 
     # Set compiler flags.
-    set_property(TARGET engine generate_assets PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET engine generate_assets PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+    set_property(TARGET engine PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET engine PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Link.
     if(NOT EMSCRIPTEN)
