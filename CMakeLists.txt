@@ -240,6 +240,10 @@ function(add_game_library game_name)
     # Create library.
     add_library(${game_name} ${ARGN} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
     
+    # Compile with correct flags.
+    set_property(TARGET ${game_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET ${game_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
+    
     # TODO(TS): The engine depends on these modules, so they are forced to be
     #           part of the build. Mainly because core.c pulls depends on a lot
     #           of things, so the proper fix is probably to make core itself into
@@ -257,11 +261,13 @@ function(add_game_library game_name)
         message(STATUS "Adding lodge module: ${module} (${module_define})")
         list(APPEND ENGINE_DEFINES ${module_define})
     endforeach()
-    
+        
     # Update defines for modules
     target_compile_definitions(${game_name} PUBLIC ${ENGINE_DEFINES})
     foreach(module ${ENGINE_MODULES})
         target_compile_definitions(${module} PUBLIC ${ENGINE_DEFINES})
+        set_property(TARGET ${module} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+        set_property(TARGET ${module} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
     endforeach()
 
     # Store as dependencies that will be applied to the 'engine' target later.
@@ -301,10 +307,6 @@ function(add_game_library game_name)
 
     # Compile with DEBUG flag?
     target_compile_definitions(${game_name} PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-
-    # Compile with correct flags.
-    set_property(TARGET ${game_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET ${game_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Link libraries.
     target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
