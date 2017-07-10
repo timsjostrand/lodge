@@ -60,7 +60,7 @@
 #define SPRITE_TYPE_PLAYER		2
 #define SPRITE_TYPE_PARTICLE	3
 
-struct game_settings settings = {
+struct lodge_settings settings = {
 	.view_width = VIEW_WIDTH,
 	.view_height = VIEW_HEIGHT,
 	.window_width = VIEW_WIDTH,
@@ -127,7 +127,7 @@ struct game {
 struct game* game = 0;
 struct vfs* vfs = NULL;
 
-struct game_settings* game_get_settings()
+struct lodge_settings* game_get_settings()
 {
 	return &settings;
 }
@@ -427,12 +427,12 @@ void load_console_conf()
 void game_mousebutton_callback(lodge_window_t window, int button, int action, int mods)
 {
 	if (action == GLFW_PRESS) {
-		double x = 0;
-		double y = 0;
-		glfwGetCursorPos(window, &x, &y);
+		float x = 0;
+		float y = 0;
+		lodge_window_get_cursor(window, &x, &y);
 		int win_w = 0;
 		int win_h = 0;
-		glfwGetWindowSize(window, &win_w, &win_h);
+		lodge_window_get_size(window, &win_w, &win_h);
 		/* Convert screen space => game space. */
 		game->mouse_pos[0] = x * (VIEW_WIDTH / (float)win_w);
 		game->mouse_pos[1] = VIEW_HEIGHT - y * (VIEW_HEIGHT / (float)win_h);
@@ -446,10 +446,10 @@ void game_mousebutton_callback(lodge_window_t window, int button, int action, in
 	}
 }
 
-void game_console_init(struct console* c, struct env *env)
+void game_console_init(struct console *c, struct env* env)
 {
 	/* Set up game-specific console variables. */
-	env_bind_1f(c, "graphics_detail", &(game->graphics_detail));
+	env_bind_1f(env, "graphics_detail", &(game->graphics_detail));
 }
 
 void game_key_callback(lodge_window_t window, int key, int scancode, int action, int mods)
@@ -573,7 +573,7 @@ void game_render(struct graphics* g, float delta_time)
 	}
 
 	/* Text. */
-	monotext_render(&game->txt_debug, &assets->shaders.basic_shader, g);
+	monotext_render(&game->txt_debug, &assets->shaders.basic_shader);
 }
 
 void game_init()
