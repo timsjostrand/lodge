@@ -328,7 +328,7 @@ function(add_game_library game_name)
 
     # Main executable.
     add_executable(engine ${ENGINE_PATH}/main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-    set_property(TARGET engine PROPERTY OUTPUT_NAME ${game_name})
+    set_property(TARGET engine PROPERTY RUNTIME_OUTPUT_NAME "${game_name}")
 
     # Engine depends on game library.
     #add_dependencies(engine ${ENGINE_DEPS})
