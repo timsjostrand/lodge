@@ -354,15 +354,6 @@ function(add_game_library game_name)
         target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:-O2>)
         target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
         #target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-
-        # QUIRK: stb.h requires all these warnings to be silenced, but it seems
-        # warnings have to be set for the source file including the header...
-        set(STB_HEADER vfs.c)
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-maybe-uninitialized ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-strict-aliasing ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-but-set-variable ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-value ")
-        set_property(SOURCE ${STB_HEADER} APPEND_STRING PROPERTY COMPILE_FLAGS "-Wno-unused-function ")
     endif()
 
     # Set compiler flags.
