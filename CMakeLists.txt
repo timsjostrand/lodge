@@ -85,11 +85,7 @@ if(NOT EMSCRIPTEN)
     # Library: cJSON.
     add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
     set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
-    if(ENABLE_SHARED)
-        set(CJSON_LIBRARY cJSON.shared)
-    else()
-        set(CJSON_LIBRARY cJSON)
-    endif()
+    set(CJSON_LIBRARY cjson)
     target_include_directories(${CJSON_LIBRARY} PUBLIC "${ENGINE_PATH}/lib")
     list(APPEND ENGINE_EXTRA_LIBS ${CJSON_LIBRARY}) # NOTE(TS): needed or atlas support, but should be moved to a module
 

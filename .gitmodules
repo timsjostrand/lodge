@@ -12,7 +12,7 @@
 	url = git://repo.or.cz/openal-soft.git
 [submodule "lib/cjson"]
 	path = lib/cjson
-	url = https://github.com/kbranigan/cJSON.git
+	url = https://github.com/DaveGamble/cJSON.git
 [submodule "lib/libarchive"]
 	path = lib/libarchive
 	url = https://github.com/libarchive/libarchive.git
