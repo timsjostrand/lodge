@@ -1,15 +1,10 @@
 # Where to store generated assets files.
 set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
-set(ASSETS_C assets.c)
-set(ASSETS_H assets.h)
 
 # Asset generator executable
-add_executable(generate_assets generate_assets.c)
-
-target_sources(generate_assets
-    PRIVATE
-        "${CMAKE_CURRENT_LIST_DIR}/generate_assets.c"
-        "${ENGINE_PATH}/vfs.c"
+add_executable(generate_assets
+    "${CMAKE_CURRENT_LIST_DIR}/generate_assets.c"
+    "${ENGINE_PATH}/vfs.c"
 )
 
 target_include_directories(generate_assets
@@ -25,7 +20,6 @@ target_link_libraries(generate_assets
     glfw
     lodge-sound
     lodge-collections
-    ${ENGINE_EXTRA_LIBS}
 )
 
 # Compare assets directory, maybe regenerate assets.c
@@ -33,10 +27,6 @@ add_custom_target(assets_check_update ALL
     COMMAND ${CMAKE_COMMAND} -DSRC_DIR=${ASSET_PATH} -DSTAMP_FILE=${ASSETS_STAMP_FILE} -P ${ENGINE_PATH}/cmake/dir_checksum.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Calculating assets checksum...")
-
-# Mark asset files as "generated" so cmake doesn't complain.
-set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
-set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
 
 # Creates assets.{c,h} if ASSETS_STAMP_FILE was changed.
 add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
@@ -54,10 +44,10 @@ add_library(lodge-assets STATIC "")
 
 target_sources(lodge-assets
     PRIVATE
-        "${CMAKE_CURRENT_BINARY_DIR}/${ASSETS_C}"
+        "${CMAKE_BINARY_DIR}/${ASSETS_C}"
         "${ENGINE_PATH}"
     PUBLIC
-        "${CMAKE_CURRENT_BINARY_DIR}/${ASSETS_H}"
+        "${CMAKE_BINARY_DIR}/${ASSETS_H}"
 )
 
 target_include_directories(lodge-assets
@@ -74,6 +64,7 @@ target_link_libraries(lodge-assets
     glfw
     lodge-sound
     lodge-collections
+    lodge-asset-pyxel   # FIXME(TS): these assets should be added with fragments and an asset system instead
     ${ENGINE_EXTRA_LIBS}
 )
 
