@@ -1,6 +1,6 @@
 # lodge-collections
 
-add_library(lodge-collections "")
+add_library(lodge-collections STATIC "")
 
 target_sources(lodge-collections
     PRIVATE

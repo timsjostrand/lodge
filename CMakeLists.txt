@@ -60,6 +60,13 @@ if(ENABLE_SHARED)
     set(BUILD_SHARED_LIBS On)
 endif()
 
+# Inform all modules that assets files are generated later.
+set(ASSETS_C assets.c)
+set(ASSETS_H assets.h)
+# Mark asset files as "generated" so cmake doesn't complain.
+set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
+set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
+
 if(NOT EMSCRIPTEN)
     # Library: GLFW.
     set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
@@ -74,13 +81,20 @@ if(NOT EMSCRIPTEN)
 
     # Library: glew.
     if(ENABLE_SHARED)
-        list(APPEND ENGINE_EXTRA_LIBS glew ${GLEW_LIBRARIES})
+        set(GLEW_LIBRARY glew)
     else()
-        list(APPEND ENGINE_EXTRA_LIBS glew_s ${GLEW_LIBRARIES})
+        set(GLEW_LIBRARY glew_s)
     endif()
+    list(APPEND ENGINE_EXTRA_LIBS glew_s ${GLEW_LIBRARIES})
     set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
     add_subdirectory(${ENGINE_PATH}/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
     list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/glew/include)
+    target_include_directories(${GLEW_LIBRARY}
+        PRIVATE
+            "${ENGINE_PATH}"
+        PUBLIC
+            "${ENGINE_PATH}/lib/glew/include"
+    )
 
     # Library: cJSON.
     add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
@@ -276,9 +290,6 @@ function(add_game_library game_name)
         endif()
     endif()
 
-    # Generate assets.{c,h} if necessary.
-    add_dependencies(${game_name} generate_assets_do)
-
     # Compile with console output support?
     if(ENABLE_CONSOLE)
         target_compile_definitions(${game_name} PRIVATE CONSOLE_ENABLE)
@@ -325,7 +336,6 @@ function(add_game_library game_name)
         target_compile_definitions(engine PRIVATE LOAD_SHARED)
     endif()
     target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-    #target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
     # Console capture stdout support
     if(ENABLE_CONSOLE)
@@ -337,7 +347,6 @@ function(add_game_library game_name)
         # DEBUG: Lightweight buffer overflow detection.
         target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:-O2>)
         target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-        #target_compile_definitions(generate_assets PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
     endif()
 
     # Set compiler flags.
