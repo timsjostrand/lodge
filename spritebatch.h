@@ -2,12 +2,15 @@
 #define _SPRITEBATCH_H
 
 #include "math4.h"
-#include "graphics.h"
 
 #define SPRITEBATCH_BUFFER_CAPACITY 30720000
 #define SPRITEBATCH_CHUNK 3072000
 #define SPRITEBATCH_VERTEX_SIZE (5 * sizeof(GLfloat))
 
+struct shader;
+
+typedef float GLfloat;
+typedef unsigned int GLuint;
 typedef int(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b);
 
 struct spritebatch
@@ -23,7 +26,7 @@ struct spritebatch
 	GLfloat* gpu_vertices;
 };
 
-void spritebatch_create(struct spritebatch* batch);
+struct spritebatch* spritebatch_create();
 void spritebatch_destroy(struct spritebatch* batch);
 void spritebatch_begin(struct spritebatch* batch);
 void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_pos, vec2 tex_bounds);

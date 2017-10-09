@@ -2,7 +2,6 @@
 #define _TILES_H
 
 #include "math4.h"
-#include "graphics.h"
 #include "atlas.h"
 #include "animatedsprites.h"
 

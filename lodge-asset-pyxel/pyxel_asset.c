@@ -12,6 +12,7 @@
 #include "pyxel_asset.h"
 #include "texture.h"
 #include "util_reload.h"
+#include "graphics.h"
 
 static int pyxel_asset_init_atlas(struct atlas *atlas, struct pyxel *pyxel)
 {

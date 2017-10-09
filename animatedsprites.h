@@ -2,7 +2,6 @@
 #define _ANIMATEDSPRITES_H
 
 #include "math4.h"
-#include "graphics.h"
 #include "spritebatch.h"
 #include "log.h"
 
@@ -12,9 +11,6 @@
 #define animatedsprites_error(...) errorf("Animbatch", __VA_ARGS__)
 
 struct atlas;
-
-typedef float GLfloat;
-typedef unsigned int GLuint;
 
 struct anim
 {
@@ -43,7 +39,7 @@ struct sprite
 struct animatedsprites
 {
 	struct sprite* sprites_todraw[ANIMATEDSPRITES_MAX_SPRITES];
-	struct spritebatch spritebatch;
+	struct spritebatch* spritebatch;
 	int sprite_todraw_count;
 };
 

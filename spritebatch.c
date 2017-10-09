@@ -8,14 +8,17 @@
 #include <stdio.h>
 #include <GL/glew.h>
 
+#include "shader.h"
 #include "spritebatch.h"
 #include "color.h"
 
 #define STRIDE 5
 #define CURRENT_SPRITE batch->sprite_count * STRIDE * 6
 
-void spritebatch_create(struct spritebatch* batch)
+struct spritebatch* spritebatch_create()
 {
+	struct spritebatch* batch = (struct spritebatch*)malloc(sizeof(struct spritebatch));
+
 	batch->offset_stream = 0;
 	batch->offset_draw = 0;
 
@@ -33,12 +36,16 @@ void spritebatch_create(struct spritebatch* batch)
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *) (sizeof(GLfloat) * 3));	// Texcoord
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	return batch;
 }
 
 void spritebatch_destroy(struct spritebatch* batch)
 {
 	glDeleteBuffers(1, &batch->vbo);
 	glDeleteVertexArrays(1, &batch->vao);
+
+	free(batch);
 }
 
 void spritebatch_begin(struct spritebatch* batch)
