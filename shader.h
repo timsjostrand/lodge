@@ -31,7 +31,7 @@
 #define UNIFORMS_MAX                64
 
 struct uniform {
-	const char  name[SHADER_UNIFORM_NAME_MAX_LEN];
+	char		name[SHADER_UNIFORM_NAME_MAX_LEN];
     GLint       id;
     int         datatype;
 

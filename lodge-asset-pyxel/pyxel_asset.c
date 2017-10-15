@@ -84,7 +84,7 @@ uint32_t pyxel_asset_blend_alpha(uint32_t top, uint32_t bottom)
 #endif
 }
 
-static int pyxel_asset_layers_blend(uint32_t (**bufs)[PYXEL_LAYERS_MAX], size_t buf_sizes[PYXEL_LAYERS_MAX],
+static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_count,
 		void **out, size_t *out_size, int *out_width, int *out_height)
 {
 	int width = 0;
@@ -93,7 +93,7 @@ static int pyxel_asset_layers_blend(uint32_t (**bufs)[PYXEL_LAYERS_MAX], size_t 
 	uint32_t *final = NULL;
 
 	/* Unpack raw image data form all PNG files. */
-	for(int i=0; i<PYXEL_LAYERS_MAX; i++) {
+	for(int i=0; i<buf_count; i++) {
 		if(bufs[i] == NULL || buf_sizes[i] == 0) {
 			continue;
 		}
@@ -162,7 +162,7 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 				1,
 				pyxel.anims[i].base_tile,
 				pyxel.anims[i].length,
-				pyxel.anims[i].frame_duration);
+				(float)pyxel.anims[i].frame_duration);
 
 		pyxel_debug("Parsed animation \"%s\" (%d => %d, %.0f ms)\n",
 				asset->anim_names[i],
@@ -212,7 +212,7 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 	int blend_width = 0;
 	int blend_height = 0;
 	size_t blend_size = 0;
-	if(pyxel_asset_layers_blend(&tex_bufs, tex_sizes, &blend_buf, &blend_size,
+	if(pyxel_asset_layers_blend(tex_bufs, tex_sizes, asset->layers_count, &blend_buf, &blend_size,
 			&blend_width, &blend_height) != PYXEL_OK) {
 		pyxel_error("Could not blend layers\n");
 		goto bail;

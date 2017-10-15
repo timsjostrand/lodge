@@ -22,25 +22,21 @@ endif()
 
 # MSVC compiler settings.
 if(MSVC)
-    # More warnings.
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /W3")
-    # Disable "unsafe" functions that redirects to Microsoft-specific
-    # implementations.
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /D_CRT_SECURE_NO_WARNINGS")
-    # Disable warning C4996: 'x': This function or variable may be unsafe. Consider using 'x_s' instead.
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /wd4996")
-    # Enable error C4020: 'function': too many actual parameters
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4020")
-    # Enable error C4022: 'function' : pointer mismatch for actual parameter 'number'
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4022")
-    # Enable error C4098: 'function': 'void' function returning a value
-    set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4098")
-    # Enable error C4047: "differs in levels of indirection" (trying to pass ptr** instead of ptr*)
-    # DISABLED BECAUSE STB.H
-    #set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4047")
-    # Enable error C4024: 'function' : different types for formal and actual parameter 'number'
-    # DISABLED BECAUSE STB.H
-    #set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} /we4024")
+    set(MSVC_COMPILER_FLAGS
+        "/W3"                           # More warnings.
+        "/D_CRT_SECURE_NO_WARNINGS"     # Disable "unsafe" functions that redirects to Microsoft-specific implementations.
+        "/wd4996"                       # 'x': This function or variable may be unsafe. Consider using 'x_s' instead.
+        "/we4020"                       # 'function': too many actual parameters
+        "/we4022"                       # 'function' : pointer mismatch for actual parameter 'number'
+        "/we4098"                       # 'function': 'void' function returning a value
+        "/we4047"                       # "differs in levels of indirection" (trying to pass ptr** instead of ptr*)
+        "/we4024"                       # 'function' : different types for formal and actual parameter 'number'
+        "/we4029"                       # declared formal parameter list different from declaration
+    )
+    
+    foreach(flag ${MSVC_COMPILER_FLAGS})
+        set(ENGINE_COMPILER_FLAGS "${ENGINE_COMPILER_FLAGS} ${flag}")
+    endforeach()
 endif()
 
 # Clang compiler settings.
