@@ -85,13 +85,10 @@ if(NOT EMSCRIPTEN)
     else()
         set(GLEW_LIBRARY glew_s)
     endif()
-    list(APPEND ENGINE_EXTRA_LIBS glew_s ${GLEW_LIBRARIES})
+    list(APPEND ENGINE_EXTRA_LIBS ${GLEW_LIBRARY} ${GLEW_LIBRARIES})
     set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
     add_subdirectory(${ENGINE_PATH}/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
-    list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/glew/include)
     target_include_directories(${GLEW_LIBRARY}
-        PRIVATE
-            "${ENGINE_PATH}"
         PUBLIC
             "${ENGINE_PATH}/lib/glew/include"
     )

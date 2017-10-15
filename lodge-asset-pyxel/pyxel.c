@@ -13,11 +13,11 @@
 #include "pyxel.h"
 #include "str.h"
 
-static int pyxel_parse_str(char *dst, cJSON *item, const char (*key)[PYXEL_STR_MAX]);
+static int pyxel_parse_str(char *dst, cJSON *item, const char *key);
 static int pyxel_parse_int(int *dst, cJSON *item, const char *key);
 static int pyxel_parse_int_from(int *dst, cJSON *value);
 
-static int pyxel_parse_str(char *dst, cJSON *item, const char (*key)[PYXEL_STR_MAX])
+static int pyxel_parse_str(char *dst, cJSON *item, const char *key)
 {
 	if(item == NULL) {
 		pyxel_error("item == NULL\n");
@@ -189,7 +189,7 @@ static int pyxel_parse_doc_data(struct pyxel *pyxel, const char *data)
 	for(int i=0; i<pyxel->layers_count; i++) {
 		/* Parse iterated layer. */
 		cJSON *layer = cJSON_GetArrayItem(layers, i);
-		PYXEL_OK_OR_BAIL(pyxel_parse_str(&pyxel->layers[i].name, layer, "name"));
+		PYXEL_OK_OR_BAIL(pyxel_parse_str(pyxel->layers[i].name, layer, "name"));
 	}
 
 	/* "animations" branch. */
@@ -206,7 +206,7 @@ static int pyxel_parse_doc_data(struct pyxel *pyxel, const char *data)
 	for(int i=0; i<pyxel->anims_count; i++) {
 		/* Parse iterated animation. */
 		cJSON *anim_leaf = cJSON_GetArrayItem(anims, i);
-		PYXEL_OK_OR_BAIL(pyxel_parse_str(&pyxel->anims[i].name, anim_leaf, "name"));
+		PYXEL_OK_OR_BAIL(pyxel_parse_str(pyxel->anims[i].name, anim_leaf, "name"));
 
 		/* Sanity check for "frameDurationMultipliers". */
 		pyxel_frame_duration_multipliers_check(anim_leaf, &pyxel->anims[i].name);
@@ -231,7 +231,7 @@ int pyxel_load(struct pyxel *pyxel, void *data, size_t data_len)
 	char doc_data[PYXEL_DOC_DATA_MAX] = { 0 };
 	if(pyxel_archive_extract(data, data_len,
 				"docData.json",
-				&doc_data, sizeof(doc_data)) != PYXEL_OK) {
+				doc_data, sizeof(doc_data)) != PYXEL_OK) {
 		pyxel_error("Could not extract docData.json\n");
 		return PYXEL_ERROR;
 	}
@@ -261,7 +261,7 @@ int pyxel_archive_file_size(void *data, const size_t data_len, const char *filen
 	}
 
 	/* Extract entry. */
-	*size = archive_entry_size(entry);
+	*size = (size_t)archive_entry_size(entry);
 
 	/* Cleanup. */
 	archive_read_free(a);

@@ -193,7 +193,7 @@ void shader_uniforms_relocate(struct shader *s)
 /**
  * Find the next unused uniform index in this shader.
  */
-int shader_uniform_idx_next(struct shader *s)
+static int shader_uniform_idx_next(struct shader *s)
 {
 	for(int i=0; i<UNIFORMS_MAX; i++) {
 		if(s->uniforms[i] == NULL) {
@@ -203,7 +203,7 @@ int shader_uniform_idx_next(struct shader *s)
 	return -1;
 }
 
-struct uniform* shader_uniform_create(struct shader *s, const char *name)
+static int shader_uniform_create(struct shader *s, const char *name, struct uniform** out)
 {
 	int index = shader_uniform_idx_next(s);
 	if (index < 0) {
@@ -221,7 +221,9 @@ struct uniform* shader_uniform_create(struct shader *s, const char *name)
 	strcpy(u->name, name);
 	s->uniforms[index] = u;
 
-	return u;
+	*out = u;
+
+	return SHADER_OK;
 }
 
 int shader_uniform_init(struct shader *s, struct uniform* uniform, void* data, int type)
@@ -237,7 +239,12 @@ int shader_uniform_init(struct shader *s, struct uniform* uniform, void* data, i
 
 int shader_uniform(struct shader *s, const char *name, void *data, int type)
 {
-	struct uniform* uniform = shader_uniform_create(s, name);
+	struct uniform* uniform = NULL;
+	int result = shader_uniform_create(s, name, &uniform );
+	if( result != SHADER_OK )
+	{
+		return result;
+	}
 	return shader_uniform_init(s, uniform, data, type);
 }
 
@@ -273,14 +280,24 @@ int shader_uniform_matrix4f(struct shader *s, const char *name, mat4 *data)
 
 void shader_constant_uniform1i(struct shader *s, const char *name, int data)
 {
-	struct uniform* uniform = shader_uniform_create(s, name);
+	struct uniform* uniform = NULL;
+	int result = shader_uniform_create(s, name, &uniform);
+	if( result != SHADER_OK )
+	{
+		return;
+	}
 	memcpy(uniform->constant_data, &data, sizeof(int));
 	shader_uniform_init(s, uniform, (void*)uniform->constant_data, TYPE_VEC_1I);
 }
 
 void shader_constant_uniform4f(struct shader *s, const char *name, vec4 data)
 {
-	struct uniform* uniform = shader_uniform_create(s, name);
+	struct uniform* uniform = NULL;
+	int result = shader_uniform_create(s, name, &uniform);
+	if( result != SHADER_OK )
+	{
+		return;
+	}
 	memcpy(uniform->constant_data, &data, sizeof(float)*4);
 	shader_uniform_init(s, uniform, (void*)uniform->constant_data, TYPE_VEC_4F);
 }
