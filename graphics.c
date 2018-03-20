@@ -38,15 +38,8 @@ struct graphics* graphics_global;
 
 int graphics_opengl_init(struct graphics *g)
 {
-	/* Global transforms. */
-	translate(g->translate, 0.0f, 0.0f, 0.0f);
-	scale(g->scale, 10.0f, 10.0f, 1);
-	rotate_z(g->rotate, 0);
-	ortho(g->projection, 0, g->view_width, g->view_height, 0, -1.0f, 1.0f);
-	transpose_same(g->projection);
-
 	/* OpenGL. */
-	// glViewport( 0, 0, view_width, view_height );
+	//glViewport( 0, 0, view_width, view_height );
 	glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
 
 #ifdef DEPTH

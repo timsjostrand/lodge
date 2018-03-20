@@ -74,10 +74,6 @@ struct graphics {
 	float			delta_time_factor;			/* Delta-time is multiplied with this factor. */
 	GLuint			vbo_rect;					/* Vertex Buffer Object. */
 	GLuint			vao_rect;					/* Vertex Array Object. */
-	mat4			projection;					/* Projection matrix. */
-	mat4			translate;					/* Global translation matrix. */
-	mat4			rotate;						/* Global rotation matrix. */
-	mat4			scale;						/* Global scale matrix. */
 	float			view_width;
 	float			view_height;
 };
