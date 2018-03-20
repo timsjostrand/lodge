@@ -52,13 +52,13 @@ size_t	sound_buf_add_filter(ALshort *buf, const size_t start, const size_t len,
 				filter_t filter);
 
 struct sound_emitter* sound_buf_play_detailed(struct sound *s, const sound_buf_t buf,
-				vec3 pos, vec3 velocity, ALboolean loop, float gain, float pitch,
+				vec3 *pos, vec3 *velocity, ALboolean loop, float gain, float pitch,
 				int uninterruptable);
 struct sound_emitter* sound_buf_play_pitched(struct sound *s, const sound_buf_t buf,
-				vec3 pos, float pitch_range);
+				vec3 *pos, float pitch_range);
 struct sound_emitter* sound_buf_play_music(struct sound *s, const sound_buf_t buf,
 				float gain);
-struct sound_emitter* sound_buf_play(struct sound *s, const sound_buf_t buf, vec3 pos);
+struct sound_emitter* sound_buf_play(struct sound *s, const sound_buf_t buf, vec3 *pos);
 
 int		sound_src_stop(sound_src_t src);
 int		sound_src_pitch(sound_buf_t buf, float pitch);
