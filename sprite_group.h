@@ -8,7 +8,7 @@
 struct sprite_group
 {
 	vec3			position;
-	vec2			scale;
+	vec3			scale;
 	struct sprite	sprites[SPRITE_GROUP_MAX_SPRITES];
 	struct sprite	draw_sprites[SPRITE_GROUP_MAX_SPRITES];
 	unsigned int	sprites_count;
