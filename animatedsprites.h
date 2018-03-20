@@ -30,7 +30,7 @@ struct anim_state
 struct sprite
 {
 	vec3 position;
-	vec2 scale;
+	vec3 scale;
 
 	const struct anim *anim;
 	struct anim_state state;

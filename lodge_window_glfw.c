@@ -265,6 +265,12 @@ void lodge_window_set_userdata(lodge_window_t window, void* userdata)
 	glfw_window->userdata = userdata;
 }
 
+void lodge_window_set_cursor_mode(lodge_window_t window, int value)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	glfwSetInputMode(glfw_window->window, GLFW_CURSOR, value);
+}
+
 void* lodge_window_get_userdata(lodge_window_t window)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
@@ -286,6 +292,12 @@ void lodge_window_get_cursor(lodge_window_t window, float* x, float* y)
 
 	*x = (float)tmp_x;
 	*y = (float)tmp_y;
+}
+
+int lodge_window_is_focused(lodge_window_t window)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	return glfwGetWindowAttrib(glfw_window->window, GLFW_FOCUSED);
 }
 
 double lodge_window_get_time()
