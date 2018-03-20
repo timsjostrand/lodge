@@ -10,188 +10,275 @@
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <float.h>
 
 #include "math4.h"
 
 #define PRINTF_4F "% 8f\t% 8f\t% 8f\t% 8f"
+#define PRINTF_3F "% 8f\t% 8f\t% 8f"
 
-void printm(mat4 m)
+void mat4_print(const mat4 m)
 {
-	printf(PRINTF_4F "\n", m[0],  m[1],  m[2],	m[3]);
-	printf(PRINTF_4F "\n", m[4],  m[5],  m[6],	m[7]);
-	printf(PRINTF_4F "\n", m[8],  m[9],  m[10], m[11]);
-	printf(PRINTF_4F "\n", m[12], m[13], m[14], m[15]);
+	printf(PRINTF_4F "\n", m.m[0],  m.m[1],  m.m[2],	m.m[3]);
+	printf(PRINTF_4F "\n", m.m[4],  m.m[5],  m.m[6],	m.m[7]);
+	printf(PRINTF_4F "\n", m.m[8],  m.m[9],  m.m[10],	m.m[11]);
+	printf(PRINTF_4F "\n", m.m[12], m.m[13], m.m[14],	m.m[15]);
 }
 
-void printv(vec4 v)
+void mat4_zero(mat4 *m)
 {
-	printf(PRINTF_4F "\n", v[0], v[1], v[2], v[3]);
+	memset(m, 0, sizeof(mat4));
 }
 
-/**
- *
- * param m
- * param l Left
- * param r Right
- * param t Top
- * param b Bottom
- * param n Near
- * param f Far
- */
-void ortho(mat4 m, float l, float r, float t, float b, float n, float f)
+mat4 mat4_ortho(float left, float right, float top, float bottom, float nearZ, float farZ)
 {
-	m[0]  = 2/(r-l); m[1]  =	   0; m[2]	=		   0; m[3]	= -((r+l)/(r-l));
-	m[4]  =		  0; m[5]  = 2/(t-b); m[6]	=		   0; m[7]	= -((t+b)/(t-b));
-	m[8]  =		  0; m[9]  =	   0; m[10] = (-2)/(f-n); m[11] = -((f+n)/(f-n));
-	m[12] =		  0; m[13] =	   0; m[14] =		   0; m[15] =			   1;
+	float ral = right + left;
+	float rsl = right - left;
+	float tab = top + bottom;
+	float tsb = top - bottom;
+	float fan = farZ + nearZ;
+	float fsn = farZ - nearZ;
+	
+	mat4 m = {
+		2.0f / rsl, 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f / tsb, 0.0f, 0.0f,
+		0.0f, 0.0f, -2.0f / fsn, 0.0f,
+		-ral / rsl, -tab / tsb, -fan / fsn, 1.0f
+	};
+					 
+	return m;
+#if 0
+	mat4 m = {
+		2/(r-l),			0.0f,				0.0f,			0.0f,
+		0.0f,				2/(t-b),			0.0f,			0.0f,
+		0.0f,				0.0f,				(-2)/(f-n),		0.0f,
+		-((r+l)/(r-l)),		-((t+b)/(t-b)),		-((f+n)/(f-n)), 1.0f
+	};
+	return m;
+#endif
 }
 
-void identity(mat4 m)
+mat4 mat4_frustum(float left, float right, float bottom, float top, float near, float far)
 {
-	m[0]  = 1; m[1]  = 0; m[2]	= 0; m[3]  = 0;
-	m[4]  = 0; m[5]  = 1; m[6]	= 0; m[7]  = 0;
-	m[8]  = 0; m[9]  = 0; m[10] = 1; m[11] = 0;
-	m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
+	float ral = right + left;
+	float rsl = right - left;
+	float tsb = top - bottom;
+	float tab = top + bottom;
+	float fan = near + far;
+	float fsn = far - near;
+	
+	mat4 m = {
+		2.0f * near / rsl,		0.0f,				0.0f,							0.0f,
+		0.0f,					2.0f * near / tsb,	0.0f,							0.0f,
+		ral / rsl,				tab / tsb,			-fan / fsn,						-1.0f,
+		0.0f,					0.0f,				(-2.0f * far * near) / fsn,		0.0f
+	};
+
+	return m;
 }
 
-void translate(mat4 m, float x, float y, float z)
+mat4 mat4_make( float m00, float m01, float m02, float m03,
+	float m10, float m11, float m12, float m13,
+	float m20, float m21, float m22, float m23,
+	float m30, float m31, float m32, float m33)
 {
-	m[0]  = 1; m[1]  = 0; m[2]	= 0; m[3]  = x;
-	m[4]  = 0; m[5]  = 1; m[6]	= 0; m[7]  = y;
-	m[8]  = 0; m[9]  = 0; m[10] = 1; m[11] = z;
-	m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
+	mat4 m = {
+		m00, m01, m02, m03,
+		m10, m11, m12, m13,
+		m20, m21, m22, m23,
+		m30, m31, m32, m33
+	};
+	return m; 
 }
 
-void mult_vec4(vec4 v, const mat4 m, const vec4 a)
+mat4 mat4_perspective(float fov_y, float ratio, float near, float far)
 {
-	v[0] = m[0]  * a[0] + m[1]  * a[1] + m[2]  * a[2] + m[3]  * a[3];
-	v[1] = m[4]  * a[0] + m[5]  * a[1] + m[6]  * a[2] + m[7]  * a[3];
-	v[2] = m[8]  * a[0] + m[9]  * a[1] + m[10] * a[2] + m[11] * a[3];
-	v[3] = m[12] * a[0] + m[13] * a[1] + m[14] * a[2] + m[15] * a[3];
+	float cotan = 1.0f / tanf(fov_y / 2.0f);
+	
+	mat4 m = {
+		cotan / ratio,	0.0f,		0.0f,									0.0f,
+		0.0f,			cotan,		0.0f,									0.0f,
+		0.0f,			0.0f,		(far + near) / (near - far),			-1.0f,
+		0.0f,			0.0f,		(2.0f * far * near) / (near - far),		0.0f
+	};
+	return m;
 }
 
-void translatev(mat4 m, vec4 v)
+mat4 mat4_lookat(const vec3 eye_pos, const vec3 lookat_pos, const vec3 up)
 {
-	translate(m, xyz(v));
+	vec3 n = vec3_norm(vec3_add(eye_pos, vec3_negate(lookat_pos)));
+	vec3 u = vec3_norm(vec3_cross(up, n));
+	vec3 v = vec3_cross(n, u);
+	
+	mat4 m = {
+		u.v[0], v.v[0], n.v[0], 0.0f,
+		u.v[1], v.v[1], n.v[1], 0.0f,
+		u.v[2], v.v[2], n.v[2], 0.0f,
+		vec3_dot(vec3_negate(u), eye_pos),
+		vec3_dot(vec3_negate(v), eye_pos),
+		vec3_dot(vec3_negate(n), eye_pos),
+		1.0f
+	};
+	return m;
 }
 
-void scale(mat4 m, float x, float y, float z)
+mat4 mat4_identity()
 {
-	m[0]  = x; m[1]  = 0; m[2]	= 0; m[3]  = 0;
-	m[4]  = 0; m[5]  = y; m[6]	= 0; m[7]  = 0;
-	m[8]  = 0; m[9]  = 0; m[10] = z; m[11] = 0;
-	m[12] = 0; m[13] = 0; m[14] = 0; m[15] = 1;
+	mat4 id;
+	mat4_init_diagonal(&id, 1.0f);
+	return id;
 }
 
-/**
- * Rotate along X axis.
- *
- * param m
- * param a Angle in radians.
- */
-void rotate_x(mat4 m, const float a)
+void mat4_init_diagonal(mat4 *m, float s)
 {
-	m[ 0] = 1; m[ 1] =		 0; m[ 2] =		  0; m[ 3] = 0;
-	m[ 4] = 0; m[ 5] =	cos(a); m[ 6] = -sin(a); m[ 7] = 0;
-	m[ 8] = 0; m[ 9] =	sin(a); m[10] =  cos(a); m[11] = 0;
-	m[12] = 0; m[13] =		 0; m[14] =		  0; m[15] = 1;
+	m->m[0]  = s; m->m[1]  = 0; m->m[2]	 = 0; m->m[3]  = 0;
+	m->m[4]  = 0; m->m[5]  = s; m->m[6]	 = 0; m->m[7]  = 0;
+	m->m[8]  = 0; m->m[9]  = 0; m->m[10] = s; m->m[11] = 0;
+	m->m[12] = 0; m->m[13] = 0; m->m[14] = 0; m->m[15] = s;
 }
 
-/**
- * Rotate along Y axis.
- *
- * param m
- * param a Angle in radians.
- */
-void rotate_y(mat4 m, const float a)
+mat4 mat4_translation(float x, float y, float z)
 {
-	m[ 0] =  cos(a); m[ 1] = 0; m[ 2] = sin(a); m[ 3] = 0;
-	m[ 4] =		  0; m[ 5] = 1; m[ 6] =		 0; m[ 7] = 0;
-	m[ 8] = -sin(a); m[ 9] = 0; m[10] = cos(a); m[11] = 0;
-	m[12] =		  0; m[13] = 0; m[14] =		 0; m[15] = 1;
+	mat4 m = mat4_identity();
+	m.m[12] = x;
+	m.m[13] = y;
+	m.m[14] = z;
+	return m;
 }
 
-/**
- * Rotate along Z axis.
- *
- * param m
- * param a Angle in radians.
- */
-void rotate_z(mat4 m, const float a)
+mat4 mat4_scaling(float sx, float sy, float sz)
 {
-	m[ 0] = cos(a); m[ 1] = -sin(a); m[ 2] = 0; m[ 3] = 0;
-	m[ 4] = sin(a); m[ 5] =  cos(a); m[ 6] = 0; m[ 7] = 0;
-	m[ 8] =		 0; m[ 9] =		  0; m[10] = 1; m[11] = 0;
-	m[12] =		 0; m[13] =		  0; m[14] = 0; m[15] = 1;
+	mat4 m = mat4_identity();
+	m.m[0] = sx;
+	m.m[5] = sy;
+	m.m[10] = sz;
+	return m;
 }
 
-void scalev(mat4 m, vec4 v)
+mat4 mat4_translate(const mat4 m, float x, float y, float z)
 {
-	scale(m, xyz(v));
+	mat4 translation = mat4_translation(x, y, z);
+	return mat4_mult(m, translation);
 }
 
-/**
- * A0	B1	 C2   D3
- * E4	F5	 G6   H7
- * I8	J9	 K10  L11
- * M12	N13  O14  P15
- *
- * param m Output
- * param a Input
- * param b Input
- */
-void mult(mat4 m, const mat4 a, const mat4 b)
+mat4 mat4_scale(const mat4 m, float sx, float sy, float sz)
 {
-	// Column 0
-	m[0]  = a[ 0]*b[ 0] + a[ 1]*b[ 4] + a[ 2]*b[ 8] + a[ 3]*b[12];
-	m[4]  = a[ 4]*b[ 0] + a[ 5]*b[ 4] + a[ 6]*b[ 8] + a[ 7]*b[12];
-	m[8]  = a[ 8]*b[ 0] + a[ 9]*b[ 4] + a[10]*b[ 8] + a[11]*b[12];
-	m[12] = a[12]*b[ 0] + a[13]*b[ 4] + a[14]*b[ 8] + a[15]*b[12];
-	// Column 1
-	m[1]  = a[ 0]*b[ 1] + a[ 1]*b[ 5] + a[ 2]*b[ 9] + a[ 3]*b[13];
-	m[5]  = a[ 4]*b[ 1] + a[ 5]*b[ 5] + a[ 6]*b[ 9] + a[ 7]*b[13];
-	m[9]  = a[ 8]*b[ 1] + a[ 9]*b[ 5] + a[10]*b[ 9] + a[11]*b[13];
-	m[13] = a[12]*b[ 1] + a[13]*b[ 5] + a[14]*b[ 9] + a[15]*b[13];
-	// Column 2
-	m[2]  = a[ 0]*b[ 2] + a[ 1]*b[ 6] + a[ 2]*b[10] + a[ 3]*b[14];
-	m[6]  = a[ 4]*b[ 2] + a[ 5]*b[ 6] + a[ 6]*b[10] + a[ 7]*b[14];
-	m[10] = a[ 8]*b[ 2] + a[ 9]*b[ 6] + a[10]*b[10] + a[11]*b[14];
-	m[14] = a[12]*b[ 2] + a[13]*b[ 6] + a[14]*b[10] + a[15]*b[14];
-	// Column 3
-	m[3]  = a[ 0]*b[ 3] + a[ 1]*b[ 7] + a[ 2]*b[11] + a[ 3]*b[15];
-	m[7]  = a[ 4]*b[ 3] + a[ 5]*b[ 7] + a[ 6]*b[11] + a[ 7]*b[15];
-	m[11] = a[ 8]*b[ 3] + a[ 9]*b[ 7] + a[10]*b[11] + a[11]*b[15];
-	m[15] = a[12]*b[ 3] + a[13]*b[ 7] + a[14]*b[11] + a[15]*b[15];
+    mat4 tmp = {
+		m.m[0] * sx, m.m[1] * sx, m.m[2] * sx, m.m[3] * sx,
+		m.m[4] * sy, m.m[5] * sy, m.m[6] * sy, m.m[7] * sy,
+		m.m[8] * sz, m.m[9] * sz, m.m[10] * sz, m.m[11] * sz,
+		m.m[12], m.m[13], m.m[14], m.m[15]
+	};
+    return tmp;
 }
 
-void mult_same(mat4 a, const mat4 b)
+vec4 mat4_mult_vec4(const mat4 m, const vec4 a)
 {
-	mult(a, a, b);
+	vec4 r = {
+		m.m[0]  * a.v[0] + m.m[1]  * a.v[1] + m.m[2]  * a.v[2] + m.m[3]  * a.v[3],
+		m.m[4]  * a.v[0] + m.m[5]  * a.v[1] + m.m[6]  * a.v[2] + m.m[7]  * a.v[3],
+		m.m[8]  * a.v[0] + m.m[9]  * a.v[1] + m.m[10] * a.v[2] + m.m[11] * a.v[3],
+		m.m[12] * a.v[0] + m.m[13] * a.v[1] + m.m[14] * a.v[2] + m.m[15] * a.v[3],
+	};
+	return r;
+}
+
+mat4 mat4_rotation_x(const float radians)
+{
+	float cos = cosf(radians);
+	float sin = sinf(radians);
+	mat4 m = {
+		1.0f,	0.0f,	0.0f,	0.0f,
+		0.0f,	cos,	sin,	0.0f,
+		0.0f,	-sin,	cos,	0.0f,
+		0.0f,	0.0f,	0.0f,	1.0f
+	};
+	return m;
+}
+
+mat4 mat4_rotation_y(const float radians)
+{
+	float cos = cosf(radians);
+	float sin = sinf(radians);
+	mat4 m = {
+		cos,	0.0f,	-sin,	0.0f,
+		0.0f,	1.0f,	0.0f,	0.0f,
+		sin,	0.0f,	cos,	0.0f,
+		0.0f,	0.0f,	0.0f,	1.0f
+	};
+	return m;
+}
+
+mat4 mat4_rotation_z(const float radians)
+{
+	float cos = cosf(radians);
+	float sin = sinf(radians);
+	mat4 m = {
+		cos,	sin,	0.0f,	0.0f,
+		-sin,	cos,	0.0f,	0.0f,
+		0.0f,	0.0f,	1.0f,	0.0f,
+		0.0f,	0.0f,	0.0f,	1.0f
+	};
+	return m;
+}
+
+mat4 mat4_rotate_x(const mat4 m, const float radians)
+{
+	mat4 rotation = mat4_rotation_x(radians);
+	return mat4_mult(m, rotation);
+}
+
+mat4 mat4_rotate_y(const mat4 m, const float radians)
+{
+	mat4 rotation = mat4_rotation_y(radians);
+	return mat4_mult(m, rotation);
+}
+
+mat4 mat4_rotate_z(const mat4 m, const float radians)
+{
+	mat4 rotation = mat4_rotation_z(radians);
+	return mat4_mult(m, rotation);
+}
+
+mat4 mat4_mult(const mat4 lhs, const mat4 rhs)
+{
+	mat4 m;
+	
+	m.m[0]  = lhs.m[0] * rhs.m[0]  + lhs.m[4] * rhs.m[1]  + lhs.m[8] * rhs.m[2]   + lhs.m[12] * rhs.m[3];
+	m.m[4]  = lhs.m[0] * rhs.m[4]  + lhs.m[4] * rhs.m[5]  + lhs.m[8] * rhs.m[6]   + lhs.m[12] * rhs.m[7];
+	m.m[8]  = lhs.m[0] * rhs.m[8]  + lhs.m[4] * rhs.m[9]  + lhs.m[8] * rhs.m[10]  + lhs.m[12] * rhs.m[11];
+	m.m[12] = lhs.m[0] * rhs.m[12] + lhs.m[4] * rhs.m[13] + lhs.m[8] * rhs.m[14]  + lhs.m[12] * rhs.m[15];
+	
+	m.m[1]  = lhs.m[1] * rhs.m[0]  + lhs.m[5] * rhs.m[1]  + lhs.m[9] * rhs.m[2]   + lhs.m[13] * rhs.m[3];
+	m.m[5]  = lhs.m[1] * rhs.m[4]  + lhs.m[5] * rhs.m[5]  + lhs.m[9] * rhs.m[6]   + lhs.m[13] * rhs.m[7];
+	m.m[9]  = lhs.m[1] * rhs.m[8]  + lhs.m[5] * rhs.m[9]  + lhs.m[9] * rhs.m[10]  + lhs.m[13] * rhs.m[11];
+	m.m[13] = lhs.m[1] * rhs.m[12] + lhs.m[5] * rhs.m[13] + lhs.m[9] * rhs.m[14]  + lhs.m[13] * rhs.m[15];
+	
+	m.m[2]  = lhs.m[2] * rhs.m[0]  + lhs.m[6] * rhs.m[1]  + lhs.m[10] * rhs.m[2]  + lhs.m[14] * rhs.m[3];
+	m.m[6]  = lhs.m[2] * rhs.m[4]  + lhs.m[6] * rhs.m[5]  + lhs.m[10] * rhs.m[6]  + lhs.m[14] * rhs.m[7];
+	m.m[10] = lhs.m[2] * rhs.m[8]  + lhs.m[6] * rhs.m[9]  + lhs.m[10] * rhs.m[10] + lhs.m[14] * rhs.m[11];
+	m.m[14] = lhs.m[2] * rhs.m[12] + lhs.m[6] * rhs.m[13] + lhs.m[10] * rhs.m[14] + lhs.m[14] * rhs.m[15];
+	
+	m.m[3]  = lhs.m[3] * rhs.m[0]  + lhs.m[7] * rhs.m[1]  + lhs.m[11] * rhs.m[2]  + lhs.m[15] * rhs.m[3];
+	m.m[7]  = lhs.m[3] * rhs.m[4]  + lhs.m[7] * rhs.m[5]  + lhs.m[11] * rhs.m[6]  + lhs.m[15] * rhs.m[7];
+	m.m[11] = lhs.m[3] * rhs.m[8]  + lhs.m[7] * rhs.m[9]  + lhs.m[11] * rhs.m[10] + lhs.m[15] * rhs.m[11];
+	m.m[15] = lhs.m[3] * rhs.m[12] + lhs.m[7] * rhs.m[13] + lhs.m[11] * rhs.m[14] + lhs.m[15] * rhs.m[15];
+	
+	return m;
 }
 
 /**
  * Store the transpose of matrix 'a' in 'm'.
  */
-void transpose(mat4 m, mat4 a)
+mat4 mat4_transpose(const mat4 m)
 {
-	/* Row 0 */
-	m[0]  = a[ 0]; m[1]  = a[ 4]; m[2]	= a[ 8]; m[3]  = a[12];
-	/* Row 1 */
-	m[4]  = a[ 1]; m[5]  = a[ 5]; m[6]	= a[ 9]; m[7]  = a[13];
-	/* Row 2 */
-	m[8]  = a[ 2]; m[9]  = a[ 6]; m[10] = a[10]; m[11] = a[14];
-	/* Row 3 */
-	m[12] = a[ 3]; m[13] = a[ 7]; m[14] = a[11]; m[15] = a[15];
-}
-
-/**
- * Transposes the matrix 'm'.
- */
-void transpose_same_copy(mat4 m)
-{
-	mat4 tmp;
-	transpose(tmp, m);
-	copym(m, tmp);
+	mat4 t = {
+		m.m[ 0],	m.m[ 4],	m.m[ 8],	m.m[12],
+		m.m[ 1],	m.m[ 5],	m.m[ 9],	m.m[13],
+		m.m[ 2],	m.m[ 6],	m.m[10],	m.m[14],
+		m.m[ 3],	m.m[ 7],	m.m[11],	m.m[15],
+	};
+	return t;
 }
 
 /**
@@ -202,191 +289,554 @@ void transpose_same_copy(mat4 m)
  *	for m = n + 1 to N - 1
  *	 swap A(n,m) with A(m,n)
  */
-void transpose_same(mat4 a)
+void mat4_transpose_same(mat4 *m)
 {
 	float tmp;
 	// n=0, m=[1,3]
-	swapf(tmp, a[0*4 + 1], a[1*4 + 0]);
-	swapf(tmp, a[0*4 + 2], a[2*4 + 0]);
-	swapf(tmp, a[0*4 + 3], a[3*4 + 0]);
+	swapf(tmp, m->m[0*4 + 1], m->m[1*4 + 0]);
+	swapf(tmp, m->m[0*4 + 2], m->m[2*4 + 0]);
+	swapf(tmp, m->m[0*4 + 3], m->m[3*4 + 0]);
 	// n=1, m=[2,3]
-	swapf(tmp, a[1*4 + 2], a[2*4 + 1]);
-	swapf(tmp, a[1*4 + 3], a[3*4 + 1]);
+	swapf(tmp, m->m[1*4 + 2], m->m[2*4 + 1]);
+	swapf(tmp, m->m[1*4 + 3], m->m[3*4 + 1]);
 	// n=2, m=[3,3]
-	swapf(tmp, a[2*4 + 3], a[3*4 + 2]);
+	swapf(tmp, m->m[2*4 + 3], m->m[3*4 + 2]);
 }
 
-/**
- * Store the cross product of 'a x b' in 'v'.
- */
-void cross(vec3 v, const vec3 a, const vec3 b)
+vec3 vec3_cross(const vec3 lhs, const vec3 rhs)
 {
-	v[0] = a[1]*b[2] - a[2]*b[1];
-	v[1] = a[2]*b[0] - a[0]*b[2];
-	v[2] = a[0]*b[1] - a[1]*b[0];
+	vec3 v = {
+		lhs.v[1] * rhs.v[2] - lhs.v[2] * rhs.v[1],
+		lhs.v[2] * rhs.v[0] - lhs.v[0] * rhs.v[2],
+		lhs.v[0] * rhs.v[1] - lhs.v[1] * rhs.v[0]
+	};
+	return v;
 }
 
 /**
  * @return The dot product of 'a . b'.
  */
-float dot3v(const vec3 a, const vec3 b)
+float vec3_dot(const vec3 lhs, const vec3 rhs)
 {
-	float total = 0;
-	total += a[0] * b[0];
-	total += a[1] * b[1];
-	total += a[2] * b[2];
-	return total;
+	return lhs.v[0] * rhs.v[0] + lhs.v[1] * rhs.v[1] + lhs.v[2] * rhs.v[2];
 }
 
-void adjugate(mat4 m, const mat4 a)
+vec3 vec3_add(const vec3 left, const vec3 right)
 {
-	m[ 0] = -a[ 7]*a[10]*a[13]+a[ 6]*a[11]*a[13]+a[ 7]*a[ 9]*a[14]-a[ 5]*a[11]*a[14]-a[ 6]*a[ 9]*a[15]+a[ 5]*a[10]*a[15];
-	m[ 1] =  a[ 3]*a[10]*a[13]-a[ 2]*a[11]*a[13]-a[ 3]*a[ 9]*a[14]+a[ 1]*a[11]*a[14]+a[ 2]*a[ 9]*a[15]-a[ 1]*a[10]*a[15];
-	m[ 2] = -a[ 3]*a[ 6]*a[13]+a[ 2]*a[ 7]*a[13]+a[ 3]*a[ 5]*a[14]-a[ 1]*a[ 7]*a[14]-a[ 2]*a[ 5]*a[15]+a[ 1]*a[ 6]*a[15];
-	m[ 3] =  a[ 3]*a[ 6]*a[ 9]-a[ 2]*a[ 7]*a[ 9]-a[ 3]*a[ 5]*a[10]+a[ 1]*a[ 7]*a[10]+a[ 2]*a[ 5]*a[11]-a[ 1]*a[ 6]*a[11];
-	m[ 4] =  a[ 7]*a[10]*a[12]-a[ 6]*a[11]*a[12]-a[ 7]*a[ 8]*a[14]+a[ 4]*a[11]*a[14]+a[ 6]*a[ 8]*a[15]-a[ 4]*a[10]*a[15];
-	m[ 5] = -a[ 3]*a[10]*a[12]+a[ 2]*a[11]*a[12]+a[ 3]*a[ 8]*a[14]-a[ 0]*a[11]*a[14]-a[ 2]*a[ 8]*a[15]+a[ 0]*a[10]*a[15];
-	m[ 6] =  a[ 3]*a[ 6]*a[12]-a[ 2]*a[ 7]*a[12]-a[ 3]*a[ 4]*a[14]+a[ 0]*a[ 7]*a[14]+a[ 2]*a[ 4]*a[15]-a[ 0]*a[ 6]*a[15];
-	m[ 7] = -a[ 3]*a[ 6]*a[ 8]+a[ 2]*a[ 7]*a[ 8]+a[ 3]*a[ 4]*a[10]-a[ 0]*a[ 7]*a[10]-a[ 2]*a[ 4]*a[11]+a[ 0]*a[ 6]*a[11];
-	m[ 8] = -a[ 7]*a[ 9]*a[12]+a[ 5]*a[11]*a[12]+a[ 7]*a[ 8]*a[13]-a[ 4]*a[11]*a[13]-a[ 5]*a[ 8]*a[15]+a[ 4]*a[ 9]*a[15];
-	m[ 9] =  a[ 3]*a[ 9]*a[12]-a[ 1]*a[11]*a[12]-a[ 3]*a[ 8]*a[13]+a[ 0]*a[11]*a[13]+a[ 1]*a[ 8]*a[15]-a[ 0]*a[ 9]*a[15];
-	m[10] = -a[ 3]*a[ 5]*a[12]+a[ 1]*a[ 7]*a[12]+a[ 3]*a[ 4]*a[13]-a[ 0]*a[ 7]*a[13]-a[ 1]*a[ 4]*a[15]+a[ 0]*a[ 5]*a[15];
-	m[11] =  a[ 3]*a[ 5]*a[ 8]-a[ 1]*a[ 7]*a[ 8]-a[ 3]*a[ 4]*a[ 9]+a[ 0]*a[ 7]*a[ 9]+a[ 1]*a[ 4]*a[11]-a[ 0]*a[ 5]*a[11];
-	m[12] =  a[ 6]*a[ 9]*a[12]-a[ 5]*a[10]*a[12]-a[ 6]*a[ 8]*a[13]+a[ 4]*a[10]*a[13]+a[ 5]*a[ 8]*a[14]-a[ 4]*a[ 9]*a[14];
-	m[13] = -a[ 2]*a[ 9]*a[12]+a[ 1]*a[10]*a[12]+a[ 2]*a[ 8]*a[13]-a[ 0]*a[10]*a[13]-a[ 1]*a[ 8]*a[14]+a[ 0]*a[ 9]*a[14];
-	m[14] =  a[ 2]*a[ 5]*a[12]-a[ 1]*a[ 6]*a[12]-a[ 2]*a[ 4]*a[13]+a[ 0]*a[ 6]*a[13]+a[ 1]*a[ 4]*a[14]-a[ 0]*a[ 5]*a[14];
-	m[15] = -a[ 2]*a[ 5]*a[ 8]+a[ 1]*a[ 6]*a[ 8]+a[ 2]*a[ 4]*a[ 9]-a[ 0]*a[ 6]*a[ 9]-a[ 1]*a[ 4]*a[10]+a[ 0]*a[ 5]*a[10];
+	vec3 v = {
+		left.v[0] + right.v[0],
+		left.v[1] + right.v[1],
+		left.v[2] + right.v[2],
+	};
+	return v;
 }
 
-float determinant(const mat4 m)
+vec3 vec3_sub(const vec3 left, const vec3 right)
 {
-	return +m[ 3]*m[ 6]*m[ 9]*m[12]
-		   -m[ 2]*m[ 7]*m[ 9]*m[12]
-		   -m[ 3]*m[ 5]*m[10]*m[12]
-		   +m[ 1]*m[ 7]*m[10]*m[12]
-		   +m[ 2]*m[ 5]*m[11]*m[12]
-		   -m[ 1]*m[ 6]*m[11]*m[12]
-		   -m[ 3]*m[ 6]*m[ 8]*m[13]
-		   +m[ 2]*m[ 7]*m[ 8]*m[13]
-		   +m[ 3]*m[ 4]*m[10]*m[13]
-		   -m[ 0]*m[ 7]*m[10]*m[13]
-		   -m[ 2]*m[ 4]*m[11]*m[13]
-		   +m[ 0]*m[ 6]*m[11]*m[13]
-		   +m[ 3]*m[ 5]*m[ 8]*m[14]
-		   -m[ 1]*m[ 7]*m[ 8]*m[14]
-		   -m[ 3]*m[ 4]*m[ 9]*m[14]
-		   +m[ 0]*m[ 7]*m[ 9]*m[14]
-		   +m[ 1]*m[ 4]*m[11]*m[14]
-		   -m[ 0]*m[ 5]*m[11]*m[14]
-		   -m[ 2]*m[ 5]*m[ 8]*m[15]
-		   +m[ 1]*m[ 6]*m[ 8]*m[15]
-		   +m[ 2]*m[ 4]*m[ 9]*m[15]
-		   -m[ 0]*m[ 6]*m[ 9]*m[15]
-		   -m[ 1]*m[ 4]*m[10]*m[15]
-		   +m[ 0]*m[ 5]*m[10]*m[15];
+	vec3 v = {
+		left.v[0] - right.v[0],
+		left.v[1] - right.v[1],
+		left.v[2] - right.v[2],
+	};
+	return v;
 }
 
-void mult_scalar(mat4 m, const mat4 a, const float s)
+vec3 vec3_mult(const vec3 left, const vec3 right)
 {
-	m[ 0] = a[ 0]*s; m[ 1] = a[ 1]*s; m[ 2] = a[ 2]*s; m[ 3] = a[ 3]*s;
-	m[ 4] = a[ 4]*s; m[ 5] = a[ 5]*s; m[ 6] = a[ 6]*s; m[ 7] = a[ 7]*s;
-	m[ 8] = a[ 8]*s; m[ 9] = a[ 9]*s; m[10] = a[10]*s; m[11] = a[11]*s;
-	m[12] = a[12]*s; m[13] = a[13]*s; m[14] = a[14]*s; m[15] = a[15]*s;
+	vec3 v = {
+		left.v[0] * right.v[0],
+		left.v[1] * right.v[1],
+		left.v[2] * right.v[2],
+	};
+	return v;
 }
 
-void mult_scalar_same(mat4 m, const float s)
+vec3 vec3_mult_scalar(const vec3 lhs, float rhs)
 {
-	mult_scalar(m, m, s);
+	vec3 v = {
+		lhs.v[0] * rhs,
+		lhs.v[1] * rhs,
+		lhs.v[2] * rhs
+	};
+	return v;
 }
 
-void add(mat4 a, const mat4 b)
+vec3 vec3_negate(const vec3 v)
 {
-	a[ 0] += b[ 0]; a[ 1] += b[ 1]; a[ 2] += b[ 2]; a[ 3] += b[ 3];
-	a[ 4] += b[ 4]; a[ 5] += b[ 5]; a[ 6] += b[ 6]; a[ 7] += b[ 7];
-	a[ 8] += b[ 8]; a[ 9] += b[ 9]; a[10] += b[10]; a[11] += b[11];
-	a[12] += b[12]; a[13] += b[13]; a[14] += b[14]; a[15] += b[15];
+	vec3 neg = {
+		-v.v[0],
+		-v.v[1],
+		-v.v[2],
+	};
+	return neg;
 }
 
-/**
- * If one exists, stores the inverse of matrix 'a' in 'm'.
- *
- * @param m Output matrix.
- * @param a Input matrix.
- * @return	-1 if no inverse exists, 0 otherwise.
- */
-int inverse(mat4 m, const mat4 a)
+mat4 mat4_adjugate(const mat4 a)
 {
-	float det = determinant(a);
-	if(det == 0) {
-		return -1;
+	mat4 m = {
+		-a.m[ 7]*a.m[10]*a.m[13]+a.m[ 6]*a.m[11]*a.m[13]+a.m[ 7]*a.m[ 9]*a.m[14]-a.m[ 5]*a.m[11]*a.m[14]-a.m[ 6]*a.m[ 9]*a.m[15]+a.m[ 5]*a.m[10]*a.m[15],
+		 a.m[ 3]*a.m[10]*a.m[13]-a.m[ 2]*a.m[11]*a.m[13]-a.m[ 3]*a.m[ 9]*a.m[14]+a.m[ 1]*a.m[11]*a.m[14]+a.m[ 2]*a.m[ 9]*a.m[15]-a.m[ 1]*a.m[10]*a.m[15],
+		-a.m[ 3]*a.m[ 6]*a.m[13]+a.m[ 2]*a.m[ 7]*a.m[13]+a.m[ 3]*a.m[ 5]*a.m[14]-a.m[ 1]*a.m[ 7]*a.m[14]-a.m[ 2]*a.m[ 5]*a.m[15]+a.m[ 1]*a.m[ 6]*a.m[15],
+		 a.m[ 3]*a.m[ 6]*a.m[ 9]-a.m[ 2]*a.m[ 7]*a.m[ 9]-a.m[ 3]*a.m[ 5]*a.m[10]+a.m[ 1]*a.m[ 7]*a.m[10]+a.m[ 2]*a.m[ 5]*a.m[11]-a.m[ 1]*a.m[ 6]*a.m[11],
+		 a.m[ 7]*a.m[10]*a.m[12]-a.m[ 6]*a.m[11]*a.m[12]-a.m[ 7]*a.m[ 8]*a.m[14]+a.m[ 4]*a.m[11]*a.m[14]+a.m[ 6]*a.m[ 8]*a.m[15]-a.m[ 4]*a.m[10]*a.m[15],
+		-a.m[ 3]*a.m[10]*a.m[12]+a.m[ 2]*a.m[11]*a.m[12]+a.m[ 3]*a.m[ 8]*a.m[14]-a.m[ 0]*a.m[11]*a.m[14]-a.m[ 2]*a.m[ 8]*a.m[15]+a.m[ 0]*a.m[10]*a.m[15],
+		 a.m[ 3]*a.m[ 6]*a.m[12]-a.m[ 2]*a.m[ 7]*a.m[12]-a.m[ 3]*a.m[ 4]*a.m[14]+a.m[ 0]*a.m[ 7]*a.m[14]+a.m[ 2]*a.m[ 4]*a.m[15]-a.m[ 0]*a.m[ 6]*a.m[15],
+		-a.m[ 3]*a.m[ 6]*a.m[ 8]+a.m[ 2]*a.m[ 7]*a.m[ 8]+a.m[ 3]*a.m[ 4]*a.m[10]-a.m[ 0]*a.m[ 7]*a.m[10]-a.m[ 2]*a.m[ 4]*a.m[11]+a.m[ 0]*a.m[ 6]*a.m[11],
+		-a.m[ 7]*a.m[ 9]*a.m[12]+a.m[ 5]*a.m[11]*a.m[12]+a.m[ 7]*a.m[ 8]*a.m[13]-a.m[ 4]*a.m[11]*a.m[13]-a.m[ 5]*a.m[ 8]*a.m[15]+a.m[ 4]*a.m[ 9]*a.m[15],
+		 a.m[ 3]*a.m[ 9]*a.m[12]-a.m[ 1]*a.m[11]*a.m[12]-a.m[ 3]*a.m[ 8]*a.m[13]+a.m[ 0]*a.m[11]*a.m[13]+a.m[ 1]*a.m[ 8]*a.m[15]-a.m[ 0]*a.m[ 9]*a.m[15],
+		-a.m[ 3]*a.m[ 5]*a.m[12]+a.m[ 1]*a.m[ 7]*a.m[12]+a.m[ 3]*a.m[ 4]*a.m[13]-a.m[ 0]*a.m[ 7]*a.m[13]-a.m[ 1]*a.m[ 4]*a.m[15]+a.m[ 0]*a.m[ 5]*a.m[15],
+		 a.m[ 3]*a.m[ 5]*a.m[ 8]-a.m[ 1]*a.m[ 7]*a.m[ 8]-a.m[ 3]*a.m[ 4]*a.m[ 9]+a.m[ 0]*a.m[ 7]*a.m[ 9]+a.m[ 1]*a.m[ 4]*a.m[11]-a.m[ 0]*a.m[ 5]*a.m[11],
+		 a.m[ 6]*a.m[ 9]*a.m[12]-a.m[ 5]*a.m[10]*a.m[12]-a.m[ 6]*a.m[ 8]*a.m[13]+a.m[ 4]*a.m[10]*a.m[13]+a.m[ 5]*a.m[ 8]*a.m[14]-a.m[ 4]*a.m[ 9]*a.m[14],
+		-a.m[ 2]*a.m[ 9]*a.m[12]+a.m[ 1]*a.m[10]*a.m[12]+a.m[ 2]*a.m[ 8]*a.m[13]-a.m[ 0]*a.m[10]*a.m[13]-a.m[ 1]*a.m[ 8]*a.m[14]+a.m[ 0]*a.m[ 9]*a.m[14],
+		 a.m[ 2]*a.m[ 5]*a.m[12]-a.m[ 1]*a.m[ 6]*a.m[12]-a.m[ 2]*a.m[ 4]*a.m[13]+a.m[ 0]*a.m[ 6]*a.m[13]+a.m[ 1]*a.m[ 4]*a.m[14]-a.m[ 0]*a.m[ 5]*a.m[14],
+		-a.m[ 2]*a.m[ 5]*a.m[ 8]+a.m[ 1]*a.m[ 6]*a.m[ 8]+a.m[ 2]*a.m[ 4]*a.m[ 9]-a.m[ 0]*a.m[ 6]*a.m[ 9]-a.m[ 1]*a.m[ 4]*a.m[10]+a.m[ 0]*a.m[ 5]*a.m[10],
+	};
+	return m;
+}
+
+float mat4_determinant(const mat4 m)
+{
+	return +m.m[ 3]*m.m[ 6]*m.m[ 9]*m.m[12]
+		   -m.m[ 2]*m.m[ 7]*m.m[ 9]*m.m[12]
+		   -m.m[ 3]*m.m[ 5]*m.m[10]*m.m[12]
+		   +m.m[ 1]*m.m[ 7]*m.m[10]*m.m[12]
+		   +m.m[ 2]*m.m[ 5]*m.m[11]*m.m[12]
+		   -m.m[ 1]*m.m[ 6]*m.m[11]*m.m[12]
+		   -m.m[ 3]*m.m[ 6]*m.m[ 8]*m.m[13]
+		   +m.m[ 2]*m.m[ 7]*m.m[ 8]*m.m[13]
+		   +m.m[ 3]*m.m[ 4]*m.m[10]*m.m[13]
+		   -m.m[ 0]*m.m[ 7]*m.m[10]*m.m[13]
+		   -m.m[ 2]*m.m[ 4]*m.m[11]*m.m[13]
+		   +m.m[ 0]*m.m[ 6]*m.m[11]*m.m[13]
+		   +m.m[ 3]*m.m[ 5]*m.m[ 8]*m.m[14]
+		   -m.m[ 1]*m.m[ 7]*m.m[ 8]*m.m[14]
+		   -m.m[ 3]*m.m[ 4]*m.m[ 9]*m.m[14]
+		   +m.m[ 0]*m.m[ 7]*m.m[ 9]*m.m[14]
+		   +m.m[ 1]*m.m[ 4]*m.m[11]*m.m[14]
+		   -m.m[ 0]*m.m[ 5]*m.m[11]*m.m[14]
+		   -m.m[ 2]*m.m[ 5]*m.m[ 8]*m.m[15]
+		   +m.m[ 1]*m.m[ 6]*m.m[ 8]*m.m[15]
+		   +m.m[ 2]*m.m[ 4]*m.m[ 9]*m.m[15]
+		   -m.m[ 0]*m.m[ 6]*m.m[ 9]*m.m[15]
+		   -m.m[ 1]*m.m[ 4]*m.m[10]*m.m[15]
+		   +m.m[ 0]*m.m[ 5]*m.m[10]*m.m[15];
+}
+
+mat4 mat4_mult_scalar(const mat4 m, const float s)
+{
+	mat4 r = {
+		 m.m[ 0]*s,	m.m[ 1]*s,	m.m[ 2]*s,	m.m[ 3]*s,
+		 m.m[ 4]*s,	m.m[ 5]*s,	m.m[ 6]*s,	m.m[ 7]*s,
+		 m.m[ 8]*s,	m.m[ 9]*s,	m.m[10]*s,	m.m[11]*s,
+		 m.m[12]*s,	m.m[13]*s,	m.m[14]*s,	m.m[15]*s,
+	};
+	return r;
+}
+
+mat4 mat4_add(const mat4 lhs, const mat4 rhs)
+{
+	mat4 m = {
+		lhs.m[ 0] + rhs.m[ 0], lhs.m[ 1] + rhs.m[ 1], lhs.m[ 2] + rhs.m[ 2], lhs.m[ 3] + rhs.m[ 3],
+		lhs.m[ 4] + rhs.m[ 4], lhs.m[ 5] + rhs.m[ 5], lhs.m[ 6] + rhs.m[ 6], lhs.m[ 7] + rhs.m[ 7],
+		lhs.m[ 8] + rhs.m[ 8], lhs.m[ 9] + rhs.m[ 9], lhs.m[10] + rhs.m[10], lhs.m[11] + rhs.m[11],
+		lhs.m[12] + rhs.m[12], lhs.m[13] + rhs.m[13], lhs.m[14] + rhs.m[14], lhs.m[15] + rhs.m[15],
+	};
+	return m;
+}
+
+mat4 mat4_inverse(const mat4 matrix, int* is_invertable)
+{
+	// m = transposed cofactor matrix
+	float c02070306 = matrix.m[2] * matrix.m[7] - matrix.m[3] * matrix.m[6];
+	float c02110310 = matrix.m[2] * matrix.m[11] - matrix.m[3] * matrix.m[10];
+	float c02150314 = matrix.m[2] * matrix.m[15] - matrix.m[3] * matrix.m[14];
+	float c06110710 = matrix.m[6] * matrix.m[11] - matrix.m[7] * matrix.m[10];
+	float c06150714 = matrix.m[6] * matrix.m[15] - matrix.m[7] * matrix.m[14];
+	float c10151114 = matrix.m[10] * matrix.m[15] - matrix.m[11] * matrix.m[14];
+	mat4 m = {
+		matrix.m[5] * c10151114 + matrix.m[9] * -c06150714 + matrix.m[13] * c06110710, // c0
+		-matrix.m[1] * c10151114 + matrix.m[9] * c02150314 - matrix.m[13] * c02110310, // c4
+		matrix.m[1] * c06150714 - matrix.m[5] * c02150314 + matrix.m[13] * c02070306, // c8
+		-matrix.m[1] * c06110710 + matrix.m[5] * c02110310 - matrix.m[9] * c02070306, // c12
+		0.0f, // c1
+		0.0f, // c5
+		0.0f, // c9
+		0.0f, // c13
+		0.0f, // c2
+		0.0f, // c6
+		0.0f, // c10
+		0.0f, // c14
+		0.0f, // c3
+		0.0f, // c7
+		0.0f, // c11
+		0.0f, // c15
+	};
+	// d = matrix determinant
+	float d = m.m[0] * matrix.m[0] + m.m[1] * matrix.m[4] + m.m[2] * matrix.m[8] + m.m[3] * matrix.m[12];
+	if (fabsf(d) < FLT_EPSILON) {
+		if(is_invertable) {
+			*is_invertable = 0;
+		}
+		return mat4_identity();
 	}
-	// Store adjugate of a in m
-	adjugate(m, a);
-	// Turn m into inverse of a now
-	mult_scalar_same(m, 1/det);
-	return 0;
+	if(is_invertable) {
+		*is_invertable = 1;
+	}
+	// d = 1 / matrix determinant
+	d = 1.0f / d;
+	// m = transposed inverse matrix = transposed cofactor matrix * d
+	float c01070305 = matrix.m[1] * matrix.m[7] - matrix.m[3] * matrix.m[5];
+	float c01110309 = matrix.m[1] * matrix.m[11] - matrix.m[3] * matrix.m[9];
+	float c01150313 = matrix.m[1] * matrix.m[15] - matrix.m[3] * matrix.m[13];
+	float c05110709 = matrix.m[5] * matrix.m[11] - matrix.m[7] * matrix.m[9];
+	float c05150713 = matrix.m[5] * matrix.m[15] - matrix.m[7] * matrix.m[13];
+	float c09151113 = matrix.m[9] * matrix.m[15] - matrix.m[11] * matrix.m[13];
+
+	float c01060205 = matrix.m[1] * matrix.m[6] - matrix.m[2] * matrix.m[5];
+	float c01100209 = matrix.m[1] * matrix.m[10] - matrix.m[2] * matrix.m[9];
+	float c01140213 = matrix.m[1] * matrix.m[14] - matrix.m[2] * matrix.m[13];
+	float c05100609 = matrix.m[5] * matrix.m[10] - matrix.m[6] * matrix.m[9];
+	float c05140613 = matrix.m[5] * matrix.m[14] - matrix.m[6] * matrix.m[13];
+	float c09141013 = matrix.m[9] * matrix.m[14] - matrix.m[10] * matrix.m[13];
+
+	m.m[0] *= d; // c0
+	m.m[1] *= d, // c4
+	m.m[2] *= d; // c8
+	m.m[3] *= d; // c12
+	m.m[4] = (-matrix.m[4] * c10151114 + matrix.m[8] * c06150714 - matrix.m[12] * c06110710) * d; // c1
+	m.m[5] = (matrix.m[0] * c10151114 - matrix.m[8] * c02150314 + matrix.m[12] * c02110310) * d; // c5
+	m.m[6] = (-matrix.m[0] * c06150714 + matrix.m[4] * c02150314 - matrix.m[12] * c02070306) * d; // c9
+	m.m[7] = (matrix.m[0] * c06110710 - matrix.m[4] * c02110310 + matrix.m[8] * c02070306) * d; // c13
+	m.m[8] = (matrix.m[4] * c09151113 - matrix.m[8] * c05150713 + matrix.m[12] * c05110709) * d; // c2
+	m.m[9] = (-matrix.m[0] * c09151113 + matrix.m[8] * c01150313 - matrix.m[12] * c01110309) * d; // c6
+	m.m[10] = (matrix.m[0] * c05150713 - matrix.m[4] * c01150313 + matrix.m[12] * c01070305) * d; // c10
+	m.m[11] = (-matrix.m[0] * c05110709 + matrix.m[4] * c01110309 - matrix.m[8] * c01070305) * d; // c14
+	m.m[12] = (-matrix.m[4] * c09141013 + matrix.m[8] * c05140613 - matrix.m[12] * c05100609) * d; // c3
+	m.m[13] = (matrix.m[0] * c09141013 - matrix.m[8] * c01140213 + matrix.m[12] * c01100209) * d; // c7
+	m.m[14] = (-matrix.m[0] * c05140613 + matrix.m[4] * c01140213 - matrix.m[12] * c01060205) * d; // c11
+	m.m[15] = (matrix.m[0] * c05100609 - matrix.m[4] * c01100209 + matrix.m[8] * c01060205) * d; // c15
+	return m;
 }
 
-float distancef(float x, float y)
+
+vec2 vec2_make(const float x, const float y)
 {
-	return sqrtf((x*x) + (y*y));
+	vec2 v = { x, y };
+	return v;
 }
 
-float distance2f(vec2 a, vec2 b)
+void vec2_init(vec2 *v, const float x, const float y)
 {
-	return distancef(b[0]-a[0], b[0]-a[0]);
+	v->v[0] = x; v->v[1] = y;
 }
 
-/**
- * Calculate the distance between two 3D points.
- **/
-float distance3f(const vec3 a, const vec3 b)
+void vec2_lerp(vec2 *dst, const vec2 src, float t)
 {
-	return sqrt(
-			(a[0]-b[0]) * (a[0]-b[0]) +
-			(a[1]-b[1]) * (a[1]-b[1]) +
-			(a[2]-b[2]) * (a[2]-b[2])
+	dst->v[0] = lerp1f(dst->v[0], src.v[0], t);
+	dst->v[1] = lerp1f(dst->v[1], src.v[1], t);
+}
+
+float vec2_distance(const vec2 a, const vec2 b)
+{
+	return distancef(b.v[0]-a.v[0], b.v[0]-a.v[0]);
+}
+
+vec2 vec2_norm(const vec2 v)
+{
+	float length = vec2_length(v);
+
+	if (length == 0.0f)
+		return v;
+
+	vec2 r = {
+		v.v[0] / length,
+		v.v[1] / length,
+	};
+	return r;
+}
+
+float vec2_length(const vec2 v)
+{
+	return sqrtf(v.v[0]*v.v[0] + v.v[1]*v.v[1]);
+}
+
+float vec2_angle_from_to(const vec2 a, const vec2 b)
+{
+	return atan2f(a.v[0]-b.v[0], a.v[1]-b.v[1]);
+}
+
+vec2 vec2_add(const vec2 lhs, const vec2 rhs)
+{
+	vec2 v = {
+		lhs.v[0] + rhs.v[0],
+		lhs.v[0] + rhs.v[0]
+	};
+	return v;
+}
+
+vec2 vec2_sub(const vec2 lhs, const vec2 rhs)
+{
+	vec2 v = {
+		lhs.v[0] - rhs.v[0],
+		lhs.v[0] - rhs.v[0]
+	};
+	return v;
+}
+
+vec2 vec2_mult(const vec2 lhs, const vec2 rhs)
+{
+	vec2 v = {
+		lhs.v[0] * rhs.v[0],
+		lhs.v[0] * rhs.v[0]
+	};
+	return v;
+}
+
+
+vec3 vec3_make(const float x, const float y, const float z)
+{
+	vec3 v = { x, y, z };
+	return v;
+}
+
+vec3 vec3_zero()
+{
+	return vec3_make(0.0f, 0.0f, 0.0f);
+}
+
+vec3 vec3_ones()
+{
+	return vec3_make(1.0f, 1.0f, 1.0f);
+}
+
+void vec3_init(vec3 *v, const float x, const float y, const float z)
+{
+	v->v[0] = x; v->v[1] = y; v->v[2] = z;
+}
+
+void vec3_print(const vec3 v)
+{
+	printf(PRINTF_3F "\n", v.v[0], v.v[1], v.v[2]);
+}
+
+vec3 vec3_norm(const vec3 v)
+{
+	float length = vec3_length(v);
+
+	if (length == 0.0f)
+		return v;
+
+	vec3 r = {
+		v.v[0] / length,
+		v.v[1] / length,
+		v.v[2] / length,
+	};
+	return r;
+}
+
+vec3 vec3_add3f(const vec3 v, const float x, const float y, const float z)
+{
+	vec3 r = {
+		v.v[0] + x,
+		v.v[1] + y,
+		v.v[2] + z,
+	};
+	return r;
+}
+
+vec3 vec3_sub3f(const vec3 v, const float x, const float y, const float z)
+{
+	vec3 r = {
+		v.v[0] - x,
+		v.v[1] - y,
+		v.v[2] - z,
+	};
+	return r;
+}
+
+vec3 vec3_mult3f(const vec3 v, const float x, const float y, const float z)
+{
+	vec3 r = {
+		v.v[0] * x,
+		v.v[1] * y,
+		v.v[2] * z,
+	};
+	return r;
+}
+
+vec3 vec3_lerp(const vec3 min, const vec3 max, float t)
+{
+	vec3 tmp = {
+		lerp1f(min.v[0], max.v[0], t),
+		lerp1f(min.v[1], max.v[1], t),
+		lerp1f(min.v[2], max.v[2], t)
+	};
+	return tmp;
+}
+
+float vec3_distance(const vec3 a, const vec3 b)
+{
+	return sqrtf(
+		(a.v[0]-b.v[0]) * (a.v[0]-b.v[0]) +
+		(a.v[1]-b.v[1]) * (a.v[1]-b.v[1]) +
+		(a.v[2]-b.v[2]) * (a.v[2]-b.v[2])
 	);
 }
 
-/**
- * @return The length (hypotenuse) of the vector.
- */
-float length2f(const vec2 v)
+float vec3_length(const vec3 v)
 {
-	return sqrt(v[0]*v[0] + v[1]*v[1]);
+	return sqrtf(
+		v.v[0]*v.v[0] +
+		v.v[1]*v.v[1] +
+		v.v[2]*v.v[2]
+	);
 }
 
-/**
- * @return The length (hypotenuse) of the vector.
- */
-float length3f(const vec3 v)
+
+vec4 vec4_make(const float x, const float y, const float z, const float w)
 {
-	return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+	vec4 v = { x, y, z, w };
+	return v;
 }
 
-/**
- * @return The length (hypotenuse) of the vector.
- */
-float length4f(const vec4 v)
+void vec4_init(vec4 *v, const float x, const float y, const float z, const float w)
 {
-	return sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3]);
+	v->v[0] = x; v->v[1] = y; v->v[2] = z; v->v[3] = w;
 }
 
-/**
- * Copy the contents of matrix 'a' into 'm'.
- */
-void copym(mat4 m, const mat4 a)
+float vec4_length(const vec4 v)
 {
-	memcpy(m, a, sizeof(float) * 16);
+	return sqrtf(
+		v.v[0]*v.v[0] +
+		v.v[1]*v.v[1] +
+		v.v[2]*v.v[2] +
+		v.v[3]*v.v[3]
+	);
 }
 
-/**
- * Copy the contents of vector 'a' into 'm'.
- */
-void copyv(vec4 v, const vec4 a)
+void vec4_print(const vec4 v)
 {
-	memcpy(v, a, sizeof(float) * 4);
+	printf(PRINTF_4F "\n", v.v[0], v.v[1], v.v[2], v.v[3]);
+}
+
+
+void quat_init(quat* q, float x, float y, float z, float w)
+{
+	q->q[0] = x;
+	q->q[1] = y;
+	q->q[2] = z;
+	q->q[3] = w;
+}
+
+float quat_length(const quat q)
+{
+	return sqrtf(
+		q.q[0] * q.q[0] +
+		q.q[1] * q.q[1] +
+		q.q[2] * q.q[2] +
+		q.q[3] * q.q[3]
+	);
+}
+
+#if 0
+float quat_angle(const quat q)
+{
+}
+
+vec3 quat_axis(const quat q)
+{
+}
+#endif
+
+quat quat_add(const quat lhs, const quat rhs)
+{
+	quat q = {
+		lhs.q[0] + rhs.q[0],
+		lhs.q[1] + rhs.q[1],
+		lhs.q[2] + rhs.q[2],
+		lhs.q[3] + rhs.q[3]
+	};
+    return q;
+}
+
+quat quat_sub(const quat lhs, const quat rhs)
+{
+	quat q = {
+		lhs.q[0] - rhs.q[0],
+		lhs.q[1] - rhs.q[1],
+		lhs.q[2] - rhs.q[2],
+		lhs.q[3] - rhs.q[3]
+	};
+    return q;
+}
+
+quat quat_mult(const quat lhs, const quat rhs)
+{
+    quat q = {
+		lhs.q[3] * rhs.q[0] +
+		lhs.q[0] * rhs.q[3] +
+		lhs.q[1] * rhs.q[2] -
+		lhs.q[2] * rhs.q[1],
+
+		lhs.q[3] * rhs.q[1] +
+		lhs.q[1] * rhs.q[3] +
+		lhs.q[2] * rhs.q[0] -
+		lhs.q[0] * rhs.q[2],
+
+		lhs.q[3] * rhs.q[2] +
+		lhs.q[2] * rhs.q[3] +
+		lhs.q[0] * rhs.q[1] -
+		lhs.q[1] * rhs.q[0],
+	
+		lhs.q[3] * rhs.q[3] -
+		lhs.q[0] * rhs.q[0] -
+		lhs.q[1] * rhs.q[1] -
+		lhs.q[2] * rhs.q[2]
+	};
+    return q;
+}
+
+quat quat_normalize(const quat q)
+{
+	float scale = 1.0f / quat_length(q);
+	quat out = {
+		q.q[0] * scale, 
+		q.q[1] * scale,
+		q.q[2] * scale,
+		q.q[3] * scale
+	};
+	return out;
+}
+
+
+int sign(int x)
+{
+	return (x > 0) - (x < 0);
+}
+
+int powi(int base, int exp)
+{
+	int result = 1;
+	while (exp) {
+		if(exp & 1) {
+			result *= base;
+		}
+		exp /= 2;
+		base *= base;
+	}
+	return result;
+}
+
+int log2i(unsigned int val)
+{
+	if (val == 0) return UINT_MAX;
+	if (val == 1) return 0;
+	unsigned int ret = 0;
+	while (val > 1) {
+		val >>= 1;
+		ret++;
+	}
+	return ret;
 }
 
 int imax(int a, int b)
@@ -414,150 +864,7 @@ float lerp1f(float min, float max, float t)
 	return (1.0f - t) * min + t * max;
 }
 
-void lerp2f(vec2 dst, const vec2 src, float t)
+float distancef(float x, float y)
 {
-	dst[0] = lerp1f(dst[0], src[0], t);
-	dst[1] = lerp1f(dst[1], src[1], t);
-}
-
-void set2f(vec2 v, const float x, const float y)
-{
-	v[0] = x; v[1] = y;
-}
-
-void set3f(vec3 v, const float x, const float y, const float z)
-{
-	v[0] = x; v[1] = y; v[2] = z;
-}
-
-void set4f(vec4 v, const float x, const float y, const float z, const float w)
-{
-	v[0] = x; v[1] = y; v[2] = z; v[3] = w;
-}
-
-void norm2f(vec2 v)
-{
-	float length = length2f(v);
-
-	if (length == 0.0f)
-		return;
-
-	v[0] /= length;
-	v[1] /= length;
-}
-
-/**
- * @return	The angle between the first and second point in radians.
- */
-float angle_from_to(vec2 a, vec2 b)
-{
-	return atan2f(a[0]-b[0], a[1]-b[1]);
-}
-
-/**
- * NOTE: To add with another vector struct, simply: add3f(dst, xyz(src)).
- */
-void add3f(vec3 dst, const float x, const float y, const float z)
-{
-	dst[0] += x;
-	dst[1] += y;
-	dst[2] += z;
-}
-
-/**
- * NOTE: To add with another vector struct, simply: sub3f(dst, xyz(src)).
- */
-void sub3f(vec3 dst, const float x, const float y, const float z)
-{
-	dst[0] -= x;
-	dst[1] -= y;
-	dst[2] -= z;
-}
-
-/**
- * NOTE: To add with another vector struct, simply: mult3f(dst, xyz(src)).
- */
-void mult3f(vec3 dst, const float x, const float y, const float z)
-{
-	dst[0] *= x;
-	dst[1] *= y;
-	dst[2] *= z;
-}
-
-/**
- * NOTE: To use with another vector struct, simply: add2f(dst, xy_of(src)).
- */
-void add2f(vec2 dst, const float x, const float y)
-{
-	dst[0] += x;
-	dst[1] += y;
-}
-
-/**
- * NOTE: To use with another vector struct, simply: sub2f(dst, xy_of(src)).
- */
-void sub2f(vec2 dst, const float x, const float y)
-{
-	dst[0] -= x;
-	dst[1] -= y;
-}
-
-/**
- * NOTE: To use with another vector struct, simply: mult2f(dst, xy_of(src)).
- */
-void mult2f(vec2 dst, const float x, const float y)
-{
-	dst[0] *= x;
-	dst[1] *= y;
-}
-
-int sign(int x)
-{
-	return (x > 0) - (x < 0);
-}
-
-void add3v(vec3 dst, const vec3 left, const vec3 right)
-{
-	dst[0] = left[0] + right[0];
-	dst[1] = left[1] + right[1];
-	dst[2] = left[2] + right[2];
-}
-
-void sub3v(vec3 dst, const vec3 left, const vec3 right)
-{
-	dst[0] = left[0] - right[0];
-	dst[1] = left[1] - right[1];
-	dst[2] = left[2] - right[2];
-}
-
-void mult3v(vec3 dst, const vec3 left, const vec3 right)
-{
-	dst[0] = left[0] * right[0];
-	dst[1] = left[1] * right[1];
-	dst[2] = left[2] * right[2];
-}
-
-int powi(int base, int exp)
-{
-	int result = 1;
-	while (exp) {
-		if(exp & 1) {
-			result *= base;
-		}
-		exp /= 2;
-		base *= base;
-	}
-	return result;
-}
-
-int log2i(unsigned int val)
-{
-	if (val == 0) return UINT_MAX;
-	if (val == 1) return 0;
-	unsigned int ret = 0;
-	while (val > 1) {
-		val >>= 1;
-		ret++;
-	}
-	return ret;
+	return sqrtf((x*x) + (y*y));
 }
