@@ -241,8 +241,8 @@ void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 	}
 	dst->font = font;
 	dst->shader = shader;
-	set3f(dst->bottom_left, blx, bly, 0.2f);
-	copyv(dst->color, color);
+	vec3_init(&dst->bottom_left, blx, bly, 0.2f);
+	dst->color = color;
 	monotext_update(dst, text, strnlen(text, MONOTEXT_STR_MAX));
 }
 
@@ -324,9 +324,9 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 		int index = 0;
 		int x = 0;
 		int y = dst->height_chars;
-		float blx = dst->bottom_left[0];
-		float bly = dst->bottom_left[1];
-		float blz = dst->bottom_left[2];
+		float blx = dst->bottom_left.v[0];
+		float bly = dst->bottom_left.v[1];
+		float blz = dst->bottom_left.v[2];
 		struct monofont *f = dst->font;
 
 		for(int i=0; i < dst->text_len; i++) {
@@ -370,15 +370,15 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 		GL_OK_OR_RETURN;
 
 		/* Position stream. */
-		GLint posAttrib = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_POSITION);
-		glEnableVertexAttribArray(posAttrib);
-		glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
+		GLint attrib_pos = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_POSITION);
+		glEnableVertexAttribArray(attrib_pos);
+		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
 		GL_OK_OR_RETURN;
 
 		/* Texcoord stream. */
-		GLint texcoordAttrib = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_TEXCOORD);
-		glEnableVertexAttribArray(texcoordAttrib);
-		glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
+		GLint attrib_texcoord = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_TEXCOORD);
+		glEnableVertexAttribArray(attrib_texcoord);
+		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
 				(void*) (3 * sizeof(GLfloat)));
 		GL_OK_OR_RETURN;
 	}
@@ -386,8 +386,6 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 
 /**
  * FIXME: optimize:
- *
- * - transform_final is not really used but required for current sprite shader.
  * - use DrawElements instead of DrawArrays (requires indices array).
  */
 void monotext_render(struct monotext *text, struct shader *s)

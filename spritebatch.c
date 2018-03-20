@@ -91,46 +91,46 @@ void spritebatch_end(struct spritebatch* batch)
 void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_pos, vec2 tex_bounds)
 {
 	// Top-left
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 0] = -0.5f * scale[0] + pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 1] = 0.5f  * scale[1] + pos[1];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 2] = 0.0f + pos[2];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 3] = tex_pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 4] = tex_pos[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 0] = -0.5f * scale.v[0] + pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 1] = 0.5f  * scale.v[1] + pos.v[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 2] = 0.0f + pos.v[2];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 3] = tex_pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 0 + 4] = tex_pos.v[1];
 
 	// Bottom-left
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 0] = -0.5f * scale[0] + pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 1] = -0.5f * scale[1] + pos[1];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 2] = 0.0f + pos[2];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 3] = tex_pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 4] = tex_pos[1] + tex_bounds[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 0] = -0.5f * scale.v[0] + pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 1] = -0.5f * scale.v[1] + pos.v[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 2] = 0.0f + pos.v[2];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 3] = tex_pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 1 + 4] = tex_pos.v[1] + tex_bounds.v[1];
 
 	// Top-right
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 0] = 0.5f * scale[0] + pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 1] = 0.5f * scale[1] + pos[1];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 2] = 0.0f + pos[2];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 3] = tex_pos[0] + tex_bounds[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 4] = tex_pos[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 0] = 0.5f * scale.v[0] + pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 1] = 0.5f * scale.v[1] + pos.v[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 2] = 0.0f + pos.v[2];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 3] = tex_pos.v[0] + tex_bounds.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 2 + 4] = tex_pos.v[1];
 
 	// Top-right
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 0] = 0.5f * scale[0] + pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 1] = 0.5f * scale[1] + pos[1];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 2] = 0.0f + pos[2];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 3] = tex_pos[0] + tex_bounds[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 4] = tex_pos[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 0] = 0.5f * scale.v[0] + pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 1] = 0.5f * scale.v[1] + pos.v[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 2] = 0.0f + pos.v[2];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 3] = tex_pos.v[0] + tex_bounds.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 3 + 4] = tex_pos.v[1];
 
 	// Bottom-left 
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 0] = -0.5f * scale[0] + pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 1] = -0.5f * scale[1] + pos[1];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 2] = 0.0f + pos[2];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 3] = tex_pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 4] = tex_pos[1] + tex_bounds[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 0] = -0.5f * scale.v[0] + pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 1] = -0.5f * scale.v[1] + pos.v[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 2] = 0.0f + pos.v[2];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 3] = tex_pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 4 + 4] = tex_pos.v[1] + tex_bounds.v[1];
 
 	// Bottom-right
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 0] = 0.5f  * scale[0] + pos[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 1] = -0.5f * scale[1] + pos[1];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 2] = 0.0f + pos[2];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 3] = tex_pos[0] + tex_bounds[0];
-	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 4] = tex_pos[1] + tex_bounds[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 0] = 0.5f  * scale.v[0] + pos.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 1] = -0.5f * scale.v[1] + pos.v[1];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 2] = 0.0f + pos.v[2];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 3] = tex_pos.v[0] + tex_bounds.v[0];
+	batch->gpu_vertices[CURRENT_SPRITE + STRIDE * 5 + 4] = tex_pos.v[1] + tex_bounds.v[1];
 
 	batch->sprite_count++;
 }
@@ -175,10 +175,10 @@ void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, GLui
 	GLint uniform_tex = glGetUniformLocation(s->program, "tex");
 	GLint uniform_color = glGetUniformLocation(s->program, "color");
 
-	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, transform);
-	glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, projection);
+	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, transform.m);
+	glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, projection.m);
 	glUniform1i(uniform_tex, 0);
-	glUniform4fv(uniform_color, 1, COLOR_WHITE);
+	glUniform4fv(uniform_color, 1, COLOR_WHITE.v);
 
 	spritebatch_render(batch, s);
 }

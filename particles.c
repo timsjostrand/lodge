@@ -77,11 +77,11 @@ static void particle_init(struct particle *p, struct anim *anim,
 	p->dead = 0;
 	p->age = 0;
 	p->age_max = age_max;
-	set3f(p->v, vx, vy, 0);
+	vec3_init(&p->v, vx, vy, 0);
 
 	/* Init sprite */
-	set3f(p->sprite.position, x, y, 0);
-	set2f(p->sprite.scale, w, h);
+	vec3_init(&p->sprite.position, x, y, 0);
+	vec2_init(&p->sprite.scale, w, h);
 
 	animatedsprites_playanimation(&p->sprite, anim);
 }

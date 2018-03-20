@@ -4,7 +4,7 @@
 #include "math4.h"
 #include "geometry.h"
 
-#define xywh(pos, size) pos[0], pos[1], size[0], size[1]
+#define xywh(pos, size) pos.v[0], pos.v[1], size.v[0], size.v[1]
 
 int collide_rect(const struct rect *a, const struct rect *b);
 int collide_circle(const struct circle *a, const struct circle *b);

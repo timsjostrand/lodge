@@ -33,13 +33,13 @@ void sprite_group_update(struct sprite_group* group)
 		}
 
 		/* Scale to group scale. */
-		mult2f(draw_sprite->scale, xy_of(group->scale));
+		draw_sprite->scale.x *= group->scale.x;
+		draw_sprite->scale.y *= group->scale.y;
 
 		/* Scale offset position. */
 		/* FIXME: is this correct? Also: scale should be vec3 so we can use
 		 * mult3f below... */
-		mult3f(draw_sprite->position, xyz(draw_sprite->scale));
-		add3f(draw_sprite->position, xyz(group->position));
+		draw_sprite->position = vec3_add(vec3_mult(draw_sprite->position, draw_sprite->scale), group->position);
 	}
 }
 
@@ -53,8 +53,8 @@ struct sprite* sprite_group_add_sprite(struct sprite_group* group, struct anim *
 	}
 
 	struct sprite *sprite = &group->sprites[group->sprites_count++];
-	set3f(sprite->position, relx, rely, relz);
-	set2f(sprite->scale, sx, sy);
+	vec3_init(&sprite->position, relx, rely, relz);
+	vec2_init(&sprite->scale, sx, sy);
 	animatedsprites_switchanim(sprite, anim);
 
 	return sprite;

@@ -66,16 +66,16 @@ void animatedsprites_update(struct animatedsprites* animatedsprites, struct atla
 		int index = current_sprite->state.frame_current;
 
 		vec2 tex_pos;
-		tex_pos[0] = (atlas->frames[index].x) / (float)atlas->width;
-		tex_pos[1] = (atlas->frames[index].y) / (float)atlas->height;
+		tex_pos.x = (atlas->frames[index].x) / (float)atlas->width;
+		tex_pos.y = (atlas->frames[index].y) / (float)atlas->height;
 
 		vec2 tex_bounds;
-		tex_bounds[0] = (atlas->frames[index].width) / (float)atlas->width;
-		tex_bounds[1] = (atlas->frames[index].height) / (float)atlas->height;
+		tex_bounds.x = (atlas->frames[index].width) / (float)atlas->width;
+		tex_bounds.y = (atlas->frames[index].height) / (float)atlas->height;
 
 		vec2 scale;
-		scale[0] = atlas->frames[index].width * current_sprite->scale[0];
-		scale[1] = atlas->frames[index].height * current_sprite->scale[1];
+		scale.x = atlas->frames[index].width * current_sprite->scale.x;
+		scale.y = atlas->frames[index].height * current_sprite->scale.y;
 
 		spritebatch_add(animatedsprites->spritebatch, current_sprite->position, scale, tex_pos, tex_bounds);
 	}

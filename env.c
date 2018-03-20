@@ -81,7 +81,7 @@ int env_set_1f(struct env *env, const char *name, const float value)
 	return 0;
 }
 
-int env_bind_2f(struct env *env, const char *name, vec2 v)
+int env_bind_2f(struct env *env, const char *name, vec2 *v)
 {
 	struct env_var *var = env_var_get_by_name(env, name);
 
@@ -100,11 +100,11 @@ int env_bind_2f(struct env *env, const char *name, vec2 v)
 
 	/* "name".x utility setter. */
 	snprintf(cmd_name, ENV_VAR_NAME_MAX, "%s.x", name);
-	env_bind_1f(env, cmd_name, &v[0]);
+	env_bind_1f(env, cmd_name, &v->x);
 
 	/* "name".y utility setter. */
 	snprintf(cmd_name, ENV_VAR_NAME_MAX, "%s.y", name);
-	env_bind_1f(env, cmd_name, &v[1]);
+	env_bind_1f(env, cmd_name, &v->y);
 
 	return 0;
 }
@@ -121,12 +121,12 @@ int env_set_2f(struct env *env, const char *name, const vec2 v)
 		return -1;
 	}
 
-	((float *) var->value)[0] = v[0];
-	((float *) var->value)[1] = v[1];
+	((float *) var->value)[0] = v.v[0];
+	((float *) var->value)[1] = v.v[1];
 	return 0;
 }
 
-int env_bind_3f(struct env *env, const char *name, vec3 v)
+int env_bind_3f(struct env *env, const char *name, vec3 *v)
 {
 	struct env_var *var = env_var_get_by_name(env, name);
 
@@ -143,15 +143,15 @@ int env_bind_3f(struct env *env, const char *name, vec3 v)
 
 	/* "name".x utility setter. */
 	snprintf(cmd_name, ENV_VAR_NAME_MAX, "%s.x", name);
-	env_bind_1f(env, cmd_name, &v[0]);
+	env_bind_1f(env, cmd_name, &v->x);
 
 	/* "name".y utility setter. */
 	snprintf(cmd_name, ENV_VAR_NAME_MAX, "%s.y", name);
-	env_bind_1f(env, cmd_name, &v[1]);
+	env_bind_1f(env, cmd_name, &v->y);
 
 	/* "name".z utility setter. */
 	snprintf(cmd_name, ENV_VAR_NAME_MAX, "%s.z", name);
-	env_bind_1f(env, cmd_name, &v[2]);
+	env_bind_1f(env, cmd_name, &v->z);
 
 	env_var_set(var, name, ENV_VAR_TYPE_3F, v, sizeof(vec3));
 	return 0;
@@ -169,9 +169,9 @@ int env_set_3f(struct env *env, const char *name, const vec3 v)
 		return -1;
 	}
 
-	((float *) var->value)[0] = v[0];
-	((float *) var->value)[1] = v[1];
-	((float *) var->value)[2] = v[2];
+	((float *) var->value)[0] = v.v[0];
+	((float *) var->value)[1] = v.v[1];
+	((float *) var->value)[2] = v.v[2];
 	return 0;
 }
 

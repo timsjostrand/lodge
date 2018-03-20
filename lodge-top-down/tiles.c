@@ -89,12 +89,12 @@ void tiles_think(struct tiles *tiles, vec2 view_offset, struct atlas *atlas, flo
 
 			animatedsprites_add(tiles->batcher, draw_tile);
 
-			float grid_x = (x-1) * tiles->tile_size + tiles->tile_size/2.0f - fmod(view_offset[0], tiles->tile_size);
-			float grid_y = (y-1) * tiles->tile_size + tiles->tile_size/2.0f - fmod(view_offset[1], tiles->tile_size);
+			float grid_x = (x-1) * tiles->tile_size + tiles->tile_size/2.0f - fmod(view_offset.x, tiles->tile_size);
+			float grid_y = (y-1) * tiles->tile_size + tiles->tile_size/2.0f - fmod(view_offset.y, tiles->tile_size);
 
 			/* Get tile at coordinate. */
-			struct anim *type = tiles->get_data_at_pixel_fn(view_offset[0] + grid_x,
-															view_offset[1] + grid_y,
+			struct anim *type = tiles->get_data_at_pixel_fn(view_offset.x + grid_x,
+															view_offset.y + grid_y,
 															tiles->tile_size, tiles->tiles_x, tiles->tiles_y);
 
 			/* Set correct animation. */
@@ -102,10 +102,10 @@ void tiles_think(struct tiles *tiles, vec2 view_offset, struct atlas *atlas, flo
 				animatedsprites_playanimation(draw_tile, type);
 			}
 
-			set2f(draw_tile->scale, 1.0f, 1.0f);
+			vec2_init(&draw_tile->scale, 1.0f, 1.0f);
 
 			/* Move within the viewport. */
-			set3f(draw_tile->position, grid_x, grid_y, 0);
+			vec3_init(&draw_tile->position, grid_x, grid_y, 0);
 		}
 	}
 

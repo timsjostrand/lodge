@@ -37,12 +37,12 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	s->type = 0;
 	s->rotation = 0;
 	s->texture = white_tex;
-	set4f(s->pos, xyz(txt->bottom_left), 0.0f);
-	set4f(s->scale,
+	vec4_init(&s->pos, xyz(txt->bottom_left), 0.0f);
+	vec4_init(&s->scale,
 			txt->font->letter_width  + txt->font->letter_spacing_x + 1,
 			txt->font->letter_height + txt->font->letter_spacing_y,
 			1, 1);
-	set4f(s->color, rgba(CONSOLE_COLOR_CURSOR));
+	vec4_init(&s->color, rgba(CONSOLE_COLOR_CURSOR));
 }
 
 static double timer_elapsed(double since)
@@ -55,18 +55,18 @@ static void console_cursor_think(struct console_cursor *cur)
 	struct basic_sprite *s = &(cur->sprite);
 
 	/* Update cursor X. */
-	s->pos[0] = cur->txt->bottom_left[0] + cur->pos * (cur->txt->font->letter_width + cur->txt->font->letter_spacing_x) + cur->txt->font->letter_spacing_x;
+	s->pos.x = cur->txt->bottom_left.x + cur->pos * (cur->txt->font->letter_width + cur->txt->font->letter_spacing_x) + cur->txt->font->letter_spacing_x;
 
 	/* Blink cursor. */
 	if(timer_elapsed(cur->time_input) <= 700) {
 		/* Solid while writing. */
-		s->color[3] = 1.0f;
+		s->color.a = 1.0f;
 	} else {
 		/* Start blinking when idle. */
 		if(timer_elapsed(cur->time_blink) <= 250) {
-			s->color[3] = 1.0f;
+			s->color.a = 1.0f;
 		} else if(timer_elapsed(cur->time_blink) <= 250+400) {
-			s->color[3] = 0.0f;
+			s->color.a = 0.0f;
 		} else {
 			cur->time_blink = lodge_window_get_time();
 		}
@@ -424,10 +424,10 @@ static void console_env_set(struct console *c, const char *name,
 		}
 		case ENV_VAR_TYPE_2F: {
 			vec2 v;
-			if(str_parse_2f(value, ',', &v[0], &v[1]) != 0) {
+			if(str_parse_2f(value, ',', &v.x, &v.y) != 0) {
 				console_printf(c, "Usage: %s=<FLOAT>,<FLOAT> (now: %g,%g)\n", name,
-						((float *) var->value)[0],
-						((float *) var->value)[1]
+						((vec2 *) var->value)->x,
+						((vec2 *) var->value)->y
 				);
 				return;
 			} else {
@@ -437,11 +437,11 @@ static void console_env_set(struct console *c, const char *name,
 		}
 		case ENV_VAR_TYPE_3F: {
 			vec3 v;
-			if(str_parse_3f(value, ',', &v[0], &v[1], &v[2]) != 0) {
+			if(str_parse_3f(value, ',', &v.x, &v.y, &v.z) != 0) {
 				console_printf(c, "Usage: %s=<F>,<F>,<F> (now: %g,%g,%g)\n", name,
-						((float *) var->value)[0],
-						((float *) var->value)[1],
-						((float *) var->value)[2]
+						((vec3 *) var->value)->x,
+						((vec3 *) var->value)->y,
+						((vec3 *) var->value)->z
 				);
 				return;
 			} else {

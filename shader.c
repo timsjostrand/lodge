@@ -334,11 +334,13 @@ void shader_uniforms_think(struct shader *s, float delta_time)
 			break;
 		}
 		case TYPE_VEC_3F: {
-			glUniform3f(u->id, xyz(((float *) u->data)));
+			vec3 *v = (vec3 *) u->data;
+			glUniform3f(u->id, v->x, v->y, v->z);
 			break;
 		}
 		case TYPE_VEC_4F: {
-			glUniform4f(u->id, xyzw(((float *) u->data)));
+			vec4 *v = (vec4 *) u->data;
+			glUniform4f(u->id, v->x, v->y, v->z, v->w);
 			break;
 		}
 		case TYPE_MAT_4F: {
