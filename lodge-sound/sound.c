@@ -181,7 +181,7 @@ void sound_free(struct sound *s)
  *							buffer, or NULL on error.
  */
 struct sound_emitter* sound_buf_play_detailed(struct sound *s, const sound_buf_t buf,
-		float *pos, float *velocity, ALboolean loop, float gain, float pitch,
+		vec3 *pos, vec3 *velocity, ALboolean loop, float gain, float pitch,
 		int uninterruptable)
 {
 	/* Get available emitter. */
@@ -233,7 +233,7 @@ struct sound_emitter* sound_buf_play_music(struct sound *s, const sound_buf_t bu
  * [1.0-variation, 1.0+variation].
  */
 struct sound_emitter* sound_buf_play_pitched(struct sound *s, const sound_buf_t buf,
-		float *pos, float pitch_range)
+		vec3 *pos, float pitch_range)
 {
 	return sound_buf_play_detailed(s, buf, pos, NULL, AL_FALSE, 1.0f,
 			randr(1.0f - pitch_range, 1.0f + pitch_range), 0);
@@ -243,7 +243,7 @@ struct sound_emitter* sound_buf_play_pitched(struct sound *s, const sound_buf_t 
  * Plays a non-looping sound with zero velocity and default pitch and gain.
  */
 struct sound_emitter* sound_buf_play(struct sound *s, const sound_buf_t buf,
-		float *pos)
+		vec3 *pos)
 {
 	return sound_buf_play_detailed(s, buf, pos, NULL, AL_FALSE, 1.0f, 1.0f, 0);
 }
