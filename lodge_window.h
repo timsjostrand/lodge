@@ -5,6 +5,10 @@
 #define LODGE_WINDOW_MODE_BORDERLESS	1
 #define LODGE_WINDOW_MODE_WINDOWED		2
 
+#define LODGE_CURSOR_MODE_NORMAL		0x00034001
+#define LODGE_CURSOR_MODE_HIDDEN		0x00034002
+#define LODGE_CURSOR_MODE_DISABLED		0x00034003
+
 typedef int lodge_window_t;
 
 typedef void(*lodge_window_create_callback_t)(lodge_window_t window);
@@ -24,6 +28,8 @@ void			lodge_window_set_mode(lodge_window_t window, int window_mode);
 int				lodge_window_get_mode(lodge_window_t window);
 void			lodge_window_toggle_fullscreen(lodge_window_t window);
 
+void			lodge_window_set_cursor_mode(lodge_window_t window, int value);
+
 void			lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback);
 void			lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback);
 void			lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback);
@@ -40,5 +46,6 @@ double			lodge_window_get_time();
 void			lodge_window_get_screen_size(int* width, int* height);
 
 int				lodge_window_is_open(lodge_window_t window);
+int				lodge_window_is_focused(lodge_window_t window);
 
 #endif
