@@ -1,6 +1,6 @@
-project(engine)
+project(engine C)
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.6)
 
 # Import compiler flags defined in another file.
 include(${ENGINE_PATH}/cmake/engine-compiler-flags.cmake)
@@ -324,6 +324,7 @@ function(add_game_library game_name)
     # Main executable.
     add_executable(engine ${ENGINE_PATH}/main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
     set_property(TARGET engine PROPERTY RUNTIME_OUTPUT_NAME "${game_name}")
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT engine)
 
     # Engine depends on game library.
     #add_dependencies(engine ${ENGINE_DEPS})
