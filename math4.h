@@ -5,9 +5,16 @@
 #define M_PI 3.14159265358979323846264338327950288
 #endif
 
-#define xy_of(v) v[0], v[1]
-#define xyz(v) v[0], v[1], v[2]
-#define xyzw(v) v[0], v[1], v[2], v[3]
+#ifndef radians
+#define radians(a)  ((a)*(M_PI/180.0f))
+#endif
+#ifndef degrees
+#define degrees(a)  ((a)*(180.0f/M_PI))
+#endif
+
+#define xy_of(v) v.x, v.y
+#define xyz(v) v.x, v.y, v.z
+#define xyzw(v) v.x, v.y, v.z, v.w
 
 #define swapf(t,a,b) t = a;\
 	a = b; \
@@ -20,77 +27,149 @@
 #define max(x, y) ((x) > (y) ? (x) : (y))
 #endif
 
-typedef float mat4[16];
-typedef float vec2[2];
-typedef float vec3[3];
-typedef float vec4[4];
+union vec2
+{
+	struct { float x, y; };
+	struct { float s, t; };
+	float v[2];
+};
+typedef union vec2 vec2;
 
-void ortho(mat4 m, float left, float right, float top, float bottom, float near, float far);
-void mult(mat4 m, const mat4 a, const mat4 b);
-void mult_vec4(vec4 v, const mat4 m, const vec4 a);
-void mult_same(mat4 a, const mat4 b);
-void mult_scalar(mat4 m, const mat4 a, const float s);
-void mult_scalar_same(mat4 m, const float s);
-void add(mat4 a, const mat4 b);
-void identity(mat4 m);
-void translate(mat4 m, float x, float y, float z);
-void translatev(mat4 m, vec4 v);
-void rotate_x(mat4 m, const float angle);
-void rotate_y(mat4 m, const float angle);
-void rotate_z(mat4 m, const float angle);
-void scale(mat4 m, float x, float y, float z);
-void scalev(mat4 m, vec4 v);
-void transpose(mat4 m, mat4 a);
-void transpose_same(mat4 m);
-void transpose_same_copy(mat4 m);
-void cross(vec3 v, const vec3 a, const vec3 b);
-float dot3v(const vec3 left, const vec3 right);
-int inverse(mat4 m, const mat4 a);
-float determinant(const mat4 m);
-void adjugate(mat4 m, const mat4 a);
-float distancef(float x, float y);
-float distance2f(vec2 a, vec2 b);
-float distance3f(const vec3 a, const vec3 b);
+union vec3
+{
+	struct { float x, y, z; };
+	struct { float r, g, b; };
+	struct { float s, t, p; };
+	float v[3];
+};
+typedef union vec3 vec3;
 
-void add2f(vec2 dst, const float x, const float y);
-void sub2f(vec2 dst, const float x, const float y);
-void mult2f(vec2 dst, const float x, const float y);
+union vec4
+{
+	struct { float x, y, z, w; };
+	struct { float r, g, b, a; };
+	struct { float s, t, p, q; };
+	float v[4];
+};
+typedef union vec4 vec4;
 
-void add3f(vec3 dst, const float x, const float y, const float z);
-void sub3f(vec3 dst, const float x, const float y, const float z);
-void mult3f(vec3 dst, const float x, const float y, const float z);
+union mat4
+{
+	struct
+	{
+		float m00, m01, m02, m03;
+		float m10, m11, m12, m13;
+		float m20, m21, m22, m23;
+		float m30, m31, m32, m33;
+	};
+	float m[16];
+};
+typedef union mat4 mat4;
 
-void add3v(vec3 dst, const vec3 left, const vec3 right);
-void sub3v(vec3 dst, const vec3 left, const vec3 right);
-void mult3v(vec3 dst, const vec3 left, const vec3 right);
+union quat
+{
+	struct { vec3 v; float s; };
+	struct { float x, y, z, w; };
+	float q[4];
+};
+typedef union quat quat;
 
-float length2f(const vec2 v);
-float length3f(const vec3 v);
-float length4f(const vec4 v);
+mat4	mat4_make(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
+mat4	mat4_identity();
+void	mat4_init_identity(mat4 *m);
+void	mat4_init(mat4 *m, float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
+void	mat4_init_diagonal(mat4 *m, float s);
+void	mat4_zero(mat4 *m);
+mat4	mat4_transpose(const mat4 m);
+void	mat4_transpose_same(mat4 *m);
+void	mat4_print(const mat4 m);
 
-float lerp1f(float min, float max, float t);
-void lerp2f(vec2 dst, const vec2 src, float t);
+mat4	mat4_add(const mat4 lhs, const mat4 rhs);
+mat4	mat4_mult(const mat4 lhs, const mat4 rhs);
+mat4	mat4_mult_scalar(const mat4 m, const float s);
+vec4	mat4_mult_vec4(const mat4 lhs, const vec4 rhs);
 
-int imax(int a, int b);
-int imin(int a, int b);
-float clamp(float f, float min, float max);
-float randr(float min, float max);
-float angle_from_to(vec2 a, vec2 b);
+mat4	mat4_ortho(float left, float right, float top, float bottom, float near, float far);
+mat4	mat4_frustum(float left, float right, float bottom, float top, float near, float far);
+mat4	mat4_perspective(float fov, float ratio, float near, float far);
+mat4	mat4_lookat(const vec3 eye_pos, const vec3 lookat_pos, const vec3 up);
 
-void printm(mat4 m);
-void printv(vec4 v);
+mat4	mat4_translation(float x, float y, float z);
+mat4	mat4_scaling(float x, float y, float z);
+mat4	mat4_rotation_x(const float angle);
+mat4	mat4_rotation_y(const float angle);
+mat4	mat4_rotation_z(const float angle);
 
-void copym(mat4 m, const mat4 a);
-void copyv(vec4 v, const vec4 a);
-void set2f(vec2 v, const float x, const float y);
-void set3f(vec3 v, const float x, const float y, const float z);
-void set4f(vec4 v, const float x, const float y, const float z, const float w);
+mat4	mat4_rotate_x(const mat4 m, const float a);
+mat4	mat4_rotate_y(const mat4 m, const float a);
+mat4	mat4_rotate_z(const mat4 m, const float a);
+mat4	mat4_translate(const mat4 m, float x, float y, float z);
+mat4	mat4_scale(const mat4 m, float sx, float sy, float sz);
+mat4	mat4_inverse(const mat4 matrix, int* is_invertible);
+//mat4	mat4_adjugate(const mat4 a);
+//float	mat4_determinant(const mat4 m);
 
-void norm2f(vec2 v);
 
-int sign(int x);
+vec2	vec2_make(const float x, const float y);
+void	vec2_init(vec2 *v, const float x, const float y);
+vec2	vec2_add(const vec2 lhs, const vec2 rhs);
+vec2	vec2_sub(const vec2 lhs, const vec2 rhs);
+vec2	vec2_mult(const vec2 lhs, const vec2 rhs);
+vec2	vec2_norm(const vec2 v);
+void	vec2_lerp(vec2 *dst, const vec2 src, float t);
+float	vec2_length(const vec2 v);
+float	vec2_angle_from_to(const vec2 a, const vec2 b);
+float	vec2_distance(const vec2 a, const vec2 b);
 
-int powi(int base, int exp);
-int log2i(unsigned int val);
+
+vec3	vec3_make(const float x, const float y, const float z);
+vec3	vec3_zero();
+vec3	vec3_ones();
+void	vec3_init(vec3 *v, const float x, const float y, const float z);
+void	vec3_print(const vec3 v);
+vec3	vec3_add(const vec3 lhs, const vec3 rhs);
+vec3	vec3_sub(const vec3 lhs, const vec3 rhs);
+vec3	vec3_mult(const vec3 lhs, const vec3 rhs);
+vec3	vec3_mult_scalar(const vec3 lhs, float rhs);
+vec3	vec3_negate(const vec3 v);
+vec3	vec3_cross(const vec3 lhs, const vec3 rhs);
+float	vec3_dot(const vec3 lhs, const vec3 rhs);
+vec3	vec3_norm(const vec3 v);
+float	vec3_length(const vec3 v);
+vec3	vec3_lerp(const vec3 min, const vec3 max, float t);
+float	vec3_distance(const vec3 a, const vec3 b);
+vec3	vec3_add3f(const vec3 v, const float x, const float y, const float z);
+vec3	vec3_sub3f(const vec3 v, const float x, const float y, const float z);
+vec3	vec3_mult3f(const vec3 v, const float x, const float y, const float z);
+
+
+vec4	vec4_make(const float x, const float y, const float z, const float w);
+void	vec4_init(vec4 *v, const float x, const float y, const float z, const float w);
+float	vec4_length(const vec4 v);
+void	vec4_print(const vec4 v);
+
+
+void	quat_init(quat* q, float x, float y, float z, float w);
+float	quat_length(const quat q);
+#if 0
+float	quat_angle(const quat q);
+vec3	quat_axis(const quat q);
+#endif
+quat	quat_add(const quat lhs, const quat rhs);
+quat	quat_sub(const quat lhs, const quat rhs);
+quat	quat_mult(const quat lhs, const quat rhs);
+
+
+float	distancef(float x, float y);
+
+float	lerp1f(float min, float max, float t); // NOTE(TS): lerp() clashes with OpenAL
+float	clamp(float f, float min, float max);
+float	randr(float min, float max);
+
+int		imax(int a, int b);
+int		imin(int a, int b);
+int		sign(int x);
+int		powi(int base, int exp);
+int		log2i(unsigned int val);
 
 #endif
