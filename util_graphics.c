@@ -63,19 +63,19 @@ void util_window_to_view(float win_x, float win_y, float win_w, float win_h, flo
 	win_w = vw;
 	win_h = vh;
 
-	mat4 projection_inv;
-	inverse(projection_inv, projection);
+	int is_invertible = 1;
+	mat4 projection_inv = mat4_inverse(projection, &is_invertible);
 
-	vec4 in_pos;
-	in_pos[0] = 2.0f * win_x / win_w;
-	in_pos[1] = 2.0f * (1.0f - win_y / win_h);
-	in_pos[2] = 0.0f;
-	in_pos[3] = 1.0f;
+	vec4 in_pos = {
+		2.0f * win_x / win_w,
+		2.0f * (1.0f - win_y / win_h),
+		0.0f,
+		1.0f,
+	};
 
-	vec4 out_pos;
-	mult_vec4(out_pos, projection_inv, in_pos);
-	*x = out_pos[0];
-	*y = out_pos[1];
+	vec4 out_pos = mat4_mult_vec4(projection_inv, in_pos);
+	*x = out_pos.x;
+	*y = out_pos.y;
 }
 
 /**

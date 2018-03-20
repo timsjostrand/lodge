@@ -16,8 +16,8 @@ int collide_rect(const struct rect *a, const struct rect *b)
 
 int collide_circle(const struct circle *a, const struct circle *b)
 {
-	return collide_circlef(a->pos[0], a->pos[1], a->r,
-			b->pos[0], b->pos[1], b->r);
+	return collide_circlef(a->pos.x, a->pos.y, a->r,
+			b->pos.x, b->pos.y, b->r);
 }
 
 int collide_rectf(const float x1, const float y1, const float w1, const float h1,

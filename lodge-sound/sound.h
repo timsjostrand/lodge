@@ -30,8 +30,8 @@ struct sound_emitter {
 	sound_src_t		src;				/* OpenAL Source Name assigned to this emitter. */
 	int				available;			/* Whether this emitter is available to play sounds. */
 	int				uninterruptable;	/* If this sound is uninterruptable until it is done playing (for music, dialog, etc.) */
-	float			*pos;				/* X,Y,Z components in space (or NULL). */
-	float			*velocity;			/* X,Y,Z velocity components (or NULL). */
+	vec3			*pos;				/* X,Y,Z components in space (or NULL). */
+	vec3			*velocity;			/* X,Y,Z velocity components (or NULL). */
 };
 
 struct sound {

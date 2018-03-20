@@ -240,7 +240,7 @@ void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint 
 
 	/* Upload color */
 	GLint uniform_color = glGetUniformLocation(s->program, "color");
-	glUniform4fv(uniform_color, 1, color);
+	glUniform4fv(uniform_color, 1, (GLfloat*)color.v);
 
 	/* Upload transform */
 	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
@@ -259,7 +259,7 @@ void drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, v
 
 void drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s)
 {
-	drawable_new_rect_outlinef(dst, rect->pos[0], rect->pos[1], rect->size[0], rect->size[1], s);
+	drawable_new_rect_outlinef(dst, rect->pos.x, rect->pos.y, rect->size.x, rect->size.y, s);
 }
 
 void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s)
@@ -402,7 +402,7 @@ void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float 
  */
 void drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments, struct shader *s)
 {
-	drawable_new_circle_outlinef(dst, circle->pos[0], circle->pos[1], circle->r, segments, s);
+	drawable_new_circle_outlinef(dst, circle->pos.x, circle->pos.y, circle->r, segments, s);
 }
 
 void drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s)
@@ -462,9 +462,9 @@ void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float 
 		float w, float h, const vec4 color, float rotation, GLuint *texture)
 {
 	sprite->type = type;
-	set4f(sprite->pos, x, y, z, 0.0f);
-	set4f(sprite->scale, w, h, 1.0f, 1.0f);
-	set4f(sprite->color, rgba(color));
+	vec4_init(&sprite->pos, x, y, z, 0.0f);
+	vec4_init(&sprite->scale, w, h, 1.0f, 1.0f);
+	vec4_init(&sprite->color, rgba(color));
 	sprite->rotation = rotation;
 	sprite->texture = texture;
 }

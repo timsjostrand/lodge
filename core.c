@@ -270,7 +270,7 @@ void core_setup(const char *title, float view_width, float view_height,
 	core_global->view_height = view_height;
 
 	/* Set up sound */
-	sound_init(&core_global->sound, (float *)core_global->sound_listener, core_global->sound_distance_max);
+	sound_init(&core_global->sound, *core_global->sound_listener, core_global->sound_distance_max);
 
 	/* Allocate game memory */
 	core_global->shared_memory.game_memory = malloc(game_memory_size);

@@ -50,8 +50,8 @@ static void core_console_meta_lines(struct console *c, struct console_cmd *cmd, 
 	/* Update height & pos. */
 	float bg_h = console_height(c, c->display_lines);
 	printf("got %g typed=%g\n", bg_h, f);
-	c->background.pos[1] = bg_h/2.0f;
-	c->background.scale[1] = bg_h;
+	c->background.pos.y = bg_h/2.0f;
+	c->background.scale.y = bg_h;
 
 	/* Trim line count. */
 	console_print(c, "", 0);

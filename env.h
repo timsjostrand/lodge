@@ -33,10 +33,10 @@ struct env_var* env_var_get_by_name(struct env *e, const char *name);
 int  env_bind_1f(struct env *env, const char *name, float *value);
 int  env_set_1f(struct env *env, const char *name, const float value);
 
-int  env_bind_2f(struct env *env, const char *name, vec2 v);
+int  env_bind_2f(struct env *env, const char *name, vec2 *v);
 int  env_set_2f(struct env *env, const char *name, const vec2 v);
 
-int  env_bind_3f(struct env *env, const char *name, vec3 v);
+int  env_bind_3f(struct env *env, const char *name, vec3 *v);
 int  env_set_3f(struct env *env, const char *name, const vec3 v);
 
 int  env_bind_bool(struct env *env, const char *name, int *value);

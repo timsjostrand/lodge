@@ -589,10 +589,10 @@ static void sound_emitters_clean(struct sound *s)
 void sound_emitter_update(struct sound_emitter *em)
 {
 	if(em->pos != NULL) {
-		sound_src_position(em->src, xyz(em->pos));
+		sound_src_position(em->src, em->pos->x, em->pos->y, em->pos->z);
 	}
 	if(em->velocity != NULL) {
-		sound_src_velocity(em->src, xyz(em->velocity));
+		sound_src_velocity(em->src, em->velocity->x, em->velocity->y, em->velocity->z);
 	}
 }
 

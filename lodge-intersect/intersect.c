@@ -15,12 +15,12 @@
 
 void ray_init(struct ray *ray, const vec3 *origin, const vec3 *dir)
 {
-	memcpy(ray->origin, origin, sizeof(vec3));
-	memcpy(ray->dir, dir, sizeof(vec3));
+	memcpy(ray->origin.v, origin, sizeof(vec3));
+	memcpy(ray->dir.v, dir, sizeof(vec3));
 
-	ray->dir_inv[0] = 1.0f / ray->dir[0];
-	ray->dir_inv[1] = 1.0f / ray->dir[1];
-	ray->dir_inv[2] = 1.0f / ray->dir[2];
+	ray->dir_inv.x = 1.0f / ray->dir.x;
+	ray->dir_inv.y = 1.0f / ray->dir.y;
+	ray->dir_inv.z = 1.0f / ray->dir.z;
 }
 
 int intersect_ray_vs_aabb(const struct ray *ray, const struct aabb *aabb, float *t_near, float *t_far)
@@ -59,15 +59,15 @@ int intersect_ray_vs_aabb(const struct ray *ray, const struct aabb *aabb, float 
 
 	return tmax > max(tmin, 0.0);
 #else
-	double t1 = (aabb->min[0] - ray->origin[0]) * ray->dir_inv[0];
-	double t2 = (aabb->max[0] - ray->origin[0]) * ray->dir_inv[0];
+	double t1 = (aabb->min.x - ray->origin.x) * ray->dir_inv.x;
+	double t2 = (aabb->max.x - ray->origin.x) * ray->dir_inv.x;
 
 	double tmin = min(t1, t2);
 	double tmax = max(t1, t2);
 
 	for (int i = 1; i < 3; ++i) {
-		t1 = (aabb->min[i] - ray->origin[i]) * ray->dir_inv[i];
-		t2 = (aabb->max[i] - ray->origin[i]) * ray->dir_inv[i];
+		t1 = (aabb->min.v[i] - ray->origin.v[i]) * ray->dir_inv.v[i];
+		t2 = (aabb->max.v[i] - ray->origin.v[i]) * ray->dir_inv.v[i];
 
 		tmin = max(tmin, min(min(t1, t2), tmax));
 		tmax = min(tmax, max(max(t1, t2), tmin));

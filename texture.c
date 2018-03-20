@@ -98,7 +98,7 @@ int texture_solid_color(GLuint *tex, int w, int h, const vec4 color)
 	}
 
 	for(size_t i=0; i<buf_size; i += sizeof(vec4)) {
-		memcpy(&buf[i], color, sizeof(vec4));
+		memcpy(&buf[i], color.v, sizeof(vec4));
 	}
 
 	/* Upload texture. */
