@@ -25,7 +25,7 @@ if(NOT APPLE)
 
     # OpenAL has different names on different platforms.
     if(WIN32)
-        set(OPENAL_LIBRARY OpenAL32)
+        set(OPENAL_LIBRARY OpenAL)
     else()
         set(OPENAL_LIBRARY openal)
     endif()
@@ -58,5 +58,6 @@ target_link_libraries(lodge-sound
     PUBLIC
         lodge-collections
         lodge-stb
-        "${OPENAL_LIBRARY}"
+    PRIVATE
+        ${OPENAL_LIBRARY}
 )
