@@ -124,17 +124,18 @@ mat4 mat4_lookat(const vec3 eye_pos, const vec3 lookat_pos, const vec3 up)
 
 mat4 mat4_identity()
 {
-	mat4 id;
-	mat4_init_diagonal(&id, 1.0f);
-	return id;
+	return mat4_make_diagonal(1.0f);
 }
 
-void mat4_init_diagonal(mat4 *m, float s)
+mat4 mat4_make_diagonal(float s)
 {
-	m->m[0]  = s; m->m[1]  = 0; m->m[2]	 = 0; m->m[3]  = 0;
-	m->m[4]  = 0; m->m[5]  = s; m->m[6]	 = 0; m->m[7]  = 0;
-	m->m[8]  = 0; m->m[9]  = 0; m->m[10] = s; m->m[11] = 0;
-	m->m[12] = 0; m->m[13] = 0; m->m[14] = 0; m->m[15] = s;
+	mat4 tmp = {
+		s,		0.0f,	0.0f, 	0.0f,
+		0.0f,	s,		0.0f, 	0.0f,
+		0.0f,	0.0f,	s,		0.0f,
+		0.0f,	0.0f,	0.0f, 	s,
+	};
+	return tmp;
 }
 
 mat4 mat4_translation(float x, float y, float z)
@@ -243,27 +244,27 @@ mat4 mat4_rotate_z(const mat4 m, const float radians)
 mat4 mat4_mult(const mat4 lhs, const mat4 rhs)
 {
 	mat4 m;
-	
+
 	m.m[0]  = lhs.m[0] * rhs.m[0]  + lhs.m[4] * rhs.m[1]  + lhs.m[8] * rhs.m[2]   + lhs.m[12] * rhs.m[3];
 	m.m[4]  = lhs.m[0] * rhs.m[4]  + lhs.m[4] * rhs.m[5]  + lhs.m[8] * rhs.m[6]   + lhs.m[12] * rhs.m[7];
 	m.m[8]  = lhs.m[0] * rhs.m[8]  + lhs.m[4] * rhs.m[9]  + lhs.m[8] * rhs.m[10]  + lhs.m[12] * rhs.m[11];
 	m.m[12] = lhs.m[0] * rhs.m[12] + lhs.m[4] * rhs.m[13] + lhs.m[8] * rhs.m[14]  + lhs.m[12] * rhs.m[15];
-	
+
 	m.m[1]  = lhs.m[1] * rhs.m[0]  + lhs.m[5] * rhs.m[1]  + lhs.m[9] * rhs.m[2]   + lhs.m[13] * rhs.m[3];
 	m.m[5]  = lhs.m[1] * rhs.m[4]  + lhs.m[5] * rhs.m[5]  + lhs.m[9] * rhs.m[6]   + lhs.m[13] * rhs.m[7];
 	m.m[9]  = lhs.m[1] * rhs.m[8]  + lhs.m[5] * rhs.m[9]  + lhs.m[9] * rhs.m[10]  + lhs.m[13] * rhs.m[11];
 	m.m[13] = lhs.m[1] * rhs.m[12] + lhs.m[5] * rhs.m[13] + lhs.m[9] * rhs.m[14]  + lhs.m[13] * rhs.m[15];
-	
+
 	m.m[2]  = lhs.m[2] * rhs.m[0]  + lhs.m[6] * rhs.m[1]  + lhs.m[10] * rhs.m[2]  + lhs.m[14] * rhs.m[3];
 	m.m[6]  = lhs.m[2] * rhs.m[4]  + lhs.m[6] * rhs.m[5]  + lhs.m[10] * rhs.m[6]  + lhs.m[14] * rhs.m[7];
 	m.m[10] = lhs.m[2] * rhs.m[8]  + lhs.m[6] * rhs.m[9]  + lhs.m[10] * rhs.m[10] + lhs.m[14] * rhs.m[11];
 	m.m[14] = lhs.m[2] * rhs.m[12] + lhs.m[6] * rhs.m[13] + lhs.m[10] * rhs.m[14] + lhs.m[14] * rhs.m[15];
-	
+
 	m.m[3]  = lhs.m[3] * rhs.m[0]  + lhs.m[7] * rhs.m[1]  + lhs.m[11] * rhs.m[2]  + lhs.m[15] * rhs.m[3];
 	m.m[7]  = lhs.m[3] * rhs.m[4]  + lhs.m[7] * rhs.m[5]  + lhs.m[11] * rhs.m[6]  + lhs.m[15] * rhs.m[7];
 	m.m[11] = lhs.m[3] * rhs.m[8]  + lhs.m[7] * rhs.m[9]  + lhs.m[11] * rhs.m[10] + lhs.m[15] * rhs.m[11];
 	m.m[15] = lhs.m[3] * rhs.m[12] + lhs.m[7] * rhs.m[13] + lhs.m[11] * rhs.m[14] + lhs.m[15] * rhs.m[15];
-	
+
 	return m;
 }
 
@@ -525,11 +526,6 @@ vec2 vec2_make(const float x, const float y)
 	return v;
 }
 
-void vec2_init(vec2 *v, const float x, const float y)
-{
-	v->v[0] = x; v->v[1] = y;
-}
-
 void vec2_lerp(vec2 *dst, const vec2 src, float t)
 {
 	dst->v[0] = lerp1f(dst->v[0], src.v[0], t);
@@ -538,7 +534,7 @@ void vec2_lerp(vec2 *dst, const vec2 src, float t)
 
 float vec2_distance(const vec2 a, const vec2 b)
 {
-	return distancef(b.v[0]-a.v[0], b.v[0]-a.v[0]);
+	return distancef(b.v[0]-a.v[0], b.v[1]-a.v[1]);
 }
 
 vec2 vec2_norm(const vec2 v)
@@ -609,11 +605,6 @@ vec3 vec3_ones()
 	return vec3_make(1.0f, 1.0f, 1.0f);
 }
 
-void vec3_init(vec3 *v, const float x, const float y, const float z)
-{
-	v->v[0] = x; v->v[1] = y; v->v[2] = z;
-}
-
 void vec3_print(const vec3 v)
 {
 	printf(PRINTF_3F "\n", v.v[0], v.v[1], v.v[2]);
@@ -674,13 +665,17 @@ vec3 vec3_lerp(const vec3 min, const vec3 max, float t)
 	return tmp;
 }
 
+float vec3_distance_squared(const vec3 a, const vec3 b)
+{
+	float xd = a.v[0] - b.v[0];
+	float yd = a.v[1] - b.v[1];
+	float zd = a.v[2] - b.v[2];
+	return xd*xd + yd*yd + zd*zd;
+}
+
 float vec3_distance(const vec3 a, const vec3 b)
 {
-	return sqrtf(
-		(a.v[0]-b.v[0]) * (a.v[0]-b.v[0]) +
-		(a.v[1]-b.v[1]) * (a.v[1]-b.v[1]) +
-		(a.v[2]-b.v[2]) * (a.v[2]-b.v[2])
-	);
+	return sqrtf(vec3_distance_squared(a, b));
 }
 
 float vec3_length(const vec3 v)
@@ -699,9 +694,15 @@ vec4 vec4_make(const float x, const float y, const float z, const float w)
 	return v;
 }
 
-void vec4_init(vec4 *v, const float x, const float y, const float z, const float w)
+vec4 vec4_lerp(const vec4 min, const vec4 max, float t)
 {
-	v->v[0] = x; v->v[1] = y; v->v[2] = z; v->v[3] = w;
+	vec4 tmp = {
+		lerp1f(min.v[0], max.v[0], t),
+		lerp1f(min.v[1], max.v[1], t),
+		lerp1f(min.v[2], max.v[2], t),
+		lerp1f(min.v[3], max.v[3], t)
+	};
+	return tmp;
 }
 
 float vec4_length(const vec4 v)
@@ -720,12 +721,10 @@ void vec4_print(const vec4 v)
 }
 
 
-void quat_init(quat* q, float x, float y, float z, float w)
+quat quat_make(float x, float y, float z, float w)
 {
-	q->q[0] = x;
-	q->q[1] = y;
-	q->q[2] = z;
-	q->q[3] = w;
+	quat tmp = { x, y, z, w };
+	return tmp;
 }
 
 float quat_length(const quat q)
@@ -756,7 +755,7 @@ quat quat_add(const quat lhs, const quat rhs)
 		lhs.q[2] + rhs.q[2],
 		lhs.q[3] + rhs.q[3]
 	};
-    return q;
+	return q;
 }
 
 quat quat_sub(const quat lhs, const quat rhs)
@@ -767,12 +766,12 @@ quat quat_sub(const quat lhs, const quat rhs)
 		lhs.q[2] - rhs.q[2],
 		lhs.q[3] - rhs.q[3]
 	};
-    return q;
+	return q;
 }
 
 quat quat_mult(const quat lhs, const quat rhs)
 {
-    quat q = {
+	quat q = {
 		lhs.q[3] * rhs.q[0] +
 		lhs.q[0] * rhs.q[3] +
 		lhs.q[1] * rhs.q[2] -
@@ -787,20 +786,20 @@ quat quat_mult(const quat lhs, const quat rhs)
 		lhs.q[2] * rhs.q[3] +
 		lhs.q[0] * rhs.q[1] -
 		lhs.q[1] * rhs.q[0],
-	
+
 		lhs.q[3] * rhs.q[3] -
 		lhs.q[0] * rhs.q[0] -
 		lhs.q[1] * rhs.q[1] -
 		lhs.q[2] * rhs.q[2]
 	};
-    return q;
+	return q;
 }
 
 quat quat_normalize(const quat q)
 {
 	float scale = 1.0f / quat_length(q);
 	quat out = {
-		q.q[0] * scale, 
+		q.q[0] * scale,
 		q.q[1] * scale,
 		q.q[2] * scale,
 		q.q[3] * scale
