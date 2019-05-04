@@ -22,7 +22,7 @@
 
 typedef unsigned int sound_buf_t;
 typedef unsigned int sound_src_t;
-typedef ALCcontext;
+typedef struct ALCcontext_struct ALCcontext;
 typedef short ALshort;
 typedef char ALboolean;
 

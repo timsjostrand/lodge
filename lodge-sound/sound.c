@@ -27,7 +27,7 @@
 #include "math4.h"
 
 static size_t sound_buf_read_file(stb_vorbis *header, stb_vorbis_info *info,
-		ALshort *buf, int len);
+		ALshort *buf, size_t len);
 static struct sound_emitter* sound_emitter_get(struct sound *s);
 
 static int al_test(const char *msg)
@@ -336,7 +336,7 @@ int sound_src_loop(sound_src_t src, ALboolean loop)
 }
 
 static size_t sound_buf_read_file(stb_vorbis *header, stb_vorbis_info *info,
-		ALshort *buf, int len)
+		ALshort *buf, size_t len)
 {
 	size_t size = 0;
 	int read = 0;
@@ -346,7 +346,7 @@ static size_t sound_buf_read_file(stb_vorbis *header, stb_vorbis_info *info,
 	/* Fill the buffer. */
 	while(size < len) {
 		read = stb_vorbis_get_samples_short_interleaved(header, info->channels,
-				buf + size, len - size);
+				buf + size, (int)(len - size));
 		if(read > 0) {
 			size += read * info->channels;
 		} else {
@@ -406,7 +406,7 @@ static int sound_filter_add_tone(double freq, ALshort *buf, size_t offset,
 		size_t len)
 {
 	double theta = (freq * 2 * M_PI) / (double) SOUND_SAMPLE_RATE;
-	for(int i=0; i < len; i++) {
+	for(size_t i=0; i < len; i++) {
 		buf[i] += (ALshort) (SOUND_SAMPLE_MAX * sin(theta * (double) (i + offset)));
 	}
 	return len;
