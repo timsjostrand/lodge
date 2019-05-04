@@ -68,17 +68,16 @@ typedef union mat4 mat4;
 
 union quat
 {
-	struct { vec3 v; float s; };
+	struct { vec3 vec3; float s; };
 	struct { float x, y, z, w; };
+	vec4 vec4;
 	float q[4];
 };
 typedef union quat quat;
 
 mat4	mat4_make(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
+mat4	mat4_make_diagonal(float s);
 mat4	mat4_identity();
-void	mat4_init_identity(mat4 *m);
-void	mat4_init(mat4 *m, float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
-void	mat4_init_diagonal(mat4 *m, float s);
 void	mat4_zero(mat4 *m);
 mat4	mat4_transpose(const mat4 m);
 void	mat4_transpose_same(mat4 *m);
@@ -111,7 +110,6 @@ mat4	mat4_inverse(const mat4 matrix, int* is_invertible);
 
 
 vec2	vec2_make(const float x, const float y);
-void	vec2_init(vec2 *v, const float x, const float y);
 vec2	vec2_add(const vec2 lhs, const vec2 rhs);
 vec2	vec2_sub(const vec2 lhs, const vec2 rhs);
 vec2	vec2_mult(const vec2 lhs, const vec2 rhs);
@@ -125,7 +123,6 @@ float	vec2_distance(const vec2 a, const vec2 b);
 vec3	vec3_make(const float x, const float y, const float z);
 vec3	vec3_zero();
 vec3	vec3_ones();
-void	vec3_init(vec3 *v, const float x, const float y, const float z);
 void	vec3_print(const vec3 v);
 vec3	vec3_add(const vec3 lhs, const vec3 rhs);
 vec3	vec3_sub(const vec3 lhs, const vec3 rhs);
@@ -138,18 +135,19 @@ vec3	vec3_norm(const vec3 v);
 float	vec3_length(const vec3 v);
 vec3	vec3_lerp(const vec3 min, const vec3 max, float t);
 float	vec3_distance(const vec3 a, const vec3 b);
+float	vec3_distance_squared(const vec3 a, const vec3 b);
 vec3	vec3_add3f(const vec3 v, const float x, const float y, const float z);
 vec3	vec3_sub3f(const vec3 v, const float x, const float y, const float z);
 vec3	vec3_mult3f(const vec3 v, const float x, const float y, const float z);
 
 
 vec4	vec4_make(const float x, const float y, const float z, const float w);
-void	vec4_init(vec4 *v, const float x, const float y, const float z, const float w);
+vec4	vec4_lerp(const vec4 min, const vec4 max, float t);
 float	vec4_length(const vec4 v);
 void	vec4_print(const vec4 v);
 
 
-void	quat_init(quat* q, float x, float y, float z, float w);
+quat	quat_make(float x, float y, float z, float w);
 float	quat_length(const quat q);
 #if 0
 float	quat_angle(const quat q);
