@@ -7,22 +7,31 @@
 
 #include "lodge_window.h"
 
+#include <assert.h>
+
 #define graphics_debug(...) debugf("Graphics", __VA_ARGS__)
 #define graphics_error(...) errorf("Graphics", __VA_ARGS__)
 
-#define GL_OK_OR_RETURN { \
+/**
+ * Exhausts OpenGL Error queue and asserts on an error, but continues execution.
+ */
+#define GL_OK_OR_ASSERT( message ) { \
 		GLenum err = GL_NO_ERROR; \
 		while((err = glGetError()) != GL_NO_ERROR) { \
-			errorf("OpenGL", "Error 0x%04x in %s:%s:%d\n", err, __FILE__, __FUNCTION__, __LINE__); \
-			return; \
+			errorf("OpenGL", "Error 0x%04x in %s:%s:%d: %s\n", err, __FILE__, __FUNCTION__, __LINE__, message); \
+			assert(0 && message); \
 		} \
 	}
 
-#define GL_OK_OR_RETURN_NONZERO { \
+/**
+ * Exhausts OpenGL Error queue and returns when done, optionally with a return value.
+ */
+#define GL_OK_OR_RETURN(...) { \
 		GLenum err = GL_NO_ERROR; \
 		while((err = glGetError()) != GL_NO_ERROR) { \
 			errorf("OpenGL", "Error 0x%04x in %s:%s:%d\n", err, __FILE__, __FUNCTION__, __LINE__); \
-			return GRAPHICS_ERROR; \
+			assert(0); \
+			return __VA_ARGS__; \
 		} \
 	}
 
