@@ -241,7 +241,7 @@ void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 	}
 	dst->font = font;
 	dst->shader = shader;
-	vec3_init(&dst->bottom_left, blx, bly, 0.2f);
+	dst->bottom_left = vec3_make(blx, bly, 0.2f);
 	dst->color = color;
 	monotext_update(dst, text, strnlen(text, MONOTEXT_STR_MAX));
 }
@@ -361,26 +361,26 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 
 		/* Bind vertex array. */
 		glBindVertexArray(dst->vao);
-		GL_OK_OR_RETURN;
+		GL_OK_OR_RETURN();
 
 		/* glBufferData reallocates memory if necessary. */
 		glBindBuffer(GL_ARRAY_BUFFER, dst->vbo);
 		glBufferData(GL_ARRAY_BUFFER, dst->verts_len * sizeof(GLfloat),
 				dst->verts, GL_DYNAMIC_DRAW);
-		GL_OK_OR_RETURN;
+		GL_OK_OR_RETURN();
 
 		/* Position stream. */
 		GLint attrib_pos = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_POSITION);
 		glEnableVertexAttribArray(attrib_pos);
 		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
-		GL_OK_OR_RETURN;
+		GL_OK_OR_RETURN();
 
 		/* Texcoord stream. */
 		GLint attrib_texcoord = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_TEXCOORD);
 		glEnableVertexAttribArray(attrib_texcoord);
 		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
 				(void*) (3 * sizeof(GLfloat)));
-		GL_OK_OR_RETURN;
+		GL_OK_OR_RETURN();
 	}
 }
 
@@ -396,16 +396,23 @@ void monotext_render(struct monotext *text, struct shader *s)
 
 	glUseProgram(s->program);
 
-	/* Dummy transform. */
-	mat4 transform_final;
-	identity(transform_final);
+	// TODO(TS): pass matrices as arguments instead
+	mat4 projection = mat4_ortho(0, 640, 360, 0, -1, 1);
+	mat4 view = mat4_identity();
+	mat4 model = mat4_identity(); 
 
 	/* Upload matrices and color. */
-	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
-	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, transform_final);
+	GLint uniform_projection = glGetUniformLocation(s->program, "projection");
+	glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, (GLfloat*)projection.m);
+
+	GLint uniform_view = glGetUniformLocation(s->program, "view");
+	glUniformMatrix4fv(uniform_view, 1, GL_FALSE, (GLfloat*)view.m);
+
+	GLint uniform_model = glGetUniformLocation(s->program, "model");
+	glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (GLfloat*)model.m);
 
 	GLint uniform_color = glGetUniformLocation(s->program, "color");
-	glUniform4fv(uniform_color, 1, text->color);
+	glUniform4fv(uniform_color, 1, (GLfloat*)text->color.v);
 
 	/* Bind vertex array. */
 	glBindVertexArray(text->vao);
@@ -415,5 +422,5 @@ void monotext_render(struct monotext *text, struct shader *s)
 	
 	/* Render it! */
 	glDrawArrays(GL_TRIANGLES, 0, text->verts_count);
-	GL_OK_OR_RETURN;
+	GL_OK_OR_RETURN();
 }
