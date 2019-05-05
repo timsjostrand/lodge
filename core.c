@@ -54,10 +54,7 @@ static void core_release()
 static void core_assets_init()
 {
 	/* FIXME: nice way to set this pointer from game library OR engine specific console shader. */
-	core_global->console_shader = &assets->shaders.basic_shader;
-	shader_uniform_matrix4f(core_global->console_shader, "projection", &core_global->graphics.projection);
-	shader_constant_uniform1i(core_global->console_shader, "tex", 0);
-	shader_constant_uniform4f(core_global->console_shader, "color", COLOR_WHITE);
+	core_global->console_shader = &assets->shaders.console;
 
 	/* Load console. */
 	console_new(&core_global->console, &core_global->font_console, core_global->view_width, 16, &core_global->textures.none,
