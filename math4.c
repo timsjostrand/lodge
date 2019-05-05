@@ -25,9 +25,26 @@ void mat4_print(const mat4 m)
 	printf(PRINTF_4F "\n", m.m[12], m.m[13], m.m[14],	m.m[15]);
 }
 
-void mat4_zero(mat4 *m)
+mat4 mat4_zero()
 {
-	memset(m, 0, sizeof(mat4));
+	mat4 tmp = {
+		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 0.0f,
+	};
+	return tmp;
+}
+
+mat4 mat4_ones()
+{
+	mat4 tmp = {
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+		1.0f, 1.0f, 1.0f, 1.0f,
+	};
+	return tmp;
 }
 
 mat4 mat4_ortho(float left, float right, float top, float bottom, float nearZ, float farZ)
@@ -268,9 +285,6 @@ mat4 mat4_mult(const mat4 lhs, const mat4 rhs)
 	return m;
 }
 
-/**
- * Store the transpose of matrix 'a' in 'm'.
- */
 mat4 mat4_transpose(const mat4 m)
 {
 	mat4 t = {
@@ -314,9 +328,6 @@ vec3 vec3_cross(const vec3 lhs, const vec3 rhs)
 	return v;
 }
 
-/**
- * @return The dot product of 'a . b'.
- */
 float vec3_dot(const vec3 lhs, const vec3 rhs)
 {
 	return lhs.v[0] * rhs.v[0] + lhs.v[1] * rhs.v[1] + lhs.v[2] * rhs.v[2];
@@ -526,10 +537,13 @@ vec2 vec2_make(const float x, const float y)
 	return v;
 }
 
-void vec2_lerp(vec2 *dst, const vec2 src, float t)
+vec2 vec2_lerp(const vec2 min, const vec2 max, float t)
 {
-	dst->v[0] = lerp1f(dst->v[0], src.v[0], t);
-	dst->v[1] = lerp1f(dst->v[1], src.v[1], t);
+	vec2 v = {
+		lerp1f(min.x, max.y, t),
+		lerp1f(min.y, max.y, t)
+	};
+	return v;
 }
 
 float vec2_distance(const vec2 a, const vec2 b)
@@ -694,6 +708,16 @@ vec4 vec4_make(const float x, const float y, const float z, const float w)
 	return v;
 }
 
+vec4 vec4_zero()
+{
+	return vec4_make(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+vec4 vec4_ones()
+{
+	return vec4_make(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
 vec4 vec4_lerp(const vec4 min, const vec4 max, float t)
 {
 	vec4 tmp = {
@@ -723,8 +747,8 @@ void vec4_print(const vec4 v)
 
 quat quat_make(float x, float y, float z, float w)
 {
-	quat tmp = { x, y, z, w };
-	return tmp;
+	quat q = { x, y, z, w };
+	return q;
 }
 
 float quat_length(const quat q)
