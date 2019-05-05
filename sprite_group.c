@@ -17,7 +17,7 @@
 
 void sprite_group_update(struct sprite_group* group)
 {
-	for(int i=0; i<group->sprites_count; i++) {
+	for(unsigned int i=0; i<group->sprites_count; i++) {
 		struct sprite *draw_sprite = &group->draw_sprites[i];
 		struct sprite *src_sprite = &group->sprites[i];
 
@@ -53,8 +53,8 @@ struct sprite* sprite_group_add_sprite(struct sprite_group* group, struct anim *
 	}
 
 	struct sprite *sprite = &group->sprites[group->sprites_count++];
-	vec3_init(&sprite->position, relx, rely, relz);
-	vec2_init(&sprite->scale, sx, sy);
+	sprite->position = vec3_make(relx, rely, relz);
+	sprite->scale = vec3_make(sx, sy, 1.0);
 	animatedsprites_switchanim(sprite, anim);
 
 	return sprite;
