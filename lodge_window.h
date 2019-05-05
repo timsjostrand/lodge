@@ -44,6 +44,7 @@ void			lodge_window_get_cursor(lodge_window_t window, float* x, float* y);
 
 double			lodge_window_get_time();
 void			lodge_window_get_screen_size(int* width, int* height);
+void			lodge_window_set_vsync_enabled(lodge_window_t window, int vsync);
 
 int				lodge_window_is_open(lodge_window_t window);
 int				lodge_window_is_focused(lodge_window_t window);

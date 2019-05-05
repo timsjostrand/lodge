@@ -314,4 +314,11 @@ void lodge_window_get_screen_size(int* width, int* height)
 	*height = video_mode->height;
 }
 
+void lodge_window_set_vsync_enabled(lodge_window_t window, int vsync)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	glfwMakeContextCurrent(glfw_window->window);
+	glfwSwapInterval(vsync ? 1 : 0);
+}
+
 #endif
