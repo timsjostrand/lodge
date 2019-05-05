@@ -176,7 +176,7 @@ void atlas_free(struct atlas *atlas)
 int atlas_frame_index(struct atlas *atlas, const char *name)
 {
 	for(int i=0; i<atlas->frames_count; i++) {
-		if(str_equals(atlas->frames[i].name, name)) {
+		if(str_equals(atlas->frames[i].name, strlen(atlas->frames[i].name), name, strlen(name))) {
 			return i;
 		}
 	}
