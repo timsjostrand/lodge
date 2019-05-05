@@ -55,7 +55,7 @@ void image_free(uint8_t *data)
  * @param width		The width of the image.
  * @param height	The height of the image.
  */
-int texture_load_pixels(GLuint *tex, const uint8_t *data,
+int texture_load_pixels(tex_t *tex, const uint8_t *data,
 		const int width, const int height)
 {
 	glGenTextures(1, tex);
@@ -63,15 +63,20 @@ int texture_load_pixels(GLuint *tex, const uint8_t *data,
 	/* Upload texture. */
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
 			GL_UNSIGNED_BYTE, data);
-	/* Wrapping. */
+#if 0
+	/* Linear mipmapped */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D);
+#else
+	/* Nearest */
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	/* Filter (mipmap). */
-//	glGenerateMipmap(GL_TEXTURE_2D);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+#endif
 	return GRAPHICS_OK;
 }
 
@@ -83,7 +88,7 @@ int texture_load_pixels(GLuint *tex, const uint8_t *data,
  * @param h		The height of the texture.
  * @param color	The color of the texture.
  */
-int texture_solid_color(GLuint *tex, int w, int h, const vec4 color)
+int texture_solid_color(tex_t *tex, int w, int h, const vec4 color)
 {
 	glGenTextures(1, tex);
 	glBindTexture(GL_TEXTURE_2D, *tex);
@@ -122,12 +127,12 @@ int texture_solid_color(GLuint *tex, int w, int h, const vec4 color)
  * texture, the fragment shader can still multiply this texture with a sprite
  * color to produce the correct fragment color.
  */
-void texture_white(GLuint *tex)
+void texture_white(tex_t *tex)
 {
 	texture_solid_color(tex, 1, 1, COLOR_WHITE);
 }
 
-void texture_free(const GLuint tex)
+void texture_free(const tex_t tex)
 {
 	glDeleteTextures(1, &tex);
 }
@@ -142,7 +147,7 @@ void texture_free(const GLuint tex)
  * @param data		The image data to load.
  * @param len		The length of the image data.
  */
-int texture_load(GLuint *tex, int *width, int *height, const uint8_t *data,
+int texture_load(tex_t *tex, int *width, int *height, const uint8_t *data,
 		size_t len)
 {
 	uint8_t *tmp;
