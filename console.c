@@ -37,12 +37,11 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	s->type = 0;
 	s->rotation = 0;
 	s->texture = white_tex;
-	vec4_init(&s->pos, xyz(txt->bottom_left), 0.0f);
-	vec4_init(&s->scale,
-			txt->font->letter_width  + txt->font->letter_spacing_x + 1,
-			txt->font->letter_height + txt->font->letter_spacing_y,
-			1, 1);
-	vec4_init(&s->color, rgba(CONSOLE_COLOR_CURSOR));
+	s->pos = vec4_make(xyz(txt->bottom_left), 0.0f);
+	s->scale = vec4_make(txt->font->letter_width  + txt->font->letter_spacing_x + 1,
+		txt->font->letter_height + txt->font->letter_spacing_y,
+		1, 1);
+	s->color = vec4_make(rgba(CONSOLE_COLOR_CURSOR));
 }
 
 static double timer_elapsed(double since)
@@ -247,7 +246,7 @@ void console_think(struct console *c)
 
 void console_render(struct console *c, struct shader *s, struct graphics* g)
 {
-	shader_uniforms_think(s, 1.0f);
+	shader_uniforms_think(s);
 	sprite_render(&c->background, s, g);
 	sprite_render(&c->cursor.sprite, s, g);
 	monotext_render(&c->txt_display, s);
@@ -405,6 +404,7 @@ static void console_env_set(struct console *c, const char *name,
 		const char *value)
 {
 	struct env_var *var = env_var_get_by_name(c->env, name);
+	size_t value_len = strlen(value);
 
 	if(var == NULL) {
 		console_printf(c, "Unknown variable: \"%s\"\n", name);
@@ -451,7 +451,7 @@ static void console_env_set(struct console *c, const char *name,
 		}
 		case ENV_VAR_TYPE_BOOL: {
 			int b;
-			if(str_parse_bool(value, &b) != 0) {
+			if(str_parse_bool(value, value_len, &b) != 0) {
 				console_printf(c, "Usage: %s=<BOOL> (now: %s)\n", name, (*((int *) var->value)) ? "true" : "false");
 				return;
 			} else {
@@ -521,9 +521,10 @@ void console_parse(struct console *c, const char *in_str, size_t in_str_len)
 
 	/* Store to display history. */
 	char tmp[CONSOLE_INPUT_MAX] = { 0 };
-	strncpy(tmp, in_str, in_str_len);
-	in_str_len += str_insert(tmp, CONSOLE_INPUT_MAX, 0, "# ", 2);
-	in_str_len += str_insert(tmp, CONSOLE_INPUT_MAX, in_str_len, "\n", 1);
+	strbuf_t strbuf = strbuf_wrap(tmp);
+	strbuf_set(strbuf, strview_make(in_str, in_str_len));
+	in_str_len += strbuf_insert(strbuf, 0, strview_static("# "));
+	in_str_len += strbuf_insert(strbuf, in_str_len, strview_static("\n"));
 	console_print(c, tmp, in_str_len);
 
 	/* Split arguments. */
