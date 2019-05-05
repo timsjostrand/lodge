@@ -7,14 +7,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <GL/glew.h>
 
 #include "shader.h"
 #include "math4.h"
+#include "str.h"
+#include "blob.h"
+#include "vfs.h"
+#include "array.h"
 
-int shader_program_log(GLuint program, const char *name)
+static int shader_program_log(GLuint program, const char* name)
 {
-	shader_debug("=== %s ===\n", name);
+	shader_debug("=== %s: program ===\n", name);
 
 	GLint status = 0;
 	glGetProgramiv(program, GL_LINK_STATUS, &status);
@@ -49,15 +54,15 @@ int shader_program_log(GLuint program, const char *name)
 	return SHADER_OK;
 }
 
-int shader_log(GLuint shader, const char *name)
+int shader_log(GLuint shader, const char *name, const char* label)
 {
-	shader_debug("=== %s ===\n", name);
+	shader_debug("=== %s: %s ===\n", name, label);
 
 	GLint status = 0;
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
 
 	if(status == GL_FALSE) {
-		shader_error("Compilation of %s failed\n", name);
+		shader_error("Compilation of `%s` failed\n", name);
 	}
 
 	GLint len = 0;
@@ -83,6 +88,102 @@ int shader_log(GLuint shader, const char *name)
 	return SHADER_OK;
 }
 
+static int shader_include(txt_t *txt, size_t start, array_t includes, const char* include_file)
+{
+	size_t include_data_size = 0;
+	const char* include_data = vfs_get_file(include_file, &include_data_size);
+	if(!include_data) {
+		return 0;
+	} else {
+		*txt = txt_insert(*txt, start, strview_make(include_data, include_data_size));
+		*txt = txt_insert(*txt, start + include_data_size, strview_static("\n"));
+		array_append(includes, include_file);
+		return 1;
+	}
+}
+
+static int shader_resolve_includes_str(txt_t txt, array_t includes, txt_t *out)
+{
+	static const int INCLUDE_LENGTH = 9;
+	int retry = 1;
+
+	static const char* global_include_file = "global.fxh";
+	if(!shader_include(&txt, 0, includes, global_include_file)) {
+		shader_debug("Could not include file: `%s`\n", global_include_file);
+	}
+
+	while(retry) {
+		retry = 0;
+
+		size_t count = txt_count(txt); 
+		foreach_line(txt, count) {
+			if(len == 0) {
+				continue;
+			}
+
+			size_t post_whitespace = start;
+			while(isspace(txt[post_whitespace]) && post_whitespace < count) {
+				post_whitespace++;
+			}
+
+			if(str_begins_with(&txt[post_whitespace], INCLUDE_LENGTH, "#include ")) {
+				txt_t include_file = txt_new(strview_make(&txt[start + INCLUDE_LENGTH], len - INCLUDE_LENGTH));
+
+				// Trim whitespace
+				txt_trim(include_file);
+
+				// Strip quotes
+				if(txt_begins_with(include_file, strview_static("\""))) {
+					txt_delete(include_file, 0, 1);
+				}
+				if(txt_ends_with(include_file, strview_static("\""))) {
+					txt_delete_from_tail(include_file, 1);
+				}
+
+				int include_index = array_find_string(includes, include_file, txt_count(include_file));
+				if(include_index == -1) {
+					shader_debug("Including file: `%s`\n", include_file);
+
+					// Remove `#include` line
+					txt_delete(txt, start, len);
+
+					if(shader_include(&txt, start, includes, include_file)) {
+						retry = 1;
+					} else {
+						shader_error("Could not include file: `%s`\n", include_file);
+						txt_free(include_file);
+						return SHADER_INCLUDE_ERROR;
+					}
+				} else {
+					shader_debug("Skipping already included file: `%s`\n", include_file);
+					txt_delete(txt, start, len);
+				}
+
+				txt_free(include_file);
+
+				if(retry) {
+					shader_debug("Retry include pass\n");
+					break;
+				}
+			}
+		}
+	};
+
+	*out = txt;
+	return SHADER_OK;
+}
+
+static int shader_resolve_includes(struct shader *s)
+{
+	array_clear(s->vert_includes);
+	array_clear(s->frag_includes);
+
+	int success = shader_resolve_includes_str(s->vert_transformed, s->vert_includes, &s->vert_transformed) == SHADER_OK;
+	success &= shader_resolve_includes_str(s->frag_transformed, s->frag_includes, &s->frag_transformed) == SHADER_OK;
+
+	return success ? SHADER_OK : SHADER_INCLUDE_ERROR;
+}
+
 /**
  * Compiles and links a new shader program.
  *
@@ -91,26 +192,34 @@ int shader_log(GLuint shader, const char *name)
  * @param frag_src			Fragment shader source.
  */
 int shader_init(struct shader *s,
-		char *vert_src, int vert_src_len,
-		char *frag_src, int frag_src_len)
+	const char *name,
+	const strview_t vert_src,
+	const strview_t frag_src)
 {
 	int ret = 0;
 
-	/* Make sure struct is up-to-date. */
-	s->vert_src = vert_src;
-	s->vert_src_len = vert_src_len;
-	s->frag_src = frag_src;
-	s->frag_src_len = frag_src_len;
+	strncpy(s->name, name, sizeof(s->name));
 
-	/* FIXME: make sure string ends with \0. */
-	vert_src[vert_src_len-1] = '\0';
-	frag_src[frag_src_len-1] = '\0';
+	s->vert_src = vert_src;
+	s->frag_src = frag_src;
+
+	// FIXME(TS): leaking when reloading atm
+	s->vert_includes = array_create(SHADER_FILENAME_MAX, 32);
+	s->frag_includes = array_create(SHADER_FILENAME_MAX, 32);
+
+	// FIXME(TS): leaking when reloading atm
+	s->vert_transformed = txt_new(vert_src);
+	s->frag_transformed = txt_new(frag_src);
+
+	if(shader_resolve_includes(s) != SHADER_OK) {
+		return ret;
+	}
 
 	/* Compile vertex shader. */
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vs, 1, &vert_src, NULL);
+	glShaderSource(vs, 1, &s->vert_transformed, NULL);
 	glCompileShader(vs);
-	ret = shader_log(vs, "vertex shader");
+	ret = shader_log(vs, s->name, "vertex shader");
 
 	if(ret != SHADER_OK) {
 		return ret;
@@ -118,9 +227,9 @@ int shader_init(struct shader *s,
 
 	/* Compile fragment shader. */
 	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, &frag_src, NULL);
+	glShaderSource(fs, 1, &s->frag_transformed, NULL);
 	glCompileShader(fs);
-	ret = shader_log(fs, "fragment shader");
+	ret = shader_log(fs, s->name, "fragment shader");
 
 	if(ret != SHADER_OK) {
 		return ret;
@@ -133,24 +242,13 @@ int shader_init(struct shader *s,
 	glLinkProgram(s->program);
 	glDeleteShader(vs);
 	glDeleteShader(fs);
-	ret = shader_program_log(s->program, "program");
+	ret = shader_program_log(s->program, s->name);
 
 	if(ret != SHADER_OK) {
 		return ret;
 	}
 
-	/* Position stream. */
-	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
-	shader_debug("attrib: %s=%d\n", ATTRIB_NAME_POSITION, posAttrib);
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-
-	/* Texcoord stream. */
-	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
-	shader_debug("attrib: %s=%d\n", ATTRIB_NAME_TEXCOORD, texcoordAttrib);
-	glEnableVertexAttribArray(texcoordAttrib);
-	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-			(void*) (3 * sizeof(float)));
+	s->initialized = 1;
 
 	return SHADER_OK;
 }
@@ -166,6 +264,12 @@ void shader_free(struct shader *s)
 {
 	shader_uniforms_free(s);
 	shader_delete(s);
+
+	txt_free(s->frag_transformed);
+	txt_free(s->vert_transformed);
+
+	array_destroy(s->vert_includes);
+	array_destroy(s->frag_includes);
 }
 
 /**
@@ -312,7 +416,7 @@ void shader_uniforms_free(struct shader *s)
 	}
 }
 
-void shader_uniforms_think(struct shader *s, float delta_time)
+void shader_uniforms_think(struct shader *s)
 {
 	glUseProgram(s->program);
 

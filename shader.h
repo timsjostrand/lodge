@@ -5,6 +5,10 @@
 
 #include "math4.h"
 #include "log.h"
+#include "str.h"
+#include "txt.h"
+// FIXME(TS): why is the prefix required in VS?
+#include "lodge-collections/array.h"
 
 #define shader_debug(...) debugf("Shader", __VA_ARGS__)
 #define shader_error(...) errorf("Shader", __VA_ARGS__)
@@ -14,10 +18,15 @@
 #define SHADER_LINK_ERROR			-2
 #define SHADER_OOM_ERROR			-3
 #define SHADER_UNIFORMS_MAX_ERROR	-4
+#define SHADER_INCLUDE_ERROR		-5
+
+#define SHADER_FILENAME_MAX			255
 #define SHADER_UNIFORM_NAME_MAX_LEN	255
 
 #define ATTRIB_NAME_POSITION		"vertex_in"
 #define ATTRIB_NAME_TEXCOORD		"texcoord_in"
+#define ATTRIB_NAME_TANGENT			"tangent_in"
+#define ATTRIB_NAME_BITANGENT		"bitangent_in"
 
 #define TYPE_VEC_1F	                0
 #define TYPE_VEC_2F	                1
@@ -40,17 +49,27 @@ struct uniform {
 };
 
 struct shader {
-	const char	    *vert_src;
-	int			    vert_src_len;
-	const char	    *frag_src;
-	int			    frag_src_len;
-	GLuint		    program;
+	int				initialized;
+	char			name[SHADER_FILENAME_MAX];
+
+	strview_t		vert_src;
+	strview_t		frag_src;
+	
+	txt_t			vert_transformed;
+	txt_t			frag_transformed;
+
+	array_t			vert_includes;					// Included files in the vertex source
+	array_t			frag_includes;					// Included files in the fragment source
+
+	GLuint			program;
+
 	struct uniform	*uniforms[UNIFORMS_MAX];
 };
 
 int     shader_init(struct shader *s,
-				char *vert_src, int vert_src_len,
-                char *frag_src, int frag_src_len);
+				const char* name,
+				const strview_t vert_src,
+                const strview_t frag_src);
 void    shader_delete(struct shader *s);
 void    shader_free(struct shader *s);
 
@@ -68,6 +87,6 @@ void	shader_constant_uniform4f(struct shader *s, const char *name, vec4 data);
 
 void	shader_uniforms_relocate(struct shader *s);
 void	shader_uniforms_free(struct shader *s);
-void    shader_uniforms_think(struct shader *s, float delta_time);
+void    shader_uniforms_think(struct shader *s);
 
 #endif
