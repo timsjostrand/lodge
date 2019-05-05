@@ -20,12 +20,8 @@
 	a = b; \
 	b = t;
 
-#ifndef min
 #define min(x, y) ((x) < (y) ? (x) : (y))
-#endif
-#ifndef max
 #define max(x, y) ((x) > (y) ? (x) : (y))
-#endif
 
 union vec2
 {
@@ -62,6 +58,7 @@ union mat4
 		float m20, m21, m22, m23;
 		float m30, m31, m32, m33;
 	};
+	vec4 rows[4];
 	float m[16];
 };
 typedef union mat4 mat4;
@@ -75,10 +72,18 @@ union quat
 };
 typedef union quat quat;
 
+struct mvp
+{
+	mat4 model;
+	mat4 view;
+	mat4 projection;
+};
+
 mat4	mat4_make(float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
 mat4	mat4_make_diagonal(float s);
 mat4	mat4_identity();
-void	mat4_zero(mat4 *m);
+mat4	mat4_zero();
+mat4	mat4_ones();
 mat4	mat4_transpose(const mat4 m);
 void	mat4_transpose_same(mat4 *m);
 void	mat4_print(const mat4 m);
@@ -114,7 +119,7 @@ vec2	vec2_add(const vec2 lhs, const vec2 rhs);
 vec2	vec2_sub(const vec2 lhs, const vec2 rhs);
 vec2	vec2_mult(const vec2 lhs, const vec2 rhs);
 vec2	vec2_norm(const vec2 v);
-void	vec2_lerp(vec2 *dst, const vec2 src, float t);
+vec2	vec2_lerp(const vec2 min, const vec2 max, float t);
 float	vec2_length(const vec2 v);
 float	vec2_angle_from_to(const vec2 a, const vec2 b);
 float	vec2_distance(const vec2 a, const vec2 b);
@@ -136,12 +141,11 @@ float	vec3_length(const vec3 v);
 vec3	vec3_lerp(const vec3 min, const vec3 max, float t);
 float	vec3_distance(const vec3 a, const vec3 b);
 float	vec3_distance_squared(const vec3 a, const vec3 b);
-vec3	vec3_add3f(const vec3 v, const float x, const float y, const float z);
-vec3	vec3_sub3f(const vec3 v, const float x, const float y, const float z);
-vec3	vec3_mult3f(const vec3 v, const float x, const float y, const float z);
 
 
 vec4	vec4_make(const float x, const float y, const float z, const float w);
+vec4	vec4_zero();
+vec4	vec4_ones();
 vec4	vec4_lerp(const vec4 min, const vec4 max, float t);
 float	vec4_length(const vec4 v);
 void	vec4_print(const vec4 v);
