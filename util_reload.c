@@ -4,6 +4,8 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
+#include "util_reload.h"
+
 #include <string.h>
 
 #include "core.h"
@@ -12,6 +14,7 @@
 #include "atlas.h"
 #include "texture.h"
 #include "console.h"
+#include "array.h"
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 #include "pyxel_asset.h"
@@ -39,6 +42,35 @@ void util_reload_sound(const char *filename, unsigned int size, void *data, void
 	}
 }
 
+static str_copy_without_ext(char *dst, const char *src, const char *ext, size_t len)
+{
+	const char *needle = strstr(src, ext);
+	size_t sub_len = needle - src;
+	strncpy(dst, src, sub_len < len ? sub_len : len);
+}
+
+static void util_reload_shader_register_callbacks(struct shader *s)
+{
+	char tmp[SHADER_FILENAME_MAX] = { 0 };
+	strbuf_t buf = strbuf_wrap(tmp);
+
+	strbuf_set(buf, strview_make(s->name, strnlen(s->name, SHADER_FILENAME_MAX)));
+	strbuf_append(buf, strview_static(".frag"));
+	vfs_register_callback_filter(buf.s, &util_reload_shader, s);
+
+	strbuf_set(buf, strview_make(s->name, strnlen(s->name, SHADER_FILENAME_MAX)));
+	strbuf_append(buf, strview_static(".vert"));
+	vfs_register_callback_filter(buf.s, &util_reload_shader, s);
+
+	array_foreach(s->vert_includes, const char, include) {
+		vfs_register_callback(include, &util_reload_shader, s);
+	}
+
+	array_foreach(s->frag_includes, const char, include) {
+		vfs_register_callback(include, &util_reload_shader, s);
+	}
+}
+
 void util_reload_shader(const char *filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
@@ -55,41 +87,43 @@ void util_reload_shader(const char *filename, unsigned int size, void *data, voi
 
 	/* Keep references to shader sources. */
 	if(strstr(filename, ".frag") != NULL) {
-		dst->frag_src = data;
-		dst->frag_src_len = size;
+		str_copy_without_ext(dst->name, filename, ".frag", SHADER_FILENAME_MAX);
+		dst->frag_src = strview_make(data, size);
 	} else if(strstr(filename, ".vert") != NULL) {
-		dst->vert_src = data;
-		dst->vert_src_len = size;
+		str_copy_without_ext(dst->name, filename, ".vert", SHADER_FILENAME_MAX);
+		dst->vert_src = strview_make(data, size);
 	} else {
-		shader_error("Unknown source name \"%s\" (%u bytes)\n", filename, size);
-		return;
+		shader_debug("%s: Included file \"%s\" modified, reloading\n", dst->name, filename);
 	}
 
 	/* Have both sources been loaded? */
-	if(dst->vert_src_len == 0) {
-		shader_debug("Awaiting vertex shader source...\n");
+	if(dst->vert_src.length == 0) {
+		shader_debug("%s: Awaiting vertex shader source...\n", dst->name);
 		return;
 	}
-	if(dst->frag_src_len == 0) {
-		shader_debug("Awaiting fragment shader source...\n");
+	if(dst->frag_src.length == 0) {
+		shader_debug("%s: Awaiting fragment shader source...\n", dst->name);
 		return;
 	}
 
 	/* Recompile shader. */
 	struct shader tmp = (*dst);
 
-	int ret = shader_init(&tmp,
-			dst->vert_src, dst->vert_src_len,
-			dst->frag_src, dst->frag_src_len);
+	int ret = shader_init(&tmp, dst->name, dst->vert_src, dst->frag_src);
 	if(ret != SHADER_OK) {
 		shader_error("Error %d when loading shader %s (%u bytes)\n", ret, filename, size);
 	} else {
+		/* Clear callbacks for this shader (due to more being added for included files) */
+		vfs_prune_callbacks(&util_reload_shader, userdata);
 		/* Delete the old shader. */
 		shader_delete(dst);
+		//shader_free(dst);
 		/* Assign the new shader only if compilation succeeded. */
 		(*dst) = tmp;
 		/* Relocate uniforms in the shader, if they changed. */
 		shader_uniforms_relocate(dst);
+		/* Trigger reloads when included files change */
+		util_reload_shader_register_callbacks(dst);
 	}
 }
 
