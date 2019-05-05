@@ -152,17 +152,17 @@ foreach(module ${ENGINE_MODULES_AVAILABLE})
 endforeach()
 
 # Engine sources
-list(APPEND ENGINE_SOURCES_LOCAL math4.c core_console.c events.c graphics.c shader.c input.c texture.c
-        color.c vfs.c atlas.c monotext.c str.c lodge.c console.c
+list(APPEND ENGINE_SOURCES_LOCAL math4.c core_console.c events.c graphics.c vertex.c shader.c input.c texture.c
+        color.c vfs.c atlas.c monotext.c str.c txt.c lodge.c console.c
         spritebatch.c animatedsprites.c core.c core_argv.c util_reload.c
         particles.c collide.c drawable.c sprite_group.c
-        util_graphics.c env.c framebuffer.c lodge_window_glfw.c)
+        util_graphics.c env.c framebuffer.c lodge_window_glfw.c blob.c)
 list(APPEND ENGINE_HEADERS_LOCAL math4.h core_console.h events.h graphics.h shader.h input.h texture.h
-        color.h vfs.h atlas.h monotext.h str.h lodge.h console.h
+        color.h vfs.h atlas.h monotext.h str.h txt.h lodge.h console.h
         spritebatch.h animatedsprites.h core.h core_argv.h util_reload.h
         particles.h game.h collide.h geometry.h drawable.h
-        sprite_group.h util_graphics.h env.h framebuffer.h
-        lodge_window.h)
+        sprite_group.h util_graphics.h vertex.h env.h framebuffer.h
+        lodge_window.h blob.h)
 
 # Prepend all sources with absolute engine path (because of reasons...)
 foreach(src ${ENGINE_SOURCES_LOCAL})
