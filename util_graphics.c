@@ -85,8 +85,9 @@ void util_window_to_view(float win_x, float win_y, float win_w, float win_h, flo
  * @param x				X coordinate destination.
  * @param y				Y coordinate destination.
  * @param projection	View projection matrix.
+ * @return				True if cursor is inside window.
  */
-void util_view_get_cursor(lodge_window_t window, float* x, float* y, mat4 projection)
+int util_view_get_cursor(lodge_window_t window, float* x, float* y, mat4 projection)
 {
 	float win_x = 0, win_y = 0;
 	lodge_window_get_cursor(window, &win_x, &win_y);
@@ -95,5 +96,7 @@ void util_view_get_cursor(lodge_window_t window, float* x, float* y, mat4 projec
 	lodge_window_get_size(window, &win_w, &win_h);
 
 	/* Convert screen space => game space. */
-	util_window_to_view(win_x, win_y, win_w, win_h, x, y, projection);
+	util_window_to_view(win_x, win_y, (float)win_w, (float)win_h, x, y, projection);
+
+	return !(win_x > win_w || win_y > win_h || win_x < 0 || win_y < 0);
 }
