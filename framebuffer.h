@@ -37,6 +37,7 @@ enum framebuffer_target
 };
 
 texture_t		texture_create_rgba(int width, int height);
+texture_t		texture_create_depth(int width, int height);
 void			texture_destroy(texture_t texture);
 void			texture_set_properties(texture_t texture, struct texture_properties* properties);
 

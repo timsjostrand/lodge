@@ -65,21 +65,32 @@ void texture_properties_set_default(texture_t texture)
 	texture_set_properties(texture, &properties);
 }
 
-texture_t texture_create_rgba(int width, int height)
+static texture_t texture_create(int width, int height, GLint internal_format, GLint format, GLenum type)
 {
 	struct texture* texture = malloc(sizeof(struct texture));
 
 	glGenTextures(1, &texture->id);
 	glBindTexture(GL_TEXTURE_2D, texture->id);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, type, 0);
 
 	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-		texture_error("glTexImage2D failed: %s\n", err);
+	if (err != GL_NO_ERROR) {
+		texture_error("glTexImage2D failed: %d\n", err);
+	}
 
 	texture_properties_set_default(texture);
 
 	return texture;
+}
+
+texture_t texture_create_rgba(int width, int height)
+{
+	return texture_create(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+}
+
+texture_t texture_create_depth(int width, int height)
+{
+	return texture_create(width, height, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT);
 }
 
 void texture_destroy(texture_t texture)
@@ -97,8 +108,9 @@ void texture_set_properties(texture_t texture, struct texture_properties* proper
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture_filter_opengl(properties->filter_max));
 
 	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-		texture_error("glTexParameteri failed: %s\n", err);
+	if (err != GL_NO_ERROR) {
+		texture_error("glTexParameteri failed: %d\n", err);
+	}
 }
 
 void texture_bind(texture_t texture, int slot)
@@ -130,8 +142,10 @@ framebuffer_t framebuffer_create()
 
 	glGenFramebuffers(1, &framebuffer->id);
 	
-	if (glGetError() == GL_INVALID_VALUE)
-		framebuffer_error("glGenFramebuffers failed\n");
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR) {
+		framebuffer_error("glGenFramebuffers failed: %d\n", err);
+	}
 	
 	return framebuffer;
 }
@@ -150,6 +164,27 @@ void framebuffer_bind(framebuffer_t framebuffer)
 void framebuffer_unbind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+static const char* framebuffer_status_to_text(GLenum status)
+{
+	switch(status)
+	{
+	case GL_FRAMEBUFFER_COMPLETE:
+		return "GL_FRAMEBUFFER_COMPLETE";
+	case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+		return "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT";
+	case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+		return "GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER";
+	case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+		return "GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER";
+	case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+		return "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT";
+	case GL_FRAMEBUFFER_UNSUPPORTED:
+		return "GL_FRAMEBUFFER_UNSUPPORTED";
+	default:
+		return "n/a";
+	}
 }
 
 void framebuffer_attach_texture(framebuffer_t framebuffer, texture_t texture, enum framebuffer_target target)
@@ -172,6 +207,12 @@ void framebuffer_attach_texture(framebuffer_t framebuffer, texture_t texture, en
 	glFramebufferTexture2D(GL_FRAMEBUFFER, gl_target, GL_TEXTURE_2D, texture->id, 0);
 
 	GLenum err = glGetError();
-	if (err != GL_NO_ERROR)
-		texture_error("glFramebufferTexture2D failed: %s\n", err);
+	if (err != GL_NO_ERROR) {
+		framebuffer_error("glFramebufferTexture2D failed: %d\n", err);
+	}
+
+	err = glCheckFramebufferStatus(GL_FRAMEBUFFER); 
+	if(err != GL_FRAMEBUFFER_COMPLETE) {
+		framebuffer_error("Error: %s\n", framebuffer_status_to_text(err));
+	}
 }
