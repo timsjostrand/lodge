@@ -51,7 +51,7 @@ strview_t strbuf_to_strview(const strbuf_t str)
 
 size_t strbuf_length(const strbuf_t str)
 {
-	return strnlen(str.s, str.size);
+	return strview_length(strbuf_to_strview(str));
 }
 
 size_t strbuf_size(const strbuf_t str)
