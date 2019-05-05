@@ -13,34 +13,26 @@ struct drawable {
 	GLuint	vao;
 };
 
-void	drawable_free(struct drawable *d);
+void		drawable_free(struct drawable *d);
 
-void	drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments, struct shader *s);
-void	drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments, struct shader *s);
+void		drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments, struct shader *s);
+void		drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments, struct shader *s);
 
-void	drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s);
-void	drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
-void	drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
-void	drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s);
+void		drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s);
+void		drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
+void		drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h, struct shader *s);
+void		drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s);
+void		drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s);
+void		drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s);
 
-void	drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s);
+void		drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s);
 
-void	drawable_render(struct drawable *d);
-void	drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec4 color, struct shader *s, mat4 transform);
-void	drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform);
+void		drawable_new_cube(struct drawable *dst, struct shader *shader);
 
-/* FIXME: basic_sprite should be refactored into a drawable of type "rect". */
-struct basic_sprite {
-	int		type;
-	vec4	pos;
-	vec4	scale;
-	vec4	color;
-	float	rotation;
-	GLuint	*texture;
-};
+GLfloat*	drawable_get_vertices_plane_quad(GLfloat* dst, float x, float y, float w, float h, int mirror);
 
-void	sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-				float w, float h, const vec4 color, float rotation, GLuint *texture);
-void	sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics* g);
+void		drawable_render(struct drawable *d);
+void		drawable_render_detailed(GLenum mode, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp);
+void		drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform);
 
 #endif

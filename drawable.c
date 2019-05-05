@@ -10,6 +10,7 @@
 #include <GL/glew.h>
 #include <math.h>
 
+#include "vertex.h"
 #include "drawable.h"
 #include "math4.h"
 #include "graphics.h"
@@ -18,43 +19,78 @@
 /**
  * Upload vertices to GPU.
  */
-static void drawable_set_vbo(GLfloat *vertices, GLuint vertices_count, struct shader *s,
-		GLuint *vbo, GLuint *vao)
+static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertices_count, GLuint *vbo, GLuint *vao)
 {
 	/* Generate new vertex array? */
 	if(*vao == 0) {
 		glGenVertexArrays(1, vao);
-		GL_OK_OR_RETURN;
+		GL_OK_OR_RETURN();
 	}
 
 	/* Bind vertex array. */
 	glBindVertexArray(*vao);
-	GL_OK_OR_RETURN;
+	GL_OK_OR_RETURN();
 
 	/* Generate vertex buffer? */
 	if(*vbo == 0) {
 		glGenBuffers(1, vbo);
-		GL_OK_OR_RETURN;
+		GL_OK_OR_RETURN();
 	}
 
 	/* Bind and upload buffer. */
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	GL_OK_OR_RETURN;
+	GL_OK_OR_RETURN();
 	glBufferData(GL_ARRAY_BUFFER, vertices_count * VBO_VERTEX_LEN * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
-	GL_OK_OR_RETURN;
+	GL_OK_OR_RETURN();
 
-	/* Position stream. */
-	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
-	glEnableVertexAttribArray(posAttrib);
-	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, VBO_VERTEX_LEN * sizeof(GLfloat), NULL);
-	GL_OK_OR_RETURN;
+	/* Positions */
+	{
+		static const GLint attrib_pos = 0;
+		glEnableVertexAttribArray(attrib_pos);
+		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+		GL_OK_OR_RETURN();
+	}
 
-	/* Texcoord stream. */
-	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
-	glEnableVertexAttribArray(texcoordAttrib);
-	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, VBO_VERTEX_LEN * sizeof(GLfloat),
-			(void *) (3 * sizeof(GLfloat)));
-	GL_OK_OR_RETURN;
+	/* UVs */
+	{
+		//GLint attrib_texcoord = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
+		static const GLint attrib_texcoord = 1;
+		glEnableVertexAttribArray(attrib_texcoord);
+		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		GL_OK_OR_RETURN();
+	}
+
+	/* Reset bindings to default */
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN();
+}
+
+static void drawable_set_vbo_vertex(const vertex_t *vertices, GLuint vertices_count, struct shader *s, GLuint *vbo, GLuint *vao)
+{
+	/* Generate new vertex array? */
+	if(*vao == 0) {
+		glGenVertexArrays(1, vao);
+		GL_OK_OR_RETURN();
+	}
+
+	/* Bind vertex array. */
+	glBindVertexArray(*vao);
+	GL_OK_OR_RETURN();
+
+	/* Generate vertex buffer? */
+	if(*vbo == 0) {
+		glGenBuffers(1, vbo);
+		GL_OK_OR_RETURN();
+	}
+
+	/* Bind and upload buffer. */
+	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
+	GL_OK_OR_RETURN();
+	glBufferData(GL_ARRAY_BUFFER, vertices_count * sizeof(vertex_t), vertices, GL_STATIC_DRAW);
+	GL_OK_OR_RETURN();
+
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN();
 }
 
 /**
@@ -74,7 +110,7 @@ static void drawable_set_vbo(GLfloat *vertices, GLuint vertices_count, struct sh
  */
 static void drawable_get_vertices_circle(GLfloat *dst, float cx, float cy, float r, int segments)
 {
-	float theta = 2 * M_PI / (float) (segments - 1);
+	float theta = 2 * (float)M_PI / (float) (segments - 1);
 	float c = cosf(theta); // Precalculate.
 	float s = sinf(theta);
 	float t;
@@ -232,29 +268,70 @@ void drawable_render(struct drawable *d)
 	glDrawArrays(d->draw_mode, 0, d->vertex_count);
 }
 
-void drawable_render_detailed(GLenum mode, GLuint vbo, GLuint vbo_count, GLuint vao, GLuint *tex, vec4 color, struct shader *s, mat4 transform)
+/* TODO(TS): remove `vbo` arg */
+void drawable_render_detailed(GLenum mode, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
 {
+	assert(vertex_count > 0);
+	assert(s->program != 0);
+	assert(vao != 0);
+
 	/* Bind vertices. */
 	glUseProgram(s->program);
+	GL_OK_OR_ASSERT("Failed to use shader program");
+
 	glBindVertexArray(vao);
+	GL_OK_OR_ASSERT("Failed to bind VAO");
 
 	/* Upload color */
 	GLint uniform_color = glGetUniformLocation(s->program, "color");
-	glUniform4fv(uniform_color, 1, (GLfloat*)color.v);
+	if(uniform_color != -1) {
+		glUniform4fv(uniform_color, 1, (GLfloat*)color.v);
+		GL_OK_OR_ASSERT("Could not set uniform `color`");
+	}
 
 	/* Upload transform */
-	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
-	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, (GLfloat*)transform);
+	GLint uniform_projection = glGetUniformLocation(s->program, "projection");
+	if(uniform_projection != -1) {
+		glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, (GLfloat*)mvp.projection.m);
+		GL_OK_OR_ASSERT("Could not set uniform `projection`");
+	}
+
+	/* Upload transform */
+	GLint uniform_view = glGetUniformLocation(s->program, "view");
+	if(uniform_view != -1) {
+		glUniformMatrix4fv(uniform_view, 1, GL_FALSE, (GLfloat*)mvp.view.m);
+		GL_OK_OR_ASSERT("Could not set uniform `view`");
+	}
+
+	/* Upload transform */
+	GLint uniform_model = glGetUniformLocation(s->program, "model");
+	if(uniform_model != -1) {
+		glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (GLfloat*)mvp.model.m);
+		GL_OK_OR_ASSERT("Could not set uniform `model`");
+	}
 
 	/* Render it! */
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, (*tex));
-	glDrawArrays(mode, 0, vbo_count);
+	if(tex) {
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, (*tex));
+		GL_OK_OR_ASSERT("Could not bind drawable texture");
+	}
+
+	glDrawArrays(mode, 0, vertex_count);
+	GL_OK_OR_RETURN();
+
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN();
 }
 
-void drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform)
+void drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 view)
 {
-	drawable_render_detailed(d->draw_mode, d->vbo, d->vertex_count, d->vao, tex, color, s, transform);
+	struct mvp mvp = {
+		.model = mat4_identity(),
+		.view = view,
+		.projection = mat4_identity()
+	};
+	drawable_render_detailed(d->draw_mode, d->vao, d->vertex_count, tex, color, s, mvp);
 }
 
 void drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s)
@@ -279,7 +356,7 @@ void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w,
 	drawable_get_vertices_rect_outline(vertices, x, y, w, h);
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
 
 	/* Cleanup. */
 	free(vertices);
@@ -302,7 +379,251 @@ void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, f
 	drawable_get_vertices_rect_solid(vertices, x, y, w, h);
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
+
+	/* Cleanup. */
+	free(vertices);
+}
+
+GLfloat* drawable_get_vertices_plane_quad(GLfloat* dst, float x, float y, float w, float h, int mirror)
+{
+	//w /= 2.0f;
+	//h /= 2.0f;
+
+	if(mirror) {
+		/* Top-left */
+		dst[0 * VBO_VERTEX_LEN + 0] = x;		// x
+		dst[0 * VBO_VERTEX_LEN + 1] = y + h;	// y
+		dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
+		dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
+		/* Bottom-Left */
+		dst[1 * VBO_VERTEX_LEN + 0] = x;		// x
+		dst[1 * VBO_VERTEX_LEN + 1] = y;		// y
+		dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
+		dst[1 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+		/* Bottom-right */
+		dst[2 * VBO_VERTEX_LEN + 0] = x + w;	// x
+		dst[2 * VBO_VERTEX_LEN + 1] = y;		// y
+		dst[2 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[2 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
+		dst[2 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+
+		/* Top-right */
+		dst[3 * VBO_VERTEX_LEN + 0] = x + w;	// x
+		dst[3 * VBO_VERTEX_LEN + 1] = y + h;	// y
+		dst[3 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[3 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
+		dst[3 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
+		/* Top-left */
+		dst[4 * VBO_VERTEX_LEN + 0] = x;		// x
+		dst[4 * VBO_VERTEX_LEN + 1] = y + h;	// y
+		dst[4 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[4 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
+		dst[4 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
+		/* Bottom-right */
+		dst[5 * VBO_VERTEX_LEN + 0] = x + w;	// x
+		dst[5 * VBO_VERTEX_LEN + 1] = y;		// y
+		dst[5 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[5 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
+		dst[5 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+	} else {
+		/* Top-left */
+		dst[0 * VBO_VERTEX_LEN + 0] = x;		// x
+		dst[0 * VBO_VERTEX_LEN + 1] = y + h;	// y
+		dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
+		dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
+		/* Bottom-Left */
+		dst[1 * VBO_VERTEX_LEN + 0] = x;		// x
+		dst[1 * VBO_VERTEX_LEN + 1] = y;		// y
+		dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
+		dst[1 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+		/* Top-right */
+		dst[2 * VBO_VERTEX_LEN + 0] = x + w;	// x
+		dst[2 * VBO_VERTEX_LEN + 1] = y + h;	// y
+		dst[2 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[2 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
+		dst[2 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
+
+		/* Top-right */
+		dst[3 * VBO_VERTEX_LEN + 0] = x + w;	// x
+		dst[3 * VBO_VERTEX_LEN + 1] = y + h;	// y
+		dst[3 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[3 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
+		dst[3 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
+		/* Bottom-left */
+		dst[4 * VBO_VERTEX_LEN + 0] = x;		// x
+		dst[4 * VBO_VERTEX_LEN + 1] = y;		// y
+		dst[4 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[4 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
+		dst[4 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+		/* Bottom-right */
+		dst[5 * VBO_VERTEX_LEN + 0] = x + w;	// x
+		dst[5 * VBO_VERTEX_LEN + 1] = y;		// y
+		dst[5 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
+		dst[5 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
+		dst[5 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+	}
+
+	return dst + 6 * VBO_VERTEX_LEN;
+}
+
+static vertex_t* drawable_get_vertices_plane_quad_vertex(vertex_t* dst, float x, float y, float w, float h, int mirror)
+{
+	//w /= 2.0f;
+	//h /= 2.0f;
+
+	if(mirror) {
+		/* Top-left */
+		dst[0].x = x;	
+		dst[0].y = y + h;
+		dst[0].z = 0.0f;
+		dst[0].u = x;
+		dst[0].v = y + h;
+		/* Bottom-Left */
+		dst[1].x = x;
+		dst[1].y = y;
+		dst[1].z = 0.0f;
+		dst[1].u = x;	
+		dst[1].v = y;	
+		/* Bottom-right */
+		dst[2].x = x + w;
+		dst[2].y = y;
+		dst[2].z = 0.0f;
+		dst[2].u = x + w;
+		dst[2].v = y;
+		vertex_calc_tangents(&dst[0], &dst[1], &dst[2]);
+
+		/* Top-right */
+		dst[3].x = x + w;
+		dst[3].y = y + h;
+		dst[3].z = 0.0f;	
+		dst[3].u = x + w;
+		dst[3].v = y + h;	
+		/* Top-left */
+		dst[4].x = x;
+		dst[4].y = y + h;
+		dst[4].z = 0.0f;
+		dst[4].u = x;
+		dst[4].v = y + h;	
+		/* Bottom-right */
+		dst[5].x = x + w;
+		dst[5].y = y;
+		dst[5].z = 0.0f;
+		dst[5].u = x + w;
+		dst[5].v = y;	
+		vertex_calc_tangents(&dst[3], &dst[4], &dst[5]);
+	} else {
+		/* Top-left */
+		dst[0].x = x;
+		dst[0].y = y + h;
+		dst[0].z = 0.0f;	
+		dst[0].u = x;
+		dst[0].v = y + h;
+		/* Bottom-Left */
+		dst[1].x = x;
+		dst[1].y = y;
+		dst[1].z = 0.0f;	
+		dst[1].u = x;
+		dst[1].v = y;
+		/* Top-right */
+		dst[2].x = x + w;
+		dst[2].y = y + h;
+		dst[2].z = 0.0f;
+		dst[2].u = x + w;	
+		dst[2].v = y + h;
+		vertex_calc_tangents(&dst[0], &dst[1], &dst[2]);
+
+		/* Top-right */
+		dst[3].x = x + w;
+		dst[3].y = y + h;
+		dst[3].z = 0.0f;
+		dst[3].u = x + w;	
+		dst[3].v = y + h;	
+		/* Bottom-left */
+		dst[4].x = x;
+		dst[4].y = y;
+		dst[4].z = 0.0f;	
+		dst[4].u = x;
+		dst[4].v = y;
+		/* Bottom-right */
+		dst[5].x = x + w;
+		dst[5].y = y;
+		dst[5].z = 0.0f;
+		dst[5].u = x + w;
+		dst[5].v = y;
+		vertex_calc_tangents(&dst[3], &dst[4], &dst[5]);
+	}
+
+	return dst + 6;
+}
+
+void drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s)
+{
+	dst->draw_mode = GL_TRIANGLES;
+	/* Allocate memory for vertices. */
+	dst->vertex_count = 6 * divisions_x * divisions_y;
+	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
+
+	/* OOM? */
+	if(vertices == NULL) {
+		graphics_error("Out of memory\n");
+		return;
+	}
+
+	/* Calculate vertices. */
+	float w = size.x / divisions_x;
+	float h = size.y / divisions_y;
+	GLfloat *cursor = vertices;
+	for(int y = 0; y < divisions_y; y++) {
+		for(int x = 0; x < divisions_x; x++) {
+			float x0 = origin.x + x * w;
+			float y0 = origin.y + y * h;
+			int mirror = (y + x) % 2 == 0;
+
+			cursor = drawable_get_vertices_plane_quad(cursor, x0, y0, w, h, mirror);
+		}
+	}
+
+	/* Upload vertices to GPU. */
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
+
+	/* Cleanup. */
+	free(vertices);
+}
+
+void drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s)
+{
+	dst->draw_mode = GL_TRIANGLES;
+	/* Allocate memory for vertices. */
+	dst->vertex_count = 6 * divisions_x * divisions_y;
+	vertex_t *vertices = (vertex_t *) calloc(dst->vertex_count, sizeof(vertex_t));
+
+	/* OOM? */
+	if(vertices == NULL) {
+		graphics_error("Out of memory\n");
+		return;
+	}
+
+	/* Calculate vertices. */
+	float w = size.x / divisions_x;
+	float h = size.y / divisions_y;
+	vertex_t *cursor = vertices;
+	for(int y = 0; y < divisions_y; y++) {
+		for(int x = 0; x < divisions_x; x++) {
+			float x0 = origin.x + x * w;
+			float y0 = origin.y + y * h;
+			int mirror = (y + x) % 2 == 0;
+
+			cursor = drawable_get_vertices_plane_quad_vertex(cursor, x0, y0, w, h, mirror);
+		}
+	}
+
+	/* Upload vertices to GPU. */
+	drawable_set_vbo_vertex(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
 
 	/* Cleanup. */
 	free(vertices);
@@ -364,7 +685,7 @@ void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
 	vertices[5 * VBO_VERTEX_LEN + 4] = 0.0f;	// v
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
 
 	/* Cleanup. */
 	free(vertices);
@@ -391,7 +712,7 @@ void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float 
 	drawable_get_vertices_circle(vertices, x, y, r, dst->vertex_count);
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
 
 	/* Cleanup. */
 	free(vertices);
@@ -423,10 +744,60 @@ void drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, floa
 	drawable_get_vertices_line(vertices, x1, y1, x2, y2);
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
 
 	/* Cleanup. */
 	free(vertices);
+}
+
+/**
+ * Create a unit cube from (-0.5,-0.5,-0.5) to (0.5,0.5,0.5).
+ */
+void drawable_new_cube(struct drawable *dst, struct shader *shader)
+{
+	dst->draw_mode = GL_TRIANGLES;
+
+	static const GLfloat vertices[] = {
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+	};
+
+	dst->vertex_count = sizeof(vertices) / sizeof(vertices[0]) / VBO_VERTEX_LEN;
+	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
 }
 
 void drawable_free(struct drawable *d)
@@ -434,37 +805,4 @@ void drawable_free(struct drawable *d)
 	glDeleteVertexArrays(1, &d->vao);
 	glDeleteBuffers(1, &d->vbo);
 	d->vertex_count = 0;
-}
-
-/**** DEPRECATED STUFF ****/
-
-void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics* g)
-{
-	// Position, rotation and scale
-	mat4 transform_position;
-	translate(transform_position, xyz(sprite->pos));
-
-	mat4 transform_scale;
-	scale(transform_scale, xyz(sprite->scale));
-
-	mat4 transform_rotation;
-	rotate_z(transform_rotation, sprite->rotation);
-
-	mat4 transform_final;
-	mult(transform_final, transform_position, transform_rotation);
-	mult(transform_final, transform_final, transform_scale);
-	transpose_same(transform_final);
-
-	drawable_render_detailed(GL_TRIANGLES, g->vbo_rect, VBO_QUAD_VERTEX_COUNT, g->vao_rect, sprite->texture, sprite->color, s, transform_final);
-}
-
-void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-		float w, float h, const vec4 color, float rotation, GLuint *texture)
-{
-	sprite->type = type;
-	vec4_init(&sprite->pos, x, y, z, 0.0f);
-	vec4_init(&sprite->scale, w, h, 1.0f, 1.0f);
-	vec4_init(&sprite->color, rgba(color));
-	sprite->rotation = rotation;
-	sprite->texture = texture;
 }
