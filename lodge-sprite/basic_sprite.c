@@ -3,7 +3,16 @@
 #include <GL/glew.h>
 #include "drawable.h"
 
-/**** DEPRECATED STUFF ****/
+void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
+	float w, float h, const vec4 color, float rotation, GLuint *texture)
+{
+	sprite->type = type;
+	sprite->pos = vec4_make(x, y, z, 0.0f);
+	sprite->scale = vec4_make(w, h, 1.0f, 1.0f);
+	sprite->color = vec4_make(xyzw(color));
+	sprite->rotation = rotation;
+	sprite->texture = texture;
+}
 
 void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g)
 {
@@ -21,22 +30,10 @@ void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphic
 	};
 
 	drawable_render_detailed(GL_TRIANGLES,
-		g->vbo_rect,
-		VBO_QUAD_VERTEX_COUNT,
 		g->vao_rect,
+		VBO_QUAD_VERTEX_COUNT,
 		sprite->texture,
 		sprite->color,
 		s,
 		mvp);
-}
-
-void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-	float w, float h, const vec4 color, float rotation, GLuint *texture)
-{
-	sprite->type = type;
-	sprite->pos = vec4_make(x, y, z, 0.0f);
-	sprite->scale = vec4_make(w, h, 1.0f, 1.0f);
-	sprite->color = vec4_make(xyzw(color));
-	sprite->rotation = rotation;
-	sprite->texture = texture;
 }
