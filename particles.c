@@ -1,7 +1,7 @@
 /**
  * Particle emitter.
  *
- * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
+ * Author: Tim SjÃ¶strand <tim.sjostrand@gmail.com>
  */
 
 #include <string.h>
@@ -77,11 +77,11 @@ static void particle_init(struct particle *p, struct anim *anim,
 	p->dead = 0;
 	p->age = 0;
 	p->age_max = age_max;
-	vec3_init(&p->v, vx, vy, 0);
+	p->v = vec3_make(vx, vy, 0);
 
 	/* Init sprite */
-	vec3_init(&p->sprite.position, x, y, 0);
-	vec2_init(&p->sprite.scale, w, h);
+	p->sprite.position = vec3_make(x, y, 0.0f);
+	p->sprite.scale = vec3_make(w, h, 1.0f);
 
 	animatedsprites_playanimation(&p->sprite, anim);
 }
