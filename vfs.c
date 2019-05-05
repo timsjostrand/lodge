@@ -26,6 +26,7 @@ void vfs_init(const char *mount_path)
 		vfs_global->file_table[i].size = 0;
 		vfs_global->file_table[i].data = 0;
 		vfs_global->file_table[i].read_callbacks = 0;
+		vfs_global->file_table[i].timeout_frames = 0;
 	}
 
 	if (mount_path != NULL) {
@@ -40,6 +41,30 @@ void vfs_shutdown()
 		stb_fclose(vfs_global->file_table[i].file, 0);
 		if (vfs_global->file_table[i].data != NULL) {
 			free(vfs_global->file_table[i].data);
+		}
+	}
+}
+
+void vfs_prune_callbacks(read_callback_t fn, void* userdata)
+{
+	int added = 0;
+
+	struct read_callback cbck;
+	cbck.fn = fn;
+	cbck.userdata = userdata;
+
+	for(int i = 0; i < vfs_global->file_count; i++)
+	{
+		struct vfs_file *file = &vfs_global->file_table[i];
+
+		for(int j = 0; j < stb_arr_len(file->read_callbacks); j++)
+		{
+			struct read_callback *callback = &file->read_callbacks[j];
+
+			if(callback->fn == fn && callback->userdata == userdata) {
+				stb_arr_delete(file->read_callbacks, j);
+				j--;
+			}
 		}
 	}
 }
@@ -66,6 +91,7 @@ void vfs_register_callback(const char* filename, read_callback_t fn, void* userd
 		vfs_global->file_table[vfs_global->file_count].data = 0;
 		vfs_global->file_table[vfs_global->file_count].file = 0;
 		vfs_global->file_table[vfs_global->file_count].lastChange = 0;
+		vfs_global->file_table[vfs_global->file_count].timeout_frames = 0;
 		strcpy(vfs_global->file_table[vfs_global->file_count].name, filename);
 		strcpy(vfs_global->file_table[vfs_global->file_count].simplename, filename);
 		vfs_global->file_table[vfs_global->file_count].size = 0;
@@ -91,9 +117,20 @@ void vfs_register_callback_filter(const char* filter, read_callback_t fn, void* 
 static void vfs_reload(struct vfs_file *f, int force)
 {
 	time_t lastChange = stb_ftimestamp(f->name);
-	if (f->lastChange != lastChange || force)
+	if (f->lastChange != lastChange)
 	{
-		f->file = stb_fopen(f->name, "rb");
+		f->timeout_frames += 50;
+		f->lastChange = lastChange;
+	}
+
+	if(force)
+	{
+		f->timeout_frames = 1;
+	}
+
+	if(f->timeout_frames > 0 && --f->timeout_frames == 0)
+	{
+		f->file = fopen(f->name, "rb");
 
 		if (f->file == 0)
 		{
@@ -103,14 +140,15 @@ static void vfs_reload(struct vfs_file *f, int force)
 		fseek(f->file, 0, SEEK_SET);
 
 		free(f->data);
-		f->lastChange = lastChange;
 
 		// Hacky solution to make sure the OS is finished with the fseek call
 		// How can this be solved better?
+		size_t last_size = -1;
 		f->size = 0;
-		while (f->size == 0)
+		while (f->size == 0 || last_size != f->size)
 		{
 			f->size = stb_filelen(f->file);
+			last_size = f->size;
 		}
 
 		f->data = malloc(f->size);
@@ -125,7 +163,7 @@ static void vfs_reload(struct vfs_file *f, int force)
 	}
 }
 
-static struct vfs_file* vfs_get_file_entry(const char *filename)
+struct vfs_file* vfs_get_file_entry(const char *filename)
 {
 	for (int i = 0; i < vfs_global->file_count; i++)
 	{
@@ -226,6 +264,7 @@ void vfs_mount(const char* dir)
 				vfs_global->file_table[j].lastChange = stb_ftimestamp(vfs_global->file_table[j].name);
 				vfs_global->file_table[j].size = stb_filelen(vfs_global->file_table[j].file);
 				vfs_global->file_table[j].data = malloc(vfs_global->file_table[j].size);
+				vfs_global->file_table[j].timeout_frames = 0;
 				fread(vfs_global->file_table[j].data, 1, vfs_global->file_table[j].size, vfs_global->file_table[j].file);
 				stb_fclose(vfs_global->file_table[i].file, 0);
 
@@ -241,6 +280,7 @@ void vfs_mount(const char* dir)
 			new_file.lastChange = stb_ftimestamp(new_file.name);
 			new_file.size = stb_filelen(new_file.file);
 			new_file.data = malloc(new_file.size);
+			new_file.timeout_frames = 0;
 			fread(new_file.data, 1, new_file.size, new_file.file);
 			stb_fclose(new_file.file, 0);
 

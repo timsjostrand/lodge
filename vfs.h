@@ -26,6 +26,7 @@ struct vfs_file
 	char name[VFS_MAX_FILENAME_LEN];
 	char simplename[VFS_MAX_FILENAME_LEN];
 	time_t lastChange;
+	size_t timeout_frames;
 	struct read_callback* read_callbacks;
 	size_t size;
 	void* data;
@@ -45,6 +46,7 @@ void	vfs_mount(const char* dir);
 void	vfs_register_callback(const char* filename, read_callback_t fn, void* userdata);
 void	vfs_register_callback_filter(const char* filter, read_callback_t fn, void* userdata);
 void	vfs_run_callbacks();
+void	vfs_prune_callbacks(read_callback_t fn, void* userdata);
 int		vfs_reload_file(const char *filename);
 #ifdef VFS_ENABLE_FILEWATCH
 void	vfs_filewatch();
