@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <ctype.h>
+#include <assert.h>
 
 #include "str.h"
 
@@ -23,19 +25,93 @@
  * An implementation of the standard strnlen, if it is not already implemented.
  */
 #ifndef HAVE_STRNLEN
-size_t strnlen(const char *s, size_t s_size)
+size_t strnlen(const char *s, size_t s_len)
 {
 	const char *e;
 	size_t n;
 
-	for(e = s, n = 0; *e && n < s_size; e++, n++);
+	for(e = s, n = 0; *e && n < s_len; e++, n++);
 	return n;
 }
 #endif
 
+strbuf_t strbuf_make(char *s, size_t size)
+{
+	strbuf_t tmp = {
+		.size = size,
+		.s = s
+	};
+	return tmp;
+}
+
+strview_t strbuf_to_strview(const strbuf_t str)
+{
+	return strview_make(str.s, strbuf_length(str));
+}
+
+size_t strbuf_length(const strbuf_t str)
+{
+	return strnlen(str.s, str.size);
+}
+
+size_t strbuf_size(const strbuf_t str)
+{
+	return str.size;
+}
+
+int strbuf_equals(const strbuf_t lhs, const strview_t rhs)
+{
+	return strview_equals(strbuf_to_strview(lhs), rhs);
+}
+
+size_t strbuf_insert(strbuf_t str, size_t index, const strview_t sub)
+{
+	return str_insert(str.s, str.size, index, sub.s, sub.length);
+}
+
+size_t strbuf_delete(strbuf_t str, size_t index, size_t count)
+{
+	return str_delete(str.s, str.size, index, count);
+}
+
+size_t strbuf_set(strbuf_t dst, const strview_t src)
+{
+	return str_set(dst.s, dst.size, src);
+}
+
+size_t strbuf_append(strbuf_t dst, const strview_t src)
+{
+	return str_append(dst.s, dst.size, src.s, src.length);
+}
+
+strview_t strview_make(const char *s, size_t length)
+{
+	strview_t tmp = {
+		.length = length,
+		.s = s
+	};
+	return tmp;
+}
+
+int strview_equals(const strview_t lhs, const strview_t rhs)
+{
+	return str_equals(lhs.s, lhs.length, rhs.s, rhs.length);
+}
+
+int strview_empty(const strview_t str)
+{
+	return strview_length(str) == 0;
+}
+
+int strview_length(const strview_t str)
+{
+	assert(str.length == strlen(str.s));
+	return str.length;
+}
+
 /**
  * Insert a character into a given position in a string, and move any adjacent
- * characters to accomodate the new substring.
+ * characters to accommodate the new substring.
  *
  * @param s			The string to delete from.
  * @param s_size	The size of the buffer holding s.
@@ -156,7 +232,7 @@ int str_replace_into(char *s, size_t s_size, size_t index, const char *sub, size
  *
  * @return			The number of characters removed from the string.
  */
-int str_delete(char *s, size_t s_size, size_t index, size_t count)
+size_t str_delete(char *s, size_t s_size, size_t index, size_t count)
 {
 	/* Sanity check: invalid arguments. */
 	if(count < 1
@@ -199,7 +275,7 @@ int str_delete(char *s, size_t s_size, size_t index, size_t count)
  *
 */
 
-int str_append(char *s, size_t s_size, const char *sub, size_t sub_len)
+size_t str_append(char *s, size_t s_size, const char *sub, size_t sub_len)
 {
 	size_t s_null = strnlen(s, s_size);
 	/* Sanity check: out of bounds? */
@@ -388,13 +464,13 @@ int str_parse_3f(const char *s, const char delimiter, float *dst_x, float *dst_y
  *
  * @return -1 on error, 0 on success.
  */
-int str_parse_bool(const char *s, int *dst)
+int str_parse_bool(const char *s, size_t s_len, int *dst)
 {
 	if(str_empty(s, 1)) {
 		return -1;
-	} else if(str_equals_ignore_case(s, "true")) {
+	} else if(str_equals_ignore_case(s, s_len, str_static("true"))) {
 		*dst = 1;
-	} else if(str_equals_ignore_case(s, "1")) {
+	} else if(str_equals_ignore_case(s, s_len, str_static("1"))) {
 		*dst = 1;
 	} else {
 		*dst = 0;
@@ -410,15 +486,11 @@ void str_print_hex(const char *s)
 /**
  * @return 1 if 'a' is equal to 'b'.
  */
-int str_equals(const char *a, const char *b)
+int str_equals(const char *a, size_t a_len, const char *b, size_t b_len)
 {
-	size_t a_len = strlen(a);
-	size_t b_len = strlen(b);
-
 	if(a_len != b_len) {
 		return 0;
 	}
-
 	/* a_len == b_len here. */
 	return strncmp(a, b, a_len) == 0;
 }
@@ -426,15 +498,11 @@ int str_equals(const char *a, const char *b)
 /**
  * @return 1 if 'a' is equal to 'b', ignoring case.
  */
-int str_equals_ignore_case(const char *a, const char *b)
+int str_equals_ignore_case(const char *a, size_t a_len, const char *b, size_t b_len)
 {
-	size_t a_len = strlen(a);
-	size_t b_len = strlen(b);
-
 	if(a_len != b_len) {
 		return 0;
 	}
-
 	/* a_len == b_len here. */
 #ifndef WIN32
 	return strncasecmp(a, b, a_len) == 0;
@@ -450,13 +518,14 @@ int str_equals_ignore_case(const char *a, const char *b)
  *
  * @return The number of characters excluded from the copy, if any.
  */
-int str_set(char *dst, size_t dst_size, const char *src)
+int str_set(char *dst, size_t dst_size, const strview_t src)
 {
-	size_t src_size = strlen(src) + 1;
-	size_t end = src_size > dst_size ? dst_size : src_size;
-	memcpy(dst, src, end);
-	dst[end+1 < dst_size ? end+1 : dst_size] = '\0';
-	return src_size - end;
+	size_t end = (src.length >= (dst_size - 1)) ? (dst_size - 1) : src.length;
+	assert(end < dst_size);
+	memcpy(dst, src.s, end);
+	dst[end] = '\0';
+
+	return src.length - end;
 }
 
 /**
@@ -469,6 +538,65 @@ int str_empty(const char *s, size_t s_size)
 	}
 
 	return strnlen(s, s_size) == 0;
+}
+
+/**
+ * @return True if the string starts with 'start_with'.
+ */
+int str_begins_with(const char *s, size_t s_len, const char *begins_with)
+{
+	return strncmp(s, begins_with, s_len) == 0;
+}
+
+void str_to_lower(char *s, size_t s_len)
+{
+	for(size_t i=0; i<s_len; i++) {
+		s[i] = tolower(s[i]);
+	}
+}
+
+void str_to_upper(char *s, size_t s_len)
+{
+	for(size_t i=0; i<s_len; i++) {
+		s[i] = toupper(s[i]);
+	}
+}
+
+size_t str_ltrim(char *s, size_t s_len)
+{
+	size_t i = 0;
+	for(; i<s_len; i++) {
+		if(!isspace(s[i])) {
+			break;
+		}
+	}
+	str_delete(s, s_len, 0, i);
+	return s_len - i;
+}
+
+size_t str_rtrim(char *s, size_t s_len)
+{
+	size_t i = s_len - 1;
+	for(; i>=0; i--) {
+		char c = s[i];
+		if(isspace(c)) {
+			s[i] = '\0';
+			s_len--;
+		} else if(c != '\0') {
+			break;
+		}
+	}
+	return s_len;
+}
+
+size_t str_trim(char *s, size_t s_len)
+{
+	if(s_len == 0) {
+		return s_len;
+	}
+	s_len = str_ltrim(s, s_len);
+	s_len = str_rtrim(s, s_len);
+	return s_len;
 }
 
 #ifndef HAVE_VSNPRINTF
