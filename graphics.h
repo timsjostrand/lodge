@@ -13,18 +13,18 @@
 #define graphics_error(...) errorf("Graphics", __VA_ARGS__)
 
 /**
- * Exhausts OpenGL Error queue and asserts on an error, but continues execution.
+ * Exhausts the OpenGL Error queue and asserts on an error, but continues execution.
  */
-#define GL_OK_OR_ASSERT( message ) { \
+#define GL_OK_OR_ASSERT(message ) { \
 		GLenum err = GL_NO_ERROR; \
 		while((err = glGetError()) != GL_NO_ERROR) { \
-			errorf("OpenGL", "Error 0x%04x in %s:%s:%d: %s\n", err, __FILE__, __FUNCTION__, __LINE__, message); \
-			assert(0 && message); \
+			errorf("OpenGL", "Error 0x%04x in %s:%s:%d: %s\n", err, __FILE__, __FUNCTION__, __LINE__, (message)); \
+			assert(0 && (message)); \
 		} \
 	}
 
 /**
- * Exhausts OpenGL Error queue and returns when done, optionally with a return value.
+ * Exhausts the OpenGL Error queue and returns when done (optionally with a return value).
  */
 #define GL_OK_OR_RETURN(...) { \
 		GLenum err = GL_NO_ERROR; \

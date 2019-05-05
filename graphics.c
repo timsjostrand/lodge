@@ -48,26 +48,115 @@ int graphics_opengl_init(struct graphics *g)
 #else
 	glDisable(GL_DEPTH_TEST);
 #endif
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
 
 	glEnable(GL_CULL_FACE);
 	//glDisable(GL_CULL_FACE);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	/* Vertex buffer. */
-	glGenBuffers(1, &g->vbo_rect);
-	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
-	glBufferData(GL_ARRAY_BUFFER, VBO_QUAD_LEN * sizeof(float),
-			rect_vertices, GL_STATIC_DRAW);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
 
 	/* Vertex array. */
 	glGenVertexArrays(1, &g->vao_rect);
 	glBindVertexArray(g->vao_rect);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
 
-	GL_OK_OR_RETURN_NONZERO;
+	/* Vertex buffer. */
+	glGenBuffers(1, &g->vbo_rect);
+	glBindBuffer(GL_ARRAY_BUFFER, g->vbo_rect);
+	glBufferData(GL_ARRAY_BUFFER, VBO_QUAD_LEN * sizeof(float), rect_vertices, GL_STATIC_DRAW);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
+
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
+
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
 
 	return GRAPHICS_OK;
+}
+
+static const char* loc_opengl_debug_type(GLenum type)
+{
+	switch(type)
+	{
+	case GL_DEBUG_TYPE_ERROR:
+		return "ERROR";
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		return "DEPRECATED_BEHAVIOR";
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		return "UNDEFINED_BEHAVIOR";
+	case GL_DEBUG_TYPE_PORTABILITY:
+		return "PORTABILITY";
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		return "PERFORMANCE";
+	case GL_DEBUG_TYPE_OTHER:
+		return "OTHER";
+	case GL_DEBUG_TYPE_MARKER:
+		return "MARKER";
+	case GL_DEBUG_TYPE_PUSH_GROUP:
+		return "PUSH_GROUP";
+	case GL_DEBUG_TYPE_POP_GROUP:
+		return "POP_GROUP";
+	default:
+		return "UNKNOWN_TYPE";
+	}
+}
+
+static const char* loc_opengl_debug_severity(GLenum severity)
+{
+	switch(severity)
+	{
+	case GL_DEBUG_SEVERITY_HIGH:
+		return "HIGH";
+	case GL_DEBUG_SEVERITY_MEDIUM:
+		return "MEDIUM";
+	case GL_DEBUG_SEVERITY_LOW:
+		return "LOW";
+	case GL_DEBUG_SEVERITY_NOTIFICATION:
+		return "NOTIFICATION";
+	default:
+		return "UNKNOWN_SEVERITY";
+	}
+}
+
+static const char* loc_opengl_debug_source(GLenum source)
+{
+	switch(source)
+	{
+	case GL_DEBUG_SOURCE_API:
+		return "API";
+	case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+		return "WINDOW_SYSTEM";
+	case GL_DEBUG_SOURCE_SHADER_COMPILER:
+		return "SHADER_COMPILER";
+	case GL_DEBUG_SOURCE_THIRD_PARTY:
+		return "THIRD_PARTY";
+	case GL_DEBUG_SOURCE_APPLICATION:
+		return "APPLICATION";
+	case GL_DEBUG_SOURCE_OTHER:
+		return "OTHER";
+	default:
+		return "UNKNOWN_SOURCE";
+	}
+}
+
+static void GLAPIENTRY loc_opengl_debug_message_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+{
+	printf("OpenGL: %s/%s/%s:\n `%s`\n",
+		loc_opengl_debug_source(source),
+		loc_opengl_debug_type(type),
+		loc_opengl_debug_severity(severity),
+		message
+	);
 }
 
 /**
@@ -98,14 +187,16 @@ int graphics_init(struct graphics *g, think_func_t think, render_func_t render, 
 		return GRAPHICS_GLEW_ERROR;
 	}
 
-	/* NOTE: Something in the init code above is causing an 0x0500 OpenGL error,
-	* and it will linger in the error queue until the application pops it.
-	* Assuming the aforementioned init code does it's error checking properly,
-	* we can safely exhaust the error queue here to avoid ugly debug print
-	* statements later. */
-	while (glGetError() != GL_NO_ERROR) {
+	/* NOTE: Something in glewInit() is causing an 0x0500 OpenGL error, but the
+	* Internet says we should ignore this error. */
+	while(glGetError() != GL_NO_ERROR) {
 		/* Ignore this error. */
 	}
+
+	glEnable(GL_DEBUG_OUTPUT);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
+	glDebugMessageCallback((GLDEBUGPROC)&loc_opengl_debug_message_callback, 0);
+	GL_OK_OR_RETURN(GRAPHICS_ERROR);
 
 	return GRAPHICS_OK;
 }
