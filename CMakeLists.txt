@@ -49,8 +49,8 @@ endif()
 set(ENGINE_INCLUDES ${ENGINE_PATH})
 
 # Store DLLs alongside engine.exe.
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-    CACHE STRING "Static Library output directory" FORCE)
+#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+#    CACHE STRING "Static Library output directory" FORCE)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     CACHE STRING "Shared Library output directory" FORCE)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
@@ -245,6 +245,8 @@ function(add_game_library game_name)
     #           a module.
     list(APPEND ENGINE_MODULES lodge-assets)
     list(APPEND ENGINE_MODULES lodge-sound)
+    list(APPEND ENGINE_MODULES lodge-collections)
+    list(APPEND ENGINE_MODULES lodge-sprite) # NOTE(TS): needed by console.h
     list(APPEND ENGINE_MODULES lodge-stb) # NOTE(TS): needed for texture.c, vfs.c
 
     # Engine modules
