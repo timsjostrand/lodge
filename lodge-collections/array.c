@@ -22,10 +22,10 @@ void array_destroy(array_t array)
 
 void* array_get(array_t array, int index)
 {
-	return (void*)array->data[array->element_size * index];
+	return (void*)&array->data[array->element_size * index];
 }
 
-void array_append(array_t array, void* data)
+void array_append(array_t array, const void* data)
 {
 	memcpy((char*)&array->data[array->element_size * array->count++], 
 		(char*)data, 
@@ -66,4 +66,16 @@ void* array_last(array_t array)
 void array_sort(array_t array, int(*compar)(const void *, const void*))
 {
 	qsort(array->data, array->count, array->element_size, compar);
+}
+
+int array_find_string(array_t array, const char *s, size_t s_len)
+{
+	for(int i=0, count=array->count; i<count; i++)
+	{
+		const char* element = array_get(array, i);
+		if(strncmp(s, element, max(s_len, strlen(element))) == 0) {
+			return i;
+		}
+	}
+	return -1;
 }
