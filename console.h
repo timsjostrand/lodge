@@ -6,6 +6,7 @@
 #include "list.h"
 #include "graphics.h"
 #include "drawable.h"
+#include "basic_sprite.h"
 #include "monotext.h"
 #include "log.h"
 
