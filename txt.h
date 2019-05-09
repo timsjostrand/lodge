@@ -13,7 +13,7 @@ void		txt_free(txt_t txt);
 txt_t		txt_reserve(txt_t txt, size_t new_size);
 txt_t		txt_grow(txt_t txt, size_t fit);
 
-size_t		txt_count(txt_t txt);
+size_t		txt_length(txt_t txt);
 
 txt_t		txt_insert(txt_t txt, size_t index, const strview_t sub);
 void		txt_delete(txt_t txt, size_t index, size_t count);

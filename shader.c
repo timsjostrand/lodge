@@ -115,7 +115,7 @@ static int shader_resolve_includes_str(txt_t txt, array_t includes, txt_t *out)
 	while(retry) {
 		retry = 0;
 
-		size_t count = txt_count(txt); 
+		size_t count = txt_length(txt); 
 		foreach_line(txt, count) {
 			if(len == 0) {
 				continue;
@@ -140,7 +140,7 @@ static int shader_resolve_includes_str(txt_t txt, array_t includes, txt_t *out)
 					txt_delete_from_tail(include_file, 1);
 				}
 
-				int include_index = array_find_string(includes, include_file, txt_count(include_file));
+				int include_index = array_find_string(includes, include_file, txt_length(include_file));
 				if(include_index == -1) {
 					shader_debug("Including file: `%s`\n", include_file);
 
