@@ -102,10 +102,10 @@ void tiles_think(struct tiles *tiles, vec2 view_offset, struct atlas *atlas, flo
 				animatedsprites_playanimation(draw_tile, type);
 			}
 
-			vec2_init(&draw_tile->scale, 1.0f, 1.0f);
+			draw_tile->scale = vec3_ones();
 
 			/* Move within the viewport. */
-			vec3_init(&draw_tile->position, grid_x, grid_y, 0);
+			draw_tile->position = vec3_make(grid_x, grid_y, 0);
 		}
 	}
 

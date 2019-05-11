@@ -1,5 +1,17 @@
 #include "vertex.h"
 
+xyzuv_t xyzuv_make(float x, float y, float z, float u, float v)
+{
+	xyzuv_t tmp = {
+		.x = x,
+		.y = y,
+		.z = z,
+		.u = u,
+		.v = v
+	};
+	return tmp;
+}
+
 void vertex_calc_tangents(vertex_t *t1, vertex_t *t2, vertex_t *t3)
 {
 	vec3 edge1 = vec3_sub(t2->pos, t1->pos);

@@ -5,21 +5,59 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
+#include "drawable.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <GL/glew.h>
 #include <math.h>
 
-#include "vertex.h"
-#include "drawable.h"
 #include "math4.h"
+#include "vertex.h"
+#include "vertex_buffer.h"
 #include "graphics.h"
 #include "color.h"
+
+#define LODGE_ARRAYSIZE(a) ( sizeof(a) / sizeof(a[0]) )
+
+static int32_t loc_draw_mode_to_opengl_mode(enum draw_mode dm)
+{
+	switch(dm)
+	{
+	case DRAW_MODE_POINTS:
+		return GL_POINTS;
+	case DRAW_MODE_LINE_STRIP:
+		return GL_LINE_STRIP;
+	case DRAW_MODE_LINE_LOOP:
+		return GL_LINE_LOOP;
+	case DRAW_MODE_LINES:
+		return GL_LINES;
+	case DRAW_MODE_LINE_STRIP_ADJACENCY:
+		return GL_LINE_STRIP_ADJACENCY;
+	case DRAW_MODE_LINES_ADJACENCY:
+		return GL_LINES_ADJACENCY;
+	case DRAW_MODE_TRIANGLE_STRIP:
+		return GL_TRIANGLE_STRIP;
+	case DRAW_MODE_TRIANGLE_FAN:
+		return GL_TRIANGLE_FAN;
+	case DRAW_MODE_TRIANGLES:
+		return GL_TRIANGLES;
+	case DRAW_MODE_TRIANGLE_STRIP_ADJACENCY:
+		return GL_TRIANGLE_STRIP_ADJACENCY;
+	case DRAW_MODE_TRIANGLES_ADJACENCY:
+		return GL_TRIANGLES_ADJACENCY;
+	case DRAW_MODE_PATCHES:
+		return GL_PATCHES;
+	default:
+		assert("Invalid draw_mode");
+		return -1;
+	}
+}
 
 /**
  * Upload vertices to GPU.
  */
-static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertices_count, GLuint *vbo, GLuint *vao)
+static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertex_count, GLuint *vbo, GLuint *vao)
 {
 	/* Generate new vertex array? */
 	if(*vao == 0) {
@@ -40,7 +78,7 @@ static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertices_count, GLu
 	/* Bind and upload buffer. */
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 	GL_OK_OR_RETURN();
-	glBufferData(GL_ARRAY_BUFFER, vertices_count * VBO_VERTEX_LEN * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertex_count * VBO_VERTEX_LEN * sizeof(GLfloat), vertices, GL_STATIC_DRAW);
 	GL_OK_OR_RETURN();
 
 	/* Positions */
@@ -65,7 +103,7 @@ static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertices_count, GLu
 	GL_OK_OR_RETURN();
 }
 
-static void drawable_set_vbo_vertex(const vertex_t *vertices, GLuint vertices_count, struct shader *s, GLuint *vbo, GLuint *vao)
+static void drawable_set_vbo_vertex(const vertex_t *vertices, GLuint vertex_count, struct shader *s, GLuint *vbo, GLuint *vao)
 {
 	/* Generate new vertex array? */
 	if(*vao == 0) {
@@ -86,8 +124,40 @@ static void drawable_set_vbo_vertex(const vertex_t *vertices, GLuint vertices_co
 	/* Bind and upload buffer. */
 	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
 	GL_OK_OR_RETURN();
-	glBufferData(GL_ARRAY_BUFFER, vertices_count * sizeof(vertex_t), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_t), vertices, GL_STATIC_DRAW);
 	GL_OK_OR_RETURN();
+
+	/* Positions */
+	{
+		static const GLint attrib_pos = 0;
+		glEnableVertexAttribArray(attrib_pos);
+		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, pos));
+		GL_OK_OR_RETURN();
+	}
+
+	/* UVs */
+	{
+		static const GLint attrib_texcoord = 1;
+		glEnableVertexAttribArray(attrib_texcoord);
+		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, uv));
+		GL_OK_OR_RETURN();
+	}
+
+	/* Tangents */
+	{
+		static const GLint attrib_tangent = 2;
+		glEnableVertexAttribArray(attrib_tangent);
+		glVertexAttribPointer(attrib_tangent, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, tangent));
+		GL_OK_OR_RETURN();
+	}
+
+	/* Bitangents */
+	{
+		static const GLint attrib_bitangent = 3;
+		glEnableVertexAttribArray(attrib_bitangent);
+		glVertexAttribPointer(attrib_bitangent, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, bitangent));
+		GL_OK_OR_RETURN();
+	}
 
 	glBindVertexArray(0);
 	GL_OK_OR_RETURN();
@@ -262,14 +332,129 @@ static void drawable_get_vertices_line(GLfloat *dst, float x1, float y1, float x
 	dst[1 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 }
 
+static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv_t *vertices, size_t vertex_count)
+{
+	assert(vertices != NULL);
+	assert(vertex_count > 0);
+
+	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
+
+	glGenVertexArrays(1, &drawable.vao);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Bind vertex array. */
+	glBindVertexArray(drawable.vao);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Generate vertex buffer? */
+	glGenBuffers(1, &drawable.vbo);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Bind and upload buffer. */
+	glBindBuffer(GL_ARRAY_BUFFER, drawable.vbo);
+	GL_OK_OR_RETURN(drawable);
+	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(xyzuv_t), vertices, GL_STATIC_DRAW);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Positions */
+	{
+		static const GLint attrib_pos = 0;
+		glEnableVertexAttribArray(attrib_pos);
+		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, sizeof(xyzuv_t), (const void*)offsetof(xyzuv_t, pos));
+		GL_OK_OR_RETURN(drawable);
+	}
+
+	/* UVs */
+	{
+		static const GLint attrib_texcoord = 1;
+		glEnableVertexAttribArray(attrib_texcoord);
+		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, sizeof(xyzuv_t), (const void*)offsetof(xyzuv_t, uv));
+		GL_OK_OR_RETURN(drawable);
+	}
+
+	/* Reset bindings to default */
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN(drawable);
+	return drawable;
+}
+
+struct drawable drawable_make(enum draw_mode draw_mode, GLuint vertex_count, GLuint vbo, GLuint vao)
+{
+	struct drawable d = {
+		.draw_mode = draw_mode,
+		.vertex_count = vertex_count,
+		.vbo = vbo,
+		.vao = vao,
+	};
+	return d;
+}
+
+struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum draw_mode draw_mode)
+{
+	struct drawable drawable = { 0 };
+
+	/* Generate new vertex array? */
+	glGenVertexArrays(1, &drawable.vao);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Bind vertex array. */
+	glBindVertexArray(drawable.vao);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Generate vertex buffer? */
+	glGenBuffers(1, &drawable.vbo);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Bind and upload buffer. */
+	glBindBuffer(GL_ARRAY_BUFFER, drawable.vbo);
+	GL_OK_OR_RETURN(drawable);
+
+	glBufferData(GL_ARRAY_BUFFER, vertex_buffer_get_data_size(vb), vertex_buffer_get_data(vb), GL_STATIC_DRAW);
+	GL_OK_OR_RETURN(drawable);
+
+	struct vertex_buffer_attribs attribs = vertex_buffer_get_attribs(vb);
+	size_t offset = 0;
+	for(int i = 0; i < VERTEX_BUFFER_ATTRIBS_MAX; i++)
+	{
+		const size_t attrib_size = attribs.attribs[i];
+
+		if(attrib_size > 0)
+		{
+			glEnableVertexAttribArray(i);
+			glVertexAttribPointer(i,
+				attrib_size / sizeof(GLfloat),
+				GL_FLOAT,
+				GL_FALSE,
+				vertex_buffer_get_element_size(vb),
+				(const void*)(offset)
+			);
+
+			offset += attrib_size;
+			GL_OK_OR_RETURN(drawable);
+		}
+	}
+
+	/* Reset bindings to default */
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN(drawable);
+
+	return drawable;
+}
+
+void drawable_reset(struct drawable *d)
+{
+	glDeleteVertexArrays(1, &d->vao);
+	glDeleteBuffers(1, &d->vbo);
+	*d = drawable_make(0, 0, 0, 0);
+}
+
 void drawable_render(struct drawable *d)
 {
 	glBindVertexArray(d->vao);
-	glDrawArrays(d->draw_mode, 0, d->vertex_count);
+	glDrawArrays(loc_draw_mode_to_opengl_mode(d->draw_mode), 0, d->vertex_count);
 }
 
-/* TODO(TS): remove `vbo` arg */
-void drawable_render_detailed(GLenum mode, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
+void drawable_render_detailed(enum draw_mode draw_mode, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
 {
 	assert(vertex_count > 0);
 	assert(s->program != 0);
@@ -317,7 +502,7 @@ void drawable_render_detailed(GLenum mode, GLuint vao, GLuint vertex_count, GLui
 		GL_OK_OR_ASSERT("Could not bind drawable texture");
 	}
 
-	glDrawArrays(mode, 0, vertex_count);
+	glDrawArrays(loc_draw_mode_to_opengl_mode(draw_mode), 0, vertex_count);
 	GL_OK_OR_RETURN();
 
 	glBindVertexArray(0);
@@ -364,7 +549,7 @@ void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w,
 
 void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h, struct shader *s)
 {
-	dst->draw_mode = GL_TRIANGLES;
+	dst->draw_mode = DRAW_MODE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6;
 	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
@@ -563,7 +748,7 @@ static vertex_t* drawable_get_vertices_plane_quad_vertex(vertex_t* dst, float x,
 
 void drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s)
 {
-	dst->draw_mode = GL_TRIANGLES;
+	dst->draw_mode = DRAW_MODE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6 * divisions_x * divisions_y;
 	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
@@ -597,7 +782,7 @@ void drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size,
 
 void drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s)
 {
-	dst->draw_mode = GL_TRIANGLES;
+	dst->draw_mode = DRAW_MODE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6 * divisions_x * divisions_y;
 	vertex_t *vertices = (vertex_t *) calloc(dst->vertex_count, sizeof(vertex_t));
@@ -631,7 +816,7 @@ void drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec
 
 void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
 {
-	dst->draw_mode = GL_TRIANGLES;
+	dst->draw_mode = DRAW_MODE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6;
 	GLfloat *vertices = (GLfloat *)calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
@@ -753,56 +938,46 @@ void drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, floa
 /**
  * Create a unit cube from (-0.5,-0.5,-0.5) to (0.5,0.5,0.5).
  */
-void drawable_new_cube(struct drawable *dst, struct shader *shader)
+struct drawable drawable_make_unit_cube()
 {
-	dst->draw_mode = GL_TRIANGLES;
-
-	static const GLfloat vertices[] = {
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, 0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f, 0.0f, 0.0f,
+	static const xyzuv_t vertices[] = {
+		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f, -0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{ -0.5f,  0.5f,  0.5f, 0.0f, 0.0f },
+		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
 	};
 
-	dst->vertex_count = sizeof(vertices) / sizeof(vertices[0]) / VBO_VERTEX_LEN;
-	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
-}
-
-void drawable_free(struct drawable *d)
-{
-	glDeleteVertexArrays(1, &d->vao);
-	glDeleteBuffers(1, &d->vbo);
-	d->vertex_count = 0;
+	return drawable_make_xyzuv(DRAW_MODE_TRIANGLES, vertices, LODGE_ARRAYSIZE(vertices));
 }

@@ -17,5 +17,5 @@ target_include_directories(lodge-sprite
 )
 
 target_link_libraries(lodge-sprite
-    ${GLEW_LIBRARY} # NODE(TS): required for some GL defines
+    lodge-graphics
 )

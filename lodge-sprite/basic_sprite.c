@@ -29,7 +29,7 @@ void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphic
 		.projection = mat4_ortho(0, g->view_width, g->view_height, 0, -1, 1)
 	};
 
-	drawable_render_detailed(GL_TRIANGLES,
+	drawable_render_detailed(DRAW_MODE_TRIANGLES,
 		g->vao_rect,
 		VBO_QUAD_VERTEX_COUNT,
 		sprite->texture,
