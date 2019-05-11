@@ -186,6 +186,7 @@ list(APPEND ENGINE_SOURCES_LOCAL
 
 list(APPEND ENGINE_HEADERS_LOCAL
     math4.h
+    lodge_assert.h
     core_console.h
     events.h
     graphics.h
