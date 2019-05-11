@@ -103,66 +103,6 @@ static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertex_count, GLuin
 	GL_OK_OR_RETURN();
 }
 
-static void drawable_set_vbo_vertex(const vertex_t *vertices, GLuint vertex_count, struct shader *s, GLuint *vbo, GLuint *vao)
-{
-	/* Generate new vertex array? */
-	if(*vao == 0) {
-		glGenVertexArrays(1, vao);
-		GL_OK_OR_RETURN();
-	}
-
-	/* Bind vertex array. */
-	glBindVertexArray(*vao);
-	GL_OK_OR_RETURN();
-
-	/* Generate vertex buffer? */
-	if(*vbo == 0) {
-		glGenBuffers(1, vbo);
-		GL_OK_OR_RETURN();
-	}
-
-	/* Bind and upload buffer. */
-	glBindBuffer(GL_ARRAY_BUFFER, *vbo);
-	GL_OK_OR_RETURN();
-	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_t), vertices, GL_STATIC_DRAW);
-	GL_OK_OR_RETURN();
-
-	/* Positions */
-	{
-		static const GLint attrib_pos = 0;
-		glEnableVertexAttribArray(attrib_pos);
-		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, pos));
-		GL_OK_OR_RETURN();
-	}
-
-	/* UVs */
-	{
-		static const GLint attrib_texcoord = 1;
-		glEnableVertexAttribArray(attrib_texcoord);
-		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, uv));
-		GL_OK_OR_RETURN();
-	}
-
-	/* Tangents */
-	{
-		static const GLint attrib_tangent = 2;
-		glEnableVertexAttribArray(attrib_tangent);
-		glVertexAttribPointer(attrib_tangent, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, tangent));
-		GL_OK_OR_RETURN();
-	}
-
-	/* Bitangents */
-	{
-		static const GLint attrib_bitangent = 3;
-		glEnableVertexAttribArray(attrib_bitangent);
-		glVertexAttribPointer(attrib_bitangent, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, bitangent));
-		GL_OK_OR_RETURN();
-	}
-
-	glBindVertexArray(0);
-	GL_OK_OR_RETURN();
-}
-
 /**
  * Obtain a matrix of vertices (xyzuv) for a circle with the given segments.
  *
@@ -307,7 +247,7 @@ static void drawable_get_vertices_rect_outline(GLfloat *dst, float x, float y, f
 
 static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv_t *vertices, size_t vertex_count)
 {
-	assert(vertices != NULL);
+	assert(vertices);
 	assert(vertex_count > 0);
 
 	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
@@ -348,6 +288,70 @@ static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv
 	/* Reset bindings to default */
 	glBindVertexArray(0);
 	GL_OK_OR_RETURN(drawable);
+
+	return drawable;
+}
+
+static struct drawable drawable_make_vertex(enum draw_mode draw_mode, const vertex_t *vertices, GLuint vertex_count)
+{
+	assert(vertices);
+	assert(vertex_count > 0);
+
+	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
+
+	/* Generate new vertex array? */
+	glGenVertexArrays(1, &drawable.vao);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Bind vertex array. */
+	glBindVertexArray(drawable.vao);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Generate vertex buffer? */
+	glGenBuffers(1, &drawable.vbo);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Bind and upload buffer. */
+	glBindBuffer(GL_ARRAY_BUFFER, drawable.vbo);
+	GL_OK_OR_RETURN(drawable);
+	glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(vertex_t), vertices, GL_STATIC_DRAW);
+	GL_OK_OR_RETURN(drawable);
+
+	/* Positions */
+	{
+		static const GLint attrib_pos = 0;
+		glEnableVertexAttribArray(attrib_pos);
+		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, pos));
+		GL_OK_OR_RETURN(drawable);
+	}
+
+	/* UVs */
+	{
+		static const GLint attrib_texcoord = 1;
+		glEnableVertexAttribArray(attrib_texcoord);
+		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, uv));
+		GL_OK_OR_RETURN(drawable);
+	}
+
+	/* Tangents */
+	{
+		static const GLint attrib_tangent = 2;
+		glEnableVertexAttribArray(attrib_tangent);
+		glVertexAttribPointer(attrib_tangent, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, tangent));
+		GL_OK_OR_RETURN(drawable);
+	}
+
+	/* Bitangents */
+	{
+		static const GLint attrib_bitangent = 3;
+		glEnableVertexAttribArray(attrib_bitangent);
+		glVertexAttribPointer(attrib_bitangent, 3, GL_FLOAT, GL_FALSE, sizeof(vertex_t), (void*)offsetof(vertex_t, bitangent));
+		GL_OK_OR_RETURN(drawable);
+	}
+
+	glBindVertexArray(0);
+	GL_OK_OR_RETURN(drawable);
+
 	return drawable;
 }
 
@@ -416,8 +420,12 @@ struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum draw_mo
 
 void drawable_reset(struct drawable *d)
 {
-	glDeleteVertexArrays(1, &d->vao);
-	glDeleteBuffers(1, &d->vbo);
+	if(d->vao > 0) {
+		glDeleteVertexArrays(1, &d->vao);
+	}
+	if(d->vbo > 0) {
+		glDeleteBuffers(1, &d->vbo);
+	}
 	*d = drawable_make(0, 0, 0, 0);
 }
 
@@ -543,97 +551,29 @@ void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, f
 	free(vertices);
 }
 
-GLfloat* drawable_get_vertices_plane_quad(GLfloat* dst, float x, float y, float w, float h, int mirror)
+static xyzuv_t* drawable_get_vertices_plane_quad(xyzuv_t* dst, float x, float y, float w, float h, int mirror)
 {
-	//w /= 2.0f;
-	//h /= 2.0f;
-
 	if(mirror) {
-		/* Top-left */
-		dst[0 * VBO_VERTEX_LEN + 0] = x;		// x
-		dst[0 * VBO_VERTEX_LEN + 1] = y + h;	// y
-		dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-		dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-		/* Bottom-Left */
-		dst[1 * VBO_VERTEX_LEN + 0] = x;		// x
-		dst[1 * VBO_VERTEX_LEN + 1] = y;		// y
-		dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-		dst[1 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
-		/* Bottom-right */
-		dst[2 * VBO_VERTEX_LEN + 0] = x + w;	// x
-		dst[2 * VBO_VERTEX_LEN + 1] = y;		// y
-		dst[2 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[2 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
-		dst[2 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
-
-		/* Top-right */
-		dst[3 * VBO_VERTEX_LEN + 0] = x + w;	// x
-		dst[3 * VBO_VERTEX_LEN + 1] = y + h;	// y
-		dst[3 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[3 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
-		dst[3 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-		/* Top-left */
-		dst[4 * VBO_VERTEX_LEN + 0] = x;		// x
-		dst[4 * VBO_VERTEX_LEN + 1] = y + h;	// y
-		dst[4 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[4 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-		dst[4 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-		/* Bottom-right */
-		dst[5 * VBO_VERTEX_LEN + 0] = x + w;	// x
-		dst[5 * VBO_VERTEX_LEN + 1] = y;		// y
-		dst[5 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[5 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
-		dst[5 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+		dst[0] = xyzuv_make(x,		y + h,	0.0f, 0.0f, 0.0f);	/* Top-left */
+		dst[1] = xyzuv_make(x,		y,		0.0f, 0.0f, 1.0f);	/* Bottom-Left */
+		dst[2] = xyzuv_make(x + w,	y,		0.0f, 1.0f, 1.0f);	/* Bottom-right */
+		dst[3] = xyzuv_make(x + w,	y + h,	0.0f, 1.0f, 0.0f);	/* Top-right */
+		dst[4] = xyzuv_make(x,		y + h,	0.0f, 0.0f, 0.0f);	/* Top-left */
+		dst[5] = xyzuv_make(x + w,	y,		0.0f, 1.0f, 1.0f);	/* Bottom-right */
 	} else {
-		/* Top-left */
-		dst[0 * VBO_VERTEX_LEN + 0] = x;		// x
-		dst[0 * VBO_VERTEX_LEN + 1] = y + h;	// y
-		dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-		dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-		/* Bottom-Left */
-		dst[1 * VBO_VERTEX_LEN + 0] = x;		// x
-		dst[1 * VBO_VERTEX_LEN + 1] = y;		// y
-		dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-		dst[1 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
-		/* Top-right */
-		dst[2 * VBO_VERTEX_LEN + 0] = x + w;	// x
-		dst[2 * VBO_VERTEX_LEN + 1] = y + h;	// y
-		dst[2 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[2 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
-		dst[2 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-
-		/* Top-right */
-		dst[3 * VBO_VERTEX_LEN + 0] = x + w;	// x
-		dst[3 * VBO_VERTEX_LEN + 1] = y + h;	// y
-		dst[3 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[3 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
-		dst[3 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-		/* Bottom-left */
-		dst[4 * VBO_VERTEX_LEN + 0] = x;		// x
-		dst[4 * VBO_VERTEX_LEN + 1] = y;		// y
-		dst[4 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[4 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-		dst[4 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
-		/* Bottom-right */
-		dst[5 * VBO_VERTEX_LEN + 0] = x + w;	// x
-		dst[5 * VBO_VERTEX_LEN + 1] = y;		// y
-		dst[5 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-		dst[5 * VBO_VERTEX_LEN + 3] = 1.0f;		// u
-		dst[5 * VBO_VERTEX_LEN + 4] = 1.0f;		// v
+		dst[0] = xyzuv_make(x,		y + h,	0.0f, 0.0f, 0.0f);	/* Top-left */
+		dst[1] = xyzuv_make(x,		y,		0.0f, 0.0f, 1.0f);	/* Bottom-Left */
+		dst[2] = xyzuv_make(x + w,	y + h,	0.0f, 1.0f, 0.0f);	/* Top-right */
+		dst[3] = xyzuv_make(x + w,	y + h,	0.0f, 1.0f, 0.0f);	/* Top-right */
+		dst[4] = xyzuv_make(x,		y,		0.0f, 0.0f, 1.0f);	/* Bottom-left */
+		dst[5] = xyzuv_make(x + w,	y,		0.0f, 1.0f, 1.0f);	/* Bottom-right */
 	}
 
-	return dst + 6 * VBO_VERTEX_LEN;
+	return dst + 6 * sizeof(xyzuv_t);
 }
 
 static vertex_t* drawable_get_vertices_plane_quad_vertex(vertex_t* dst, float x, float y, float w, float h, int mirror)
 {
-	//w /= 2.0f;
-	//h /= 2.0f;
-
 	if(mirror) {
 		/* Top-left */
 		dst[0].x = x;	
@@ -719,23 +659,16 @@ static vertex_t* drawable_get_vertices_plane_quad_vertex(vertex_t* dst, float x,
 	return dst + 6;
 }
 
-void drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s)
+struct drawable drawable_make_plane_subdivided(vec2 origin, vec2 size, int divisions_x, int divisions_y)
 {
-	dst->draw_mode = DRAW_MODE_TRIANGLES;
-	/* Allocate memory for vertices. */
-	dst->vertex_count = 6 * divisions_x * divisions_y;
-	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
-
-	/* OOM? */
-	if(vertices == NULL) {
-		graphics_error("Out of memory\n");
-		return;
-	}
+	size_t vertex_count = 6 * divisions_x * divisions_y;
+	xyzuv_t *vertices = (xyzuv_t *)calloc(vertex_count, sizeof(xyzuv_t));
+	assert(vertices);
 
 	/* Calculate vertices. */
-	float w = size.x / divisions_x;
-	float h = size.y / divisions_y;
-	GLfloat *cursor = vertices;
+	const float w = size.x / divisions_x;
+	const float h = size.y / divisions_y;
+	xyzuv_t *cursor = vertices;
 	for(int y = 0; y < divisions_y; y++) {
 		for(int x = 0; x < divisions_x; x++) {
 			float x0 = origin.x + x * w;
@@ -747,28 +680,23 @@ void drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size,
 	}
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
+	struct drawable drawable = drawable_make_xyzuv(DRAW_MODE_TRIANGLES, vertices, vertex_count);
 
 	/* Cleanup. */
 	free(vertices);
+
+	return drawable;
 }
 
-void drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s)
+struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, int divisions_x, int divisions_y)
 {
-	dst->draw_mode = DRAW_MODE_TRIANGLES;
-	/* Allocate memory for vertices. */
-	dst->vertex_count = 6 * divisions_x * divisions_y;
-	vertex_t *vertices = (vertex_t *) calloc(dst->vertex_count, sizeof(vertex_t));
-
-	/* OOM? */
-	if(vertices == NULL) {
-		graphics_error("Out of memory\n");
-		return;
-	}
+	size_t vertex_count = 6 * divisions_x * divisions_y;
+	vertex_t *vertices = (vertex_t *)calloc(vertex_count, sizeof(vertex_t));
+	assert(vertices);
 
 	/* Calculate vertices. */
-	float w = size.x / divisions_x;
-	float h = size.y / divisions_y;
+	const float w = size.x / divisions_x;
+	const float h = size.y / divisions_y;
 	vertex_t *cursor = vertices;
 	for(int y = 0; y < divisions_y; y++) {
 		for(int x = 0; x < divisions_x; x++) {
@@ -781,10 +709,12 @@ void drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec
 	}
 
 	/* Upload vertices to GPU. */
-	drawable_set_vbo_vertex(vertices, dst->vertex_count, s, &dst->vbo, &dst->vao);
+	struct drawable drawable = drawable_make_vertex(DRAW_MODE_TRIANGLES, vertices, vertex_count);
 
 	/* Cleanup. */
 	free(vertices);
+
+	return drawable;
 }
 
 void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
