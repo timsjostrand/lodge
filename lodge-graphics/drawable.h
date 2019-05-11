@@ -30,9 +30,7 @@ void			drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s);
 void			drawable_new_plane_subdivided(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s);
 void			drawable_new_plane_subdivided_vertex(struct drawable *dst, vec2 origin, vec2 size, int divisions_x, int divisions_y, struct shader *s);
 
-void			drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s);
-
-//void			drawable_new_cube(struct drawable *dst, struct shader *shader);
+struct drawable	drawable_make_line(vec3 start, vec3 end);
 struct drawable	drawable_make_unit_cube();
 
 GLfloat*		drawable_get_vertices_plane_quad(GLfloat* dst, float x, float y, float w, float h, int mirror);
