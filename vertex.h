@@ -3,6 +3,26 @@
 
 #include "math4.h"
 
+// TODO(TS): rename vertex_types.h
+
+union xyzuv {
+	struct {
+		vec3	pos;
+		vec2	uv;
+	};
+	struct {
+		float	x;
+		float	y;
+		float	z;
+		float	u;
+		float	v;
+	};
+	float ptr[5];
+};
+typedef union xyzuv xyzuv_t;
+
+xyzuv_t xyzuv_make(float x, float y, float z, float u, float v);
+
 union vertex {
 	struct {
 		vec3	pos;

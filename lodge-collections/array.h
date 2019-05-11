@@ -26,6 +26,7 @@ void		array_remove(array_t array, int index);
 void		array_clear(array_t array);
 
 int			array_count(array_t array);
+size_t		array_byte_size(array_t array);
 
 void		array_sort(array_t array, int(*compar)(const void *, const void*));
 

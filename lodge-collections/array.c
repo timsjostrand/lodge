@@ -44,6 +44,11 @@ int array_count(array_t array)
 	return array->count;
 }
 
+size_t array_byte_size(array_t array)
+{
+	return array->element_size * array->max_count;
+}
+
 void array_clear(array_t array)
 {
 	array->count = 0;
