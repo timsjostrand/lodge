@@ -305,33 +305,6 @@ static void drawable_get_vertices_rect_outline(GLfloat *dst, float x, float y, f
 	dst[4 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 }
 
-/**
- * Produces a matrix of vertices (xyzuv) for the outline of a rectangle of
- * the given dimensions.
- *
- * @param dst	Destination buffer. Size should be (2 * vertex_length) where
- *				vertex_length is 5 (xyzuv).
- * @param x1	Start X coordinate.
- * @param y1	Start Y coordinate.
- * @param x2	End X coordinate.
- * @param y2	End Y coordinate.
- */
-static void drawable_get_vertices_line(GLfloat *dst, float x1, float y1, float x2, float y2)
-{
-	/* Start */
-	dst[0 * VBO_VERTEX_LEN + 0] = x1;		// x
-	dst[0 * VBO_VERTEX_LEN + 1] = y1;		// y
-	dst[0 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-	dst[0 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-	dst[0 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-	/* End */
-	dst[1 * VBO_VERTEX_LEN + 0] = x2;		// x
-	dst[1 * VBO_VERTEX_LEN + 1] = y2;		// y
-	dst[1 * VBO_VERTEX_LEN + 2] = 0.0f;		// z
-	dst[1 * VBO_VERTEX_LEN + 3] = 0.0f;		// u
-	dst[1 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
-}
-
 static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv_t *vertices, size_t vertex_count)
 {
 	assert(vertices != NULL);
@@ -911,28 +884,13 @@ void drawable_new_circle_outline(struct drawable *dst, struct circle *circle, in
 	drawable_new_circle_outlinef(dst, circle->pos.x, circle->pos.y, circle->r, segments, s);
 }
 
-void drawable_new_linef(struct drawable *dst, float x1, float y1, float x2, float y2, struct shader *s)
+struct drawable drawable_make_line(vec3 start, vec3 end)
 {
-	dst->draw_mode = GL_LINE_STRIP;
-	dst->vertex_count = 2;
-
-	/* Allocate memory for vertices. */
-	GLfloat *vertices = (GLfloat *) calloc(2 * VBO_VERTEX_LEN, sizeof(GLfloat));
-
-	/* OOM? */
-	if(vertices == NULL) {
-		graphics_error("Out of memory\n");
-		return;
-	}
-
-	/* Calculate vertices. */
-	drawable_get_vertices_line(vertices, x1, y1, x2, y2);
-
-	/* Upload vertices to GPU. */
-	drawable_set_vbo_xyzuv(vertices, dst->vertex_count, &dst->vbo, &dst->vao);
-
-	/* Cleanup. */
-	free(vertices);
+	const xyzuv_t vertices[] = {
+		{ start.x,	start.y,	start.z,	0.0f, 0.0f },
+		{ end.x,	end.y,		end.z,		0.0f, 0.0f },
+	};
+	return drawable_make_xyzuv(GL_LINE_STRIP, vertices, LODGE_ARRAYSIZE(vertices));
 }
 
 /**
