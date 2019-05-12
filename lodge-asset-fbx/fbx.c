@@ -779,3 +779,35 @@ const char* fbx_property_get_array_char(struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_CHAR, char);
 }
+
+struct fbx_string fbx_property_get_string(struct fbx_property *prop)
+{
+	if(prop->type != FBX_PROPERTY_TYPE_STRING) {
+		ASSERT_FAIL("FBX: Incorrect type");
+		static const struct fbx_string empty = { 0 };
+		return empty;
+	}
+	ASSERT(prop->heap_data);
+	struct fbx_property_special *prop_data = (struct fbx_property_special*)prop->heap_data;
+	struct fbx_string tmp = {
+		.length = prop_data->length,
+		.data = prop_data->data
+	};
+	return tmp;
+}
+
+struct fbx_string fbx_property_get_binary(struct fbx_property *prop)
+{
+	if(prop->type != FBX_PROPERTY_TYPE_BINARY) {
+		ASSERT_FAIL("FBX: Incorrect type");
+		static const struct fbx_string empty = { 0 };
+		return empty; \
+	}
+	ASSERT(prop->heap_data);
+	struct fbx_property_special *prop_data = (struct fbx_property_special*)prop->heap_data;
+	struct fbx_string tmp = {
+		.length = prop_data->length,
+		.data = prop_data->data
+	};
+	return tmp;
+}

@@ -48,7 +48,7 @@ static int32_t loc_draw_mode_to_opengl_mode(enum draw_mode dm)
 	case DRAW_MODE_PATCHES:
 		return GL_PATCHES;
 	default:
-		assert("Invalid draw_mode");
+		ASSERT_FAIL("Invalid draw_mode");
 		return -1;
 	}
 }
@@ -246,8 +246,8 @@ static void drawable_get_vertices_rect_outline(GLfloat *dst, float x, float y, f
 
 static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv_t *vertices, size_t vertex_count)
 {
-	assert(vertices);
-	assert(vertex_count > 0);
+	ASSERT(vertices);
+	ASSERT(vertex_count > 0);
 
 	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
 
@@ -293,8 +293,8 @@ static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv
 
 static struct drawable drawable_make_vertex(enum draw_mode draw_mode, const vertex_t *vertices, GLuint vertex_count)
 {
-	assert(vertices);
-	assert(vertex_count > 0);
+	ASSERT(vertices);
+	ASSERT(vertex_count > 0);
 
 	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
 
@@ -436,9 +436,9 @@ void drawable_render(struct drawable *d)
 
 void drawable_render_detailed(enum draw_mode draw_mode, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
 {
-	assert(vertex_count > 0);
-	assert(s->program != 0);
-	assert(vao != 0);
+	ASSERT(vertex_count > 0);
+	ASSERT(s->program != 0);
+	ASSERT(vao != 0);
 
 	/* Bind vertices. */
 	glUseProgram(s->program);
@@ -662,7 +662,7 @@ struct drawable drawable_make_plane_subdivided(vec2 origin, vec2 size, int divis
 {
 	size_t vertex_count = 6 * divisions_x * divisions_y;
 	xyzuv_t *vertices = (xyzuv_t *)calloc(vertex_count, sizeof(xyzuv_t));
-	assert(vertices);
+	ASSERT(vertices);
 
 	/* Calculate vertices. */
 	const float w = size.x / divisions_x;
@@ -691,7 +691,7 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 {
 	size_t vertex_count = 6 * divisions_x * divisions_y;
 	vertex_t *vertices = (vertex_t *)calloc(vertex_count, sizeof(vertex_t));
-	assert(vertices);
+	ASSERT(vertices);
 
 	/* Calculate vertices. */
 	const float w = size.x / divisions_x;
