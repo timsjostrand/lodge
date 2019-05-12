@@ -12,13 +12,12 @@
 #include <GL/glew.h>
 #include <math.h>
 
+#include "lodge_platform.h"
 #include "math4.h"
 #include "vertex.h"
 #include "vertex_buffer.h"
 #include "graphics.h"
 #include "color.h"
-
-#define LODGE_ARRAYSIZE(a) ( sizeof(a) / sizeof(a[0]) )
 
 static int32_t loc_draw_mode_to_opengl_mode(enum draw_mode dm)
 {
