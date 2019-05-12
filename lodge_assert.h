@@ -5,11 +5,11 @@
 
 #include <crtdbg.h>
 
-#define ASSERT(expr, message) \
-	_ASSERT_EXPR( expr, L#message )
+#define ASSERT(expr) \
+	_ASSERTE( expr )
 
-#define ASSERT_FAIL(message) \
-	_ASSERT_EXPR( 0, L#message )
+#define ASSERT_MESSAGE(expr, message) \
+	_ASSERT_EXPR( expr, L#message )
 
 #else
 
@@ -18,8 +18,15 @@
 #define ASSERT(expr, message) \
 	assert( (expr) && (message) )
 
-#define ASSERT_FAIL(message) ASSERT( 0, (message) )
+#define ASSERT_MESSAGE(expr, message) \
+	ASSERT( expr && message )
 
 #endif
+
+#define ASSERT_FAIL(message) \
+	ASSERT_MESSAGE( 0, message )
+
+#define ASSERT_NOT_IMPLEMENTED() \
+	ASSERT_FAIL( "Not implemented" )
 
 #endif
