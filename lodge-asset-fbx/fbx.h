@@ -25,6 +25,12 @@ struct fbx;
 struct fbx_node;
 struct fbx_property;
 
+struct fbx_string
+{
+	uint32_t		length;
+	const char*		data;
+};
+
 enum fbx_property_type
 {
 	FBX_PROPERTY_TYPE_INT16			= 'Y',
@@ -59,6 +65,8 @@ const int32_t*			fbx_property_get_int32(struct fbx_property *prop);
 const float*			fbx_property_get_float(struct fbx_property *prop);
 const double*			fbx_property_get_double(struct fbx_property *prop);
 const int64_t*			fbx_property_get_int64(struct fbx_property *prop);
+struct fbx_string		fbx_property_get_string(struct fbx_property *prop);
+struct fbx_string		fbx_property_get_binary(struct fbx_property *prop);
 const float*			fbx_property_get_array_float(struct fbx_property *prop);
 const double*			fbx_property_get_array_double(struct fbx_property *prop);
 const int32_t*			fbx_property_get_array_int32(struct fbx_property *prop);

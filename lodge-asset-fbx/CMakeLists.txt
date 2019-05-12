@@ -3,10 +3,10 @@ add_library(lodge-asset-fbx STATIC "")
 target_sources(lodge-asset-fbx
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/fbx.c"
-		#"${CMAKE_CURRENT_LIST_DIR}/fbx_asset.c"
+		"${CMAKE_CURRENT_LIST_DIR}/fbx_asset.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/fbx.h"
-		#"${CMAKE_CURRENT_LIST_DIR}/fbx_asset.h"
+		"${CMAKE_CURRENT_LIST_DIR}/fbx_asset.h"
 )
 
 target_include_directories(lodge-asset-fbx
@@ -18,6 +18,7 @@ target_include_directories(lodge-asset-fbx
 
 target_link_libraries(lodge-asset-fbx
 	PUBLIC
+		"${GLEW_LIBRARY}"
 		"lodge-collections"
 		"lodge-stb"
 )
