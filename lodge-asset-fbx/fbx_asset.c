@@ -1,6 +1,7 @@
 #include "fbx_asset.h"
 
 #include <GL/glew.h>
+#include <string.h>
 
 #include "lodge_platform.h"
 #include "math4.h"
@@ -43,18 +44,26 @@ static struct fbx_string fbx_asset_get_string(struct fbx *fbx, const char *path[
 
 struct float_array
 {
-	float*	data;
+	size_t	count;
 	size_t	size;
+	float	data[];
 };
 
-void float_array_reset(struct float_array *a)
+static struct float_array* float_array_new(size_t count)
 {
-	free(a->data);
-	a->data = 0;
-	a->size = 0;
+	size_t size = count * sizeof(float);
+	struct float_array *tmp = (struct float_array *)malloc(sizeof(struct float_array) + size);
+	tmp->count = count;
+	tmp->size = size;
+	return tmp;
 }
 
-static struct float_array fbx_asset_new_layer_element(
+static void float_array_free(struct float_array *a)
+{
+	free(a);
+}
+
+static struct float_array* fbx_asset_new_layer_element(
 	struct fbx *fbx,
 	const int32_t vertex_indices[], size_t vertex_indices_count,
 	const char *mapping_type_path[], size_t mapping_type_path_count,
@@ -63,7 +72,7 @@ static struct float_array fbx_asset_new_layer_element(
 	const char *indices_path[], size_t indices_path_count
 )
 {
-	struct float_array ret = { 0 };
+	struct float_array *ret = NULL;
 
 	/* Check mapping type */
 	{
@@ -115,32 +124,57 @@ static struct float_array fbx_asset_new_layer_element(
 		goto fail;
 	}
 
-	ret.data = (float*)malloc(sizeof(float) * prop_indices_count);
-	ret.size = prop_indices_count;
+	static const uint32_t stride = 2;
+
+	ret = float_array_new(prop_indices_count * stride);
+
+	for(uint32_t i = 0; i < ret->count; i++) {
+		ret->data[i] = -1;
+	}
 
 	int32_t prop_index_max = 0;
+	int32_t ret_index_max = 0;
 	for(uint32_t i = 0; i < prop_indices_count; i++) {
 		if(ref_type == direct) {
-			ret.data[i] = (float)prop_data_ptr[i];
+			ret->data[i] = (float)prop_data_ptr[i];
 		} else if(ref_type == index_to_direct) {
-			const int32_t prop_index = prop_indices_ptr[i];
-			ASSERT(prop_index >= 0);
-			ASSERT((uint32_t)prop_index < prop_indices_count);
 			ASSERT(i < vertex_indices_count);
-			const int32_t vertex_index = vertex_indices[i];
-			ret.data[vertex_index] = (float)prop_data_ptr[prop_index];
+			ASSERT(i < prop_indices_count);
+
+			const int32_t prop_index = prop_indices_ptr[i] * stride;
+			ASSERT(prop_index >= 0);
+			ASSERT((uint32_t)prop_index < prop_data_count);
+
+			//const int32_t ret_index = i * stride;
+			const int32_t ret_index = vertex_indices[i] * stride;
+			ASSERT(ret_index >= 0);
+			ASSERT(ret_index < (int32_t)ret->count);
+
+			for(uint32_t c = 0; c < stride; c++) {
+				ret->data[ret_index + c] = (float)prop_data_ptr[prop_index + c];
+			}
+
 			prop_index_max = max(prop_index, prop_index_max);
+			ret_index_max = max(ret_index + stride, ret_index_max);
 		} else {
 			ASSERT_FAIL("Reference type not implemented");
 			goto fail;
 		}
 	}
 
+	uint32_t fail_count = 0;
+	for(uint32_t i = 0; i < ret->size; i++) {
+		if(ret->data[i] < 0) {
+			fail_count++;
+		}
+	}
+	ASSERT(fail_count == 0);
+
 	return ret;
 
 fail:
-	float_array_reset(&ret);
-	return ret;
+	float_array_free(ret);
+	return NULL;
 }
 
 struct fbx_asset fbx_asset_make(struct fbx *fbx)
@@ -251,21 +285,27 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		goto fail;
 	}
 
-	enum polygon_type {
-		triangle,
-		quad
+	enum polygon_type_ {
+		polygon_type_triangle,
+		polygon_type_quad
 	} polygon_type;
 
 	if(prop_indices_data[2] < 0) {
-		polygon_type = triangle;
+		polygon_type = polygon_type_triangle;
+
+		// make sure all are triangles (not needed?)
+		for(int i = 2; i < prop_indices_data_count; i += 3) {
+			ASSERT(prop_indices_data[i] < 0);
+		}
+
 	} else if(prop_indices_data[3] < 0) {
-		polygon_type = quad;
+		polygon_type = polygon_type_quad;
 	} else {
 		ASSERT_FAIL("Unknown polygon type");
 		goto fail;
 	}
 
-	if(polygon_type != triangle) {
+	if(polygon_type != polygon_type_triangle) {
 		ASSERT_FAIL("polygon_type != triangle not implemented");
 		goto fail;
 	}
@@ -286,7 +326,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		static const char* path_uvs_data[] = { "Objects", "Geometry", "LayerElementUV", "UV" };
 		static const char* path_uvs_indices[] = { "Objects", "Geometry", "LayerElementUV", "UVIndex" };
 
-		struct float_array uvs = fbx_asset_new_layer_element(fbx,
+		struct float_array *uvs = fbx_asset_new_layer_element(fbx,
 			indices,				asset.indices_count,
 			path_uv_mapping_type,	LODGE_ARRAYSIZE(path_uv_mapping_type),
 			path_uvs_ref_type,		LODGE_ARRAYSIZE(path_uvs_ref_type),
@@ -294,22 +334,21 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			path_uvs_indices,		LODGE_ARRAYSIZE(path_uvs_indices)
 		);
 
-		if(!uvs.data || !uvs.size) {
-			goto fail;
+		if(!uvs) {
+			goto uvs_fail;
 		}
 
 		glGenBuffers(1, &asset.buffer_object_uvs);
-		GL_OK_OR_GOTO(fail);
+		GL_OK_OR_GOTO(uvs_fail);
 
 		glBindBuffer(GL_ARRAY_BUFFER, asset.buffer_object_uvs);
-		GL_OK_OR_GOTO(fail);
+		GL_OK_OR_GOTO(uvs_fail);
 
-		glBufferData(GL_ARRAY_BUFFER, uvs.size * sizeof(float), uvs.data, GL_STATIC_DRAW);
-		free(uvs.data);
-		GL_OK_OR_GOTO(fail);
+		glBufferData(GL_ARRAY_BUFFER, uvs->size, uvs->data, GL_STATIC_DRAW);
+		GL_OK_OR_GOTO(uvs_fail);
 
 		glEnableVertexAttribArray(2);
-		GL_OK_OR_GOTO(fail);
+		GL_OK_OR_GOTO(uvs_fail);
 
 		glVertexAttribPointer(2,
 			2,
@@ -318,8 +357,16 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			2 * sizeof(float),
 			NULL
 		);
-		GL_OK_OR_GOTO(fail);
+		GL_OK_OR_GOTO(uvs_fail);
+
+		goto uvs_success;
+
+uvs_fail:
+		float_array_free(uvs);
+		goto fail;
 	}
+
+uvs_success:
 
 	/* Indices */
 	glGenBuffers(1, &asset.buffer_object_indices);
