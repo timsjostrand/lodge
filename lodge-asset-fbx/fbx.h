@@ -55,6 +55,7 @@ void					fbx_free(struct fbx *fbx);
 struct fbx_node*		fbx_get_node(struct fbx *fbx, const char *path[], size_t path_count);
 uint32_t				fbx_node_get_property_count(struct fbx_node *node);
 struct fbx_property*	fbx_node_get_property(struct fbx_node *node, uint32_t index);
+struct fbx_property*	fbx_node_get_property_array(struct fbx_node *node, uint32_t index);
 
 enum fbx_property_type	fbx_property_get_type(const struct fbx_property *prop);
 int						fbx_property_is_array(struct fbx_property *prop);

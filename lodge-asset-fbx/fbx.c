@@ -152,11 +152,10 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 		}
 		case FBX_PROPERTY_TYPE_ARRAY_FLOAT:
 		{
-			ASSERT((*it)->heap_data);
-			const struct fbx_property_array *prop_array = (const struct fbx_property_array*)(*it)->heap_data;
-			const float* prop_array_data = (const float*)prop_array->data;
-			printf("{");
-			for(uint32_t i = 0; i < prop_array->array_length; i++) {
+			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
+			const float* prop_array_data = fbx_property_get_array_float(*it);
+			printf("(%u) {", prop_array_count);
+			for(uint32_t i = 0; i < prop_array_count; i++) {
 				printf("%.2f ", prop_array_data[i]);
 			}
 			printf("}");
@@ -166,7 +165,7 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 		{
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const int32_t* prop_array_data = fbx_property_get_array_int32(*it);
-			printf("{");
+			printf("(%u) {", prop_array_count);
 			for(uint32_t i = 0; i < prop_array_count; i++) {
 				printf("%" PRId32 " ", prop_array_data[i]);
 			}
@@ -177,7 +176,7 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 		{
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const double* prop_array_data = fbx_property_get_array_double(*it);
-			printf("{");
+			printf("(%u) {", prop_array_count);
 			for(uint32_t i = 0; i < prop_array_count; i++) {
 				printf("%.2f ", prop_array_data[i]);
 			}
@@ -188,7 +187,7 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 		{
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const int64_t* prop_array_data = fbx_property_get_array_int64(*it);
-			printf("{");
+			printf("(%u) {", prop_array_count);
 			for(uint32_t i = 0; i < prop_array_count; i++) {
 				printf("%" PRId64 " ", prop_array_data[i]);
 			}
@@ -199,7 +198,7 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 		{
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const char* prop_array_data = fbx_property_get_array_bool(*it);
-			printf("{");
+			printf("(%u) {", prop_array_count);
 			for(uint32_t i = 0; i < prop_array_count; i++) {
 				printf("%s ", prop_array_data[i] ? "true" : "false");
 			}
@@ -210,7 +209,7 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 		{
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const char* prop_array_data = fbx_property_get_array_char(*it);
-			printf("{");
+			printf("(%u) {", prop_array_count);
 			for(uint32_t i = 0; i < prop_array_count; i++) {
 				printf("%c ", prop_array_data[i]);
 			}
@@ -689,6 +688,15 @@ struct fbx_property* fbx_node_get_property(struct fbx_node *node, uint32_t index
 		return NULL;
 	}
 	return (struct fbx_property*)(node->properties->data)[index];
+}
+
+struct fbx_property* fbx_node_get_property_array(struct fbx_node *node, uint32_t index)
+{
+	struct fbx_property *prop = fbx_node_get_property(node, index);
+	if(prop && fbx_property_is_array(prop)) {
+		return prop;
+	}
+	return NULL;
 }
 
 uint32_t fbx_property_get_array_count(struct fbx_property *prop)
