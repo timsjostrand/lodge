@@ -28,8 +28,12 @@ add_custom_target(assets_check_update ALL
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Calculating assets checksum...")
 
+# Mark asset files as "generated" so cmake doesn't complain.
+set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
+set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
+
 # Creates assets.{c,h} if ASSETS_STAMP_FILE was changed.
-add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
+add_custom_command(OUTPUT "${ASSETS_C}" "${ASSETS_H}"
     COMMAND generate_assets ${ASSET_PATH}
     DEPENDS generate_assets
     DEPENDS assets_check_update
@@ -40,14 +44,13 @@ add_custom_command(OUTPUT ${ASSETS_C} ${ASSETS_H}
 add_custom_target(generate_assets_do DEPENDS ${ASSETS_C} ${ASSETS_H})
 
 # lodge-assets
-add_library(lodge-assets STATIC "")
+add_library(lodge-assets STATIC ${ASSETS_C} ${ASSETS_H})
+set_target_properties(lodge-assets PROPERTIES LINKER_LANGUAGE C)
 
 target_sources(lodge-assets
     PRIVATE
-        "${CMAKE_BINARY_DIR}/${ASSETS_C}"
         "${ENGINE_PATH}"
     PUBLIC
-        "${CMAKE_BINARY_DIR}/${ASSETS_H}"
 )
 
 target_include_directories(lodge-assets
