@@ -84,6 +84,11 @@ size_t strbuf_append(strbuf_t dst, const strview_t src)
 	return str_append(dst.s, dst.size, src.s, src.length);
 }
 
+void strbuf_fill(strbuf_t dst, char c)
+{
+	memset(dst.s, c, dst.size);
+}
+
 strview_t strview_make(const char *s, size_t length)
 {
 	strview_t tmp = {
