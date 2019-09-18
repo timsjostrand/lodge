@@ -56,6 +56,7 @@ size_t		strbuf_insert(strbuf_t str, size_t index, const strview_t sub);
 size_t		strbuf_delete(strbuf_t str, size_t index, size_t count);
 size_t		strbuf_set(strbuf_t dst, const strview_t src);
 size_t		strbuf_append(strbuf_t dst, const strview_t src);
+void		strbuf_fill(strbuf_t dst, char c);
 
 strview_t	strview_make(const char *s, size_t length);
 int			strview_equals(const strview_t lhs, const strview_t rhs);

@@ -88,12 +88,12 @@ int core_argv_parse(struct core_argv *dst, int argc, char **argv)
 
 	/* Default values. */
 	if(str_empty(dst->mount, CORE_ARGV_VALUE_MAX)) {
-		str_set(dst->mount, CORE_ARGV_VALUE_MAX, "assets");
+		str_set(dst->mount, CORE_ARGV_VALUE_MAX, strview_static("assets"));
 	}
 
 #if 0
 	if(str_empty(dst->game, CORE_ARGV_VALUE_MAX)) {
-		str_set(dst->game, CORE_ARGV_VALUE_MAX, "game.dll");
+		str_set(dst->game, CORE_ARGV_VALUE_MAX, strview_static("game.dll"));
 	}
 #endif
 
