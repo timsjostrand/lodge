@@ -57,60 +57,62 @@ static GLenum lodge_sampler_wrap_to_gl(enum lodge_sampler_wrap wrap)
 }
 
 
-struct lodge_sampler lodge_sampler_make()
+lodge_sampler_t lodge_sampler_make()
 {
 	GLuint name;
 	glGenSamplers(1, &name);
-	GL_OK_OR_RETURN((struct lodge_sampler) { .name = 0 });
-	return (struct lodge_sampler) { .name = name };
+	GL_OK_OR_RETURN(NULL);
+	return lodge_sampler_from_gl(name);
 }
 
-struct lodge_sampler lodge_sampler_make_properties(struct lodge_sampler_properties properties)
+lodge_sampler_t lodge_sampler_make_properties(struct lodge_sampler_properties properties)
 {
-	struct lodge_sampler sampler = lodge_sampler_make();
+	lodge_sampler_t sampler = lodge_sampler_make();
 	lodge_sampler_set_properties(sampler, properties);
 	return sampler;
 }
 
-void lodge_sampler_reset(struct lodge_sampler *sampler)
+void lodge_sampler_reset(lodge_sampler_t *sampler)
 {
-	ASSERT(sampler->name > 0);
-	glDeleteSamplers(1, &sampler->name);
+	ASSERT(sampler != NULL && *sampler != NULL);
+
+	GLuint name = lodge_sampler_to_gl(sampler);
+	glDeleteSamplers(1, &name);
 	GL_OK_OR_ASSERT("Failed to delete sampler");
-	sampler->name = 0;
+	*sampler = NULL;
 }
 
-void lodge_sampler_set_min_filter(struct lodge_sampler sampler, enum lodge_sampler_min_filter min_filter)
+void lodge_sampler_set_min_filter(lodge_sampler_t sampler, enum lodge_sampler_min_filter min_filter)
 {
-	glSamplerParameteri(sampler.name, GL_TEXTURE_MIN_FILTER, lodge_sampler_min_filter_to_gl(min_filter));
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_MIN_FILTER, lodge_sampler_min_filter_to_gl(min_filter));
 	GL_OK_OR_ASSERT("Failed lodge_sampler_set_min_filter");
 }
 
-void lodge_sampler_set_mag_filter(struct lodge_sampler sampler, enum lodge_sampler_mag_filter mag_filter)
+void lodge_sampler_set_mag_filter(lodge_sampler_t sampler, enum lodge_sampler_mag_filter mag_filter)
 {
-	glSamplerParameteri(sampler.name, GL_TEXTURE_MAG_FILTER, lodge_sampler_mag_filter_to_gl(mag_filter));
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_MAG_FILTER, lodge_sampler_mag_filter_to_gl(mag_filter));
 	GL_OK_OR_ASSERT("Failed lodge_sampler_set_mag_filter");
 }
 
-void lodge_sampler_set_wrap_x(struct lodge_sampler sampler, enum lodge_sampler_wrap wrap)
+void lodge_sampler_set_wrap_x(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
 {
-	glSamplerParameteri(sampler.name, GL_TEXTURE_WRAP_S, lodge_sampler_wrap_to_gl(wrap));
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_S, lodge_sampler_wrap_to_gl(wrap));
 	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_x");
 }
 
-void lodge_sampler_set_wrap_y(struct lodge_sampler sampler, enum lodge_sampler_wrap wrap)
+void lodge_sampler_set_wrap_y(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
 {
-	glSamplerParameteri(sampler.name, GL_TEXTURE_WRAP_T, lodge_sampler_wrap_to_gl(wrap));
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_T, lodge_sampler_wrap_to_gl(wrap));
 	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_y");
 }
 
-void lodge_sampler_set_wrap_z(struct lodge_sampler sampler, enum lodge_sampler_wrap wrap)
+void lodge_sampler_set_wrap_z(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
 {
-	glSamplerParameteri(sampler.name, GL_TEXTURE_WRAP_R, lodge_sampler_wrap_to_gl(wrap));
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_R, lodge_sampler_wrap_to_gl(wrap));
 	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_z");
 }
 
-void lodge_sampler_set_properties(struct lodge_sampler sampler, struct lodge_sampler_properties properties)
+void lodge_sampler_set_properties(lodge_sampler_t sampler, struct lodge_sampler_properties properties)
 {
 	lodge_sampler_set_min_filter(sampler, properties.min_filter);
 	lodge_sampler_set_mag_filter(sampler, properties.mag_filter);
