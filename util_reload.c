@@ -167,7 +167,7 @@ void util_reload_texture(const char *filename, unsigned int size, void *data, vo
 
 	int ret = texture_load(&tmp, NULL, NULL, data, size);
 
-	if(ret != GRAPHICS_OK) {
+	if(ret == TEXTURE_ERROR) {
 		core_error("Texture load failed: %s (%u bytes)\n", filename, size);
 	} else {
 		if(userdata) {
@@ -195,7 +195,7 @@ void util_reload_texture_pixels(const char *filename, unsigned int size, void *d
 
 	int ret = texture_load_pixels(&tmp, data, width, height);
 
-	if(ret != GRAPHICS_OK) {
+	if(ret == TEXTURE_ERROR) {
 		core_error("Texture load failed: %s (%u bytes)\n", filename, size);
 	} else {
 		if(userdata) {

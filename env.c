@@ -12,13 +12,27 @@
 #include "str.h"
 #include "math4.h"
 
+struct lodge_plugin	env_plugin()
+{
+	struct lodge_plugin plugin = {
+		.version = LODGE_PLUGIN_VERSION,
+		.size = sizeof(struct env),
+		.name = strview_static("env"),
+		.init = NULL,
+		.free = NULL,
+		.update = NULL,
+		.render = NULL,
+	};
+	return plugin;
+}
+
 struct env_var* env_var_get_by_name(struct env *e, const char *name)
 {
-	int name_len = strnlen(name, ENV_VAR_NAME_MAX);
+	size_t name_len = strnlen(name, ENV_VAR_NAME_MAX);
 
 	for(int i=0; i<e->len; i++) {
 		struct env_var *var = (struct env_var *) &(e->vars[i]);
-		int var_name_len = strnlen(var->name, ENV_VAR_NAME_MAX);
+		size_t var_name_len = strnlen(var->name, ENV_VAR_NAME_MAX);
 		if(strncmp(var->name, name, imax(var_name_len, name_len)) == 0) {
 			return var;
 		}

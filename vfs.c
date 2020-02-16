@@ -14,7 +14,8 @@
 #include "log.h"
 #include "stb/stb.h"
 
-typedef unsigned long DWORD;
+struct vfs vfs = { 0 };
+struct vfs *vfs_global = &vfs;
 
 #define vfs_error(...) errorf("VFS", __VA_ARGS__)
 
@@ -205,10 +206,11 @@ void vfs_run_callbacks()
 {
 	for (int i = 0; i < vfs_global->file_count; i++)
 	{
-		for (int j = 0, j_size = stb_arr_len(vfs_global->file_table[i].read_callbacks); j < j_size; j++)
+		struct vfs_file *vfs_file = &vfs_global->file_table[i];
+		for (int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++)
 		{
-			read_callback_t cbck = vfs_global->file_table[i].read_callbacks[j].fn;
-			cbck(vfs_global->file_table[i].simplename, vfs_global->file_table[i].size, vfs_global->file_table[i].data, vfs_global->file_table[i].read_callbacks[j].userdata);
+			read_callback_t cbck = vfs_file->read_callbacks[j].fn;
+			cbck(vfs_file->simplename, vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
 		}
 	}
 }

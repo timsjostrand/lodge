@@ -1,36 +1,24 @@
 #ifndef _LODGE_H
 #define _LODGE_H
 
-#ifdef _WIN32
-#define EXPORT __declspec( dllexport )
-#define IMPORT __declspec( dllimport )
-#else
-#define EXPORT
-#define IMPORT
-#endif
-
-#ifdef ENABLE_SHARED
-#define SHARED_SYMBOL EXPORT
-#else
-
-#ifdef LOAD_SHARED
-#define SHARED_SYMBOL IMPORT
-#else
-#define SHARED_SYMBOL
-#endif
-
-#endif
-
+#include "lodge_platform.h"
 #include "math4.h"
+#include "str.h"
+#include "log.h"
 
-struct lodge_settings {
-	int			window_width;
-	int			window_height;
-	const char	*window_title;
-	int			view_width;
-	int			view_height;
-	vec3		sound_listener;
-	float		sound_distance_max;
+#include <math.h>
+#include <string.h>
+
+struct lodge_ret
+{
+	int			success;
+	strview_t	message;
 };
+
+struct lodge_ret lodge_ret_make_success();
+struct lodge_ret lodge_ret_make_error(strview_t message);
+
+#define lodge_success() lodge_ret_make_success()
+#define lodge_error(msg) lodge_ret_make_error(strview_static(msg))
 
 #endif

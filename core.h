@@ -5,13 +5,10 @@
 #include "log.h"
 #include "math4.h"
 #include "vfs.h"
-#include "input.h"
 #include "sound.h"
 #include "monotext.h"
 #include "console.h"
 #include "env.h"
-
-#include "graphics.h"
 
 struct core;
 
@@ -31,9 +28,8 @@ struct core_textures {
 struct core {
 	float					view_width;
 	float					view_height;
-	struct graphics			graphics;
+	//struct graphics			graphics;
 	struct core_textures	textures;
-	struct input			input;
 	struct sound			sound;
 	vec3					*sound_listener;
 	float					sound_distance_max;
@@ -43,13 +39,13 @@ struct core {
 	core_init_t				init_callback;
 	core_init_memory_t		init_memory_callback;
 	core_release_t			release_callback;
-	think_func_t			think_callback;
-	render_func_t			render_callback;
+	//think_func_t			think_callback;
+	//render_func_t			render_callback;
 
-	lodge_window_input_callback_t		key_callback;
-	lodge_window_input_char_callback_t	char_callback;
-	lodge_window_mousebutton_callback_t	mousebutton_callback;
-	fps_func_t							fps_callback;
+	//lodge_window_input_callback_t		key_callback;
+	//lodge_window_input_char_callback_t	char_callback;
+	//lodge_window_mousebutton_callback_t	mousebutton_callback;
+	//fps_func_t							fps_callback;
 
 	/* Variable environment. */
 	struct env				env;
@@ -60,13 +56,14 @@ struct core {
 	struct console			console;
 
 	/* Resources. */
-	struct monofont			font_console;
+	//struct monofont			font_console;
 
-	struct shared_memory	shared_memory;
+	//struct shared_memory	shared_memory;
 };
 
 struct core *core_global;
 
+#if 0
 /* Pre-init. */
 void core_set_init_memory_callback(core_init_memory_t init_memory_callback);
 void core_set_think_callback(think_func_t think_callback);
@@ -82,6 +79,7 @@ void core_set_up_sound(vec3 *sound_listener, float distance_max);
 
 void core_setup(const char *title, float view_width, float view_height,
 	int window_width, int window_height, int window_mode, size_t game_memory_size);
+#endif
 
 void core_run();
 void core_reload();

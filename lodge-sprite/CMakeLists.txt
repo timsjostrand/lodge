@@ -17,5 +17,5 @@ target_include_directories(lodge-sprite
 )
 
 target_link_libraries(lodge-sprite
-    lodge-graphics
+    lodge-renderer
 )

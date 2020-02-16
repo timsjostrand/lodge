@@ -40,12 +40,12 @@
 #define UNIFORMS_MAX                64
 
 struct uniform {
-	char		name[SHADER_UNIFORM_NAME_MAX_LEN];
-    GLint       id;
-    int         datatype;
+	char			name[SHADER_UNIFORM_NAME_MAX_LEN];
+    GLint			id;
+    int				datatype;
 
-    void        *data;
-	char		constant_data[64];
+    void			*data;
+	char			constant_data[64];
 };
 
 struct shader {

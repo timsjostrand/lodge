@@ -15,18 +15,27 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
+#include "monotext.h"
+#include "lodge.h"
+#include "shader.h"
+#include "texture.h"
+#include "vfs.h"
+#include "color.h"
+#include "str.h"
+#include "lodge_opengl.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <GL/glew.h>
 
-#include "monotext.h"
-#include "graphics.h"
-#include "texture.h"
-#include "vfs.h"
-#include "color.h"
-#include "str.h"
+/* Number of components in a vertex(x, y, z, u, v). */
+#define VBO_VERTEX_LEN                  5
+/* Number of vertices in a quad. */
+#define VBO_QUAD_VERTEX_COUNT			6
+/* Number of components in a quad. */
+#define VBO_QUAD_LEN                    (VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
 
 /**
  * Looks up a character in the texture atlas and returns the texture coordinates

@@ -21,4 +21,5 @@ target_link_libraries(lodge-asset-fbx
 		"${GLEW_LIBRARY}"
 		"lodge-collections"
 		"lodge-stb"
+		"lodge-renderer"
 )

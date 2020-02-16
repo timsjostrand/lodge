@@ -16,7 +16,6 @@
 #include "color.h"
 #include "str.h"
 #include "math4.h"
-#include "graphics.h"
 #include "drawable.h"
 #include "env.h"
 #include "input.h"
@@ -38,7 +37,7 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	s->rotation = 0;
 	s->texture = white_tex;
 	s->pos = vec4_make(xyz(txt->bottom_left), 0.0f);
-	s->scale = vec4_make(txt->font->letter_width  + txt->font->letter_spacing_x + 1,
+	s->scale = vec4_make(txt->font->letter_width + txt->font->letter_spacing_x + 1,
 		txt->font->letter_height + txt->font->letter_spacing_y,
 		1, 1);
 	s->color = vec4_make(rgba(CONSOLE_COLOR_CURSOR));
@@ -130,7 +129,7 @@ float console_height(struct console *c, int display_lines)
 }
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex, struct shader *shader, struct env *env)
+		int padding, GLuint *white_tex, struct shader *shader, struct env *env, struct renderer *renderer)
 {
 	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;
@@ -157,7 +156,8 @@ void console_new(struct console *c, struct monofont *font, int view_width,
 			bg_h,					/* h */
 			CONSOLE_COLOR_BG,
 			0.0f,
-			white_tex);
+			white_tex,
+			renderer);
 
 	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, padding, padding, shader);
 	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, padding, padding, shader);
@@ -244,11 +244,11 @@ void console_think(struct console *c)
 	console_cursor_think(&c->cursor);
 }
 
-void console_render(struct console *c, struct shader *s, struct graphics* g)
+void console_render(struct console *c, struct shader *s, const mat4 projection)
 {
 	shader_uniforms_think(s);
-	sprite_render(&c->background, s, g);
-	sprite_render(&c->cursor.sprite, s, g);
+	sprite_render(&c->background, s, projection);
+	sprite_render(&c->cursor.sprite, s, projection);
 	monotext_render(&c->txt_display, s);
 	console_render_input(c, s);
 }

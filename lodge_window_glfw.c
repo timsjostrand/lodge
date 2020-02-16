@@ -3,6 +3,9 @@
 #ifdef LODGE_GLFW
 
 #include "lodge_window.h"
+#include "lodge_plugins.h"
+#include "lodge_renderer.h"
+#include "input.h"
 #include "log.h"
 
 #include <GLFW/glfw3.h>
@@ -18,6 +21,11 @@
 
 #define WINDOW_TITLE_MAX 256
 
+struct input {
+	int									keys[LODGE_KEY_LAST];		/* Key status of current frame. */
+	int									last_keys[LODGE_KEY_LAST];	/* Key status of last frame. */
+};
+
 struct glfw_window
 {
 	char								title[WINDOW_TITLE_MAX];
@@ -30,13 +38,19 @@ struct glfw_window
 	int									windowed_pos_x;
 	int									windowed_pos_y;
 
-	lodge_window_create_callback_t		callback_create;
 	lodge_window_mousebutton_callback_t callback_mousebutton;
-	lodge_window_input_callback_t		callback_input;
-	lodge_window_input_char_callback_t	callback_char;
-	lodge_window_resize_callback_t		callback_resize;
+	void								*callback_mousebutton_userdata;
 
-	void*								userdata;
+	lodge_window_input_callback_t		callback_input;
+	void								*callback_input_userdata;
+
+	lodge_window_input_char_callback_t	callback_char;
+	void								*callback_char_userdata;
+
+	lodge_window_resize_callback_t		callback_resize;
+	void								*callback_resize_userdata;
+
+	struct input						input;
 };
 
 struct glfw_window*	cast_handle(lodge_window_t window)		{ return (struct glfw_window*)window; }
@@ -47,46 +61,95 @@ static void glfw_error_callback(int error_code, const char *msg)
 	lodge_window_error("GLFW Error %d: %s\n", error_code, msg);
 }
 
-void glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
+static void glfw_mousebutton_callback(GLFWwindow *window, int button, int action, int mods)
 {
 	struct glfw_window* glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
-	glfw_window->callback_mousebutton(to_handle(glfw_window), button, action, mods);
+	if(glfw_window->callback_mousebutton) {
+		glfw_window->callback_mousebutton(to_handle(glfw_window), button, action, mods, glfw_window->callback_mousebutton_userdata);
+	}
 }
 
-void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+static void glfw_key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
+{
+	struct glfw_window *glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
+
+	/* Sanity check */
+	if (key < 0 || key >= LODGE_KEY_LAST) {
+		debugf("Input", "Invalid key: %d (scancode=%d)\n", key, scancode);
+		return;
+	}
+
+	/* Only care about 'up'/'down', regard 'repeat' as 'down'. */
+	glfw_window->input.keys[key] = !(action == LODGE_RELEASE);
+
+	if(glfw_window->callback_input) {
+		glfw_window->callback_input(to_handle(glfw_window), key, scancode, action, mods, glfw_window->callback_input_userdata);
+	}
+}
+
+static void glfw_char_callback(GLFWwindow *window, unsigned int key, int mods)
 {
 	struct glfw_window* glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
-	glfw_window->callback_input(to_handle(glfw_window), key, scancode, action, mods);
+	if(glfw_window->callback_char) {
+		glfw_window->callback_char(to_handle(glfw_window), key, mods, glfw_window->callback_char_userdata);
+	}
 }
 
-void glfw_char_callback(GLFWwindow *window, unsigned int key, int mods)
+static void glfw_resize_callback(GLFWwindow *window, int width, int height)
 {
 	struct glfw_window* glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
-	glfw_window->callback_char(to_handle(glfw_window), key, mods);
+	if(glfw_window->callback_resize) {
+		glfw_window->callback_resize(to_handle(glfw_window), width, height, glfw_window->callback_resize_userdata);
+	}
 }
 
-void glfw_resize_callback(GLFWwindow *window, int width, int height)
+static struct lodge_ret lodge_windows_initialize(struct lodge_windows *windows, struct lodge_plugins *plugins)
 {
-	struct glfw_window* glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
-	glfw_window->callback_resize(to_handle(glfw_window), width, height);
-}
+	windows->library = strview_static("glfw");
 
-void lodge_window_initialize()
-{
 	int ret = glfwInit();
 	if (ret)
 	{
 		glfwSetErrorCallback(&glfw_error_callback);
+		return lodge_success();
 	}
 	else
 	{
-		printf("Could not initialize glfw (%d)\n", ret); // TODO: Where to log this?
+		return lodge_error("Could not initialize GLFW");
 	}
 }
 
-void lodge_window_shutdown()
+static void lodge_windows_shutdown(struct lodge_windows *windows)
 {
 	glfwTerminate();
+}
+
+static void lodge_windows_update(struct lodge_windows *windows, float dt)
+{
+	for(int i = 0; i < windows->windows_count; i++) {
+		lodge_window_update(windows->windows[i]);
+	}
+}
+
+static void lodge_windows_render(struct lodge_windows *windows)
+{
+	for(int i = 0; i < windows->windows_count; i++) {
+		lodge_window_render(windows->windows[i]);
+	}
+}
+
+struct lodge_plugin lodge_windows_plugin()
+{
+	struct lodge_plugin plugin = {
+		.version = LODGE_PLUGIN_VERSION,
+		.size = sizeof(struct lodge_windows),
+		.name = strview_static("windows"),
+		.init = &lodge_windows_initialize,
+		.free = &lodge_windows_shutdown,
+		.update = &lodge_windows_update,
+		.render = &lodge_windows_render,
+	};
+	return plugin;
 }
 
 GLFWwindow* glfw_window_create(const char *title, int window_width, int window_height, int window_mode, GLFWwindow* window_old)
@@ -146,39 +209,64 @@ GLFWwindow* glfw_window_create(const char *title, int window_width, int window_h
 	return window;
 }
 
-lodge_window_t lodge_window_create(const char *title, int window_width, int window_height, int window_mode, lodge_window_create_callback_t create_callback)
+lodge_window_t lodge_window_new(struct lodge_windows *windows, const char *title, int window_width, int window_height, int window_mode)
 {
 	struct glfw_window* glfw_window = (struct glfw_window*)malloc(sizeof(struct glfw_window));
 
-	glfw_window->window = glfw_window_create(title, window_width, window_height, window_mode, 0);
-	glfwMakeContextCurrent(glfw_window->window);
+	glfw_window->window = glfw_window_create(title, window_width, window_height, window_mode, NULL);
 	glfwSetWindowUserPointer(glfw_window->window, (void*)glfw_window);
 
+	glfwMakeContextCurrent(glfw_window->window);
+
 	glfw_window->window_mode = window_mode;
-	glfw_window->callback_mousebutton = 0;
-	glfw_window->callback_input = 0;
-	glfw_window->callback_char = 0;
-	glfw_window->callback_resize = 0;
-	glfw_window->callback_create = create_callback;
-	glfw_window->userdata = 0;
+	glfw_window->callback_mousebutton = NULL;
+	glfw_window->callback_mousebutton_userdata = NULL;
+	glfw_window->callback_input = NULL;
+	glfw_window->callback_input_userdata = NULL;
+	glfw_window->callback_char = NULL;
+	glfw_window->callback_char_userdata = NULL;
+	glfw_window->callback_resize = NULL;
+	glfw_window->callback_resize_userdata = NULL;
+
+	memset(&glfw_window->input, 0, sizeof(struct input));
 
 	strcpy(glfw_window->title, title);
 
 	lodge_window_t window = to_handle(glfw_window);
 
-	if (glfw_window->callback_create)
-		glfw_window->callback_create(window);
+	windows->windows[windows->windows_count++] = window;
 
 	return window;
 }
 
-void lodge_window_destroy(lodge_window_t window)
+void lodge_window_free(lodge_window_t window)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfwSetWindowShouldClose(glfw_window->window, 1);
+	free(glfw_window);
+}
+
+struct lodge_ret lodge_window_set_renderer(lodge_window_t window, struct lodge_renderer *renderer)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	glfwMakeContextCurrent(glfw_window->window);
+	struct lodge_ret attach_ret = lodge_renderer_attach(renderer);
+	if(!attach_ret.success) {
+		ASSERT_FAIL("Failed to attach renderer");
+		errorf("Window", "Failed to attach renderer: %s\n", attach_ret.message.s);
+		return attach_ret;
+	}
+	return lodge_success();
 }
 
 void lodge_window_update(lodge_window_t window)
+{
+	struct glfw_window *glfw_window = cast_handle(window);
+	// Remember key state
+	memcpy(glfw_window->input.last_keys, glfw_window->input.keys, sizeof(glfw_window->input.last_keys));
+}
+
+void lodge_window_render(lodge_window_t window)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfwPollEvents();
@@ -235,34 +323,32 @@ int lodge_window_is_open(lodge_window_t window)
 	return !glfwWindowShouldClose(glfw_window->window);
 }
 
-void lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback)
+void lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback, void *userdata)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfw_window->callback_mousebutton = callback;
+	glfw_window->callback_mousebutton_userdata = userdata;
 }
 
-void lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback)
+void lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback, void *userdata)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfw_window->callback_input = callback;
+	glfw_window->callback_input_userdata = userdata;
 }
 
-void lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback)
+void lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback, void *userdata)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfw_window->callback_char = callback;
+	glfw_window->callback_char_userdata = userdata;
 }
 
-void lodge_window_set_resize_callback(lodge_window_t window, lodge_window_resize_callback_t callback)
+void lodge_window_set_resize_callback(lodge_window_t window, lodge_window_resize_callback_t callback, void *userdata)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfw_window->callback_resize = callback;
-}
-
-void lodge_window_set_userdata(lodge_window_t window, void* userdata)
-{
-	struct glfw_window* glfw_window = cast_handle(window);
-	glfw_window->userdata = userdata;
+	glfw_window->callback_resize_userdata = userdata;
 }
 
 void lodge_window_set_cursor_mode(lodge_window_t window, int value)
@@ -271,10 +357,10 @@ void lodge_window_set_cursor_mode(lodge_window_t window, int value)
 	glfwSetInputMode(glfw_window->window, GLFW_CURSOR, value);
 }
 
-void* lodge_window_get_userdata(lodge_window_t window)
+void lodge_window_set_should_close(lodge_window_t window, int value)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
-	return glfw_window->userdata;
+	glfwSetWindowShouldClose(glfw_window->window, value);
 }
 
 void lodge_window_get_size(lodge_window_t window, int* width, int* height)
@@ -319,6 +405,24 @@ void lodge_window_set_vsync_enabled(lodge_window_t window, int vsync)
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfwMakeContextCurrent(glfw_window->window);
 	glfwSwapInterval(vsync ? 1 : 0);
+}
+
+int lodge_window_key_down(lodge_window_t window, int key)
+{
+	struct glfw_window *glfw_window = cast_handle(window);
+	return glfw_window->input.keys[key];
+}
+
+int lodge_window_key_pressed(lodge_window_t window, int key)
+{
+	struct glfw_window *glfw_window = cast_handle(window);
+	return (glfw_window->input.keys[key] && !glfw_window->input.last_keys[key]);
+}
+
+int lodge_window_key_released(lodge_window_t window, int key)
+{
+	struct glfw_window *glfw_window = cast_handle(window);
+	return (!glfw_window->input.keys[key] && glfw_window->input.last_keys[key]);
 }
 
 #endif

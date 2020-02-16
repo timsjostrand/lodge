@@ -2,6 +2,8 @@
 #define _MATH4_H
 
 #include <stdint.h>
+#include <math.h> // for M_PI
+#include <stdlib.h> // for min/max
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846264338327950288
@@ -22,8 +24,13 @@
 	a = b; \
 	b = t;
 
-#define min(x, y) ((x) < (y) ? (x) : (y))
-#define max(x, y) ((x) > (y) ? (x) : (y))
+#ifndef min
+	#define min(x, y) ((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef max
+	#define max(x, y) ((x) > (y) ? (x) : (y))
+#endif
 
 union vec2
 {

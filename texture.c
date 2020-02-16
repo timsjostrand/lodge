@@ -12,40 +12,8 @@
 #include <stb/stb_image.h>
 
 #include "texture.h"
-#include "graphics.h"
 #include "color.h"
-
-/**
- * Parses pixel data from a compressed image.
- *
- * @param out		Where to store pixel data.
- * @param width		Where to store image width.
- * @param height	Where to store image height.
- * @param data		The compressed image data to parse.
- * @param len		Length of the compressed data.
- */
-int image_load(uint8_t **out, int *width, int *height, const uint8_t *data, size_t len)
-{
-	int components;
-	uint8_t *tmp = stbi_load_from_memory(data, len, width, height, &components, STBI_rgb_alpha);
-	if(tmp == NULL) {
-		graphics_error("image_load(): %s\n", stbi_failure_reason());
-		return GRAPHICS_IMAGE_LOAD_ERROR;
-	}
-	*out = tmp;
-	return GRAPHICS_OK;
-}
-
-/**
- * When an image has been loaded via image_load{_file}(), use image_free() to release
- * it.
- *
- * @param data	The data to release.
- */
-void image_free(uint8_t *data)
-{
-	stbi_image_free(data);
-}
+#include "lodge_image.h"
 
 /**
  * Loads raw RGBA data into an OpenGL texture.
@@ -77,7 +45,7 @@ int texture_load_pixels(tex_t *tex, const uint8_t *data,
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 #endif
-	return GRAPHICS_OK;
+	return TEXTURE_OK;
 }
 
 /**
@@ -147,28 +115,24 @@ void texture_free(const tex_t tex)
  * @param data		The image data to load.
  * @param len		The length of the image data.
  */
-int texture_load(tex_t *tex, int *width, int *height, const uint8_t *data,
-		size_t len)
+int texture_load(tex_t *tex, int *width, int *height, const uint8_t *data, size_t data_size)
 {
-	uint8_t *tmp;
-	int tmp_width;
-	int tmp_height;
-	int ret;
-	ret = image_load(&tmp, &tmp_width, &tmp_height, data, len);
-	if(ret != GRAPHICS_OK) {
-		return ret;
+	struct lodge_image_out image;
+	struct lodge_ret image_ret = lodge_image_new(&image, data, data_size);
+	if(!image_ret.success) {
+		return TEXTURE_ERROR;
 	}
-	ret = texture_load_pixels(tex, tmp, tmp_width, tmp_height);
-	image_free(tmp);
-	if(ret != GRAPHICS_OK) {
+	int ret = texture_load_pixels(tex, image.pixel_data, image.width, image.height);
+	lodge_image_free(image.pixel_data);
+	if(ret != TEXTURE_OK) {
 		texture_free(*tex);
 		return ret;
 	}
 	if(width != NULL) {
-		*(width) = tmp_width;
+		*(width) = image.width;
 	}
 	if(height != NULL) {
-		*(height) = tmp_height;
+		*(height) = image.height;
 	}
-	return GRAPHICS_OK;
+	return TEXTURE_OK;
 }
