@@ -65,6 +65,8 @@ void					lodge_renderer_bind_sampler(int slot, struct lodge_sampler *sampler);
 void					lodge_renderer_bind_texture(int slot, texture_t texture);
 
 void					lodge_renderer_set_constant_vec2(struct shader *shader, strview_t name, vec2 v);
+void					lodge_renderer_set_constant_vec3(struct shader *shader, strview_t name, vec3 v);
+void					lodge_renderer_set_constant_vec4(struct shader *shader, strview_t name, vec4 v);
 void					lodge_renderer_set_constant_mat4(struct shader *shader, strview_t name, mat4 mat);
 
 #if 0
