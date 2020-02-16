@@ -329,6 +329,33 @@ void lodge_renderer_set_constant_vec2(struct shader *s, strview_t name, vec2 v)
 	}
 }
 
+void lodge_renderer_set_constant_vec3(struct shader *s, strview_t name, vec3 v)
+{
+	glUseProgram(s->program);
+	GLint id = glGetUniformLocation(s->program, name.s);
+	if(id == -1) {
+		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
+	}
+	glUniform3f(id, v.x, v.y, v.z);
+	GLint err = glGetError();
+	if(err != GL_NO_ERROR) {
+		errorf("OpenGL", "set_uniform_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+	}
+}
+
+void lodge_renderer_set_constant_vec4(struct shader *s, strview_t name, vec4 v)
+{
+	glUseProgram(s->program);
+	GLint id = glGetUniformLocation(s->program, name.s);
+	if(id == -1) {
+		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
+	}
+	glUniform4f(id, v.x, v.y, v.z, v.w);
+	GLint err = glGetError();
+	if(err != GL_NO_ERROR) {
+		errorf("OpenGL", "set_uniform_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+	}
+}
 void lodge_renderer_set_constant_mat4(struct shader *s, strview_t name, mat4 mat)
 {
 	glUseProgram(s->program);
