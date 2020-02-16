@@ -4,7 +4,6 @@
 #include <stdarg.h>
 
 #include "list.h"
-#include "graphics.h"
 #include "drawable.h"
 #include "basic_sprite.h"
 #include "monotext.h"
@@ -74,13 +73,13 @@ struct console {
 };
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex, struct shader *shader, struct env *env);
+		int padding, GLuint *white_tex, struct shader *shader, struct env *env, struct renderer *renderer);
 void console_free(struct console *c);
 void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
 void console_vprintf(struct console *c, const char *fmt, va_list args);
 void console_think(struct console *c);
-void console_render(struct console *c, struct shader *s, struct graphics* g);
+void console_render(struct console *c, struct shader *s, const mat4 projection);
 void console_toggle_focus(struct console *c);
 void console_parse_conf(struct console *c, struct console_conf *conf);
 float console_height(struct console *c, int display_lines);

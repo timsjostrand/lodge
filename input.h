@@ -1,3 +1,10 @@
+/**
+ * Keyboard input.
+ *
+ * Authors: Tim Sjöstrand <tim.sjostrand@gmail.com>
+ *			Johan Yngman <johan.yngman@gmail.com>
+ */
+
 #ifndef _INPUT_H
 #define _INPUT_H
 
@@ -166,26 +173,19 @@
 #define LODGE_JOYSTICK_16            15
 #define LODGE_JOYSTICK_LAST          LODGE_JOYSTICK_16
 
-struct input {
-	int										enabled;
-	lodge_window_input_callback_t			callback;
-	lodge_window_mousebutton_callback_t		mousebutton_callback;
-	lodge_window_input_char_callback_t		char_callback;
-	int										keys[LODGE_KEY_LAST];		/* Key status of current frame. */
-	int										last_keys[LODGE_KEY_LAST];	/* Key status of last frame. */
-};
+#if 0
+struct input;
 
-int		input_init(struct input *input, lodge_window_t window,
-					lodge_window_input_callback_t key_callback, 
-					lodge_window_input_char_callback_t char_callback, 
-					lodge_window_mousebutton_callback_t mousebutton_callback);
+struct input*	input_new(lodge_window_t window);
+void			input_free(struct input *input);
 
-void	input_think(struct input *input, float delta_time);
+void			input_set_key_callback(struct input *input, lodge_window_input_callback_t callback);
+void			input_set_char_callback(struct input *input, lodge_window_input_char_callback_t callback);
+void			input_set_mousebutton_callback(struct input *input, lodge_window_mousebutton_callback_t mousebutton_callback);
 
-int		key_down(int key);
-int		key_pressed(int key);
-int		key_released(int key);
-
-struct input *input_global;
+int				input_key_down(struct input *input, int key);
+int				input_key_pressed(struct input *input, int key);
+int				input_key_released(struct input *input, int key);
+#endif
 
 #endif

@@ -16,36 +16,43 @@
 #include "math4.h"
 #include "vertex.h"
 #include "vertex_buffer.h"
-#include "graphics.h"
 #include "color.h"
+#include "lodge_opengl.h"
 
-static int32_t loc_draw_mode_to_opengl_mode(enum draw_mode dm)
+/* Number of components in a vertex(x, y, z, u, v). */
+#define VBO_VERTEX_LEN                  5
+/* Number of vertices in a quad. */
+#define VBO_QUAD_VERTEX_COUNT			6
+/* Number of components in a quad. */
+#define VBO_QUAD_LEN                    (VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
+
+static int32_t lodge_renderer_primitive_to_gl(enum lodge_renderer_primitive dm)
 {
 	switch(dm)
 	{
-	case DRAW_MODE_POINTS:
+	case LODGE_RENDERER_PRIMITIVE_POINTS:
 		return GL_POINTS;
-	case DRAW_MODE_LINE_STRIP:
+	case LODGE_RENDERER_PRIMITIVE_LINE_STRIP:
 		return GL_LINE_STRIP;
-	case DRAW_MODE_LINE_LOOP:
+	case LODGE_RENDERER_PRIMITIVE_LINE_LOOP:
 		return GL_LINE_LOOP;
-	case DRAW_MODE_LINES:
+	case LODGE_RENDERER_PRIMITIVE_LINES:
 		return GL_LINES;
-	case DRAW_MODE_LINE_STRIP_ADJACENCY:
+	case LODGE_RENDERER_PRIMITIVE_LINE_STRIP_ADJACENCY:
 		return GL_LINE_STRIP_ADJACENCY;
-	case DRAW_MODE_LINES_ADJACENCY:
+	case LODGE_RENDERER_PRIMITIVE_LINES_ADJACENCY:
 		return GL_LINES_ADJACENCY;
-	case DRAW_MODE_TRIANGLE_STRIP:
+	case LODGE_RENDERER_PRIMITIVE_TRIANGLE_STRIP:
 		return GL_TRIANGLE_STRIP;
-	case DRAW_MODE_TRIANGLE_FAN:
+	case LODGE_RENDERER_PRIMITIVE_TRIANGLE_FAN:
 		return GL_TRIANGLE_FAN;
-	case DRAW_MODE_TRIANGLES:
+	case LODGE_RENDERER_PRIMITIVE_TRIANGLES:
 		return GL_TRIANGLES;
-	case DRAW_MODE_TRIANGLE_STRIP_ADJACENCY:
+	case LODGE_RENDERER_PRIMITIVE_TRIANGLE_STRIP_ADJACENCY:
 		return GL_TRIANGLE_STRIP_ADJACENCY;
-	case DRAW_MODE_TRIANGLES_ADJACENCY:
+	case LODGE_RENDERER_PRIMITIVE_TRIANGLES_ADJACENCY:
 		return GL_TRIANGLES_ADJACENCY;
-	case DRAW_MODE_PATCHES:
+	case LODGE_RENDERER_PRIMITIVE_PATCHES:
 		return GL_PATCHES;
 	default:
 		ASSERT_FAIL("Invalid draw_mode");
@@ -354,15 +361,14 @@ static struct drawable drawable_make_vertex(enum draw_mode draw_mode, const vert
 	return drawable;
 }
 
-struct drawable drawable_make(enum draw_mode draw_mode, GLuint vertex_count, GLuint vbo, GLuint vao)
+struct drawable drawable_make(enum lodge_renderer_primitive primitive, GLuint vertex_count, GLuint vbo, GLuint vao)
 {
-	struct drawable d = {
-		.draw_mode = draw_mode,
+	return (struct drawable) {
+		.primitive = primitive,
 		.vertex_count = vertex_count,
 		.vbo = vbo,
 		.vao = vao,
 	};
-	return d;
 }
 
 struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum draw_mode draw_mode)
@@ -428,13 +434,14 @@ void drawable_reset(struct drawable *d)
 	*d = drawable_make(0, 0, 0, 0);
 }
 
-void drawable_render(struct drawable *d)
+void drawable_render(const struct drawable *d)
 {
 	glBindVertexArray(d->vao);
-	glDrawArrays(loc_draw_mode_to_opengl_mode(d->draw_mode), 0, d->vertex_count);
+	glDrawArrays(lodge_renderer_primitive_to_gl(d->primitive), 0, d->vertex_count);
 }
 
-void drawable_render_detailed(enum draw_mode draw_mode, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
+#if 0
+void drawable_render_detailed(enum lodge_renderer_primitive primitive, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
 {
 	ASSERT(vertex_count > 0);
 	ASSERT(s->program != 0);
@@ -482,7 +489,7 @@ void drawable_render_detailed(enum draw_mode draw_mode, GLuint vao, GLuint verte
 		GL_OK_OR_ASSERT("Could not bind drawable texture");
 	}
 
-	glDrawArrays(loc_draw_mode_to_opengl_mode(draw_mode), 0, vertex_count);
+	glDrawArrays(lodge_renderer_primitive_to_gl(primitive), 0, vertex_count);
 	GL_OK_OR_RETURN();
 
 	glBindVertexArray(0);
@@ -496,24 +503,25 @@ void drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, v
 		.view = view,
 		.projection = mat4_identity()
 	};
-	drawable_render_detailed(d->draw_mode, d->vao, d->vertex_count, tex, color, s, mvp);
+	drawable_render_detailed(d->primitive, d->vao, d->vertex_count, tex, color, s, mvp);
+}
+#endif
+
+void drawable_new_rect_outline(struct drawable *dst, struct rect *rect)
+{
+	drawable_new_rect_outlinef(dst, rect->pos.x, rect->pos.y, rect->size.x, rect->size.y);
 }
 
-void drawable_new_rect_outline(struct drawable *dst, struct rect *rect, struct shader *s)
+void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h)
 {
-	drawable_new_rect_outlinef(dst, rect->pos.x, rect->pos.y, rect->size.x, rect->size.y, s);
-}
-
-void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w, float h, struct shader *s)
-{
-	dst->draw_mode = GL_LINE_STRIP;
+	dst->primitive = GL_LINE_STRIP;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 5;
 	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
 
 	/* OOM? */
 	if(vertices == NULL) {
-		graphics_error("Out of memory\n");
+		errorf("Drawable", "Out of memory\n");
 		return;
 	}
 
@@ -527,16 +535,16 @@ void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w,
 	free(vertices);
 }
 
-void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h, struct shader *s)
+void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h)
 {
-	dst->draw_mode = DRAW_MODE_TRIANGLES;
+	dst->primitive = LODGE_RENDERER_PRIMITIVE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6;
 	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
 
 	/* OOM? */
 	if(vertices == NULL) {
-		graphics_error("Out of memory\n");
+		errorf("Drawable", "Out of memory\n");
 		return;
 	}
 
@@ -679,7 +687,7 @@ struct drawable drawable_make_plane_subdivided(vec2 origin, vec2 size, int divis
 	}
 
 	/* Upload vertices to GPU. */
-	struct drawable drawable = drawable_make_xyzuv(DRAW_MODE_TRIANGLES, vertices, vertex_count);
+	struct drawable drawable = drawable_make_xyzuv(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, vertex_count);
 
 	/* Cleanup. */
 	free(vertices);
@@ -708,7 +716,7 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 	}
 
 	/* Upload vertices to GPU. */
-	struct drawable drawable = drawable_make_vertex(DRAW_MODE_TRIANGLES, vertices, vertex_count);
+	struct drawable drawable = drawable_make_vertex(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, vertex_count);
 
 	/* Cleanup. */
 	free(vertices);
@@ -718,14 +726,14 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 
 void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
 {
-	dst->draw_mode = DRAW_MODE_TRIANGLES;
+	dst->primitive = LODGE_RENDERER_PRIMITIVE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6;
 	GLfloat *vertices = (GLfloat *)calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
 
 	/* OOM? */
 	if (vertices == NULL) {
-		graphics_error("Out of memory\n");
+		errorf("Drawable", "Out of memory\n");
 		return;
 	}
 
@@ -779,9 +787,9 @@ void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
 }
 
 
-void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments, struct shader *s)
+void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments)
 {
-	dst->draw_mode = GL_LINE_STRIP;
+	dst->primitive = GL_LINE_STRIP;
 	/* The actual required vertex count is segments+1 because the final vertex
 	 * needs to reconnect with the first one. */
 	dst->vertex_count = segments + 1;
@@ -791,7 +799,7 @@ void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float 
 
 	/* OOM? */
 	if(vertices == NULL) {
-		graphics_error("Out of memory\n");
+		errorf("Drawable", "Out of memory\n");
 		return;
 	}
 
@@ -808,9 +816,9 @@ void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float 
 /**
  * Creates a vertex buffer for a circle.
  */
-void drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments, struct shader *s)
+void drawable_new_circle_outline(struct drawable *dst, struct circle *circle, int segments)
 {
-	drawable_new_circle_outlinef(dst, circle->pos.x, circle->pos.y, circle->r, segments, s);
+	drawable_new_circle_outlinef(dst, circle->pos.x, circle->pos.y, circle->r, segments);
 }
 
 struct drawable drawable_make_line(vec3 start, vec3 end)
@@ -866,5 +874,5 @@ struct drawable drawable_make_unit_cube()
 		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
 	};
 
-	return drawable_make_xyzuv(DRAW_MODE_TRIANGLES, vertices, LODGE_ARRAYSIZE(vertices));
+	return drawable_make_xyzuv(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, LODGE_ARRAYSIZE(vertices));
 }

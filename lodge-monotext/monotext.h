@@ -2,7 +2,6 @@
 #define _MONOTEXT_H_
 
 #include "math4.h"
-#include "graphics.h"
 #include "log.h"
 
 #define monotext_debug(...) debugf("Monotext", __VA_ARGS__)
@@ -21,7 +20,7 @@
 struct monofont {
 	int				loaded;
 	const char		*name;
-	GLuint			texture;
+	unsigned int	texture;
 	int				width;
 	int				height;
 	int				letter_width;
@@ -46,8 +45,8 @@ struct monotext {
 	int				verts_count;				/* Number of vertices in verts buffer. */
 	int				verts_len;					/* Length of the vertex buffer. */
 	int				quads_count;				/* The number of quads required (text_len - newlines). */
-	GLuint			vbo;						/* VBO for the vertex array. */
-	GLuint			vao;
+	unsigned int	vbo;						/* VBO for the vertex array. */
+	unsigned int	vao;
 	struct shader	*shader;
 };
 

@@ -11,7 +11,6 @@
 #include "core_console.h"
 #include "sound.h"
 #include "console.h"
-#include "graphics.h"
 #include "vfs.h"
 #include "core.h"
 #include "env.h"
@@ -86,7 +85,11 @@ static void core_console_sound_init(struct console *c)
 static void core_console_graphics_quit(struct console *c, struct console_cmd *cmd,
 		struct list *argv)
 {
+#if 1
+	ASSERT_NOT_IMPLEMENTED();
+#else
 	lodge_window_destroy(core_global->graphics.window);
+#endif
 }
 
 static void core_console_graphics_init(struct console *c, struct env *env)
@@ -95,8 +98,12 @@ static void core_console_graphics_init(struct console *c, struct env *env)
 	cmd_new(&c->root_cmd, "quit", 0, &core_console_graphics_quit, NULL);
 	//struct console *cmd root = cmd_new(&c->root_cmd, "graphics", 0, NULL, NULL);
 
+#if 1
+	ASSERT_NOT_IMPLEMENTED();
+#else
 	/* Bind variables. */
 	env_bind_1f(env, "dt", &(core_global->graphics.delta_time_factor));
+#endif
 }
 
 /* VFS */

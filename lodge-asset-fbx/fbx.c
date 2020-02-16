@@ -545,7 +545,7 @@ static struct alist* fbx_node_read_children(struct blob_cur *cur)
 
 	while(!blob_cur_is_empty(cur)) {
 		while(blob_cur_remaining(cur) > FBX_NULL_NODE_SIZE) {
-			size_t end_offset = 0;
+			uint32_t end_offset = 0;
 			if(!blob_cur_read(end_offset, cur)) {
 				ASSERT_FAIL("FBX: Failed to read node header");
 				goto fail;

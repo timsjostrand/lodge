@@ -5,9 +5,6 @@
 #include "vfs.h"
 #include "alist.h"
 
-struct vfs vfs_mem = { { 0 } };
-struct vfs *vfs_global = &vfs_mem;
-
 struct alist* assets_list;
 struct alist* assets_list_textures;
 struct alist* assets_list_sounds;
@@ -60,6 +57,10 @@ void write_assets_c()
 	fprintf(fp, "#include \"util_reload.h\"\n");
 	fprintf(fp, "\n");
 
+	fprintf(fp, "struct assets assets_mem = { 0 };\n");
+	fprintf(fp, "struct assets *assets = &assets_mem;\n");
+
+	fprintf(fp, "\n");
 	fprintf(fp, "void assets_load()\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\t// Textures\n");
@@ -254,7 +255,8 @@ void write_assets_h()
 #endif
 	fprintf(fp, "};\n\n");
 
-	fprintf(fp, "struct assets* assets;\n\n");
+	fprintf(fp, "extern struct assets assets_mem;\n");
+	fprintf(fp, "extern struct assets *assets;\n\n");
 
 	fprintf(fp, "void assets_load();\n");
 	fprintf(fp, "void assets_release();\n");

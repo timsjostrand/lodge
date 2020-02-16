@@ -9,9 +9,6 @@
 
 typedef unsigned int tex_t;
 
-int  image_load(uint8_t **out, int *width, int *height, const uint8_t *data, size_t len);
-void image_free(uint8_t *data);
-
 int  texture_load(tex_t *tex, int *width, int *height, const uint8_t *data,
 		size_t len);
 int  texture_load_pixels(tex_t *tex, const uint8_t *data,

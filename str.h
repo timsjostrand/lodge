@@ -64,6 +64,9 @@ int			strview_empty(const strview_t str);
 int			strview_length(const strview_t str);
 #define		strview_static(s) strview_make((s), sizeof((s))-1)
 
+#define		STRVIEW_PRINTF_FMT "%.*s"
+#define		STRVIEW_PRINTF_ARG(STRVIEW) STRVIEW.length, STRVIEW.s
+
 int			str_insert(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
 int			str_replace_into(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
 size_t		str_delete(char *s, size_t s_size, size_t index, size_t count);

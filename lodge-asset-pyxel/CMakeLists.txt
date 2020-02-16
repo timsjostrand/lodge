@@ -21,6 +21,7 @@ target_include_directories(lodge-asset-pyxel
 target_link_libraries(lodge-asset-pyxel
     PRIVATE
         ${ENGINE_EXTRA_LIBS}
+        lodge-image
     PUBLIC
         ${LIBARCHIVE_LIBRARY}
         ${CJSON_LIBRARY}

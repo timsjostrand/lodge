@@ -1,11 +1,12 @@
 #include "fbx_asset.h"
 
-#include <GL/glew.h>
+#include "lodge_opengl.h" // TODO(TS): should depend on a renderer interface instead
+
 #include <string.h>
 
 #include "lodge_platform.h"
 #include "math4.h"
-#include "graphics.h"
+#include "shader.h"
 #include "fbx.h"
 #include "str.h"
 
@@ -63,7 +64,7 @@ static void float_array_free(struct float_array *a)
 	free(a);
 }
 
-static struct float_array* fbx_asset_new_layer_element(
+static struct array* fbx_asset_new_layer_element(
 	struct fbx *fbx,
 	const int32_t vertex_indices[], size_t vertex_indices_count,
 	const char *mapping_type_path[], size_t mapping_type_path_count,
@@ -72,7 +73,7 @@ static struct float_array* fbx_asset_new_layer_element(
 	const char *indices_path[], size_t indices_path_count
 )
 {
-	struct float_array *ret = NULL;
+	struct array *ret = NULL;
 
 	/* Check mapping type */
 	{
@@ -163,8 +164,8 @@ static struct float_array* fbx_asset_new_layer_element(
 	}
 
 	uint32_t fail_count = 0;
-	for(uint32_t i = 0; i < ret->size; i++) {
-		if(ret->data[i] < 0) {
+	for(uint32_t i = 0; i < array_count(ret); i++) {
+		if(array_equals_at(ret, i, &invalid)) {
 			fail_count++;
 		}
 	}
@@ -173,7 +174,7 @@ static struct float_array* fbx_asset_new_layer_element(
 	return ret;
 
 fail:
-	float_array_free(ret);
+	array_free(ret);
 	return NULL;
 }
 
@@ -277,7 +278,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		goto fail;
 	}
 
-	const int32_t* prop_indices_data = fbx_property_get_array_int32(prop_indices);
+	const int32_t *prop_indices_data = fbx_property_get_array_int32(prop_indices);
 	const uint32_t prop_indices_data_count = fbx_property_get_array_count(prop_indices);
 
 	if(prop_indices_data_count < 3) {
@@ -326,7 +327,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		static const char* path_uvs_data[] = { "Objects", "Geometry", "LayerElementUV", "UV" };
 		static const char* path_uvs_indices[] = { "Objects", "Geometry", "LayerElementUV", "UVIndex" };
 
-		struct float_array *uvs = fbx_asset_new_layer_element(fbx,
+		struct array *uvs = fbx_asset_new_layer_element(fbx,
 			indices,				asset.indices_count,
 			path_uv_mapping_type,	LODGE_ARRAYSIZE(path_uv_mapping_type),
 			path_uvs_ref_type,		LODGE_ARRAYSIZE(path_uvs_ref_type),
@@ -344,7 +345,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		glBindBuffer(GL_ARRAY_BUFFER, asset.buffer_object_uvs);
 		GL_OK_OR_GOTO(uvs_fail);
 
-		glBufferData(GL_ARRAY_BUFFER, uvs->size, uvs->data, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, array_byte_size(uvs), array_first(uvs), GL_STATIC_DRAW);
 		GL_OK_OR_GOTO(uvs_fail);
 
 		glEnableVertexAttribArray(2);
@@ -354,7 +355,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			2,
 			GL_FLOAT,
 			GL_FALSE,
-			2 * sizeof(float),
+			sizeof(vec2),
 			NULL
 		);
 		GL_OK_OR_GOTO(uvs_fail);
@@ -362,7 +363,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		goto uvs_success;
 
 uvs_fail:
-		float_array_free(uvs);
+		array_free(uvs);
 		goto fail;
 	}
 
@@ -416,6 +417,8 @@ void fbx_asset_reset(struct fbx_asset *asset)
 
 void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, int tex, struct mvp mvp)
 {
+	glDisable(GL_CULL_FACE);
+
 	glUseProgram(shader->program);
 	GL_OK_OR_ASSERT("Failed to use shader program");
 
@@ -449,4 +452,21 @@ void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, int tex, s
 	glBindVertexArray(asset->vertex_array_object);
 	glDrawElements(GL_TRIANGLES, asset->indices_count, GL_UNSIGNED_INT, NULL);
 	GL_OK_OR_ASSERT("Failed to draw");
+
+
+#if 0
+	struct lodge_draw_call draw_call = lodge_draw_call_make(
+		{
+			lodge_texture_slot_make(strview_static("material"), lodge_sampler_make(), tex),
+		},
+		{
+			lodge_uniform_make("projection", LODGE_TYPE_MAT4x4, mvp.projection.m),
+			lodge_uniform_make("view", LODGE_TYPE_MAT4x4, mvp.view.m_),
+			lodge_uniform_make("model", LODGE_TYPE_MAT4x4, mvp.model.m),
+		},
+		asset
+	);
+
+	lodge_renderer_draw(draw_call);
+#endif
 }

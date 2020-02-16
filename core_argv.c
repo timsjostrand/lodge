@@ -10,7 +10,7 @@
 
 #include "core_argv.h"
 #include "str.h"
-#include "graphics.h"
+#include "lodge_window.h"
 
 static int core_argv_is_arg(const char *arg, const char *name)
 {
@@ -77,12 +77,12 @@ int core_argv_parse(struct core_argv *dst, int argc, char **argv)
 
 		/* --windowed */
 		if(core_argv_is_arg(argv[i], "windowed") == 0) {
-			dst->window_mode = GRAPHICS_MODE_WINDOWED;
+			dst->window_mode = LODGE_WINDOW_MODE_WINDOWED;
 		}
 
 		/* --borderless */
 		if (core_argv_is_arg(argv[i], "borderless") == 0) {
-			dst->window_mode = GRAPHICS_MODE_BORDERLESS;
+			dst->window_mode = LODGE_WINDOW_MODE_BORDERLESS;
 		}
 	}
 

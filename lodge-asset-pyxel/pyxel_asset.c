@@ -12,7 +12,7 @@
 #include "pyxel_asset.h"
 #include "texture.h"
 #include "util_reload.h"
-#include "graphics.h"
+#include "lodge_image.h"
 
 static int pyxel_asset_init_atlas(struct atlas *atlas, struct pyxel *pyxel)
 {
@@ -87,10 +87,8 @@ uint32_t pyxel_asset_blend_alpha(uint32_t top, uint32_t bottom)
 static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_count,
 		void **out, size_t *out_size, int *out_width, int *out_height)
 {
-	int width = 0;
-	int height = 0;
-	uint32_t *tmp = NULL;
 	uint32_t *final = NULL;
+	struct lodge_image_out image_out;
 
 	/* Unpack raw image data form all PNG files. */
 	for(int i=0; i<buf_count; i++) {
@@ -102,32 +100,36 @@ static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_
 
 		uint8_t *buf = (uint8_t *) bufs[i];
 
-		if(image_load((uint8_t **) &tmp, &width, &height, buf, buf_sizes[i]) != GRAPHICS_OK) {
-			pyxel_error("images_blend(): could not load image %d\n", i);
+		struct lodge_ret image_ret = lodge_image_new(&image_out, buf, buf_sizes[i]);
+		if(!image_ret.success) {
+			pyxel_error("images_blend(): could not load image %d: " STRVIEW_PRINTF_FMT "\n", i, STRVIEW_PRINTF_ARG(image_ret.message));
 			goto bail;
 		}
 
 		/* Use the dimensions of the first processed layer to allocate memory for the
 		 * final image. */
 		if(final == NULL) {
-			final = (uint32_t *) calloc(width * height, sizeof(uint32_t));
+			final = (uint32_t *) calloc(image_out.width * image_out.height, sizeof(uint32_t));
 			if(final == NULL) {
 				pyxel_error("Out of memory\n");
 				goto bail;
 			}
-			(*out_size) = width * height * sizeof(uint32_t);
-			(*out_width) = width;
-			(*out_height) = height;
+			(*out_size) = image_out.width * image_out.height * sizeof(uint32_t);
+			(*out_width) = image_out.width;
+			(*out_height) = image_out.height;
 		}
 
 		/* Blend color components to produce final image. */
-		for(int x=0; x<width; x++) {
-			for(int y=0; y<height; y++) {
-				final[y * width + x] = pyxel_asset_blend_alpha(tmp[y * width + x], final[y * width + x]);
+		for(int x=0; x<image_out.width; x++) {
+			for(int y=0; y<image_out.height; y++) {
+				final[y * image_out.width + x] = pyxel_asset_blend_alpha(
+					image_out.pixel_data[y * image_out.width + x],
+					final[y * image_out.width + x]
+				);
 			}
 		}
 
-		image_free((uint8_t *) tmp);
+		lodge_image_free((uint8_t *) image_out.pixel_data);
 	}
 
 	(*out) = final;
@@ -135,8 +137,8 @@ static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_
 	return PYXEL_OK;
 
 bail:
-	if(tmp != NULL) {
-		image_free((uint8_t *) tmp);
+	if(image_out.pixel_data != NULL) {
+		image_free((uint8_t *) image_out.pixel_data);
 	}
 
 	if(final != NULL) {

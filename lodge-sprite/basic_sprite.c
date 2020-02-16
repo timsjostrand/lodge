@@ -1,10 +1,11 @@
 #include "basic_sprite.h"
 
-#include <GL/glew.h>
+#include "lodge.h"
 #include "drawable.h"
 
+// TODO(TS): rename sprite_make, return by value
 void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-	float w, float h, const vec4 color, float rotation, GLuint *texture)
+	float w, float h, const vec4 color, float rotation, GLuint *texture, struct lodge_renderer *renderer)
 {
 	sprite->type = type;
 	sprite->pos = vec4_make(x, y, z, 0.0f);
@@ -12,9 +13,10 @@ void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float 
 	sprite->color = vec4_make(xyzw(color));
 	sprite->rotation = rotation;
 	sprite->texture = texture;
+	sprite->renderer = renderer;
 }
 
-void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g)
+void sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection)
 {
 	// Position, rotation and scale
 	mat4 transform_position = mat4_translation(xyz(sprite->pos));
@@ -26,14 +28,20 @@ void sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphic
 	const struct mvp mvp = {
 		.model = transform_final,
 		.view = mat4_identity(),
-		.projection = mat4_ortho(0, g->view_width, g->view_height, 0, -1, 1)
+		//.projection = mat4_ortho(0, g->view_width, g->view_height, 0, -1, 1)
+		.projection = projection
 	};
 
+	// TODO(TS): port binding shader, texture
+	drawable_render(lodge_renderer_get_unit_rect(sprite->renderer));
+
+#if 0
 	drawable_render_detailed(DRAW_MODE_TRIANGLES,
-		g->vao_rect,
+		,
 		VBO_QUAD_VERTEX_COUNT,
 		sprite->texture,
 		sprite->color,
 		s,
 		mvp);
+#endif
 }

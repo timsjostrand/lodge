@@ -7,15 +7,16 @@
 struct graphics;
 
 struct basic_sprite {
-	int		type;
-	vec4	pos;
-	vec4	scale;
-	vec4	color;
-	float	rotation;
-	tex_t	*texture;
+	int						type;
+	vec4					pos;
+	vec4					scale;
+	vec4					color;
+	float					rotation;
+	tex_t					*texture;
+	struct lodge_renderer	*renderer;
 };
 
-void		sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z, float w, float h, const vec4 color, float rotation, tex_t *texture);
-void		sprite_render(struct basic_sprite *sprite, struct shader *s, struct graphics *g);
+void		sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z, float w, float h, const vec4 color, float rotation, tex_t *texture, struct lodge_renderer *renderer);
+void		sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection);
 
 #endif

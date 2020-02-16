@@ -38,7 +38,8 @@ struct vfs
 	int				file_count;
 };
 
-struct vfs* vfs_global;
+extern struct vfs vfs;
+extern struct vfs *vfs_global;
 
 void	vfs_init(const char *mount_path);
 void	vfs_shutdown();

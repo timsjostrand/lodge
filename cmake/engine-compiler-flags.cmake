@@ -32,6 +32,7 @@ if(MSVC)
         "/we4047"                       # "differs in levels of indirection" (trying to pass ptr** instead of ptr*)
         "/we4024"                       # 'function' : different types for formal and actual parameter 'number'
         "/we4029"                       # declared formal parameter list different from declaration
+        "/we4715"                       # function' : not all control paths return a value
     )
     
     foreach(flag ${MSVC_COMPILER_FLAGS})
