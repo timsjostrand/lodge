@@ -68,7 +68,7 @@ static const char* framebuffer_status_to_text(GLenum status)
 	}
 }
 
-void framebuffer_attach_texture(framebuffer_t framebuffer, const texture_t texture, enum framebuffer_target target)
+void framebuffer_attach_texture(framebuffer_t framebuffer, const lodge_texture_t texture, enum framebuffer_target target)
 {
 	GLint gl_target;
 
@@ -85,7 +85,7 @@ void framebuffer_attach_texture(framebuffer_t framebuffer, const texture_t textu
 		break;
 	}
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, gl_target, GL_TEXTURE_2D, texture_to_gl(texture), 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, gl_target, GL_TEXTURE_2D, lodge_texture_to_gl(texture), 0);
 
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR) {

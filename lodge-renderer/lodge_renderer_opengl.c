@@ -289,11 +289,11 @@ void lodge_renderer_bind_shader(struct shader *shader)
 	GL_OK_OR_ASSERT("Failed to bind shader");
 }
 
-void lodge_renderer_bind_texture(int slot, const texture_t texture)
+void lodge_renderer_bind_texture(int slot, const lodge_texture_t texture)
 {
 	GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
-	glBindTexture(GL_TEXTURE_2D, texture_to_gl(texture));
+	glBindTexture(GL_TEXTURE_2D, lodge_texture_to_gl(texture));
 	GL_OK_OR_ASSERT("Failed to bind texture");
 }
 
@@ -303,11 +303,11 @@ void lodge_renderer_bind_sampler(int slot, const lodge_sampler_t sampler)
 	GL_OK_OR_ASSERT("Failed to bind sampler");
 }
 
-void lodge_renderer_bind_texture_unit(int slot, const texture_t texture, const lodge_sampler_t sampler)
+void lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
 {
 	GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
-	glBindTexture(GL_TEXTURE_2D, texture_to_gl(texture));
+	glBindTexture(GL_TEXTURE_2D, lodge_texture_to_gl(texture));
 
 	glBindSampler(slot, lodge_sampler_to_gl(sampler));
 	GL_OK_OR_ASSERT("Failed to bind texture unit");

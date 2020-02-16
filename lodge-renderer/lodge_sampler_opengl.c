@@ -76,7 +76,7 @@ void lodge_sampler_reset(lodge_sampler_t *sampler)
 {
 	ASSERT(sampler != NULL && *sampler != NULL);
 
-	GLuint name = lodge_sampler_to_gl(sampler);
+	GLuint name = lodge_sampler_to_gl(*sampler);
 	glDeleteSamplers(1, &name);
 	GL_OK_OR_ASSERT("Failed to delete sampler");
 	*sampler = NULL;
