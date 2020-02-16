@@ -38,15 +38,15 @@
 		} \
 	}
 
-static GLuint texture_to_gl(texture_t tex)
+static GLuint lodge_texture_to_gl(lodge_texture_t tex)
 {
 	ASSERT(tex > 0);
 	return (GLuint)tex;
 }
 
-static texture_t texture_from_gl(GLuint gl_tex)
+static lodge_texture_t lodge_texture_from_gl(GLuint gl_tex)
 {
-	return (texture_t)gl_tex;
+	return (lodge_texture_t)gl_tex;
 }
 
 static GLuint lodge_sampler_to_gl(lodge_sampler_t sampler)

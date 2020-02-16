@@ -2,7 +2,7 @@
 
 #include "lodge_opengl.h"
 
-static texture_t lodge_texture_make(int width, int height, GLint internal_format, GLint format, GLenum type)
+static lodge_texture_t lodge_texture_make(int width, int height, GLint internal_format, GLint format, GLenum type)
 {
 	GLuint name;
 
@@ -15,22 +15,22 @@ static texture_t lodge_texture_make(int width, int height, GLint internal_format
 	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, type, 0);
 	GL_OK_OR_ASSERT("glTextImage2D failed");
 
-	return texture_from_gl(name);
+	return lodge_texture_from_gl(name);
 }
 
-texture_t lodge_texture_make_rgba(int width, int height)
+lodge_texture_t lodge_texture_make_rgba(int width, int height)
 {
 	return lodge_texture_make(width, height, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
 }
 
-texture_t lodge_texture_make_depth(int width, int height)
+lodge_texture_t lodge_texture_make_depth(int width, int height)
 {
 	return lodge_texture_make(width, height, GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT);
 }
 
-void lodge_texture_reset(texture_t *texture)
+void lodge_texture_reset(lodge_texture_t *texture)
 {
-	GLuint name = texture_to_gl(*texture);
+	GLuint name = lodge_texture_to_gl(*texture);
 
 	ASSERT(name > 0);
 	glDeleteTextures(1, &name);

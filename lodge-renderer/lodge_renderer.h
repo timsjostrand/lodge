@@ -8,7 +8,7 @@ struct lodge_renderer;
 struct drawable;
 
 struct lodge_texture;
-typedef struct lodge_texture* texture_t;
+typedef struct lodge_texture* lodge_texture_t;
 
 typedef void (*lodge_render_func)(struct lodge_renderer *renderer, void *userdata);
 
@@ -60,9 +60,9 @@ int						lodge_renderer_set_alpha_blend_state(struct lodge_renderer *renderer, s
 struct drawable*		lodge_renderer_get_unit_rect(struct lodge_renderer *renderer);
 
 void					lodge_renderer_bind_shader(struct shader *shader);
-void					lodge_renderer_bind_texture_unit(int slot, const texture_t texture, const lodge_sampler_t sampler);
+void					lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
 void					lodge_renderer_bind_sampler(int slot, const lodge_sampler_t sampler);
-void					lodge_renderer_bind_texture(int slot, const texture_t texture);
+void					lodge_renderer_bind_texture(int slot, const lodge_texture_t texture);
 
 void					lodge_renderer_set_constant_vec2(struct shader *shader, strview_t name, vec2 v);
 void					lodge_renderer_set_constant_vec3(struct shader *shader, strview_t name, vec3 v);

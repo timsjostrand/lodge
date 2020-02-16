@@ -2,7 +2,7 @@
 #define _LODGE_FRAMEBUFFER_H
 
 struct lodge_texture;
-typedef struct lodge_texture* texture_t;
+typedef struct lodge_texture* lodge_texture_t;
 
 typedef struct framebuffer* framebuffer_t;
 
@@ -16,7 +16,7 @@ enum framebuffer_target
 framebuffer_t	framebuffer_create();
 void			framebuffer_destroy(framebuffer_t framebuffer);
 
-void			framebuffer_attach_texture(framebuffer_t framebuffer, const texture_t texture, enum framebuffer_target target);
+void			framebuffer_attach_texture(framebuffer_t framebuffer, const lodge_texture_t texture, enum framebuffer_target target);
 
 void			framebuffer_bind(framebuffer_t framebuffer);
 void			framebuffer_unbind();
