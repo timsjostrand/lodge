@@ -2,6 +2,8 @@
 #define _LODGE_OPENGL
 
 #include "lodge.h"
+#include "lodge_texture.h"
+#include "lodge_sampler.h"
 #include <GL/glew.h>
 
 /**
@@ -36,9 +38,6 @@
 		} \
 	}
 
-struct lodge_texture;
-typedef struct lodge_texture* texture_t;
-
 static GLuint texture_to_gl(texture_t tex)
 {
 	ASSERT(tex > 0);
@@ -48,6 +47,17 @@ static GLuint texture_to_gl(texture_t tex)
 static texture_t texture_from_gl(GLuint gl_tex)
 {
 	return (texture_t)gl_tex;
+}
+
+static GLuint lodge_sampler_to_gl(lodge_sampler_t sampler)
+{
+	ASSERT(sampler != NULL);
+	return (GLuint)sampler;
+}
+
+static lodge_sampler_t lodge_sampler_from_gl(GLuint name)
+{
+	return (lodge_sampler_t)name;
 }
 
 #endif
