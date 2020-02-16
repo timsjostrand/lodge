@@ -370,6 +370,13 @@ void lodge_renderer_set_constant_mat4(struct shader *s, strview_t name, mat4 mat
 	}
 }
 
+void lodge_renderer_set_constant_mvp(struct shader *s, const struct mvp *mvp)
+{
+	lodge_renderer_set_constant_mat4(s, strview_static("model"), mvp->model);
+	lodge_renderer_set_constant_mat4(s, strview_static("view"), mvp->view);
+	lodge_renderer_set_constant_mat4(s, strview_static("projection"), mvp->projection);
+}
+
 #if 0
 void lodge_renderer_draw(struct lodge_renderer *renderer, struct lodge_draw_call *draw_call)
 {
