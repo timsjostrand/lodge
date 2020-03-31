@@ -3,6 +3,8 @@
 
 #include "math4.h"
 #include "log.h"
+#include "lodge_texture.h"
+#include "lodge_sampler.h"
 
 #define monotext_debug(...) debugf("Monotext", __VA_ARGS__)
 #define monotext_error(...) errorf("Monotext", __VA_ARGS__)
@@ -20,7 +22,8 @@
 struct monofont {
 	int				loaded;
 	const char		*name;
-	unsigned int	texture;
+	lodge_texture_t	texture;
+	lodge_sampler_t	sampler;
 	int				width;
 	int				height;
 	int				letter_width;
