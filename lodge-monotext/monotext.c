@@ -23,6 +23,8 @@
 #include "color.h"
 #include "str.h"
 #include "lodge_opengl.h"
+#include "lodge_renderer.h"
+#include "lodge_image.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -104,23 +106,31 @@ static void monofont_reload(const char *filename, unsigned int size, void *data,
 		return;
 	}
 
-	GLuint tmp;
-	int width;
-	int height;
-	int ret = texture_load(&tmp, &width, &height, data, size);
-
-	if(ret != MONOTEXT_OK) {
-		monotext_error("Texture load failed: %s (%u bytes)\n", filename, size);
-	} else {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		dst->texture = tmp;
-		dst->loaded = 1;
-		dst->width = width;
-		dst->height = height;
-		dst->grids_x = width / dst->letter_width;
-		dst->grids_y = height / dst->letter_height;
+	struct lodge_image image;
+	struct lodge_ret ret = lodge_image_new(&image, data, size);
+	if(!ret.success) {
+		monotext_error("Image load failed: %s (%u bytes)\n", filename, size);
+		return;
 	}
+
+	lodge_texture_t tex = lodge_texture_make_from_image(&image);
+	lodge_sampler_t sampler = lodge_sampler_make_properties((struct lodge_sampler_properties) {
+		.min_filter = MIN_FILTER_NEAREST,
+		.mag_filter = MAG_FILTER_NEAREST,
+		.wrap_x = WRAP_CLAMP_TO_EDGE,
+		.wrap_y = WRAP_CLAMP_TO_EDGE,
+		.wrap_z = WRAP_CLAMP_TO_EDGE,
+	});
+
+	dst->texture = tex;
+	dst->sampler = sampler;
+	dst->loaded = 1;
+	dst->width = image.width;
+	dst->height = image.height;
+	dst->grids_x = image.width / dst->letter_width;
+	dst->grids_y = image.height / dst->letter_height;
+
+	lodge_image_free(&image);
 }
 
 int monofont_new(struct monofont *font, const char *name,
@@ -143,7 +153,7 @@ int monofont_new(struct monofont *font, const char *name,
 void monofont_free(struct monofont *font)
 {
 	font->loaded = 0;
-	texture_free(font->texture);
+	//lodge_texture_reset(&font->texture);
 }
 
 /**
@@ -403,33 +413,23 @@ void monotext_render(struct monotext *text, struct shader *s)
 		return;
 	}
 
-	glUseProgram(s->program);
+	lodge_renderer_bind_shader(s);
 
-	// TODO(TS): pass matrices as arguments instead
-	mat4 projection = mat4_ortho(0, 640, 360, 0, -1, 1);
-	mat4 view = mat4_identity();
-	mat4 model = mat4_identity(); 
+	struct mvp mvp = {
+		.model = mat4_identity(),
+		.view = mat4_identity(),
+		.projection = mat4_ortho(0, 640, 360, 0, -1, 1),
+	};
 
 	/* Upload matrices and color. */
-	GLint uniform_projection = glGetUniformLocation(s->program, "projection");
-	glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, (GLfloat*)projection.m);
-
-	GLint uniform_view = glGetUniformLocation(s->program, "view");
-	glUniformMatrix4fv(uniform_view, 1, GL_FALSE, (GLfloat*)view.m);
-
-	GLint uniform_model = glGetUniformLocation(s->program, "model");
-	glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (GLfloat*)model.m);
-
-	GLint uniform_color = glGetUniformLocation(s->program, "color");
-	glUniform4fv(uniform_color, 1, (GLfloat*)text->color.v);
+	lodge_renderer_set_constant_mvp(s, &mvp);
+	lodge_renderer_set_constant_vec4(s, strview_static("color"), text->color);
+	lodge_renderer_bind_texture_unit(0, text->font->texture, text->font->sampler);
 
 	/* Bind vertex array. */
 	glBindVertexArray(text->vao);
 	
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, text->font->texture);
-	
 	/* Render it! */
 	glDrawArrays(GL_TRIANGLES, 0, text->verts_count);
-	GL_OK_OR_RETURN();
+	GL_OK_OR_ASSERT("Failed to render monotext");
 }
