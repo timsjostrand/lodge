@@ -12,14 +12,14 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
+#include "str.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
 #include <assert.h>
-
-#include "str.h"
 
 /**
  * An implementation of the standard strnlen, if it is not already implemented.
@@ -51,7 +51,7 @@ strview_t strbuf_to_strview(const strbuf_t str)
 
 size_t strbuf_length(const strbuf_t str)
 {
-	return strview_length(strbuf_to_strview(str));
+	return strnlen(str.s, str.size);
 }
 
 size_t strbuf_size(const strbuf_t str)
@@ -79,9 +79,20 @@ size_t strbuf_set(strbuf_t dst, const strview_t src)
 	return str_set(dst.s, dst.size, src);
 }
 
+size_t strbuf_setf(strbuf_t dst, const char *format, ...)
+{
+	va_list ap;
+
+	va_start(ap, format);
+	int count = str_vsnprintf(dst.s, dst.size, format, ap);
+	va_end(ap);
+
+	return count;
+}
+
 size_t strbuf_append(strbuf_t dst, const strview_t src)
 {
-	return str_append(dst.s, dst.size, src.s, src.length);
+	return str_append(dst.s, strbuf_length(dst), src.s, src.length);
 }
 
 void strbuf_fill(strbuf_t dst, char c)

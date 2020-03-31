@@ -400,10 +400,12 @@ static void console_parse_cmd(struct console *c, struct list *argv)
 	}
 }
 
-static void console_env_set(struct console *c, const char *name,
-		const char *value)
+static void console_env_set(struct console *c, const char *name, const char *value)
 {
-	struct env_var *var = env_var_get_by_name(c->env, name);
+	// FIXME(TS): `name` arg should already be `strview_t`
+	strview_t name_view = strview_make(name, strlen(name));
+
+	struct env_var *var = env_var_get_by_name(c->env, name_view);
 	size_t value_len = strlen(value);
 
 	if(var == NULL) {
@@ -418,7 +420,7 @@ static void console_env_set(struct console *c, const char *name,
 				console_printf(c, "Usage: %s=<FLOAT> (now: %g)\n", name, (*((float *) var->value)));
 				return;
 			} else {
-				env_set_1f(c->env, name, f);
+				env_set_float(c->env, name_view, f);
 			}
 			break;
 		}
@@ -431,7 +433,7 @@ static void console_env_set(struct console *c, const char *name,
 				);
 				return;
 			} else {
-				env_set_2f(c->env, name, v);
+				env_set_vec2(c->env, name_view, v);
 			}
 			break;
 		}
@@ -445,7 +447,7 @@ static void console_env_set(struct console *c, const char *name,
 				);
 				return;
 			} else {
-				env_set_3f(c->env, name, v);
+				env_set_vec3(c->env, name_view, v);
 			}
 			break;
 		}
@@ -455,7 +457,7 @@ static void console_env_set(struct console *c, const char *name,
 				console_printf(c, "Usage: %s=<BOOL> (now: %s)\n", name, (*((int *) var->value)) ? "true" : "false");
 				return;
 			} else {
-				env_set_bool(c->env, name, b);
+				env_set_bool(c->env, name_view, b);
 			}
 			break;
 		}
@@ -894,7 +896,7 @@ void console_cmd_autocomplete(struct console *c, const char *input,
 		c->input_len += added - leaf_len;
 		c->cursor.pos += added - leaf_len;
 		/* Add a convience character based on completed type. */
-		if(list_count(argv) == 1 && env_var_get_by_name(c->env, head)) {
+		if(list_count(argv) == 1 && env_var_get_by_name(c->env, strview_make(head, strlen(head)))) {
 			/* Is variable: append equal sign. */
 			added = str_replace_into(c->input, CONSOLE_INPUT_MAX, c->cursor.pos, "=", 1);
 		} else {
