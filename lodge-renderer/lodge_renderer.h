@@ -10,8 +10,6 @@ struct drawable;
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;
 
-typedef void (*lodge_render_func)(struct lodge_renderer *renderer, void *userdata);
-
 struct lodge_renderer_alpha_blend_state
 {
 	int	enabled;
@@ -48,7 +46,9 @@ typedef void* lodge_window_t;
 struct lodge_renderer*	lodge_renderer_new();
 void					lodge_renderer_free(struct lodge_renderer *renderer);
 
+#if 0
 void					lodge_renderer_add_func(struct lodge_renderer *renderer, lodge_render_func render_func, void *userdata);
+#endif
 struct lodge_ret		lodge_renderer_attach(struct lodge_renderer *renderer);
 
 strview_t				lodge_renderer_get_library(struct lodge_renderer *renderer);

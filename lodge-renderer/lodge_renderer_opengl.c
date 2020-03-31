@@ -6,27 +6,17 @@
 #include "color.h"
 #include "drawable.h"
 
-struct lodge_renderer_func
-{
-	lodge_render_func			func;
-	void						*userdata;
-};
-
 // TODO(TS): this should be shared between all renderers/contexts
 struct unit_drawables
 {
-	struct drawable				rect;
-	//renderobject_t			cube;
+	struct drawable			rect;
+	//renderobject_t		cube;
 };
 
 struct lodge_renderer
 {
-	strview_t					library;
-
-	struct lodge_renderer_func	funcs[128];
-	size_t						funcs_count;
-
-	struct unit_drawables		unit_drawables;
+	strview_t				library;
+	struct unit_drawables	unit_drawables;
 };
 
 static const char* loc_opengl_debug_type(GLenum type)
@@ -263,16 +253,6 @@ int lodge_renderer_set_alpha_blend_state(struct lodge_renderer *renderer, struct
 	return 1;
 }
 
-void lodge_renderer_add_func(struct lodge_renderer *renderer, lodge_render_func render_func, void *userdata)
-{
-	// TODO(TS): render funcs are part of window instead?
-	ASSERT_NOT_IMPLEMENTED();
-	renderer->funcs[renderer->funcs_count++] = (struct lodge_renderer_func) {
-		.func = render_func,
-		.userdata = userdata,
-	};
-}
-
 strview_t lodge_renderer_get_library(struct lodge_renderer *renderer)
 {
 	return renderer->library;
@@ -363,6 +343,7 @@ void lodge_renderer_set_constant_vec4(struct shader *s, strview_t name, vec4 v)
 		errorf("OpenGL", "set_uniform_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
+
 void lodge_renderer_set_constant_mat4(struct shader *s, strview_t name, mat4 mat)
 {
 	glUseProgram(s->program);
