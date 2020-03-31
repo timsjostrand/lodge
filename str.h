@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#include "strview.h"
+#include "strbuf.h"
+
 #ifndef HAVE_STRNLEN
 size_t	strnlen(const char *s, size_t maxlen);
 #endif
@@ -15,58 +18,6 @@ int		vsnprintf(char *outBuf, size_t size, const char *format, va_list ap);
 #ifndef HAVE_SNPRINTF
 int		snprintf(char *outBuf, size_t size, const char *format, ...);
 #endif
-
-/**
- * A wrapper for static sized character buffers.
- *
- * Example:
- *
- *		char my_string[1024];
- *		strbuf_t my_buf = strbuf_wrap(my_string);
- *		strbuf_append(my_buf, strview_static("Hello world"));
- *		strbuf_append(my_buf, strview_static("!"));
- *		printf("%s", my_buf.s);
- *		// Output: "Hello world!"
- *
- */
-typedef struct strbuf
-{
-	size_t		size;	/* The allocated size for `s` (NOT the length!) */
-	char*		s;
-} strbuf_t;
-
-/**
- * A temporary view of a string, including the length (excluding the null terminator).
- *
- * @see strbuf_t
- */
-typedef struct strview
-{
-	size_t		length;	/* Length of `s`, excluding the null terminator */
-	const char*	s;
-} strview_t;
-
-strbuf_t	strbuf_make(char *s, size_t size);
-#define		strbuf_wrap(buffer) strbuf_make((buffer), sizeof((buffer)))
-size_t		strbuf_length(const strbuf_t str);
-size_t		strbuf_size(const strbuf_t str);
-int			strbuf_equals(const strbuf_t lhs, const strview_t rhs);
-strview_t	strbuf_to_strview(const strbuf_t str);
-size_t		strbuf_insert(strbuf_t str, size_t index, const strview_t sub);
-size_t		strbuf_delete(strbuf_t str, size_t index, size_t count);
-size_t		strbuf_set(strbuf_t dst, const strview_t src);
-size_t		strbuf_setf(strbuf_t dst, const char *fmt, ...);
-size_t		strbuf_append(strbuf_t dst, const strview_t src);
-void		strbuf_fill(strbuf_t dst, char c);
-
-strview_t	strview_make(const char *s, size_t length);
-int			strview_equals(const strview_t lhs, const strview_t rhs);
-int			strview_empty(const strview_t str);
-int			strview_length(const strview_t str);
-#define		strview_static(s) strview_make((s), sizeof((s))-1)
-
-#define		STRVIEW_PRINTF_FMT "%.*s"
-#define		STRVIEW_PRINTF_ARG(STRVIEW) STRVIEW.length, STRVIEW.s
 
 int			str_insert(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
 int			str_replace_into(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
