@@ -129,7 +129,7 @@ float console_height(struct console *c, int display_lines)
 }
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct renderer *renderer)
+		int padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer)
 {
 	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;
