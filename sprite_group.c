@@ -23,7 +23,7 @@ void sprite_group_update(struct sprite_group* group)
 
 		/* Remember prev anim state. */
 		struct anim_state prev_state = draw_sprite->state;
-		struct anim *prev_anim = draw_sprite->anim;
+		const struct anim *prev_anim = draw_sprite->anim;
 
 		/* Copy from source sprite into draw sprite. */
 		memcpy(draw_sprite, src_sprite, sizeof(struct sprite));
@@ -74,7 +74,7 @@ void animatedsprites_add_group(struct animatedsprites* as, struct sprite_group* 
 	/* Update draw sprites. */
 	sprite_group_update(group);
 
-	for(int i=0; i<group->sprites_count; i++) {
+	for(unsigned int i=0; i<group->sprites_count; i++) {
 		animatedsprites_add(as, &group->draw_sprites[i]);
 	}
 }

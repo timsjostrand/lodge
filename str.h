@@ -12,7 +12,7 @@ size_t	strnlen(const char *s, size_t maxlen);
 #endif
 
 #ifndef HAVE_VSNPRINTF
-int		vsnprintf(char *outBuf, size_t size, const char *format, va_list ap);
+int		vsnprintf(char * const outBuf, size_t const size, const char * const format, va_list ap);
 #endif
 
 #ifndef HAVE_SNPRINTF

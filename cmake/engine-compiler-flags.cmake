@@ -33,6 +33,9 @@ if(MSVC)
         "/we4024"                       # 'function' : different types for formal and actual parameter 'number'
         "/we4029"                       # declared formal parameter list different from declaration
         "/we4715"                       # function' : not all control paths return a value
+        "/we4028"                       # formal parameter 1 different from declaration
+        "/we4090"                       # 'initializing': different 'const' qualifiers
+        #"/we4244"                       # 'function': conversion from 'int' to 'const float', possible loss of data
     )
     
     foreach(flag ${MSVC_COMPILER_FLAGS})

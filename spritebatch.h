@@ -11,7 +11,7 @@ struct shader;
 
 typedef float GLfloat;
 typedef unsigned int GLuint;
-typedef int(*spritebatch_sort_fn)(GLfloat* buffer_data_a, GLfloat* buffer_data_b);
+typedef int(*spritebatch_sort_fn)(const GLfloat* buffer_data_a, const GLfloat* buffer_data_b);
 
 struct spritebatch
 {

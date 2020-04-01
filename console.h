@@ -52,17 +52,17 @@ struct console_conf {
 struct console {
 	int						initialized;
 	struct env				*env;
-	int						padding;
-	int						display_lines;				/* Number of lines to display. */
-	int						focused;					/* Use console_toggle_focus() to set. */
+	uint32_t				padding;
+	uint32_t				display_lines;				/* Number of lines to display. */
+	uint32_t				focused;					/* Use console_toggle_focus() to set. */
 	char					*history;					/* History buffer. */
 	char					*history_cur;				/* Current offset in history buffer. */
 	size_t					history_len;
-	int						chars_per_line;
+	uint32_t				chars_per_line;
 	char					input[CONSOLE_INPUT_MAX];
 	size_t					input_len;					/* Length of input buffer. */
 	struct list				*input_history;				/* The last entered commands are stored here. */
-	int						input_history_cur;			/* The currently selected line in the input history. */
+	uint32_t				input_history_cur;			/* The currently selected line in the input history. */
 	struct monotext			txt_display;
 	struct monotext			txt_input;
 	struct monofont			*font;
@@ -72,8 +72,8 @@ struct console {
 	struct console_conf		conf;
 };
 
-void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer);
+void console_new(struct console *c, struct monofont *font, uint32_t view_width,
+		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer);
 void console_free(struct console *c);
 void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
@@ -82,7 +82,7 @@ void console_think(struct console *c);
 void console_render(struct console *c, struct shader *s, const mat4 projection);
 void console_toggle_focus(struct console *c);
 void console_parse_conf(struct console *c, struct console_conf *conf);
-float console_height(struct console *c, int display_lines);
+float console_height(struct console *c, uint32_t display_lines);
 
 void console_input_feed_control(struct console *c, int key, int scancode, int action, int mods);
 void console_input_feed_char(struct console *c, unsigned int key, int mods);
