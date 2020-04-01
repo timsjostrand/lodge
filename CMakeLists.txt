@@ -156,7 +156,6 @@ list(APPEND ENGINE_SOURCES_LOCAL
     math4.c
     lodge_plugins.c
     core_console.c
-    events.c
     vertex.c
     shader.c
     input.c
@@ -189,7 +188,6 @@ list(APPEND ENGINE_HEADERS_LOCAL
     lodge_plugin.h
     lodge_plugins.h
     core_console.h
-    events.h
     shader.h
     input.h
     color.h
@@ -225,63 +223,8 @@ foreach(src ${ENGINE_HEADERS_LOCAL})
     list(APPEND ENGINE_HEADERS ${ENGINE_PATH}/${src})
 endforeach()
 
-# Lodge Interface sources.
-list(APPEND LODGEI_SOURCES lodge_interface.c)
-list(APPEND LODGEI_HEADERS lodge_interface.h)
-
-# Prepend all sources with absolute engine path (because of reasons...)
-foreach(src ${LODGEI_SOURCES})
-    list(APPEND LODGEI_SOURCES_HEADERS ${ENGINE_PATH}/${src})
-endforeach()
-foreach(src ${LODGEI_HEADERS})
-    list(APPEND LODGEI_SOURCES_HEADERS ${ENGINE_PATH}/${src})
-endforeach()
-
 # Include all source directories
 include_directories(${ENGINE_INCLUDES})
-
-# Add the lodge engine library.
-function(add_lodgei_library)
-    # Create library.
-    add_library(lodgei SHARED ${ARGN} ${ASSETS_C}
-        ${ENGINE_SOURCES} ${ENGINE_HEADERS}
-        ${LODGEI_SOURCES_HEADERS}
-    )
-    
-    # Compile with console output support?
-    if(ENABLE_CONSOLE)
-        target_compile_definitions(lodgei PRIVATE CONSOLE_ENABLE)
-    endif()
-
-    # Compile as shared library?
-    if(ENABLE_SHARED)
-        target_compile_definitions(lodgei PRIVATE ENABLE_SHARED)
-    endif()
-
-    # Compile with DEBUG flag?
-    target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-
-    # Compile with correct flags.
-    set_property(TARGET lodgei PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET lodgei PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-
-    # GCC compiler settings.
-    if(CMAKE_COMPILER_IS_GNUCC)
-        # DEBUG: Lightweight buffer overflow detection.
-        target_compile_options(lodgei PRIVATE $<$<CONFIG:Debug>:-O2>)
-        target_compile_definitions(lodgei PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
-
-        # Static STD libs.
-        #set(ENGINE_LINKER_FLAGS "-static-libgcc ${ENGINE_LINKER_FLAGS} ")
-    endif()
-
-    # Set compiler flags.
-    set_property(TARGET lodgei PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET lodgei PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-
-    # Link libraries.
-    target_link_libraries(lodgei ${ENGINE_EXTRA_LIBS})
-endfunction()
 
 # Add a game library.
 function(add_game_library game_name)
