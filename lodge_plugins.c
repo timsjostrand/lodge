@@ -159,7 +159,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, game_plugin());
 
 	for(int i = 0; i < plugins->count; i++) {
-		debugf("Plugins", "Found plugin: %s\n", plugins->list[i].name.s);
+		debugf("Plugins", "Found plugin: `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(plugins->list[i].name));
 	}
 
 	return lodge_success();
