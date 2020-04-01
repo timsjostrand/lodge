@@ -160,7 +160,6 @@ list(APPEND ENGINE_SOURCES_LOCAL
     vertex.c
     shader.c
     input.c
-    texture.c
     color.c
     vfs.c
     atlas.c
@@ -193,7 +192,6 @@ list(APPEND ENGINE_HEADERS_LOCAL
     events.h
     shader.h
     input.h
-    texture.h
     color.h
     vfs.h
     atlas.h

@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "fbx.h"
 #include "str.h"
+#include "lodge_renderer.h"
 
 static struct fbx_property* fbx_asset_get_array(struct fbx *fbx, const char *path[], size_t path_count)
 {
@@ -415,7 +416,7 @@ void fbx_asset_reset(struct fbx_asset *asset)
 	*asset = tmp;
 }
 
-void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, int tex, struct mvp mvp)
+void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp)
 {
 	glDisable(GL_CULL_FACE);
 
@@ -445,8 +446,7 @@ void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, int tex, s
 
 	// FIXME(TS): material should not be hardcoded
 	{
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);
+		lodge_renderer_bind_texture(0, tex);
 	}
 
 	glBindVertexArray(asset->vertex_array_object);

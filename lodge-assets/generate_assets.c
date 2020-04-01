@@ -53,7 +53,6 @@ void write_assets_c()
 
 	fprintf(fp, "#include \"assets.h\"\n\n");
 	fprintf(fp, "#include \"vfs.h\"\n");
-	fprintf(fp, "#include \"texture.h\"\n");
 	fprintf(fp, "#include \"util_reload.h\"\n");
 	fprintf(fp, "\n");
 
@@ -104,7 +103,7 @@ void write_assets_c()
 	fprintf(fp, "\t// Textures\n");
 	foreach_alist(char*, asset, i, assets_list_textures)
 	{
-		fprintf(fp, "\ttexture_free(assets->textures.");
+		fprintf(fp, "\tlodge_texture_reset(&assets->textures.");
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -148,6 +147,7 @@ void write_assets_h()
 	fprintf(fp, "#define ASSETS_H\n\n");
 	fprintf(fp, "#include \"game.h\"\n");
 	fprintf(fp, "#include \"shader.h\"\n");
+	fprintf(fp, "#include \"lodge_texture.h\"\n");
 	fprintf(fp, "#include \"sound.h\"\n\n");
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "#include \"pyxel_asset.h\"\n\n");
@@ -161,7 +161,7 @@ void write_assets_h()
 		foreach_alist(char*, asset, i, assets_list_textures)
 		{
 			fprintf(fp, "\t");
-			fprintf(fp, "GLuint\t");
+			fprintf(fp, "lodge_texture_t\t");
 			write_clean_name(fp, asset);
 			fprintf(fp, ";");
 			fprintf(fp, "\n");

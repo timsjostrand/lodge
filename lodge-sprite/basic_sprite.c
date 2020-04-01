@@ -5,7 +5,7 @@
 
 // TODO(TS): rename sprite_make, return by value
 void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-	float w, float h, const vec4 color, float rotation, GLuint *texture, struct lodge_renderer *renderer)
+	float w, float h, const vec4 color, float rotation, lodge_texture_t texture, struct lodge_renderer *renderer)
 {
 	sprite->type = type;
 	sprite->pos = vec4_make(x, y, z, 0.0f);

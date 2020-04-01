@@ -1,8 +1,9 @@
 #ifndef _FBX_ASSET_H
 #define _FBX_ASSET_H
 
-#include "math4.h"
 #include <stdint.h>
+#include "math4.h"
+#include "lodge_renderer.h"
 
 struct fbx;
 struct shader;
@@ -20,6 +21,6 @@ struct fbx_asset
 struct fbx_asset	fbx_asset_make(struct fbx *fbx);
 void				fbx_asset_reset(struct fbx_asset *asset);
 
-void				fbx_asset_render(struct fbx_asset *asset, struct shader *shader, int tex, struct mvp mvp);
+void				fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp);
 
 #endif
