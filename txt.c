@@ -4,11 +4,11 @@
  * Note that operations on handles that returns a handle MUST update the original handle!
  *
  * Usage:
- *		txt_t my_text = txt_new("hello!");
+ *		txt_t my_text = txt_new(strview_static("hello!"));
  *		printf("%s\n", my_text);
  *		// Output: "hello!"
  *
- *		my_text = txt_insert(my_text, 0, txt_new(I say: "));
+ *		my_text = txt_insert(my_text, 0, strview_static("I say: "));
  *		printf("%s\n", my_text);
  *		// Output: "I say: hello!"
  *
