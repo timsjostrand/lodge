@@ -18,7 +18,6 @@
 #include "monotext.h"
 #include "lodge.h"
 #include "shader.h"
-#include "texture.h"
 #include "vfs.h"
 #include "color.h"
 #include "str.h"

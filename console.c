@@ -25,7 +25,7 @@ static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };
 static const vec4 CONSOLE_COLOR_CURSOR		= { 0.0f, 0.0f, 0.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_BG			= { 0.0f, 0.0f, 0.0f, 0.75f };
 
-static void console_cursor_init(struct console_cursor *cur, struct monotext *txt, GLuint *white_tex)
+static void console_cursor_init(struct console_cursor *cur, struct monotext *txt, lodge_texture_t white_tex)
 {
 	cur->txt = txt;
 	cur->pos = 0;
@@ -129,7 +129,7 @@ float console_height(struct console *c, int display_lines)
 }
 
 void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, GLuint *white_tex, struct shader *shader, struct env *env, struct renderer *renderer)
+		int padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct renderer *renderer)
 {
 	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;

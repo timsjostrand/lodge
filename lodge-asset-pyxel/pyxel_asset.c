@@ -10,9 +10,9 @@
 
 #include "str.h"
 #include "pyxel_asset.h"
-#include "texture.h"
 #include "util_reload.h"
 #include "lodge_image.h"
+#include "lodge_texture.h"
 
 static int pyxel_asset_init_atlas(struct atlas *atlas, struct pyxel *pyxel)
 {
@@ -88,7 +88,7 @@ static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_
 		void **out, size_t *out_size, int *out_width, int *out_height)
 {
 	uint32_t *final = NULL;
-	struct lodge_image_out image_out;
+	struct lodge_image image_out;
 
 	/* Unpack raw image data form all PNG files. */
 	for(int i=0; i<buf_count; i++) {
@@ -129,7 +129,7 @@ static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_
 			}
 		}
 
-		lodge_image_free((uint8_t *) image_out.pixel_data);
+		lodge_image_free(&image_out);
 	}
 
 	(*out) = final;
@@ -138,7 +138,7 @@ static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_
 
 bail:
 	if(image_out.pixel_data != NULL) {
-		image_free((uint8_t *) image_out.pixel_data);
+		lodge_image_free(&image_out);
 	}
 
 	if(final != NULL) {
@@ -267,10 +267,10 @@ void pyxel_asset_free(struct pyxel_asset *asset)
 	atlas_free(&asset->atlas);
 
 	for(int i=0; i<PYXEL_LAYERS_MAX; i++) {
-		texture_free(asset->layers[i]);
+		lodge_texture_reset(&asset->layers[i]);
 	}
 
-	texture_free(asset->layers_blended);
+	lodge_texture_reset(&asset->layers_blended);
 }
 
 /**
@@ -293,7 +293,7 @@ struct anim* pyxel_asset_get_anim(struct pyxel_asset *asset, const char *anim_na
  * Get a layer by name from the pyxel asset. To get by index, use
  * asset->layers[index] instead.
  */
-GLuint* pyxel_asset_get_layer(struct pyxel_asset *asset, const char *layer_name)
+lodge_texture_t* pyxel_asset_get_layer(struct pyxel_asset *asset, const char *layer_name)
 {
 	for(int i=0; i<asset->layers_count; i++) {
 		if(strcmp(asset->layer_names[i], layer_name) == 0) {

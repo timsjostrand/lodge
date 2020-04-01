@@ -12,9 +12,11 @@
 #include "sound.h"
 #include "shader.h"
 #include "atlas.h"
-#include "texture.h"
 #include "console.h"
 #include "array.h"
+
+#include "lodge_image.h"
+#include "lodge_texture.h"
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 #include "pyxel_asset.h"
@@ -163,12 +165,18 @@ void util_reload_texture(const char *filename, unsigned int size, void *data, vo
 		return;
 	}
 
-	GLuint tmp;
+	struct lodge_image image;
+	struct lodge_ret image_ret = lodge_image_new(&image, data, size);
+	if(!image_ret.success) {
+		core_error("Image load failed: %s (%u bytes)\n", filename, size);
+		return;
+	}
 
-	int ret = texture_load(&tmp, NULL, NULL, data, size);
+	lodge_texture_t tmp = lodge_texture_make_from_image(&image);
+	lodge_image_free(&image);
 
-	if(ret == TEXTURE_ERROR) {
-		core_error("Texture load failed: %s (%u bytes)\n", filename, size);
+	if(!lodge_texture_is_valid(tmp)) {
+   		core_error("Texture load failed: %s (%u bytes)\n", filename, size);
 	} else {
 		if(userdata) {
 			if(strcmp("paddle.png", filename) == 0) {
@@ -176,10 +184,10 @@ void util_reload_texture(const char *filename, unsigned int size, void *data, vo
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			}
 
-			(*(GLuint*)userdata) = tmp;
+			(*(lodge_texture_t*) userdata) = tmp;
 		} else {
 			core_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
-			texture_free(tmp);
+			lodge_texture_reset(&tmp);
 		}
 	}
 }
@@ -191,18 +199,24 @@ void util_reload_texture_pixels(const char *filename, unsigned int size, void *d
 		return;
 	}
 
-	GLuint tmp;
+	struct lodge_image image;
+	struct lodge_ret image_ret = lodge_image_new(&image, data, size);
+	if(!image_ret.success) {
+		core_error("Image load failed: %s (%u bytes)\n", filename, size);
+		return;
+	}
 
-	int ret = texture_load_pixels(&tmp, data, width, height);
+	lodge_texture_t tmp = lodge_texture_make_from_image(&image);
+	lodge_image_free(&image);
 
-	if(ret == TEXTURE_ERROR) {
+	if(!lodge_texture_is_valid(tmp)) {
 		core_error("Texture load failed: %s (%u bytes)\n", filename, size);
 	} else {
 		if(userdata) {
-			(*(GLuint *) userdata) = tmp;
+			(*(lodge_texture_t *) userdata) = tmp;
 		} else {
 			core_debug("Unassigned texture: %s (%u bytes)\n", filename, size);
-			texture_free(tmp);
+			lodge_texture_reset(&tmp);
 		}
 	}
 }
