@@ -123,13 +123,13 @@ static int console_split_args(const char *s, size_t s_size, const char token, st
 	return 0;
 }
 
-float console_height(struct console *c, int display_lines)
+float console_height(struct console *c, uint32_t display_lines)
 {
 	return (c->padding * 2.0f) + (display_lines + 1) * (c->font->letter_height + c->font->letter_spacing_y);
 }
 
-void console_new(struct console *c, struct monofont *font, int view_width,
-		int padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer)
+void console_new(struct console *c, struct monofont *font, uint32_t view_width,
+		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer)
 {
 	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;

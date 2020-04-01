@@ -212,6 +212,6 @@ void rqueue_print_strings(struct rqueue *rqueue)
 void rqueue_dump_strings(struct rqueue *rqueue)
 {
 	for(size_t i=0; i<rqueue->capacity; i++) {
-		printf("%c %zu=%s\n", i == rqueue->front ? 'f' : i == rqueue->back ? 'b' : ' ', i, rqueue->data[i]);
+		printf("%c %zu=%s\n", i == rqueue->front ? 'f' : i == rqueue->back ? 'b' : ' ', i, (const char*)rqueue->data[i]);
 	}
 }
