@@ -165,6 +165,8 @@ list(APPEND ENGINE_SOURCES_LOCAL
     vfs.c
     atlas.c
     str.c
+    strview.c
+    strbuf.c
     txt.c
     lodge.c
     console.c
@@ -196,6 +198,8 @@ list(APPEND ENGINE_HEADERS_LOCAL
     vfs.h
     atlas.h
     str.h
+    strview.h
+    strbuf.h
     txt.h
     lodge.h
     console.h
