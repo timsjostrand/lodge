@@ -245,7 +245,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		}
 
 		/* Register that a frame has been completed. */
-		lodge_plugins_register_frame(frame_times, (float)(lodge_window_get_time() - before)); // FIXME(TS): shoud use lodge_get_time
+		lodge_plugins_register_frame(frame_times, (float)(lodge_window_get_time() - before)); // FIXME(TS): should use lodge_get_time
 	}
 }
 

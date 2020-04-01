@@ -18,6 +18,7 @@ struct vfs vfs = { 0 };
 struct vfs *vfs_global = &vfs;
 
 #define vfs_error(...) errorf("VFS", __VA_ARGS__)
+#define vfs_debug(...) errorf("VFS", __VA_ARGS__)
 
 void vfs_init(const char *mount_path)
 {
