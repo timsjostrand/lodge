@@ -17,7 +17,7 @@ struct pyxel_asset {
 	char			layer_names[PYXEL_LAYERS_MAX][PYXEL_LAYER_NAME_MAX];
 };
 
-int					pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t size);
+int					pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t size, struct vfs *vfs);
 void				pyxel_asset_free(struct pyxel_asset *asset);
 
 struct anim*		pyxel_asset_get_anim(struct pyxel_asset *asset, const char *anim_name);

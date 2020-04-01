@@ -5,6 +5,10 @@ set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
 add_executable(generate_assets
     "${CMAKE_CURRENT_LIST_DIR}/generate_assets.c"
     "${ENGINE_PATH}/vfs.c"
+    "${ENGINE_PATH}/strview.c"
+    "${ENGINE_PATH}/str.c"
+    "${ENGINE_PATH}/strbuf.c"
+    "${ENGINE_PATH}/lodge.c"
 )
 
 target_include_directories(generate_assets

@@ -9,12 +9,9 @@ int main(int argc, char **argv)
 	struct core_argv args = { 0 };
 	core_argv_parse(&args, argc, argv);
 
-	/* Start the virtual file system */
-	vfs_init(args.mount);
-
 	/* Find plugins */
 	struct lodge_plugins *plugins = lodge_plugins_new();
-	struct lodge_ret find_ret = lodge_plugins_find(plugins);
+	struct lodge_ret find_ret = lodge_plugins_find(plugins, strview_wrap(args.mount));
 	if(!find_ret.success) {
 		errorf("Main", "Failed to find plugins: %s", find_ret.message.s);
 		return 1;
@@ -28,8 +25,6 @@ int main(int argc, char **argv)
 
 	lodge_plugins_run(plugins);
 	lodge_plugins_free(plugins);
-
-	vfs_shutdown();
 
 	return 0;
 }

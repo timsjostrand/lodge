@@ -60,29 +60,29 @@ void write_assets_c()
 	fprintf(fp, "struct assets *assets = &assets_mem;\n");
 
 	fprintf(fp, "\n");
-	fprintf(fp, "void assets_load()\n");
+	fprintf(fp, "void assets_load(struct vfs *vfs)\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\t// Textures\n");
 	foreach_alist(char*, asset, i, assets_list_textures)
 	{
-		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &util_reload_texture, &assets->textures.", asset);
+		fprintf(fp, "\tvfs_register_callback(vfs, strview_static(\"");
+		fprintf(fp, "%s\"), &util_reload_texture, &assets->textures.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
 	fprintf(fp, "\n\t// Sounds\n");
 	foreach_alist(char*, asset, i, assets_list_sounds)
 	{
-		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &util_reload_sound, &assets->sounds.", asset);
+		fprintf(fp, "\tvfs_register_callback(vfs, strview_static(\"");
+		fprintf(fp, "%s\"), &util_reload_sound, &assets->sounds.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
 	fprintf(fp, "\n\t// Shaders\n");
 	foreach_alist(char*, asset, i, assets_list_shaders)
 	{
-		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &util_reload_shader, &assets->shaders.", asset);
+		fprintf(fp, "\tvfs_register_callback(vfs, strview_static(\"");
+		fprintf(fp, "%s\"), &util_reload_shader, &assets->shaders.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -90,8 +90,8 @@ void write_assets_c()
 	fprintf(fp, "\n\t// Pyxel files\n");
 	foreach_alist(char*, asset, i, assets_list_pyxels)
 	{
-		fprintf(fp, "\tvfs_register_callback(\"");
-		fprintf(fp, "%s\", &util_reload_pyxel_asset, &assets->pyxels.", asset);
+		fprintf(fp, "\tvfs_register_callback(vfs, strview_static(\"");
+		fprintf(fp, "%s\"), &util_reload_pyxel_asset, &assets->pyxels.", asset);
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
@@ -258,7 +258,7 @@ void write_assets_h()
 	fprintf(fp, "extern struct assets assets_mem;\n");
 	fprintf(fp, "extern struct assets *assets;\n\n");
 
-	fprintf(fp, "void assets_load();\n");
+	fprintf(fp, "void assets_load(struct vfs *vfs);\n");
 	fprintf(fp, "void assets_release();\n");
 
 	fprintf(fp, "\n#endif //ASSETS_H\n");
@@ -266,11 +266,11 @@ void write_assets_h()
 	fclose(fp);
 }
 
-void add_assets()
+void add_assets(struct vfs *vfs, struct alist *assets_list)
 {
-	for (int i = 0, i_size = vfs_file_count(); i < i_size; i++)
+	for (int i = 0, i_size = vfs_file_count(vfs); i < i_size; i++)
 	{
-		alist_append(assets_list, vfs_get_simple_name(i));
+		alist_append(assets_list, vfs_get_simple_name(vfs, i).s);
 	}
 
 	const char* ext_texture[] = { ".png", ".tga", ".jpeg", ".jpg", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
@@ -371,8 +371,18 @@ int main(int argc, char* argv[])
 #endif
 	assets_list_misc = alist_new(MAX_ASSETS);
 
-	vfs_init(argv[1]);
-	add_assets(assets_list);
+	struct lodge_plugin vfs_plug = vfs_plugin();
+	struct vfs* vfs = (struct vfs *) malloc(vfs_plug.size);
+	struct lodge_ret ret = vfs_plug.init(vfs, NULL);
+	if(!ret.success) {
+		printf("Failed to initialize VFS: " STRVIEW_PRINTF_FMT "\n", STRVIEW_PRINTF_ARG(ret.message));
+		return 1;
+	}
+
+	strview_t mount_dir = strview_make(argv[1], strlen(argv[1]));
+
+	vfs_mount(vfs, mount_dir);
+	add_assets(vfs, assets_list);
 
 	write_assets_c();
 	write_assets_h();

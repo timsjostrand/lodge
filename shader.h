@@ -69,7 +69,8 @@ struct shader {
 int     shader_init(struct shader *s,
 				const char* name,
 				const strview_t vert_src,
-                const strview_t frag_src);
+                const strview_t frag_src,
+				struct vfs *vfs);
 void    shader_delete(struct shader *s);
 void    shader_free(struct shader *s);
 

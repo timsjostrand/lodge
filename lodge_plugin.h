@@ -5,10 +5,12 @@
 
 #define LODGE_PLUGIN_VERSION 1
 
-typedef struct lodge_ret	(*lodge_plugin_init_func)();
-typedef void				(*lodge_plugin_update_func)(void *plugin, float delta_time);
-typedef void				(*lodge_plugin_render_func)(void *plugin);
-typedef void				(*lodge_plugin_free_func)(void *plugin);
+struct lodge_plugins;
+
+typedef struct lodge_ret		(*lodge_plugin_init_func)(void *plugin, struct lodge_plugins *plugins);
+typedef void					(*lodge_plugin_update_func)(void *plugin, float delta_time);
+typedef void					(*lodge_plugin_render_func)(void *plugin);
+typedef void					(*lodge_plugin_free_func)(void *plugin);
 
 struct lodge_plugin
 {
@@ -21,6 +23,6 @@ struct lodge_plugin
 	lodge_plugin_free_func		free;
 };
 
-typedef struct lodge_plugin (*lodge_plugin_func)();
+typedef struct lodge_plugin		(*lodge_plugin_func)();
 
 #endif

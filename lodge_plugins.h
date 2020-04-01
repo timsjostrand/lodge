@@ -21,7 +21,8 @@ struct lodge_plugins_frame_times {
 };
 
 struct lodge_plugins*				lodge_plugins_new();
-struct lodge_ret					lodge_plugins_find(struct lodge_plugins *plugins);
+void								lodge_plugins_append(struct lodge_plugins *plugins, struct lodge_plugin plugin);
+struct lodge_ret					lodge_plugins_find(struct lodge_plugins *plugins, strview_t mount_dir);
 void								lodge_plugins_free(struct lodge_plugins *plugins);
 
 lodge_plugin_data_t					lodge_plugins_depend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name);
