@@ -108,6 +108,8 @@ static void core_console_graphics_init(struct console *c, struct env *env)
 
 /* VFS */
 
+#if 0
+
 static void core_console_vfs_list(struct console *c, struct console_cmd *cmd, struct list *argv)
 {
 	const char *name;
@@ -159,14 +161,18 @@ static void core_console_vfs_init(struct console *c)
 	cmd_new(root, "mount", 1, &core_console_vfs_mount, core_console_vfs_autocomplete_simplename);
 }
 
+#endif
+
 /* Main API */
 
 void core_console_new(struct console *c, struct env *env)
 {
 	core_console_meta_init(c);
 	core_console_sound_init(c);
+#if 0
 	core_console_graphics_init(c, env);
 	core_console_vfs_init(c);
+#endif
 }
 
 void core_console_printf(const char *fmt, ...)

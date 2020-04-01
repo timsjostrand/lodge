@@ -6,6 +6,7 @@
 #include <string.h>
 
 // FIXME(TS): Just for `_plugin()` funcs
+#include "vfs.h"
 #include "lodge_window.h"
 #include "lodge_renderer.h"
 #include "env.h"
@@ -30,6 +31,9 @@ struct lodge_plugins
 	size_t								data_size;
 	float								delta_time_factor;
 	struct lodge_plugins_frame_times	frame_times;
+
+	// HACK(TS)
+	strview_t							mount_dir;
 };
 
 static struct lodge_plugin* lodge_plugins_find_plugin_by_data(struct lodge_plugins *plugins, lodge_plugin_data_t data)
@@ -137,13 +141,22 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 	return NULL;
 }
 
-struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins)
+void lodge_plugins_append(struct lodge_plugins *plugins, struct lodge_plugin plugin)
+{
+	plugins->list[plugins->count++] = plugin;
+}
+
+struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mount_dir)
 {
 	// TODO(TS): find plugins either by looking for dynamic libraries in filesystem or static list
 
-	plugins->list[plugins->count++] = lodge_windows_plugin();
-	plugins->list[plugins->count++] = env_plugin();
-	plugins->list[plugins->count++] = game_plugin();
+	// HACK(TS)
+	plugins->mount_dir = mount_dir;
+
+	lodge_plugins_append(plugins, vfs_plugin());
+	lodge_plugins_append(plugins, lodge_windows_plugin());
+	lodge_plugins_append(plugins, env_plugin());
+	lodge_plugins_append(plugins, game_plugin());
 
 	for(int i = 0; i < plugins->count; i++) {
 		debugf("Plugins", "Found plugin: %s\n", plugins->list[i].name.s);
@@ -191,6 +204,12 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 			if(!init_ret.success) {
 				errorf("Plugins", "Error when initializing plugin `%s`: %s\n", plugin->name.s, init_ret.message.s);
 				return init_ret;
+			}
+
+			// HACK(TS): Need nice way to mount default dir
+			if(strview_equals(plugin->name, strview_static("vfs")))
+			{
+				vfs_mount((struct vfs*)cur, plugins->mount_dir);
 			}
 		}
 

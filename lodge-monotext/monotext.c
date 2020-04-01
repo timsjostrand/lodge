@@ -91,10 +91,10 @@ static void strnbounds(const char *s, const int len, int *width_max, int *height
 	}
 }
 
-static void monofont_reload(const char *filename, unsigned int size, void *data, void *userdata)
+static void monofont_reload(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
 {
 	if(size == 0) {
-		monotext_debug("Skipped reload of texture %s (%u bytes)\n", filename, size);
+		monotext_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -108,7 +108,7 @@ static void monofont_reload(const char *filename, unsigned int size, void *data,
 	struct lodge_image image;
 	struct lodge_ret ret = lodge_image_new(&image, data, size);
 	if(!ret.success) {
-		monotext_error("Image load failed: %s (%u bytes)\n", filename, size);
+		monotext_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -134,7 +134,8 @@ static void monofont_reload(const char *filename, unsigned int size, void *data,
 
 int monofont_new(struct monofont *font, const char *name,
 		int letter_width, int letter_height,
-		int letter_spacing_x, int letter_spacing_y)
+		int letter_spacing_x, int letter_spacing_y,
+		struct vfs *vfs)
 {
 	/* Font metadata. */
 	font->name = name;
@@ -144,7 +145,7 @@ int monofont_new(struct monofont *font, const char *name,
 	font->letter_spacing_y = letter_spacing_y;
 
 	/* Load font texture. */
-	vfs_register_callback(name, &monofont_reload, font);
+	vfs_register_callback(vfs, strview_make(name, strlen(name)), &monofont_reload, font);
 
 	return MONOTEXT_OK;
 }

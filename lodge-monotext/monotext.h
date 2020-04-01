@@ -62,7 +62,8 @@ void monotext_free(struct monotext *text);
 
 int  monofont_new(struct monofont *font, const char *name,
 		int letter_width, int letter_height,
-		int letter_spacing_x, int letter_spacing_y);
+		int letter_spacing_x, int letter_spacing_y,
+		struct vfs *vfs);
 void monofont_free(struct monofont *font);
 
 #endif

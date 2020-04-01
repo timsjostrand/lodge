@@ -148,7 +148,7 @@ bail:
 	return PYXEL_ERROR;
 }
 
-int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
+int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len, struct vfs *vfs)
 {
 	/* Parse .pyxel-file. */
 	struct pyxel pyxel;
@@ -206,7 +206,7 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 		pyxel_debug("Successfully extracted texture \"%s\" (%d bytes)\n", tex_filename, tex_sizes[i]);
 
 		/* Upload texture to GPU. */
-		util_reload_texture(tex_filename, tex_sizes[i], tex_bufs[i], &asset->layers[i]);
+		util_reload_texture(vfs, strview_wrap(tex_filename), tex_sizes[i], tex_bufs[i], &asset->layers[i]);
 	}
 
 	/* Combine (blend) layers. */
@@ -219,7 +219,7 @@ int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len)
 		pyxel_error("Could not blend layers\n");
 		goto bail;
 	}
-	util_reload_texture_pixels("layers_blended", blend_size, blend_buf,
+	util_reload_texture_pixels(vfs, strview_static("layers_blended"), blend_size, blend_buf,
 			&asset->layers_blended, blend_width, blend_height);
 
 	/* Clean up temporary texture memory. */

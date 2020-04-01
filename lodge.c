@@ -1,6 +1,4 @@
-#include "vfs.h"
-#include "core.h"
-#include "assets.h"
+#include "lodge.h"
 
 struct lodge_ret lodge_ret_make_success()
 {

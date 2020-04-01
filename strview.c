@@ -7,11 +7,18 @@
 
 strview_t strview_make(const char *s, size_t length)
 {
-	strview_t tmp = {
+	return (strview_t) {
 		.length = length,
 		.s = s
 	};
-	return tmp;
+}
+
+strview_t strview_null()
+{
+	return (strview_t) {
+		.length = 0,
+		.s = '\0'
+	};
 }
 
 int strview_equals(const strview_t lhs, const strview_t rhs)

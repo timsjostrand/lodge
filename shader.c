@@ -88,10 +88,10 @@ int shader_log(GLuint shader, const char *name, const char* label)
 	return SHADER_OK;
 }
 
-static int shader_include(txt_t *txt, size_t start, array_t includes, const char* include_file)
+static int shader_include(struct vfs *vfs, txt_t *txt, size_t start, array_t includes, const char* include_file)
 {
 	size_t include_data_size = 0;
-	const char* include_data = vfs_get_file(include_file, &include_data_size);
+	const char* include_data = vfs_get_file(vfs, strview_make(include_file, strlen(include_file)), &include_data_size);
 	if(!include_data) {
 		return 0;
 	} else {
@@ -102,13 +102,13 @@ static int shader_include(txt_t *txt, size_t start, array_t includes, const char
 	}
 }
 
-static int shader_resolve_includes_str(txt_t txt, array_t includes, txt_t *out)
+static int shader_resolve_includes_str(struct vfs *vfs, txt_t txt, array_t includes, txt_t *out)
 {
 	static const int INCLUDE_LENGTH = 9;
 	int retry = 1;
 
 	static const char* global_include_file = "global.fxh";
-	if(!shader_include(&txt, 0, includes, global_include_file)) {
+	if(!shader_include(vfs, &txt, 0, includes, global_include_file)) {
 		shader_debug("Could not include file: `%s`\n", global_include_file);
 	}
 
@@ -147,7 +147,7 @@ static int shader_resolve_includes_str(txt_t txt, array_t includes, txt_t *out)
 					// Remove `#include` line
 					txt_delete(txt, start, len);
 
-					if(shader_include(&txt, start, includes, include_file)) {
+					if(shader_include(vfs, &txt, start, includes, include_file)) {
 						retry = 1;
 					} else {
 						shader_error("Could not include file: `%s`\n", include_file);
@@ -173,13 +173,13 @@ static int shader_resolve_includes_str(txt_t txt, array_t includes, txt_t *out)
 	return SHADER_OK;
 }
 
-static int shader_resolve_includes(struct shader *s)
+static int shader_resolve_includes(struct shader *s, struct vfs *vfs)
 {
 	array_clear(s->vert_includes);
 	array_clear(s->frag_includes);
 
-	int success = shader_resolve_includes_str(s->vert_transformed, s->vert_includes, &s->vert_transformed) == SHADER_OK;
-	success &= shader_resolve_includes_str(s->frag_transformed, s->frag_includes, &s->frag_transformed) == SHADER_OK;
+	int success = shader_resolve_includes_str(vfs, s->vert_transformed, s->vert_includes, &s->vert_transformed) == SHADER_OK;
+	success &= shader_resolve_includes_str(vfs, s->frag_transformed, s->frag_includes, &s->frag_transformed) == SHADER_OK;
 
 	return success ? SHADER_OK : SHADER_INCLUDE_ERROR;
 }
@@ -194,7 +194,8 @@ static int shader_resolve_includes(struct shader *s)
 int shader_init(struct shader *s,
 	const char *name,
 	const strview_t vert_src,
-	const strview_t frag_src)
+	const strview_t frag_src,
+	struct vfs *vfs)
 {
 	int ret = 0;
 
@@ -211,7 +212,7 @@ int shader_init(struct shader *s,
 	s->vert_transformed = txt_new(vert_src);
 	s->frag_transformed = txt_new(frag_src);
 
-	if(shader_resolve_includes(s) != SHADER_OK) {
+	if(shader_resolve_includes(s, vfs) != SHADER_OK) {
 		return ret;
 	}
 
