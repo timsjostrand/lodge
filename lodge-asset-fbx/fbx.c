@@ -292,7 +292,7 @@ fail:
 	return NULL;
 }
 
-static struct fbx_property_array* fbx_property_get_array(struct fbx_property *prop)
+static const struct fbx_property_array* fbx_property_get_array(const struct fbx_property *prop)
 {
 	switch(prop->type)
 	{
@@ -313,7 +313,7 @@ static struct fbx_property_array* fbx_property_get_array(struct fbx_property *pr
 	case FBX_PROPERTY_TYPE_ARRAY_CHAR:
 	{
 		ASSERT(prop->heap_data);
-		return (struct fbx_property_array*)(prop->heap_data);
+		return (const struct fbx_property_array*)(prop->heap_data);
 	}
 	default:
 		return NULL;
@@ -674,13 +674,13 @@ struct fbx_node* fbx_get_node(struct fbx *fbx, const char *path[], size_t path_c
 	return curr_node;
 }
 
-uint32_t fbx_node_get_property_count(struct fbx_node *node)
+uint32_t fbx_node_get_property_count(const struct fbx_node *node)
 {
 	ASSERT(node);
 	return node->properties_count;
 }
 
-struct fbx_property* fbx_node_get_property(struct fbx_node *node, uint32_t index)
+const struct fbx_property* fbx_node_get_property(const struct fbx_node *node, uint32_t index)
 {
 	ASSERT(node);
 	if(index >= node->properties_count) {
@@ -690,23 +690,23 @@ struct fbx_property* fbx_node_get_property(struct fbx_node *node, uint32_t index
 	return (struct fbx_property*)(node->properties->data)[index];
 }
 
-struct fbx_property* fbx_node_get_property_array(struct fbx_node *node, uint32_t index)
+const struct fbx_property* fbx_node_get_property_array(const struct fbx_node *node, uint32_t index)
 {
-	struct fbx_property *prop = fbx_node_get_property(node, index);
+	const struct fbx_property *prop = fbx_node_get_property(node, index);
 	if(prop && fbx_property_is_array(prop)) {
 		return prop;
 	}
 	return NULL;
 }
 
-uint32_t fbx_property_get_array_count(struct fbx_property *prop)
+uint32_t fbx_property_get_array_count(const struct fbx_property *prop)
 {
-	struct fbx_property_array* prop_array = fbx_property_get_array(prop);
+	const struct fbx_property_array *prop_array = fbx_property_get_array(prop);
 	ASSERT(prop_array);
 	return prop_array ? prop_array->array_length : 0;
 }
 
-int fbx_property_is_array(struct fbx_property *prop)
+int fbx_property_is_array(const struct fbx_property *prop)
 {
 	return fbx_property_get_array(prop) != NULL;
 }
@@ -720,32 +720,32 @@ enum fbx_property_type fbx_property_get_type(const struct fbx_property *prop)
 #define FBX_PROPERTY_GET(prop, fbx_type, c_type) \
 	(prop->type == fbx_type) ? NULL :  (const c_type*)(prop->static_data);
 
-const int16_t* fbx_property_get_int16(struct fbx_property *prop)
+const int16_t* fbx_property_get_int16(const struct fbx_property *prop)
 {
 	return FBX_PROPERTY_GET(prop, FBX_PROPERTY_TYPE_INT16, int16_t);
 }
 
-const char* fbx_property_get_bool(struct fbx_property *prop)
+const char* fbx_property_get_bool(const struct fbx_property *prop)
 {
 	return FBX_PROPERTY_GET(prop, FBX_PROPERTY_TYPE_BOOL, char);
 }
 
-const int32_t* fbx_property_get_int32(struct fbx_property *prop)
+const int32_t* fbx_property_get_int32(const struct fbx_property *prop)
 {
 	return FBX_PROPERTY_GET(prop, FBX_PROPERTY_TYPE_INT32, int32_t);
 }
 
-const float* fbx_property_get_float(struct fbx_property *prop)
+const float* fbx_property_get_float(const struct fbx_property *prop)
 {
 	return FBX_PROPERTY_GET(prop, FBX_PROPERTY_TYPE_FLOAT, float);
 }
 
-const double* fbx_property_get_double(struct fbx_property *prop)
+const double* fbx_property_get_double(const struct fbx_property *prop)
 {
 	return FBX_PROPERTY_GET(prop, FBX_PROPERTY_TYPE_DOUBLE, double);
 }
 
-const int64_t* fbx_property_get_int64(struct fbx_property *prop)
+const int64_t* fbx_property_get_int64(const struct fbx_property *prop)
 {
 	return FBX_PROPERTY_GET(prop, FBX_PROPERTY_TYPE_INT64, int64_t);
 }
@@ -755,40 +755,40 @@ const int64_t* fbx_property_get_int64(struct fbx_property *prop)
 		ASSERT_FAIL("FBX: Incorrect type"); \
 		return NULL; \
 	} \
-	struct fbx_property_array* prop_array = fbx_property_get_array(prop); \
+	const struct fbx_property_array* prop_array = fbx_property_get_array(prop); \
 	return (const c_type*)prop_array->data;
 
-const double* fbx_property_get_array_double(struct fbx_property *prop)
+const double* fbx_property_get_array_double(const struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_DOUBLE, double);
 }
 
-const float* fbx_property_get_array_float(struct fbx_property *prop)
+const float* fbx_property_get_array_float(const struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_FLOAT, float);
 }
 
-const int32_t* fbx_property_get_array_int32(struct fbx_property *prop)
+const int32_t* fbx_property_get_array_int32(const struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_INT32, int32_t);
 }
 
-const int64_t* fbx_property_get_array_int64(struct fbx_property *prop)
+const int64_t* fbx_property_get_array_int64(const struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_INT64, int64_t);
 }
 
-const char* fbx_property_get_array_bool(struct fbx_property *prop)
+const char* fbx_property_get_array_bool(const struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_BOOL, char);
 }
 
-const char* fbx_property_get_array_char(struct fbx_property *prop)
+const char* fbx_property_get_array_char(const struct fbx_property *prop)
 {
 	FBX_PROPERTY_ARRAY_RETURN(prop, FBX_PROPERTY_TYPE_ARRAY_CHAR, char);
 }
 
-struct fbx_string fbx_property_get_string(struct fbx_property *prop)
+struct fbx_string fbx_property_get_string(const struct fbx_property *prop)
 {
 	if(prop->type != FBX_PROPERTY_TYPE_STRING) {
 		ASSERT_FAIL("FBX: Incorrect type");
@@ -797,14 +797,13 @@ struct fbx_string fbx_property_get_string(struct fbx_property *prop)
 	}
 	ASSERT(prop->heap_data);
 	struct fbx_property_special *prop_data = (struct fbx_property_special*)prop->heap_data;
-	struct fbx_string tmp = {
+	return (struct fbx_string) {
 		.length = prop_data->length,
 		.data = prop_data->data
 	};
-	return tmp;
 }
 
-struct fbx_string fbx_property_get_binary(struct fbx_property *prop)
+struct fbx_string fbx_property_get_binary(const struct fbx_property *prop)
 {
 	if(prop->type != FBX_PROPERTY_TYPE_BINARY) {
 		ASSERT_FAIL("FBX: Incorrect type");
@@ -813,9 +812,8 @@ struct fbx_string fbx_property_get_binary(struct fbx_property *prop)
 	}
 	ASSERT(prop->heap_data);
 	struct fbx_property_special *prop_data = (struct fbx_property_special*)prop->heap_data;
-	struct fbx_string tmp = {
+	return (struct fbx_string) {
 		.length = prop_data->length,
 		.data = prop_data->data
 	};
-	return tmp;
 }
