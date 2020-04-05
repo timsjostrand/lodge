@@ -158,7 +158,6 @@ list(APPEND ENGINE_SOURCES_LOCAL
     lodge_plugins.c
     core_console.c
     vertex.c
-    shader.c
     color.c
     vfs.c
     atlas.c
@@ -176,7 +175,6 @@ list(APPEND ENGINE_HEADERS_LOCAL
     lodge_plugin.h
     lodge_plugins.h
     core_console.h
-    shader.h
     lodge_keys.h
     color.h
     vfs.h

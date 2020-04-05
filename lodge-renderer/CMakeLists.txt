@@ -10,6 +10,7 @@ target_sources(lodge-renderer
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_framebuffer_opengl.c"
 		"${CMAKE_CURRENT_LIST_DIR}/drawable.c"
 		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.c"
+		"${CMAKE_CURRENT_LIST_DIR}/shader.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_renderer.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_sampler.h"
@@ -17,6 +18,7 @@ target_sources(lodge-renderer
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_framebuffer.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_opengl.h" # This should be private, but need to port legacy code to not use OpenGL calls directly
 		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.h"
+		"${CMAKE_CURRENT_LIST_DIR}/shader.h"
 )
 
 target_include_directories(lodge-renderer
