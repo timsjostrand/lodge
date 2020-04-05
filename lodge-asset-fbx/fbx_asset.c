@@ -126,38 +126,38 @@ static struct array* fbx_asset_new_layer_element(
 		goto fail;
 	}
 
-	static const uint32_t stride = 2;
+	ret = array_new(sizeof(vec2), prop_indices_count);
 
-	ret = float_array_new(prop_indices_count * stride);
-
-	for(uint32_t i = 0; i < ret->count; i++) {
-		ret->data[i] = -1;
+	static const vec2 invalid = { -1, -1 };
+	for(uint32_t i = 0, count = array_count(ret); i < count; i++) {
+		array_set(ret, i, &invalid);
 	}
 
 	int32_t prop_index_max = 0;
 	int32_t ret_index_max = 0;
 	for(uint32_t i = 0; i < prop_indices_count; i++) {
 		if(ref_type == direct) {
-			ret->data[i] = (float)prop_data_ptr[i];
+			array_set(ret, i, &prop_data_ptr[i]);
 		} else if(ref_type == index_to_direct) {
-			ASSERT(i < vertex_indices_count);
-			ASSERT(i < prop_indices_count);
+			//ASSERT(i < vertex_indices_count);
+			//ASSERT(i < prop_indices_count);
 
-			const int32_t prop_index = prop_indices_ptr[i] * stride;
-			ASSERT(prop_index >= 0);
-			ASSERT((uint32_t)prop_index < prop_data_count);
+			//const int32_t prop_index = prop_indices_ptr[vertex_indices[i]] * stride;
+			//ASSERT(prop_index >= 0);
+			//ASSERT((uint32_t)prop_index < prop_data_count);
 
 			//const int32_t ret_index = i * stride;
-			const int32_t ret_index = vertex_indices[i] * stride;
-			ASSERT(ret_index >= 0);
-			ASSERT(ret_index < (int32_t)ret->count);
+			//const int32_t ret_index = vertex_indices[i] * stride;
+			//ASSERT(ret_index >= 0);
+			//ASSERT(ret_index < (int32_t)ret->count);
 
-			for(uint32_t c = 0; c < stride; c++) {
-				ret->data[ret_index + c] = (float)prop_data_ptr[prop_index + c];
-			}
+			const int32_t vertex_index = vertex_indices[i];
+			const int32_t prop_index = prop_indices_ptr[i] * 2;
+			const vec2 prop_data = { prop_data_ptr[prop_index], prop_data_ptr[prop_index + 1] };
+			array_set(ret, vertex_index, &prop_data);
 
-			prop_index_max = max(prop_index, prop_index_max);
-			ret_index_max = max(ret_index + stride, ret_index_max);
+			//prop_index_max = max(prop_index, prop_index_max);
+			//ret_index_max = max(ret_index + stride, ret_index_max);
 		} else {
 			ASSERT_FAIL("Reference type not implemented");
 			goto fail;
