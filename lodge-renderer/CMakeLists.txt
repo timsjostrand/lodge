@@ -29,6 +29,7 @@ target_include_directories(lodge-renderer
 target_link_libraries(lodge-renderer
 	PUBLIC
 		"${GLEW_LIBRARY}"
+		"lodge-lib"
 		"lodge-image"
 		"lodge-collections"
 )

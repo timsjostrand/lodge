@@ -5,10 +5,10 @@ set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
 add_executable(generate_assets
     "${CMAKE_CURRENT_LIST_DIR}/generate_assets.c"
     "${ENGINE_PATH}/vfs.c"
-    "${ENGINE_PATH}/strview.c"
-    "${ENGINE_PATH}/str.c"
-    "${ENGINE_PATH}/strbuf.c"
-    "${ENGINE_PATH}/lodge.c"
+    "${ENGINE_PATH}/lodge-lib/strview.c"
+    "${ENGINE_PATH}/lodge-lib/str.c"
+    "${ENGINE_PATH}/lodge-lib/strbuf.c"
+    "${ENGINE_PATH}/lodge-lib/lodge.c"
 )
 
 target_include_directories(generate_assets
@@ -22,6 +22,7 @@ target_include_directories(generate_assets
 # FIXME(TS): dependencies should be handled in another way.
 target_link_libraries(generate_assets
     glfw
+    lodge-lib
     lodge-sound
     lodge-collections
 )
@@ -68,11 +69,12 @@ target_include_directories(lodge-assets
 # FIXME(TS): link libraries should be inherited from engine libs (ie its not nice
 # to have to depend on lodge-sound if its not being used)
 target_link_libraries(lodge-assets
-    glfw
+    lodge-lib
     lodge-sound
     lodge-collections
     lodge-renderer
     lodge-asset-pyxel   # FIXME(TS): these assets should be added with fragments and an asset system instead
+    glfw
     ${ENGINE_EXTRA_LIBS}
 )
 

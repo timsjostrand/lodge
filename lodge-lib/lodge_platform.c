@@ -54,7 +54,7 @@ void* lodge_lib_load_copy(const char *filename, size_t size, void *data)
 	fwrite(data, sizeof(char), size, fp);
 	fclose(fp);
 
-	return load_shared_library(name);
+	return lodge_lib_load(name);
 }
 
 void* lodge_lib_get_symbol(void *library, const char *symbol_name)
@@ -71,7 +71,7 @@ void* lodge_lib_get_symbol(void *library, const char *symbol_name)
 		errorf("Platform", "Could not load function %s\n", symbol_name);
 	}
 
-	return function;
+	return symbol;
 }
 
 int lodge_lib_free(void *library)
