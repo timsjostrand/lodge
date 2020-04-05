@@ -18,4 +18,7 @@ target_include_directories(lodge-terrain
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-target_link_libraries(lodge-terrain lodge-collections)
+target_link_libraries(lodge-terrain
+    lodge-lib
+    lodge-collections
+)

@@ -155,7 +155,6 @@ endforeach()
 
 # Engine sources
 list(APPEND ENGINE_SOURCES_LOCAL
-    math4.c
     lodge_plugins.c
     core_console.c
     vertex.c
@@ -164,11 +163,6 @@ list(APPEND ENGINE_SOURCES_LOCAL
     color.c
     vfs.c
     atlas.c
-    str.c
-    strview.c
-    strbuf.c
-    txt.c
-    lodge.c
     console.c
     spritebatch.c
     animatedsprites.c
@@ -180,14 +174,9 @@ list(APPEND ENGINE_SOURCES_LOCAL
     util_graphics.c
     env.c
     lodge_window_glfw.c
-    blob.c
-    blob_cur.c
 )
 
 list(APPEND ENGINE_HEADERS_LOCAL
-    math4.h
-    lodge_platform.h
-    lodge_assert.h
     lodge_plugin.h
     lodge_plugins.h
     core_console.h
@@ -196,11 +185,6 @@ list(APPEND ENGINE_HEADERS_LOCAL
     color.h
     vfs.h
     atlas.h
-    str.h
-    strview.h
-    strbuf.h
-    txt.h
-    lodge.h
     console.h
     spritebatch.h
     animatedsprites.h
@@ -215,8 +199,6 @@ list(APPEND ENGINE_HEADERS_LOCAL
     vertex.h
     env.h
     lodge_window.h
-    blob.h
-    blob_cur.h
 )
 
 # Prepend all sources with absolute engine path (because of reasons...)
@@ -243,6 +225,7 @@ function(add_game_library game_name)
     #           part of the build. Mainly because core.c pulls depends on a lot
     #           of things, so the proper fix is probably to make core itself into
     #           a module.
+    list(APPEND ENGINE_MODULES lodge-lib)
     list(APPEND ENGINE_MODULES lodge-assets)
     list(APPEND ENGINE_MODULES lodge-sound)
     list(APPEND ENGINE_MODULES lodge-collections)

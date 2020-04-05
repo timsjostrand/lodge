@@ -18,5 +18,6 @@ target_include_directories(lodge-image
 
 target_link_libraries(lodge-image
 	PUBLIC
+		"lodge-lib"
 		"lodge-stb"
 )

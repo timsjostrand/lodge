@@ -15,3 +15,7 @@ target_include_directories(lodge-intersect
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+target_link_libraries(lodge-intersect
+    lodge-lib
+)
