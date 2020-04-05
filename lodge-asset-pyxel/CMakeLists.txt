@@ -23,6 +23,7 @@ target_link_libraries(lodge-asset-pyxel
         ${ENGINE_EXTRA_LIBS}
         lodge-image
         lodge-renderer
+        lodge-sprite
     PUBLIC
         ${LIBARCHIVE_LIBRARY}
         ${CJSON_LIBRARY}

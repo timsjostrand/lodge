@@ -5,8 +5,14 @@ add_library(lodge-sprite STATIC "")
 target_sources(lodge-sprite
     PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/basic_sprite.c"
+        "${CMAKE_CURRENT_LIST_DIR}/spritebatch.c"
+        "${CMAKE_CURRENT_LIST_DIR}/animatedsprites.c"
+        "${CMAKE_CURRENT_LIST_DIR}/sprite_group.c"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/basic_sprite.h"
+        "${CMAKE_CURRENT_LIST_DIR}/spritebatch.h"
+        "${CMAKE_CURRENT_LIST_DIR}/animatedsprites.h"
+        "${CMAKE_CURRENT_LIST_DIR}/sprite_group.h"
 )
 
 target_include_directories(lodge-sprite
