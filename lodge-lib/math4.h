@@ -177,8 +177,8 @@ float	lerp1f(float min, float max, float t); // NOTE(TS): lerp() clashes with Op
 float	clamp(float f, float min, float max);
 float	randr(float min, float max);
 
-int		imax(int a, int b);
-int		imin(int a, int b);
+int		imax(int a, int b); // TODO(TS): remove, prefer max()
+int		imin(int a, int b); // TODO(TS): remove, prefer min()
 int		sign(int x);
 int		powi(int base, int exp);
 int		log2i(unsigned int val);
