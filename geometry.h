@@ -29,4 +29,17 @@ struct aabb {
 	vec3	max;
 };
 
+static struct ray ray_make(const vec3 origin, const vec3 dir)
+{
+	return (struct ray) {
+		.origin = origin,
+		.dir = dir,
+		.dir_inv = {
+			.x = 1.0f / dir.x,
+			.y = 1.0f / dir.y,
+			.z = 1.0f / dir.z
+		}
+	};
+}
+
 #endif
