@@ -18,7 +18,7 @@
 #include "math4.h"
 #include "drawable.h"
 #include "env.h"
-#include "input.h"
+#include "lodge_keys.h"
 
 static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };

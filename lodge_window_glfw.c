@@ -5,7 +5,7 @@
 #include "lodge_window.h"
 #include "lodge_plugins.h"
 #include "lodge_renderer.h"
-#include "input.h"
+#include "lodge_keys.h"
 #include "log.h"
 
 #include <GLFW/glfw3.h>
