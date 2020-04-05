@@ -5,10 +5,8 @@
  *			Johan Yngman <johan.yngman@gmail.com>
  */
 
-#ifndef _INPUT_H
-#define _INPUT_H
-
-#include "lodge_window.h"
+#ifndef _LODGE_KEYS_H
+#define _LODGE_KEYS_H
 
 #define LODGE_RELEASE                0
 #define LODGE_PRESS                  1
@@ -172,20 +170,5 @@
 #define LODGE_JOYSTICK_15            14
 #define LODGE_JOYSTICK_16            15
 #define LODGE_JOYSTICK_LAST          LODGE_JOYSTICK_16
-
-#if 0
-struct input;
-
-struct input*	input_new(lodge_window_t window);
-void			input_free(struct input *input);
-
-void			input_set_key_callback(struct input *input, lodge_window_input_callback_t callback);
-void			input_set_char_callback(struct input *input, lodge_window_input_char_callback_t callback);
-void			input_set_mousebutton_callback(struct input *input, lodge_window_mousebutton_callback_t mousebutton_callback);
-
-int				input_key_down(struct input *input, int key);
-int				input_key_pressed(struct input *input, int key);
-int				input_key_released(struct input *input, int key);
-#endif
 
 #endif
