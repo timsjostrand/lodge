@@ -4,14 +4,14 @@
  * Auhtor: Tim Sjöstrand <tim.sjostrand@gmail.com>.
  */
 
-#include <string.h>
-#include <math.h>
-
-#include <stdio.h> // FIXME(TS): debug
-
 #include "intersect.h"
+
 #include "math4.h"
 #include "geometry.h"
+
+#include <string.h>
+#include <math.h>
+#include <stdio.h> // FIXME(TS): debug
 
 void ray_init(struct ray *ray, const vec3 *origin, const vec3 *dir)
 {
@@ -73,8 +73,8 @@ int intersect_ray_vs_aabb(const struct ray *ray, const struct aabb *aabb, float 
 		tmax = min(tmax, max(max(t1, t2), tmin));
 	}
 
-	*t_near = tmin;
-	*t_far = tmax;
+	*t_near = (float)tmin;
+	*t_far = (float)tmax;
 
 	return tmax > max(tmin, 0.0);
 #endif
@@ -84,71 +84,61 @@ int intersect_ray_vs_aabb(const struct ray *ray, const struct aabb *aabb, float 
 
 int intersect_ray_vs_triangle(const struct ray *ray, const struct triangle *triangle, float *t)
 {
-	vec3 edge1;
-	vec3 edge2;
-	sub3v(edge1, triangle->p1, triangle->p0);
-	sub3v(edge2, triangle->p2, triangle->p0);
+	vec3 edge1 = vec3_sub(triangle->p1, triangle->p0);
+	vec3 edge2 = vec3_sub(triangle->p2, triangle->p0);
 
-	vec3 pvec;
-	cross(pvec, ray->dir, edge2);
+	vec3 pvec = vec3_cross(ray->dir, edge2);
 
-	float det = dot3v(edge1, pvec);
+	float det = vec3_dot(edge1, pvec);
 
 #ifdef TEST_CULL
-	if(det < RAY_TRIANGLE_EPSILON)
-	{
+	if(det < RAY_TRIANGLE_EPSILON) {
 		return 0;
 	}
 
-	vec3 tvec;
-	sub3v(tvec, orig, triangle->p0);
+	vec3 tvec = vec3_sub(orig, triangle->p0);
 
-	float u = dot3v(tvec, pvec);
-	if(u < 0.0f || u > det)
-	{
+	float u = vec3_dot(tvec, pvec);
+	if(u < 0.0f || u > det) {
 		return 0;
 	}
 
-	cross3v(qvec, tvec, edge1);
+	vec3_cross(qvec, tvec, edge1);
 
-	float v = dot3v(ray->dir, qvec);
+	float v = vec3_dot(ray->dir, qvec);
 	if(v < 0.0f || v > det)
 	{
 		return 0;
 	}
 
-	*t = dot3v(edge2, qvec);
+	*t = vec3_dot(edge2, qvec);
 	float inv_det = 1.0f / det;
 	*t *= inv_det;
 	//*u *= inv_det;
 	//*v *= inv_det;
 #else
-	if(fabs(det) < RAY_TRIANGLE_EPSILON)
-	{
+	if(fabs(det) < RAY_TRIANGLE_EPSILON) {
 		return 0;
 	}
 
 	float inv_det = 1.0f / det;
 
-	vec3 tvec;
-	sub3v(tvec, ray->origin, triangle->p0);
+	vec3 tvec = vec3_sub(ray->origin, triangle->p0);
 
-	float u = dot3v(tvec, pvec) * inv_det;
+	float u = vec3_dot(tvec, pvec) * inv_det;
 	if(u < 0.0f || u > 1.0f)
 	{
 		return 0;
 	}
 
-	vec3 qvec;
-	cross(qvec, tvec, edge1);
+	vec3 qvec = vec3_cross(tvec, edge1);
 
-	float v = dot3v(ray->dir, qvec) * inv_det;
-	if(v < 0.0f || (u + v) > 1.0f)
-	{
+	float v = vec3_dot(ray->dir, qvec) * inv_det;
+	if(v < 0.0f || (u + v) > 1.0f) {
 		return 0;
 	}
 
-	*t = dot3v(edge2, qvec) * inv_det;
+	*t = vec3_dot(edge2, qvec) * inv_det;
 #endif
 
 	return 1;
