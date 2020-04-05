@@ -200,9 +200,9 @@ void vfs_run_callbacks(struct vfs *vfs)
 	for (int i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *vfs_file = &vfs->file_table[i];
 		
-		vfs_debug("%s...\n", vfs_file->name);
-
 		for (int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++) {
+			vfs_debug("Loading `%s`...\n", vfs_file->name);
+
 			read_callback_t cbck = vfs_file->read_callbacks[j].fn;
 			cbck(vfs, strview_wrap(vfs_file->simplename), vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
 		}
