@@ -17,6 +17,8 @@ option(ENABLE_SHARED "Enable game hotswapping" ON)
 
 # QUIRK: Define M_PI on Windows.
 add_definitions(-D_USE_MATH_DEFINES)
+# QUIRK: Do not define min and max macros in Windef.h
+add_definitions(-DNOMINMAX)
 
 # Enable asset hotswap.
 add_definitions(-DVFS_ENABLE_FILEWATCH)
