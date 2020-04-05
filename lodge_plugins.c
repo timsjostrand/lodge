@@ -72,12 +72,15 @@ static void lodge_plugins_register_frame(struct lodge_plugins_frame_times *f, fl
 	if (lodge_window_get_time() - f->last_frame_report >= 1000.0) {
 		f->last_frame_report = lodge_window_get_time();
 		f->frame_time_avg = f->frame_time_sum / (float) f->frames;
+
+#if 1
 		// TODO(TS): reimplement frame time callback
 		//if(f->callback != NULL) {
 		//    f->callback(f);
 		//}
-
+#else
 		debugf("Plugins", "FPS: %.0f\n", f->frame_time_avg);
+#endif
 
 		f->frame_time_max = -FLT_MAX;
 		f->frame_time_min = FLT_MAX;
@@ -159,7 +162,10 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, game_plugin());
 
 	for(int i = 0; i < plugins->count; i++) {
-		debugf("Plugins", "Found plugin: `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(plugins->list[i].name));
+		debugf("Plugins", "Found plugin: `" STRVIEW_PRINTF_FMT "` (%.1f kB)\n",
+			STRVIEW_PRINTF_ARG(plugins->list[i].name),
+			plugins->list[i].size / 1024.0f
+		);
 	}
 
 	return lodge_success();

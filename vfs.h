@@ -16,7 +16,7 @@
 
 struct vfs;
 
-typedef void(*read_callback_t)(struct vfs *vfs, strview_t filename, size_t size, void *data, void *userdata);
+typedef void			(*read_callback_t)(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata);
 
 struct read_callback
 {
