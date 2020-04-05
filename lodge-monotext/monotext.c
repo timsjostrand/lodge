@@ -91,7 +91,7 @@ static void strnbounds(const char *s, const int len, int *width_max, int *height
 	}
 }
 
-static void monofont_reload(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
+static void monofont_reload(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		monotext_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);

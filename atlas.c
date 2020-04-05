@@ -83,7 +83,7 @@ void atlas_print(struct atlas *atlas)
 
 #define ATLAS_TRY(e) if((ret = e) != ATLAS_OK) goto bail
 
-int atlas_load(struct atlas *atlas, void *data)
+int atlas_load(struct atlas *atlas, const void *data)
 {
 	int ret = 0;
 

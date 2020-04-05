@@ -10,6 +10,7 @@
 #include "lodge_assert.h"
 #include "str.h"
 #include "blob.h"
+#include "blob_cur.h"
 #include "alist.h"
 
 #define FBX_FILE_MAGIC "Kaydara FBX Binary  "
