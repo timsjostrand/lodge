@@ -22,7 +22,7 @@
 #include "pyxel_asset.h"
 #endif
 
-void util_reload_sound(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
+void util_reload_sound(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		sound_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -74,7 +74,7 @@ static void util_reload_shader_register_callbacks(struct vfs *vfs, struct shader
 	}
 }
 
-void util_reload_shader(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
+void util_reload_shader(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		shader_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -131,7 +131,7 @@ void util_reload_shader(struct vfs *vfs, strview_t filename, unsigned int size, 
 	}
 }
 
-void util_reload_atlas(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
+void util_reload_atlas(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		atlas_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -160,7 +160,7 @@ void util_reload_atlas(struct vfs *vfs, strview_t filename, unsigned int size, v
 	}
 }
 
-void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void* userdata)
+void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void* userdata)
 {
 	if(size == 0) {
 		core_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -195,7 +195,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size,
 	}
 }
 
-void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void* userdata, int width, int height)
+void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void* userdata, int width, int height)
 {
 	if(size == 0) {
 		core_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -224,7 +224,7 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, unsigned in
 	}
 }
 
-void util_reload_console_conf(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
+void util_reload_console_conf(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		console_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -243,7 +243,7 @@ void util_reload_console_conf(struct vfs *vfs, strview_t filename, unsigned int 
 }
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
-void util_reload_pyxel_asset(struct vfs *vfs, strview_t filename, unsigned int size, void *data, void *userdata)
+void util_reload_pyxel_asset(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		pyxel_debug("Skipped reload of %s (%u bytes)\n", filename, size);

@@ -51,7 +51,7 @@ struct atlas {
 #endif
 };
 
-int		atlas_load(struct atlas *atlas, void *data);
+int		atlas_load(struct atlas *atlas, const void *data);
 void	atlas_free(struct atlas *atlas);
 void	atlas_print(struct atlas *atlas);
 int		atlas_frame_index(struct atlas *atlas, const char *name);
