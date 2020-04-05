@@ -60,8 +60,7 @@ struct blob* blob_new_from_file(const char *filename)
 void blob_free(struct blob *blob)
 {
 	free(blob->buf);
-	blob->buf = NULL;
-	blob->buf_size = 0;
+	free(blob);
 }
 
 const char* blob_data(struct blob *blob)
@@ -89,104 +88,4 @@ enum blob_error blob_write_to_file(struct blob *blob, const char *filename)
 
 	fclose(fp);
 	return BLOB_OK;
-}
-
-
-
-struct blob_cur blob_cur_make(const char* buf, size_t buf_size)
-{
-	struct blob_cur tmp = {
-		.begin = buf,
-		.it = buf,
-		.end = buf + buf_size
-	};
-	return tmp;
-}
-
-struct blob_cur blob_cur_make_from_cur(const struct blob_cur *cur, size_t sub_size)
-{
-	ASSERT(blob_cur_can_read(cur, sub_size));
-
-	struct blob_cur tmp = {
-		.begin = cur->begin,
-		.it = cur->it,
-		.end = min(cur->it + sub_size, cur->end)
-	};
-
-	return tmp;
-}
-
-struct blob_cur blob_cur_make_from_start(const struct blob_cur *cur, size_t offset)
-{
-	ASSERT(blob_cur_contains(cur, offset));
-
-	struct blob_cur tmp = {
-		.begin = cur->begin,
-		.it = cur->it,
-		.end = min(cur->begin + offset, cur->end)
-	};
-
-	return tmp;
-}
-
-size_t blob_cur_size(const struct blob_cur *cur)
-{
-	return cur->end - cur->begin;
-}
-
-size_t blob_cur_remaining(const struct blob_cur *cur)
-{
-	return cur->end - cur->it;
-}
-
-int blob_cur_can_read(const struct blob_cur *cur, size_t size)
-{
-	return (cur->it + size) <= cur->end;
-}
-
-int blob_cur_contains(const struct blob_cur *cur, size_t offset)
-{
-	return (cur->begin + offset) <= cur->end;
-}
-
-int blob_cur_is_empty(const struct blob_cur *cur)
-{
-	return cur->it >= cur->end;
-}
-
-int blob_cur_read_type(char* dst, size_t dst_size, struct blob_cur *cur)
-{
-	if(!blob_cur_can_read(cur, dst_size)) {
-		ASSERT_FAIL("Data cursor underrun");
-		return 0;
-	}
-	memcpy(dst, cur->it, dst_size);
-	cur->it += dst_size;
-	return 1;
-}
-
-size_t blob_cur_offset(const struct blob_cur *cur)
-{
-	return cur->it - cur->begin;
-}
-
-int blob_cur_advance(struct blob_cur *dst, size_t offset)
-{
-	if(!blob_cur_contains(dst, (size_t)(dst->it - dst->begin) + offset)) {
-		return 0;
-	}
-	dst->it += offset;
-	return 1;
-}
-
-int blob_cur_mirror(struct blob_cur *dst, const struct blob_cur *src)
-{
-	if(dst->begin != src->begin) {
-		return 0;
-	}
-	if(!blob_cur_contains(dst, blob_cur_offset(src))) {
-		return 0;
-	}
-	dst->it = src->it;
-	return 1;
 }

@@ -179,6 +179,7 @@ list(APPEND ENGINE_SOURCES_LOCAL
     env.c
     lodge_window_glfw.c
     blob.c
+    blob_cur.c
 )
 
 list(APPEND ENGINE_HEADERS_LOCAL
@@ -213,6 +214,7 @@ list(APPEND ENGINE_HEADERS_LOCAL
     env.h
     lodge_window.h
     blob.h
+    blob_cur.h
 )
 
 # Prepend all sources with absolute engine path (because of reasons...)
