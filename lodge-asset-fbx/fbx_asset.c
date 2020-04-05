@@ -418,36 +418,14 @@ void fbx_asset_reset(struct fbx_asset *asset)
 
 void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp)
 {
+	// FIXME(TS): port to lodge_renderer
 	glDisable(GL_CULL_FACE);
 
-	glUseProgram(shader->program);
-	GL_OK_OR_ASSERT("Failed to use shader program");
+	lodge_renderer_bind_shader(shader);
+	lodge_renderer_set_constant_mvp(shader, &mvp);
 
-	/* TODO(TS): Upload MVP as struct instead */
-	{
-		{
-			GLint uniform_projection = glGetUniformLocation(shader->program, "projection");
-			glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, (const GLfloat*)mvp.projection.m);
-			GL_OK_OR_ASSERT("Failed to set projection");
-		}
-
-		{
-			GLint uniform_view = glGetUniformLocation(shader->program, "view");
-			glUniformMatrix4fv(uniform_view, 1, GL_FALSE, (const GLfloat*)mvp.view.m);
-			GL_OK_OR_ASSERT("Failed to set view");
-		}
-
-		{
-			GLint uniform_model = glGetUniformLocation(shader->program, "model");
-			glUniformMatrix4fv(uniform_model, 1, GL_FALSE, (const GLfloat*)mvp.model.m);
-			GL_OK_OR_ASSERT("Failed to set model");
-		}
-	}
-
-	// FIXME(TS): material should not be hardcoded
-	{
-		lodge_renderer_bind_texture(0, tex);
-	}
+	// FIXME(TS): material should not be hardcoded, use texture unit instead
+	lodge_renderer_bind_texture(0, tex);
 
 	glBindVertexArray(asset->vertex_array_object);
 	glDrawElements(GL_TRIANGLES, asset->indices_count, GL_UNSIGNED_INT, NULL);
