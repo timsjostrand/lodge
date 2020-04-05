@@ -18,5 +18,6 @@ target_include_directories(lodge-top-down
 
 target_link_libraries(lodge-top-down
     lodge-lib
+    lodge-sprite
     glew
 )

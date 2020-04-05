@@ -163,13 +163,10 @@ list(APPEND ENGINE_SOURCES_LOCAL
     vfs.c
     atlas.c
     console.c
-    spritebatch.c
-    animatedsprites.c
     core_argv.c
     util_reload.c
     particles.c
     collide.c
-    sprite_group.c
     util_graphics.c
     env.c
     lodge_window_glfw.c
@@ -185,15 +182,12 @@ list(APPEND ENGINE_HEADERS_LOCAL
     vfs.h
     atlas.h
     console.h
-    spritebatch.h
-    animatedsprites.h
     core_argv.h
     util_reload.h
     particles.h
     game.h
     collide.h
     geometry.h
-    sprite_group.h
     util_graphics.h
     vertex.h
     env.h
