@@ -26,6 +26,7 @@ struct lodge_plugins
 	int									running;
 	struct lodge_plugin					list[LODGE_PLUGINS_MAX];
 	struct lodge_plugin_meta			meta[LODGE_PLUGINS_MAX];
+	size_t								offsets[LODGE_PLUGINS_MAX];
 	int									count;
 	char								*data;
 	size_t								data_size;
@@ -101,13 +102,17 @@ struct lodge_plugins* lodge_plugins_new()
 
 void lodge_plugins_free(struct lodge_plugins *plugins)
 {
-	char *cur = plugins->data;
-	for(int i = 0; i < plugins->count; i++) {
+	for(int i = plugins->count - 1; i >= 0; i--) {
 		struct lodge_plugin *plugin = &plugins->list[i];
+
+		const size_t offset = plugins->offsets[i];
+		char *plugin_data = &plugins->data[offset];
+
+		debugf("Plugins", "Freeing plugin `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(plugin->name));
+
 		if(plugin->free) {
-			plugin->free(cur);
+			plugin->free(plugin_data);
 		}
-		cur += plugin->size;
 	}
 
 	free(plugins->data);
@@ -218,6 +223,9 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 				vfs_mount((struct vfs*)cur, plugins->mount_dir);
 			}
 		}
+
+		/* Update offsets */ 
+		plugins->offsets[i] = (i == 0 ? 0 : plugins->offsets[i-1] + plugins->list[i-1].size);
 
 		cur += plugin->size;
 	}
