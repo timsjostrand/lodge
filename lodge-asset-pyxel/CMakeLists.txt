@@ -24,6 +24,7 @@ target_link_libraries(lodge-asset-pyxel
         lodge-image
         lodge-renderer
         lodge-sprite
+        lodge-asset-atlas
     PUBLIC
         ${LIBARCHIVE_LIBRARY}
         ${CJSON_LIBRARY}
