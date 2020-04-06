@@ -74,6 +74,7 @@ target_link_libraries(lodge-assets
     lodge-collections
     lodge-renderer
     lodge-asset-pyxel   # FIXME(TS): these assets should be added with fragments and an asset system instead
+    lodge-asset-atlas
     glfw
     ${ENGINE_EXTRA_LIBS}
 )

@@ -160,7 +160,6 @@ list(APPEND ENGINE_SOURCES_LOCAL
     vertex.c
     color.c
     vfs.c
-    atlas.c
     console.c
     core_argv.c
     util_reload.c
@@ -178,7 +177,6 @@ list(APPEND ENGINE_HEADERS_LOCAL
     lodge_keys.h
     color.h
     vfs.h
-    atlas.h
     console.h
     core_argv.h
     util_reload.h

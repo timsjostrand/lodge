@@ -11,7 +11,6 @@
 #include "core.h"
 #include "sound.h"
 #include "shader.h"
-#include "atlas.h"
 #include "console.h"
 #include "array.h"
 
@@ -20,6 +19,10 @@
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 #include "pyxel_asset.h"
+#endif
+
+#ifdef ENABLE_LODGE_ASSET_ATLAS
+#include "atlas.h"
 #endif
 
 void util_reload_sound(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
@@ -131,35 +134,6 @@ void util_reload_shader(struct vfs *vfs, strview_t filename, unsigned int size, 
 	}
 }
 
-void util_reload_atlas(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
-{
-	if(size == 0) {
-		atlas_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
-		return;
-	}
-
-	struct atlas *dst = (struct atlas *) userdata;
-
-	if(!dst) {
-		atlas_error("Invalid argument to util_reload_atlas()\n");
-		return;
-	}
-
-	struct atlas tmp = { 0 };
-
-	int ret = atlas_load(&tmp, data);
-	if(ret != ATLAS_OK) {
-		atlas_error("Error %d when loading atlas `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", ret, STRVIEW_PRINTF_ARG(filename), size);
-	} else {
-		/* Delete the old atlas. */
-		atlas_free(dst);
-		/* Assign the new atlas only if parsing succeeded. */
-		(*dst) = tmp;
-		/* DEBUG: Dump debug information about atlas to stdout. */
-		atlas_print(dst);
-	}
-}
-
 void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void* userdata)
 {
 	if(size == 0) {
@@ -241,6 +215,37 @@ void util_reload_console_conf(struct vfs *vfs, strview_t filename, unsigned int 
 		console_parse_conf(dst, &dst->conf);
 	}
 }
+
+#ifdef ENABLE_LODGE_ASSET_ATLAS
+void util_reload_atlas(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
+{
+	if(size == 0) {
+		atlas_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		return;
+	}
+
+	struct atlas *dst = (struct atlas *) userdata;
+
+	if(!dst) {
+		atlas_error("Invalid argument to util_reload_atlas()\n");
+		return;
+	}
+
+	struct atlas tmp = { 0 };
+
+	int ret = atlas_load(&tmp, data);
+	if(ret != ATLAS_OK) {
+		atlas_error("Error %d when loading atlas `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", ret, STRVIEW_PRINTF_ARG(filename), size);
+	} else {
+		/* Delete the old atlas. */
+		atlas_free(dst);
+		/* Assign the new atlas only if parsing succeeded. */
+		(*dst) = tmp;
+		/* DEBUG: Dump debug information about atlas to stdout. */
+		atlas_print(dst);
+	}
+}
+#endif
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 void util_reload_pyxel_asset(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)

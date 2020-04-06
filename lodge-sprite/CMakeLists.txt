@@ -24,4 +24,5 @@ target_include_directories(lodge-sprite
 
 target_link_libraries(lodge-sprite
     lodge-renderer
+    lodge-asset-atlas
 )
