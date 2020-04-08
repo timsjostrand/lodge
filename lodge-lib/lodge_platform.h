@@ -6,6 +6,7 @@
 #include <float.h>
 
 #include "lodge_assert.h"
+#include "lodge_time.h"
 
 #ifdef _WIN32
 #define EXPORT __declspec( dllexport )

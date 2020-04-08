@@ -1,19 +1,12 @@
 #include "lodge_platform.h"
 
 #include "log.h"
-#include "lodge_window.h" // for lodge_get_time()
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <dlfcn.h>
 #endif
-
-double lodge_get_time()
-{
-	// NOTE(TS): should be custom implementation, but this works for now
-	return lodge_window_get_time();
-}
 
 void* lodge_lib_load(const char *filename)
 {
