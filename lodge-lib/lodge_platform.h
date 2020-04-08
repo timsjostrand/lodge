@@ -31,6 +31,8 @@
 
 #define LODGE_BIT(n) 1 << n
 
+#define sizeof_member(type, member) sizeof(((type *)0)->member)
+
 double	lodge_get_time();
 
 void*	lodge_lib_load(const char *filenae);
