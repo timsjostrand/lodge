@@ -25,6 +25,7 @@ endif()
 target_sources(lodge-lib
     PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/lodge.c"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_time.c"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_platform.c"
         "${CMAKE_CURRENT_LIST_DIR}/txt.c"
         "${CMAKE_CURRENT_LIST_DIR}/strview.c"
@@ -35,6 +36,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/blob.c"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/lodge.h"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_time.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_assert.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_platform.h"
         "${CMAKE_CURRENT_LIST_DIR}/log.h"
