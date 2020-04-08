@@ -165,9 +165,7 @@ list(APPEND ENGINE_SOURCES_LOCAL
     util_reload.c
     particles.c
     collide.c
-    util_graphics.c
     env.c
-    lodge_window_glfw.c
 )
 
 list(APPEND ENGINE_HEADERS_LOCAL
@@ -184,10 +182,8 @@ list(APPEND ENGINE_HEADERS_LOCAL
     game.h
     collide.h
     geometry.h
-    util_graphics.h
     vertex.h
     env.h
-    lodge_window.h
 )
 
 # Prepend all sources with absolute engine path (because of reasons...)
@@ -215,12 +211,9 @@ function(add_game_library game_name)
     #           of things, so the proper fix is probably to make core itself into
     #           a module.
     list(APPEND ENGINE_MODULES lodge-lib)
-    list(APPEND ENGINE_MODULES lodge-assets)
     list(APPEND ENGINE_MODULES lodge-sound)
     list(APPEND ENGINE_MODULES lodge-collections)
     list(APPEND ENGINE_MODULES lodge-sprite) # NOTE(TS): needed by console.h
-    list(APPEND ENGINE_MODULES lodge-stb) # NOTE(TS): needed for texture.c, vfs.c
-    list(APPEND ENGINE_MODULES lodge-image) # NOTE(TS): needed for texture.c
     list(APPEND ENGINE_MODULES lodge-monotext) # NOTE(TS): needed for console
 
     # Engine modules
