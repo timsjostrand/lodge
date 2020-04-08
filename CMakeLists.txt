@@ -156,11 +156,9 @@ endforeach()
 # Engine sources
 list(APPEND ENGINE_SOURCES_LOCAL
     lodge_plugins.c
-    core_console.c
     vertex.c
     color.c
     vfs.c
-    console.c
     core_argv.c
     util_reload.c
     particles.c
@@ -171,11 +169,9 @@ list(APPEND ENGINE_SOURCES_LOCAL
 list(APPEND ENGINE_HEADERS_LOCAL
     lodge_plugin.h
     lodge_plugins.h
-    core_console.h
     lodge_keys.h
     color.h
     vfs.h
-    console.h
     core_argv.h
     util_reload.h
     particles.h
@@ -213,8 +209,6 @@ function(add_game_library game_name)
     list(APPEND ENGINE_MODULES lodge-lib)
     list(APPEND ENGINE_MODULES lodge-sound)
     list(APPEND ENGINE_MODULES lodge-collections)
-    list(APPEND ENGINE_MODULES lodge-sprite) # NOTE(TS): needed by console.h
-    list(APPEND ENGINE_MODULES lodge-monotext) # NOTE(TS): needed for console
 
     # Engine modules
     list(REMOVE_DUPLICATES ENGINE_MODULES)
@@ -256,6 +250,7 @@ function(add_game_library game_name)
         endif()
     endif()
 
+    # FIXME(TS): remove `ENABLE_CONSOLE` in favor of module enable definition
     # Compile with console output support?
     if(ENABLE_CONSOLE)
         target_compile_definitions(${game_name} PRIVATE CONSOLE_ENABLE)
@@ -305,6 +300,7 @@ function(add_game_library game_name)
     target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
     # Console capture stdout support
+    # FIXME(TS): remove this define
     if(ENABLE_CONSOLE)
         target_compile_definitions(engine PRIVATE CONSOLE_ENABLE)
     endif()

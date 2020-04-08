@@ -4,6 +4,7 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>.
  */
 
+#if 0
 #include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
@@ -169,10 +170,8 @@ void core_console_new(struct console *c, struct env *env)
 {
 	core_console_meta_init(c);
 	core_console_sound_init(c);
-#if 0
 	core_console_graphics_init(c, env);
 	core_console_vfs_init(c);
-#endif
 }
 
 void core_console_printf(const char *fmt, ...)
@@ -185,3 +184,5 @@ void core_console_printf(const char *fmt, ...)
 	console_vprintf(&core_global->console, fmt, args);
 	va_end(args);
 }
+
+#endif

@@ -6,9 +6,8 @@
 #include "math4.h"
 #include "vfs.h"
 #include "sound.h"
-#include "monotext.h"
-#include "console.h"
-#include "env.h"
+//#include "monotext.h"
+//#include "env.h"
 
 struct core;
 
@@ -16,20 +15,22 @@ typedef void (*core_load_t)(void);
 typedef void (*core_init_t)(void);
 typedef void (*core_init_memory_t)(struct shared_memory* shared, int reload);
 typedef void(*core_release_t)(void);
-typedef void (*core_console_init_t)(struct console *c, struct env *env);
+//typedef void (*core_console_init_t)(struct console *c, struct env *env);
 
 #define core_debug(...) debugf("Core", __VA_ARGS__)
 #define core_error(...) errorf("Core", __VA_ARGS__)
 
+#if 0
 struct core_textures {
 	GLuint	none;
 };
+#endif
 
 struct core {
 	float					view_width;
 	float					view_height;
 	//struct graphics			graphics;
-	struct core_textures	textures;
+	//struct core_textures	textures;
 	struct sound			sound;
 	vec3					*sound_listener;
 	float					sound_distance_max;
@@ -48,12 +49,11 @@ struct core {
 	//fps_func_t							fps_callback;
 
 	/* Variable environment. */
-	struct env				env;
+	//struct env				env;
 
 	/* Console. */
-	core_console_init_t		console_init_callback;
-	struct shader			*console_shader;
-	struct console			console;
+	//core_console_init_t		console_init_callback;
+	//struct shader			*console_shader;
 
 	/* Resources. */
 	//struct monofont			font_console;

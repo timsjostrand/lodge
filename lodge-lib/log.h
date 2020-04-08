@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 
+// FIXME(TS): console should hook in, in another way
+#undef CONSOLE_ENABLE
+
 #ifdef CONSOLE_ENABLE
 #include "core_console.h"
 #endif

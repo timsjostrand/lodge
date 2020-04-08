@@ -11,11 +11,14 @@
 #include "core.h"
 #include "sound.h"
 #include "shader.h"
-#include "console.h"
 #include "array.h"
 
 #include "lodge_image.h"
 #include "lodge_texture.h"
+
+#ifdef ENABLE_LODGE_CONSOLE
+#include "console.h"
+#endif
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 #include "pyxel_asset.h"
@@ -198,6 +201,7 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, unsigned in
 	}
 }
 
+#ifdef ENABLE_LODGE_CONSOLE
 void util_reload_console_conf(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
 	if(size == 0) {
@@ -215,6 +219,7 @@ void util_reload_console_conf(struct vfs *vfs, strview_t filename, unsigned int 
 		console_parse_conf(dst, &dst->conf);
 	}
 }
+#endif
 
 #ifdef ENABLE_LODGE_ASSET_ATLAS
 void util_reload_atlas(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
