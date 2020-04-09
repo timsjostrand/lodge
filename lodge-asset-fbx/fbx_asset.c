@@ -89,16 +89,16 @@ static struct array* fbx_asset_new_layer_element(
 
 	/* Check reference type */
 	enum ref_type {
-		direct,
-		index_to_direct
+		REF_TYPE_DIRECT,
+		REF_TYPE_INDEX_TO_DIRECT
 	} ref_type;
 	{
 		struct fbx_string ref_type_prop = fbx_asset_get_string(fbx, ref_type_path, ref_type_path_count);
 		strview_t ref_type_str = strview_make(ref_type_prop.data, ref_type_prop.length);
 		if(strview_equals(ref_type_str, strview_static("Direct"))) {
-			ref_type = direct;
+			ref_type = REF_TYPE_DIRECT;
 		} else if(strview_equals(ref_type_str, strview_static("IndexToDirect"))) {
-			ref_type = index_to_direct;
+			ref_type = REF_TYPE_INDEX_TO_DIRECT;
 		} else {
 			ASSERT_FAIL("Reference type not implemented");
 			goto fail;
@@ -136,9 +136,9 @@ static struct array* fbx_asset_new_layer_element(
 	int32_t prop_index_max = 0;
 	int32_t ret_index_max = 0;
 	for(uint32_t i = 0; i < prop_indices_count; i++) {
-		if(ref_type == direct) {
+		if(ref_type == REF_TYPE_DIRECT) {
 			array_set(ret, i, &prop_data_ptr[i]);
-		} else if(ref_type == index_to_direct) {
+		} else if(ref_type == REF_TYPE_INDEX_TO_DIRECT) {
 			//ASSERT(i < vertex_indices_count);
 			//ASSERT(i < prop_indices_count);
 
