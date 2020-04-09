@@ -11,13 +11,13 @@
 #include "str.h"
 #include "lodge_renderer.h"
 
-static struct fbx_property* fbx_asset_get_array(struct fbx *fbx, const char *path[], size_t path_count)
+static const struct fbx_property* fbx_asset_get_array(struct fbx *fbx, const char *path[], size_t path_count)
 {
 	struct fbx_node *node = fbx_get_node(fbx, path, path_count);
 	if(node) {
 		const uint32_t property_count = fbx_node_get_property_count(node);
 		for(uint32_t i = 0; i < property_count; i++) {
-			struct fbx_property *prop = fbx_node_get_property_array(node, i);
+			const struct fbx_property *prop = fbx_node_get_property_array(node, i);
 			if(prop) {
 				return prop;
 			}
@@ -33,7 +33,7 @@ static struct fbx_string fbx_asset_get_string(struct fbx *fbx, const char *path[
 	if(node) {
 		const uint32_t property_count = fbx_node_get_property_count(node);
 		for(uint32_t i = 0; i < property_count; i++) {
-			struct fbx_property *prop = fbx_node_get_property(node, i);
+			const struct fbx_property *prop = fbx_node_get_property(node, i);
 			if(fbx_property_get_type(prop) == FBX_PROPERTY_TYPE_STRING) {
 				return fbx_property_get_string(prop);
 			}
@@ -105,7 +105,7 @@ static struct array* fbx_asset_new_layer_element(
 		}
 	}
 
-	struct fbx_property *prop_data = fbx_asset_get_array(fbx, data_path, data_path_count);
+	const struct fbx_property *prop_data = fbx_asset_get_array(fbx, data_path, data_path_count);
 	const double* prop_data_ptr = fbx_property_get_array_double(prop_data);
 	const uint32_t prop_data_count = fbx_property_get_array_count(prop_data);
 	if(!prop_data || !prop_data_ptr || !prop_data_count) {
@@ -113,7 +113,7 @@ static struct array* fbx_asset_new_layer_element(
 		goto fail;
 	}
 
-	struct fbx_property *prop_indices = fbx_asset_get_array(fbx, indices_path, indices_path_count);
+	const struct fbx_property *prop_indices = fbx_asset_get_array(fbx, indices_path, indices_path_count);
 	const int32_t* prop_indices_ptr = fbx_property_get_array_int32(prop_indices);
 	const uint32_t prop_indices_count = fbx_property_get_array_count(prop_indices);
 	if(!prop_indices || !prop_indices_ptr || !prop_indices_count) {
@@ -199,7 +199,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 
 		static const char* path_vertices[] = { "Objects", "Geometry", "Vertices" };
 
-		struct fbx_property *vertices_prop = fbx_asset_get_array(fbx, path_vertices, LODGE_ARRAYSIZE(path_vertices));
+		const struct fbx_property *vertices_prop = fbx_asset_get_array(fbx, path_vertices, LODGE_ARRAYSIZE(path_vertices));
 		if(!vertices_prop) {
 			goto fail;
 		}
@@ -248,7 +248,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			glBindBuffer(GL_ARRAY_BUFFER, asset.buffer_object_normals);
 			GL_OK_OR_GOTO(fail);
 
-			struct fbx_property *normals_prop = fbx_asset_get_array(fbx, path_normals, LODGE_ARRAYSIZE(path_normals));
+			const struct fbx_property *normals_prop = fbx_asset_get_array(fbx, path_normals, LODGE_ARRAYSIZE(path_normals));
 			if(!normals_prop) {
 				goto fail;
 			}
@@ -274,7 +274,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 	}
 
 	static const char* path_indices[] = { "Objects", "Geometry", "PolygonVertexIndex" };
-	struct fbx_property *prop_indices = fbx_asset_get_array(fbx, path_indices, LODGE_ARRAYSIZE(path_indices));
+	const struct fbx_property *prop_indices = fbx_asset_get_array(fbx, path_indices, LODGE_ARRAYSIZE(path_indices));
 	if(!prop_indices) {
 		goto fail;
 	}
