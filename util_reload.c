@@ -6,9 +6,7 @@
 
 #include "util_reload.h"
 
-#include <string.h>
-
-#include "core.h"
+#include "vfs.h"
 #include "sound.h"
 #include "shader.h"
 #include "array.h"
@@ -27,6 +25,11 @@
 #ifdef ENABLE_LODGE_ASSET_ATLAS
 #include "atlas.h"
 #endif
+
+#include <string.h>
+
+#define reload_debug(FMT, ...) debugf("Reload", FMT, __VA_ARGS__)
+#define reload_error(FMT, ...) errorf("Reload", FMT, __VA_ARGS__)
 
 void util_reload_sound(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
 {
@@ -140,14 +143,14 @@ void util_reload_shader(struct vfs *vfs, strview_t filename, unsigned int size, 
 void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void* userdata)
 {
 	if(size == 0) {
-		core_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
 	struct lodge_image image;
 	struct lodge_ret image_ret = lodge_image_new(&image, data, size);
 	if(!image_ret.success) {
-		core_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -155,7 +158,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size,
 	lodge_image_free(&image);
 
 	if(!lodge_texture_is_valid(tmp)) {
-   		core_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+   		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		if(userdata) {
 			// HACK(TS): remove this
@@ -166,7 +169,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size,
 
 			(*(lodge_texture_t*) userdata) = tmp;
 		} else {
-			core_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 			lodge_texture_reset(&tmp);
 		}
 	}
@@ -175,14 +178,14 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, unsigned int size,
 void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void* userdata, int width, int height)
 {
 	if(size == 0) {
-		core_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
 	struct lodge_image image;
 	struct lodge_ret image_ret = lodge_image_new(&image, data, size);
 	if(!image_ret.success) {
-		core_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -190,12 +193,12 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, unsigned in
 	lodge_image_free(&image);
 
 	if(!lodge_texture_is_valid(tmp)) {
-		core_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		if(userdata) {
 			(*(lodge_texture_t *) userdata) = tmp;
 		} else {
-			core_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 			lodge_texture_reset(&tmp);
 		}
 	}

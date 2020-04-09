@@ -13,7 +13,6 @@
 #include "sound.h"
 #include "console.h"
 #include "vfs.h"
-#include "core.h"
 #include "env.h"
 
 #include "lodge_window.h"
