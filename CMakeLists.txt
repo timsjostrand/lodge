@@ -66,8 +66,8 @@ endif()
 set(ASSETS_C assets.c)
 set(ASSETS_H assets.h)
 # Mark asset files as "generated" so cmake doesn't complain.
-set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
-set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
+#set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
+#set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
 
 if(NOT EMSCRIPTEN)
     # Library: GLFW.
@@ -151,6 +151,10 @@ foreach(module ${ENGINE_MODULES_AVAILABLE})
     get_filename_component(module_name "${module}" NAME)
     message(STATUS "Found lodge module: ${module_name}")
     add_subdirectory(${module} ${CMAKE_BINARY_DIR}/module/${module_name})
+
+    #target_compile_definitions(${module} PUBLIC ${ENGINE_DEFINES})
+    set_property(TARGET ${module_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
+    set_property(TARGET ${module_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 endforeach()
 
 # Engine sources
@@ -201,15 +205,11 @@ function(add_game_library game_name)
     # Compile with correct flags.
     set_property(TARGET ${game_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
     set_property(TARGET ${game_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-    
-    # TODO(TS): The engine depends on these modules, so they are forced to be
-    #           part of the build. Mainly because core.c pulls depends on a lot
-    #           of things, so the proper fix is probably to make core itself into
-    #           a module.
-    list(APPEND ENGINE_MODULES lodge-lib)
-    list(APPEND ENGINE_MODULES lodge-sound)
-    list(APPEND ENGINE_MODULES lodge-collections)
 
+    #
+    # FIXME(TS): Is the ${ENGINE_MODULES} array used?
+    #
+    
     # Engine modules
     list(REMOVE_DUPLICATES ENGINE_MODULES)
     foreach(module ${ENGINE_MODULES})
@@ -222,11 +222,6 @@ function(add_game_library game_name)
         
     # Update defines for modules
     target_compile_definitions(${game_name} PUBLIC ${ENGINE_DEFINES})
-    foreach(module ${ENGINE_MODULES})
-        target_compile_definitions(${module} PUBLIC ${ENGINE_DEFINES})
-        set_property(TARGET ${module} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-        set_property(TARGET ${module} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-    endforeach()
 
     # Store as dependencies that will be applied to the 'engine' target later.
     if(ENABLE_SHARED)
