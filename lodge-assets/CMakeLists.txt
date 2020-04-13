@@ -4,11 +4,13 @@ set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
 # Asset generator executable
 add_executable(generate_assets
     "${CMAKE_CURRENT_LIST_DIR}/generate_assets.c"
-    "${ENGINE_PATH}/vfs.c"
+    "${ENGINE_PATH}/lodge-vfs/vfs.h"
+    "${ENGINE_PATH}/lodge-vfs/vfs.c"
     "${ENGINE_PATH}/lodge-lib/strview.c"
     "${ENGINE_PATH}/lodge-lib/str.c"
     "${ENGINE_PATH}/lodge-lib/strbuf.c"
     "${ENGINE_PATH}/lodge-lib/lodge.c"
+    "${ENGINE_PATH}/lodge-lib/lodge_platform.h"
 )
 
 target_include_directories(generate_assets
@@ -25,6 +27,8 @@ target_link_libraries(generate_assets
     lodge-lib
     lodge-sound
     lodge-collections
+    lodge-plugin-vfs
+    lodge-vfs
 )
 
 # Compare assets directory, maybe regenerate assets.c
@@ -75,6 +79,7 @@ target_link_libraries(lodge-assets
     lodge-renderer
     lodge-asset-pyxel   # FIXME(TS): these assets should be added with fragments and an asset system instead
     lodge-asset-atlas
+    lodge-vfs-reload
     glfw
     ${ENGINE_EXTRA_LIBS}
 )

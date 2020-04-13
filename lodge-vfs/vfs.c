@@ -13,8 +13,10 @@
 
 #include "vfs.h"
 
-#include "strview.h"
+#include "strbuf.h"
 #include "log.h"
+#include "lodge_platform.h"
+
 #include "stb/stb.h"
 
 struct vfs_file
@@ -37,22 +39,6 @@ struct vfs
 
 #define vfs_error(...) errorf("VFS", __VA_ARGS__)
 #define vfs_debug(...) errorf("VFS", __VA_ARGS__)
-
-static struct lodge_ret vfs_initialize(struct vfs *vfs, struct lodge_plugins *plugins)
-{
-	*vfs = (struct vfs){ 0 };
-	return lodge_success();
-}
-
-static void vfs_shutdown(struct vfs *vfs)
-{
-	for (int i = 0; i < VFS_MAX_NUM_FILES; i++) {
-		stb_fclose(vfs->file_table[i].file, 0);
-		if (vfs->file_table[i].data != NULL) {
-			free(vfs->file_table[i].data);
-		}
-	}
-}
 
 static void vfs_reload(struct vfs *vfs, struct vfs_file *f, int force)
 {
@@ -97,13 +83,34 @@ static void vfs_reload(struct vfs *vfs, struct vfs_file *f, int force)
 	}
 }
 
-static void vfs_update(struct vfs *vfs, float delta_time)
+int vfs_init(struct vfs *vfs)
+{
+	*vfs = (struct vfs) { 0 };
+	return VFS_OK;
+}
+
+void vfs_shutdown(struct vfs *vfs)
+{
+	for(int i = 0; i < VFS_MAX_NUM_FILES; i++) {
+		stb_fclose(vfs->file_table[i].file, 0);
+		if(vfs->file_table[i].data != NULL) {
+			free(vfs->file_table[i].data);
+		}
+	}
+}
+
+void vfs_update(struct vfs *vfs, float delta_time)
 {
 #ifdef VFS_ENABLE_FILEWATCH
 	for(int i = 0; i < vfs->file_count; i++) {
 		vfs_reload(vfs, &vfs->file_table[i], 0);
 	}
 #endif
+}
+
+size_t vfs_size()
+{
+	return sizeof(struct vfs);
 }
 
 void vfs_prune_callbacks(struct vfs *vfs, read_callback_t fn, void* userdata)
@@ -335,18 +342,4 @@ strview_t vfs_get_absolute_path(struct vfs *vfs, strview_t filename)
 	}
 
 	return strview_null();
-}
-
-struct lodge_plugin vfs_plugin()
-{
-	struct lodge_plugin plugin = {
-		.version = LODGE_PLUGIN_VERSION,
-		.size = sizeof(struct vfs),
-		.name = strview_static("vfs"),
-		.init = &vfs_initialize,
-		.free = &vfs_shutdown,
-		.update = &vfs_update,
-		.render = NULL,
-	};
-	return plugin;
 }

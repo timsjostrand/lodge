@@ -24,5 +24,6 @@ target_link_libraries(lodge-window
 		"glfw"
 	PUBLIC
 		"lodge-lib"
+		"lodge-plugins" # FIXME(TS): should be separate module
 		"lodge-renderer" # FIXME(TS): not sure about this dependency
 )

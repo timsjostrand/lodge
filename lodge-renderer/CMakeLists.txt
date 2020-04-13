@@ -34,4 +34,6 @@ target_link_libraries(lodge-renderer
 		"lodge-lib"
 		"lodge-image"
 		"lodge-collections"
+		"lodge-plugins" # FIXME(TS): should be separate module `lodge-plugin-renderer`
+		"lodge-vfs" # FIXME(TS): only for shader.{h,c}
 )
