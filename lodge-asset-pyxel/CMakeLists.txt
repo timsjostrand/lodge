@@ -25,6 +25,7 @@ target_link_libraries(lodge-asset-pyxel
         lodge-renderer
         lodge-sprite
         lodge-asset-atlas
+        lodge-vfs-reload # FIXME(TS)
     PUBLIC
         ${LIBARCHIVE_LIBRARY}
         ${CJSON_LIBRARY}

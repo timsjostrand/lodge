@@ -159,25 +159,18 @@ endforeach()
 
 # Engine sources
 list(APPEND ENGINE_SOURCES_LOCAL
-    lodge_plugins.c
     vertex.c
     color.c
-    vfs.c
     core_argv.c
-    util_reload.c
     particles.c
     collide.c
     env.c
 )
 
 list(APPEND ENGINE_HEADERS_LOCAL
-    lodge_plugin.h
-    lodge_plugins.h
     lodge_keys.h
     color.h
-    vfs.h
     core_argv.h
-    util_reload.h
     particles.h
     game.h
     collide.h
@@ -281,7 +274,7 @@ function(add_game_library game_name)
     endif()
 
     # Main executable.
-    add_executable(engine ${ENGINE_PATH}/main.c ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    add_executable(engine ${ENGINE_SOURCES} ${ENGINE_HEADERS})
     set_property(TARGET engine PROPERTY RUNTIME_OUTPUT_NAME "${game_name}")
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT engine)
 
