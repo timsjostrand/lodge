@@ -36,6 +36,7 @@ if(MSVC)
         "/we4028"                       # formal parameter 1 different from declaration
         "/we4090"                       # 'initializing': different 'const' qualifiers
         #"/we4244"                       # 'function': conversion from 'int' to 'const float', possible loss of data
+        "/we4013"                       # 'symbol' undefined; assuming extern returning int
     )
     
     foreach(flag ${MSVC_COMPILER_FLAGS})
