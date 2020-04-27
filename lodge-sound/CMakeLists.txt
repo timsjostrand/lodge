@@ -55,9 +55,11 @@ target_include_directories(lodge-sound
 )
 
 target_link_libraries(lodge-sound
+    PRIVATE
+        lodge-build-flags
+        ${OPENAL_LIBRARY}
+        lodge-stb
     PUBLIC
         lodge-collections
-        lodge-stb
-    PRIVATE
-        ${OPENAL_LIBRARY}
+        lodge-lib
 )

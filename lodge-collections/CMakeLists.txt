@@ -23,5 +23,7 @@ target_include_directories(lodge-collections
 )
 
 target_link_libraries(lodge-collections
-    lodge-lib
+    PRIVATE
+        lodge-build-flags
+        lodge-lib # FIXME(TS): only for lodge_assert
 )

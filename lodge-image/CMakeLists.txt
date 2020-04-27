@@ -17,7 +17,9 @@ target_include_directories(lodge-image
 )
 
 target_link_libraries(lodge-image
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
-		"lodge-lib"
-		"lodge-stb"
+		lodge-lib
+		lodge-stb
 )

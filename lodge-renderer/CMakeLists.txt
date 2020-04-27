@@ -11,6 +11,7 @@ target_sources(lodge-renderer
 		"${CMAKE_CURRENT_LIST_DIR}/drawable.c"
 		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.c"
 		"${CMAKE_CURRENT_LIST_DIR}/shader.c"
+		"${CMAKE_CURRENT_LIST_DIR}/vertex.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_renderer.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_sampler.h"
@@ -19,6 +20,7 @@ target_sources(lodge-renderer
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_opengl.h" # This should be private, but need to port legacy code to not use OpenGL calls directly
 		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.h"
 		"${CMAKE_CURRENT_LIST_DIR}/shader.h"
+		"${CMAKE_CURRENT_LIST_DIR}/vertex.h" # FIXME(TS): vertex types should be more general than `lodge-renderer` but less general than `lodge-lib`
 )
 
 target_include_directories(lodge-renderer
@@ -29,11 +31,13 @@ target_include_directories(lodge-renderer
 )
 
 target_link_libraries(lodge-renderer
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
-		"${GLEW_LIBRARY}"
-		"lodge-lib"
-		"lodge-image"
-		"lodge-collections"
-		"lodge-plugins" # FIXME(TS): should be separate module `lodge-plugin-renderer`
-		"lodge-vfs" # FIXME(TS): only for shader.{h,c}
+		${GLEW_LIBRARY}
+		lodge-lib
+		lodge-image
+		lodge-collections
+		lodge-plugins			# FIXME(TS): should be separate module `lodge-plugin-renderer`
+		lodge-vfs				# FIXME(TS): only for shader.{h,c}
 )

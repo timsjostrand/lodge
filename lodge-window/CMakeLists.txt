@@ -8,6 +8,7 @@ target_sources(lodge-window
 		"${CMAKE_CURRENT_LIST_DIR}/util_graphics.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_window.h"
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_keys.h"
 		"${CMAKE_CURRENT_LIST_DIR}/util_graphics.h"
 )
 
@@ -20,10 +21,11 @@ target_include_directories(lodge-window
 
 target_link_libraries(lodge-window
 	PRIVATE
-		"${GLEW_LIBRARY}"
-		"glfw"
+		lodge-build-flags
+		${GLEW_LIBRARY}
+		glfw
 	PUBLIC
-		"lodge-lib"
-		"lodge-plugins" # FIXME(TS): should be separate module
-		"lodge-renderer" # FIXME(TS): not sure about this dependency
+		lodge-lib
+		lodge-plugins		# FIXME(TS): should be separate module
+		lodge-renderer		# FIXME(TS): not sure about this dependency
 )

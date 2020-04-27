@@ -17,7 +17,9 @@ target_include_directories(lodge-asset-atlas
 )
 
 target_link_libraries(lodge-asset-atlas
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
-		"lodge-lib"
-		"cjson"
+		lodge-lib
+		cjson
 )

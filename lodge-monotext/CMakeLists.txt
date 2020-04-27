@@ -15,7 +15,9 @@ target_include_directories(lodge-monotext
 )
 
 target_link_libraries(lodge-monotext
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
-		"lodge-lib"
-		"lodge-renderer"
+		lodge-lib
+		lodge-renderer
 )

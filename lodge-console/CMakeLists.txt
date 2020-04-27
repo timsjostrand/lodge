@@ -19,7 +19,10 @@ target_include_directories(lodge-console
 )
 
 target_link_libraries(lodge-console
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
 		lodge-sprite
 		lodge-monotext
+		lodge-plugin-env
 )

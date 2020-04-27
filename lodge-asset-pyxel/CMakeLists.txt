@@ -12,15 +12,13 @@ target_sources(lodge-asset-pyxel
 )
 
 target_include_directories(lodge-asset-pyxel
-    PRIVATE
-        "${ENGINE_INCLUDES}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 target_link_libraries(lodge-asset-pyxel
     PRIVATE
-        ${ENGINE_EXTRA_LIBS}
+        lodge-build-flags
         lodge-image
         lodge-renderer
         lodge-sprite
