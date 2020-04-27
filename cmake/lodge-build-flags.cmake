@@ -3,8 +3,13 @@
 #
 add_library(lodge-build-flags INTERFACE)
 
+target_compile_features(lodge-build-flags
+    INTERFACE
+        c_variadic_macros
+)
+
 #
-# GCC compiler settings.
+# Clang build flags.
 #
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(lodge-build-flags
@@ -18,7 +23,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
 endif()
 
 #
-# MSVC compiler settings.
+# Clang build flags.
 #
 if(MSVC)
     target_compile_definitions(lodge-build-flags
@@ -45,7 +50,7 @@ if(MSVC)
 endif()
 
 #
-# Clang compiler settings.
+# Clang build flags.
 #
 if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     # DEBUG: Bounds checking.

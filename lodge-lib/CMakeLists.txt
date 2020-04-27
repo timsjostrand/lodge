@@ -2,26 +2,6 @@
 
 add_library(lodge-lib STATIC "")
 
-check_function_exists(strnlen HAVE_STRNLEN)
-if(HAVE_STRNLEN)
-    target_compile_definitions(lodge-lib PUBLIC HAVE_STRNLEN)
-endif()
-
-check_function_exists(vsnprintf HAVE_VSNPRINTF)
-if(HAVE_VSNPRINTF)
-    target_compile_definitions(lodge-lib PUBLIC HAVE_VSNPRINTF)
-endif()
-
-if(MSVC14)
-    check_symbol_exists(snprintf stdio.h HAVE_SNPRINTF)
-else()
-    check_function_exists(snprintf HAVE_SNPRINTF)
-endif()
-
-if(HAVE_SNPRINTF)
-    target_compile_definitions(lodge-lib PUBLIC HAVE_SNPRINTF)
-endif()
-
 target_sources(lodge-lib
     PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/lodge.c"
@@ -51,6 +31,44 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/geometry.h"
         "${CMAKE_CURRENT_LIST_DIR}/color.h"
 )
+
+check_function_exists(strnlen HAVE_STRNLEN)
+if(HAVE_STRNLEN)
+    target_compile_definitions(lodge-lib
+        PUBLIC
+            HAVE_STRNLEN
+    )
+endif()
+
+check_function_exists(vsnprintf HAVE_VSNPRINTF)
+if(HAVE_VSNPRINTF)
+    target_compile_definitions(lodge-lib
+        PUBLIC
+            HAVE_VSNPRINTF
+    )
+endif()
+
+if(MSVC14)
+    check_symbol_exists(snprintf stdio.h HAVE_SNPRINTF)
+else()
+    check_function_exists(snprintf HAVE_SNPRINTF)
+endif()
+
+if(HAVE_SNPRINTF)
+    target_compile_definitions(lodge-lib
+        PUBLIC
+            HAVE_SNPRINTF
+    )
+endif()
+
+if(MSVC)
+    target_compile_definitions(lodge-lib
+        PUBLIC
+            _USE_MATH_DEFINES       # QUIRK: Define M_PI on Windows.
+            NOMINMAX                # QUIRK: Do not define min and max macros in Windef.h
+    )
+endif()
+
 
 target_include_directories(lodge-lib
     PRIVATE

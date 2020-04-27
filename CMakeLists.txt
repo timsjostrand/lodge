@@ -1,12 +1,8 @@
-project(engine C)
+project(lodge C)
 
 cmake_minimum_required(VERSION 3.6)
 
-# Import compiler flags defined in another file.
-include(${ENGINE_PATH}/cmake/engine-compiler-flags.cmake)
-
-# Default to C99.
-set(CMAKE_C_STANDARD 99)
+include(${ENGINE_PATH}/cmake/lodge-build-flags.cmake)
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
@@ -15,11 +11,6 @@ set(CMAKE_MACOSX_RPATH 1)
 option(ENABLE_CONSOLE "Compile with console support" ON)
 option(ENABLE_SHARED "Enable game hotswapping" ON)
 
-# QUIRK: Define M_PI on Windows.
-add_definitions(-D_USE_MATH_DEFINES)
-# QUIRK: Do not define min and max macros in Windef.h
-add_definitions(-DNOMINMAX)
-
 # Enable asset hotswap.
 add_definitions(-DVFS_ENABLE_FILEWATCH)
 
@@ -27,27 +18,6 @@ add_definitions(-DVFS_ENABLE_FILEWATCH)
 include(CheckFunctionExists)
 include(CheckSymbolExists)
 
-check_function_exists(strnlen HAVE_STRNLEN)
-if(HAVE_STRNLEN)
-    add_definitions(-DHAVE_STRNLEN)
-endif()
-
-check_function_exists(vsnprintf HAVE_VSNPRINTF)
-if(HAVE_VSNPRINTF)
-    add_definitions(-DHAVE_VSNPRINTF)
-endif()
-
-if(MSVC14)
-	check_symbol_exists(snprintf stdio.h HAVE_SNPRINTF)
-else()
-	check_function_exists(snprintf HAVE_SNPRINTF)
-endif()
-
-if(HAVE_SNPRINTF)
-    add_definitions(-DHAVE_SNPRINTF)
-endif()
-
-# Store DLLs alongside engine.exe.
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 #    CACHE STRING "Static Library output directory" FORCE)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
@@ -89,8 +59,8 @@ target_include_directories(${GLEW_LIBRARY}
 )
 
 # Library: cJSON.
-add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
 set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
+add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
 set(CJSON_LIBRARY cjson)
 target_include_directories(${CJSON_LIBRARY} PUBLIC "${ENGINE_PATH}/lib")
 
@@ -126,59 +96,24 @@ endif()
 set(LIBARCHIVE_INCLUDE_DIR ${ENGINE_PATH}/lib/libarchive)
 target_include_directories(${LIBARCHIVE_LIBRARY} PUBLIC "${LIBARCHIVE_INCLUDE_DIR}")
 
-# Load engine modules
+#
+# Find lodge-* modules.
+#
 list(APPEND ENGINE_MODULES_PATH "${ENGINE_PATH}/lodge-*/")
 file(GLOB ENGINE_MODULES_AVAILABLE "${ENGINE_MODULES_PATH}")
 foreach(module ${ENGINE_MODULES_AVAILABLE})
     get_filename_component(module_name "${module}" NAME)
     message(STATUS "Found lodge module: ${module_name}")
     add_subdirectory(${module} ${CMAKE_BINARY_DIR}/module/${module_name})
-
-    #target_compile_definitions(${module} PUBLIC ${ENGINE_DEFINES})
-    set_property(TARGET ${module_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET ${module_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 endforeach()
 
-# Engine sources
-list(APPEND ENGINE_SOURCES_LOCAL
-    core_argv.c
-)
-
-list(APPEND ENGINE_HEADERS_LOCAL
-    core_argv.h
-    game.h
-)
-
-# Prepend all sources with absolute engine path (because of reasons...)
-foreach(src ${ENGINE_SOURCES_LOCAL})
-    list(APPEND ENGINE_SOURCES ${ENGINE_PATH}/${src})
-endforeach()
-foreach(src ${ENGINE_HEADERS_LOCAL})
-    list(APPEND ENGINE_HEADERS ${ENGINE_PATH}/${src})
-endforeach()
-
+#
 # Add a game library.
+#
 function(add_game_library game_name)
     # Create library.
-    add_library(${game_name} ${ARGN} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    add_executable(${game_name} ${ARGN})
 
-    #
-    # FIXME(TS): Is the ${ENGINE_MODULES} array used?
-    #
-    
-    # Engine modules
-    list(REMOVE_DUPLICATES ENGINE_MODULES)
-    foreach(module ${ENGINE_MODULES})
-        string(TOUPPER "ENABLE_${module}" module_define)
-        string(REPLACE "-" "_" module_define "${module_define}")
-        message(STATUS "Adding lodge module: ${module} (${module_define})")
-        list(APPEND ENGINE_DEFINES ${module_define})
-    endforeach()
-        
-    # Update defines for modules
-    target_compile_definitions(${game_name} PUBLIC ${ENGINE_DEFINES})
-
-    # Store as dependencies that will be applied to the 'engine' target later.
     if(ENABLE_SHARED)
         # Need HACK_POST_BUILD for Visual Studio 2013.
         if(MSVC12)
@@ -216,7 +151,10 @@ function(add_game_library game_name)
 
     # Link libraries.
     target_link_libraries(${game_name} lodge-build-flags)
+
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${game_name})
     
+#[==[
     if(ENABLE_SHARED)
         set(ENGINE_GAME_LIBRARY "")
 
@@ -236,12 +174,9 @@ function(add_game_library game_name)
     endif()
 
     # Main executable.
-    add_executable(engine ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+    add_executable(engine)
     set_property(TARGET engine PROPERTY RUNTIME_OUTPUT_NAME "${game_name}")
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT engine)
-
-    # Engine depends on game library.
-    #add_dependencies(engine ${ENGINE_DEPS})
 
     # Add DEBUG define when building debug executables.
     if(ENABLE_SHARED)
@@ -262,10 +197,7 @@ function(add_game_library game_name)
         target_compile_definitions(engine PRIVATE $<$<CONFIG:Debug>:_FORTIFY_SOURCE=2>)
     endif()
 
-    # Set compiler flags.
-    set_property(TARGET engine PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET engine PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
-
     # Link.
     target_link_libraries(engine ${ENGINE_GAME_LIBRARY})
+#]==]
 endfunction()
