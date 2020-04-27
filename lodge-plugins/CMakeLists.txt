@@ -16,10 +16,14 @@ target_include_directories(lodge-plugins
 )
 
 target_link_libraries(lodge-plugins
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
 		lodge-lib
 
 		lodge-plugin-vfs		# FIXME(TS): not statically defined
+		lodge-plugin-env		# FIXME(TS): not statically defined
 		lodge-window			# FIXME(TS): separate plugin module
 		lodge-renderer			# FIXME(TS): separate plugin module
+		lodge-res				# FIXME(TS): for lodge_res_fbx_plugin() and lodge_res_files_plugin()
 )

@@ -4,12 +4,12 @@ add_library(lodge-lib STATIC "")
 
 check_function_exists(strnlen HAVE_STRNLEN)
 if(HAVE_STRNLEN)
-    add_definitions(-DHAVE_STRNLEN)
+    target_compile_definitions(lodge-lib PUBLIC HAVE_STRNLEN)
 endif()
 
 check_function_exists(vsnprintf HAVE_VSNPRINTF)
 if(HAVE_VSNPRINTF)
-    add_definitions(-DHAVE_VSNPRINTF)
+    target_compile_definitions(lodge-lib PUBLIC HAVE_VSNPRINTF)
 endif()
 
 if(MSVC14)
@@ -19,7 +19,7 @@ else()
 endif()
 
 if(HAVE_SNPRINTF)
-    add_definitions(-DHAVE_SNPRINTF)
+    target_compile_definitions(lodge-lib PUBLIC HAVE_SNPRINTF)
 endif()
 
 target_sources(lodge-lib
@@ -34,6 +34,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/math4.c"
         "${CMAKE_CURRENT_LIST_DIR}/blob_cur.c"
         "${CMAKE_CURRENT_LIST_DIR}/blob.c"
+        "${CMAKE_CURRENT_LIST_DIR}/color.c"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/lodge.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_time.h"
@@ -47,6 +48,8 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/math4.h"
         "${CMAKE_CURRENT_LIST_DIR}/blob_cur.h"
         "${CMAKE_CURRENT_LIST_DIR}/blob.h"
+        "${CMAKE_CURRENT_LIST_DIR}/geometry.h"
+        "${CMAKE_CURRENT_LIST_DIR}/color.h"
 )
 
 target_include_directories(lodge-lib
@@ -54,4 +57,9 @@ target_include_directories(lodge-lib
         "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
+)
+
+target_link_libraries(lodge-lib
+    PRIVATE
+        lodge-build-flags
 )

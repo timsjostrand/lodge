@@ -13,6 +13,7 @@ target_include_directories(lodge-main
 )
 
 target_link_libraries(lodge-main
-	PUBLIC
-		"lodge-plugins"
+	PRIVATE
+		lodge-build-flags
+		lodge-plugins
 )

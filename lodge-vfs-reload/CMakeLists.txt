@@ -21,6 +21,8 @@ target_include_directories(lodge-vfs-reload
 )
 
 target_link_libraries(lodge-vfs-reload
+	PRIVATE
+		lodge-build-flags
 	PUBLIC
 		lodge-lib
 		lodge-vfs

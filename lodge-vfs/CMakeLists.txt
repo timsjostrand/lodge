@@ -17,7 +17,9 @@ target_include_directories(lodge-vfs
 )
 
 target_link_libraries(lodge-vfs
+	PRIVATE
+		lodge-build-flags
+		lodge-stb
 	PUBLIC
 		lodge-lib
-		lodge-stb
 )

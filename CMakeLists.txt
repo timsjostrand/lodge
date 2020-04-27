@@ -47,9 +47,6 @@ if(HAVE_SNPRINTF)
     add_definitions(-DHAVE_SNPRINTF)
 endif()
 
-# Include engine sources.
-set(ENGINE_INCLUDES ${ENGINE_PATH})
-
 # Store DLLs alongside engine.exe.
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 #    CACHE STRING "Static Library output directory" FORCE)
@@ -69,80 +66,65 @@ set(ASSETS_H assets.h)
 #set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
 #set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
 
-if(NOT EMSCRIPTEN)
-    # Library: GLFW.
-    set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
-    set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target" FORCE)
-    set(GLFW_USE_RETINA OFF CACHE BOOL "Disable GLFW retina scaling" FORCE)
-    add_subdirectory(${ENGINE_PATH}/lib/glfw ${CMAKE_BINARY_DIR}/lib/glfw)
-    list(APPEND ENGINE_INCLUDES ${ENGINE_PATH}/lib/glfw/include)
-    list(APPEND ENGINE_EXTRA_LIBS glfw ${GLFW_LIBRARIES})
+# Library: GLFW.
+set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
+set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target" FORCE)
+set(GLFW_USE_RETINA OFF CACHE BOOL "Disable GLFW retina scaling" FORCE)
+add_subdirectory(${ENGINE_PATH}/lib/glfw ${CMAKE_BINARY_DIR}/lib/glfw)
 
-    # Library: glew.
-    if(ENABLE_SHARED)
-        set(GLEW_LIBRARY glew)
-    else()
-        set(GLEW_LIBRARY glew_s)
-    endif()
-    list(APPEND ENGINE_EXTRA_LIBS ${GLEW_LIBRARY} ${GLEW_LIBRARIES})
-    set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
-    add_subdirectory(${ENGINE_PATH}/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
-    target_include_directories(${GLEW_LIBRARY}
-        PUBLIC
-            "${ENGINE_PATH}/lib/glew/include"
-    )
-
-    # Library: cJSON.
-    add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
-    set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
-    set(CJSON_LIBRARY cjson)
-    target_include_directories(${CJSON_LIBRARY} PUBLIC "${ENGINE_PATH}/lib")
-    list(APPEND ENGINE_EXTRA_LIBS ${CJSON_LIBRARY}) # NOTE(TS): needed or atlas support, but should be moved to a module
-
-    # Library: zlib.
-    set(SKIP_INSTALL_ALL ON)
-    set(ZLIB_INCLUDE_DIR "${ENGINE_PATH}/lib/zlib" "${CMAKE_BINARY_DIR}/lib/zlib")
-    if(ENABLE_SHARED)
-        set(ZLIB_LIBRARY zlib)
-    else()
-        set(ZLIB_LIBRARY zlibstatic)
-    endif()
-    add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
-    target_include_directories(${ZLIB_LIBRARY} PUBLIC "${ZLIB_INCLUDE_DIR}")
-
-    # Library: libarchive.
-    set(ENABLE_NETTLE OFF CACHE BOOL "Enable use of Nettle" FORCE)
-    set(ENABLE_OPENSSL OFF CACHE BOOL "Enable use of OpenSSL" FORCE)
-    set(ENABLE_TAR OFF CACHE BOOL "Enable tar building" FORCE)
-    set(ENABLE_CPIO OFF CACHE BOOL "Enable cpio building" FORCE)
-    set(ENABLE_XATTR OFF CACHE BOOL "Enable extended attribute support" FORCE)
-    set(ENABLE_ACL OFF CACHE BOOL "Enable ACL support" FORCE)
-    set(ENABLE_ICONV OFF CACHE BOOL "Enable iconv support" FORCE)
-    set(ENABLE_TEST OFF CACHE BOOL "Enable unit and regression tests" FORCE)
-    add_subdirectory(${ENGINE_PATH}/lib/libarchive ${CMAKE_BINARY_DIR}/lib/libarchive)
-    if(ENABLE_SHARED)
-        set(LIBARCHIVE_LIBRARY archive)
-    else()
-        # NOTE: Bug where LIBARCHIVE_STATIC is not applied for the
-        # archive_static target in Visual Studio. Force define here.
-        add_definitions(-DLIBARCHIVE_STATIC)
-        set(LIBARCHIVE_LIBRARY archive_static)
-    endif()
-    set(LIBARCHIVE_INCLUDE_DIR ${ENGINE_PATH}/lib/libarchive)
-    target_include_directories(${LIBARCHIVE_LIBRARY} PUBLIC "${LIBARCHIVE_INCLUDE_DIR}")
+# Library: glew.
+if(ENABLE_SHARED)
+    set(GLEW_LIBRARY glew)
 else()
-    # glfw and glew is provided by emscripten
-    option(USE_GLFW_3 "Use glfw3" ON)
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/test.png")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/vivaldi.ogg")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --preload-file test_assets/paddle.png")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s TOTAL_MEMORY=100000000")
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-warn-absolute-paths")
+    set(GLEW_LIBRARY glew_s)
 endif()
+set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
+add_subdirectory(${ENGINE_PATH}/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
+target_include_directories(${GLEW_LIBRARY}
+    PUBLIC
+        "${ENGINE_PATH}/lib/glew/include"
+)
+
+# Library: cJSON.
+add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
+set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
+set(CJSON_LIBRARY cjson)
+target_include_directories(${CJSON_LIBRARY} PUBLIC "${ENGINE_PATH}/lib")
+
+# Library: zlib.
+set(SKIP_INSTALL_ALL ON)
+set(ZLIB_INCLUDE_DIR "${ENGINE_PATH}/lib/zlib" "${CMAKE_BINARY_DIR}/lib/zlib")
+if(ENABLE_SHARED)
+    set(ZLIB_LIBRARY zlib)
+else()
+    set(ZLIB_LIBRARY zlibstatic)
+endif()
+add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
+target_include_directories(${ZLIB_LIBRARY} PUBLIC "${ZLIB_INCLUDE_DIR}")
+
+# Library: libarchive.
+set(ENABLE_NETTLE OFF CACHE BOOL "Enable use of Nettle" FORCE)
+set(ENABLE_OPENSSL OFF CACHE BOOL "Enable use of OpenSSL" FORCE)
+set(ENABLE_TAR OFF CACHE BOOL "Enable tar building" FORCE)
+set(ENABLE_CPIO OFF CACHE BOOL "Enable cpio building" FORCE)
+set(ENABLE_XATTR OFF CACHE BOOL "Enable extended attribute support" FORCE)
+set(ENABLE_ACL OFF CACHE BOOL "Enable ACL support" FORCE)
+set(ENABLE_ICONV OFF CACHE BOOL "Enable iconv support" FORCE)
+set(ENABLE_TEST OFF CACHE BOOL "Enable unit and regression tests" FORCE)
+add_subdirectory(${ENGINE_PATH}/lib/libarchive ${CMAKE_BINARY_DIR}/lib/libarchive)
+if(ENABLE_SHARED)
+    set(LIBARCHIVE_LIBRARY archive)
+else()
+    # NOTE: Bug where LIBARCHIVE_STATIC is not applied for the
+    # archive_static target in Visual Studio. Force define here.
+    add_definitions(-DLIBARCHIVE_STATIC)
+    set(LIBARCHIVE_LIBRARY archive_static)
+endif()
+set(LIBARCHIVE_INCLUDE_DIR ${ENGINE_PATH}/lib/libarchive)
+target_include_directories(${LIBARCHIVE_LIBRARY} PUBLIC "${LIBARCHIVE_INCLUDE_DIR}")
 
 # Load engine modules
 list(APPEND ENGINE_MODULES_PATH "${ENGINE_PATH}/lodge-*/")
@@ -159,24 +141,12 @@ endforeach()
 
 # Engine sources
 list(APPEND ENGINE_SOURCES_LOCAL
-    vertex.c
-    color.c
     core_argv.c
-    particles.c
-    collide.c
-    env.c
 )
 
 list(APPEND ENGINE_HEADERS_LOCAL
-    lodge_keys.h
-    color.h
     core_argv.h
-    particles.h
     game.h
-    collide.h
-    geometry.h
-    vertex.h
-    env.h
 )
 
 # Prepend all sources with absolute engine path (because of reasons...)
@@ -187,17 +157,10 @@ foreach(src ${ENGINE_HEADERS_LOCAL})
     list(APPEND ENGINE_HEADERS ${ENGINE_PATH}/${src})
 endforeach()
 
-# Include all source directories
-include_directories(${ENGINE_INCLUDES})
-
 # Add a game library.
 function(add_game_library game_name)
     # Create library.
     add_library(${game_name} ${ARGN} ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-    
-    # Compile with correct flags.
-    set_property(TARGET ${game_name} PROPERTY COMPILE_FLAGS "${ENGINE_COMPILER_FLAGS}")
-    set_property(TARGET ${game_name} PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     #
     # FIXME(TS): Is the ${ENGINE_MODULES} array used?
@@ -206,7 +169,6 @@ function(add_game_library game_name)
     # Engine modules
     list(REMOVE_DUPLICATES ENGINE_MODULES)
     foreach(module ${ENGINE_MODULES})
-        list(APPEND ENGINE_EXTRA_LIBS ${module})
         string(TOUPPER "ENABLE_${module}" module_define)
         string(REPLACE "-" "_" module_define "${module_define}")
         message(STATUS "Adding lodge module: ${module} (${module_define})")
@@ -253,7 +215,7 @@ function(add_game_library game_name)
     target_compile_definitions(${game_name} PRIVATE $<$<CONFIG:Debug>:DEBUG>)
 
     # Link libraries.
-    target_link_libraries(${game_name} ${ENGINE_EXTRA_LIBS})
+    target_link_libraries(${game_name} lodge-build-flags)
     
     if(ENABLE_SHARED)
         set(ENGINE_GAME_LIBRARY "")
@@ -305,9 +267,5 @@ function(add_game_library game_name)
     set_property(TARGET engine PROPERTY LINK_FLAGS "${ENGINE_LINKER_FLAGS}")
 
     # Link.
-    if(NOT EMSCRIPTEN)
-        target_link_libraries(engine ${ENGINE_GAME_LIBRARY} ${ENGINE_EXTRA_LIBS})
-    else()
-        target_link_libraries(engine)
-    endif()
+    target_link_libraries(engine ${ENGINE_GAME_LIBRARY})
 endfunction()

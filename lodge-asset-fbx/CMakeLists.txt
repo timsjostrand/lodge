@@ -17,9 +17,12 @@ target_include_directories(lodge-asset-fbx
 )
 
 target_link_libraries(lodge-asset-fbx
+	PRIVATE
+		lodge-build-flags
+		${GLEW_LIBRARY}
+		lodge-collections
+		lodge-stb
 	PUBLIC
-		"${GLEW_LIBRARY}"
-		"lodge-collections"
-		"lodge-stb"
-		"lodge-renderer"
+		lodge-lib
+		lodge-renderer
 )

@@ -19,6 +19,8 @@ target_include_directories(lodge-terrain
 )
 
 target_link_libraries(lodge-terrain
-    lodge-lib
-    lodge-collections
+    PRIVATE
+        lodge-build-flags
+        lodge-lib
+        lodge-collections
 )
