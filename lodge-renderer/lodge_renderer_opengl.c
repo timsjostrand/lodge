@@ -302,6 +302,20 @@ void lodge_renderer_unbind_texture_unit(int slot)
 	GL_OK_OR_ASSERT("Failed to unbind texture unit");
 }
 
+void lodge_renderer_set_constant_float(struct shader *s, strview_t name, float f)
+{
+	const GLint id = glGetUniformLocation(s->program, name.s);
+	if(id == -1) {
+		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
+	}
+	glUseProgram(s->program);
+	glUniform1f(id, f);
+	GLint err = glGetError();
+	if(err != GL_NO_ERROR) {
+		errorf("OpenGL", "lodge_renderer_set_constant_float(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+	}
+}
+
 void lodge_renderer_set_constant_vec2(struct shader *s, strview_t name, vec2 v)
 {
 	const GLint id = glGetUniformLocation(s->program, name.s);
@@ -312,7 +326,7 @@ void lodge_renderer_set_constant_vec2(struct shader *s, strview_t name, vec2 v)
 	glUniform2f(id, v.x, v.y);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "set_uniform_vec2(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_renderer_set_constant_vec2(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
@@ -326,7 +340,7 @@ void lodge_renderer_set_constant_vec3(struct shader *s, strview_t name, vec3 v)
 	glUniform3f(id, v.x, v.y, v.z);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "set_uniform_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_renderer_set_constant_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
@@ -340,7 +354,7 @@ void lodge_renderer_set_constant_vec4(struct shader *s, strview_t name, vec4 v)
 	glUniform4f(id, v.x, v.y, v.z, v.w);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "set_uniform_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_renderer_set_constant_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
@@ -354,7 +368,7 @@ void lodge_renderer_set_constant_mat4(struct shader *s, strview_t name, mat4 mat
 	glUniformMatrix4fv(id, 1, GL_FALSE, mat.m);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "set_uniform_mat4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_renderer_set_constant_mat4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 

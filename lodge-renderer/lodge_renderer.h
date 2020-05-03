@@ -64,6 +64,7 @@ void					lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t textur
 void					lodge_renderer_bind_sampler(int slot, const lodge_sampler_t sampler);
 void					lodge_renderer_bind_texture(int slot, const lodge_texture_t texture);
 
+void					lodge_renderer_set_constant_float(struct shader *shader, strview_t name, float f);
 void					lodge_renderer_set_constant_vec2(struct shader *shader, strview_t name, vec2 v);
 void					lodge_renderer_set_constant_vec3(struct shader *shader, strview_t name, vec3 v);
 void					lodge_renderer_set_constant_vec4(struct shader *shader, strview_t name, vec4 v);
