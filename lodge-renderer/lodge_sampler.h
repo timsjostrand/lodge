@@ -2,7 +2,7 @@
 #define _LODGE_SAMPLER_H
 
 struct lodge_sampler;
-typedef struct lodger_sampler* lodge_sampler_t;
+typedef struct lodge_sampler* lodge_sampler_t;
 
 enum lodge_sampler_min_filter
 {
