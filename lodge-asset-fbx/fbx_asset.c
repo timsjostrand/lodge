@@ -11,6 +11,8 @@
 #include "str.h"
 #include "lodge_renderer.h"
 
+#define CONVERT_DOUBLE_ARRAY_TO_FLOAT_ARRAY
+
 static const struct fbx_property* fbx_asset_get_array(struct fbx *fbx, const char *path[], size_t path_count)
 {
 	struct fbx_node *node = fbx_get_node(fbx, path, path_count);
@@ -48,21 +50,41 @@ struct float_array
 {
 	size_t	count;
 	size_t	size;
-	float	data[];
+	float	*data;
 };
 
 static struct float_array* float_array_new(size_t count)
 {
-	size_t size = count * sizeof(float);
-	struct float_array *tmp = (struct float_array *)malloc(sizeof(struct float_array) + size);
+	const size_t size = count * sizeof(float);
+	struct float_array *tmp = (struct float_array *)malloc(sizeof(struct float_array));
 	tmp->count = count;
 	tmp->size = size;
+	tmp->data = (float*)malloc(size);
 	return tmp;
 }
 
 static void float_array_free(struct float_array *a)
 {
+	free(a->data);
 	free(a);
+}
+
+static struct float_array* float_array_new_from_fbx_double_array(const struct fbx_property *prop)
+{
+	const double* double_array = fbx_property_get_array_double(prop);
+	const uint32_t double_array_count = fbx_property_get_array_count(prop);
+	if(!double_array || !double_array_count) {
+		ASSERT_FAIL("Failed to get double array property");
+		return NULL;
+	}
+
+	struct float_array *float_array = float_array_new(double_array_count);
+
+	for(size_t i = 0; i < double_array_count; i++) {
+		float_array->data[i] = (float)double_array[i];
+	}
+
+	return float_array;
 }
 
 static struct array* fbx_asset_new_layer_element(
@@ -153,7 +175,7 @@ static struct array* fbx_asset_new_layer_element(
 
 			const int32_t vertex_index = vertex_indices[i];
 			const int32_t prop_index = prop_indices_ptr[i] * 2;
-			const vec2 prop_data = { prop_data_ptr[prop_index], prop_data_ptr[prop_index + 1] };
+			const vec2 prop_data = { (float)prop_data_ptr[prop_index], (float)prop_data_ptr[prop_index + 1] };
 			array_set(ret, vertex_index, &prop_data);
 
 			//prop_index_max = max(prop_index, prop_index_max);
@@ -191,10 +213,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 
 	/* Vertices */
 	{
-		glGenBuffers(1, &asset.buffer_object_vertices);
-		GL_OK_OR_GOTO(fail);
-
-		glBindBuffer(GL_ARRAY_BUFFER, asset.buffer_object_vertices);
+		glCreateBuffers(1, &asset.buffer_object_vertices);
 		GL_OK_OR_GOTO(fail);
 
 		static const char* path_vertices[] = { "Objects", "Geometry", "Vertices" };
@@ -204,6 +223,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			goto fail;
 		}
 
+#ifndef CONVERT_DOUBLE_ARRAY_TO_FLOAT_ARRAY
 		const double* vertices_prop_data = fbx_property_get_array_double(vertices_prop);
 		const uint32_t vertices_prop_data_count = fbx_property_get_array_count(vertices_prop);
 
@@ -215,12 +235,30 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 
 		glVertexAttribPointer(0,
 			3,
-			GL_DOUBLE,
+			GL_FLOAT, //GL_DOUBLE,
 			GL_FALSE,
 			3 * sizeof(double),
 			NULL
 		);
 		GL_OK_OR_GOTO(fail);
+#else
+		struct float_array *vertices_data = float_array_new_from_fbx_double_array(vertices_prop);
+		glNamedBufferStorage(asset.buffer_object_vertices, vertices_data->size, vertices_data->data, 0);
+		float_array_free(vertices_data);
+		GL_OK_OR_GOTO(fail);
+
+		glEnableVertexAttribArray(0);
+		GL_OK_OR_GOTO(fail);
+
+		glVertexAttribPointer(0,
+			3,
+			GL_FLOAT,
+			GL_FALSE,
+			3 * sizeof(float),
+			NULL
+		);
+		GL_OK_OR_GOTO(fail);
+#endif
 	}
 
 	/* Normals */
@@ -242,10 +280,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		{
 			static const char* path_normals[] = { "Objects", "Geometry", "LayerElementNormal", "Normals" };
 
-			glGenBuffers(1, &asset.buffer_object_normals);
-			GL_OK_OR_GOTO(fail);
-
-			glBindBuffer(GL_ARRAY_BUFFER, asset.buffer_object_normals);
+			glCreateBuffers(1, &asset.buffer_object_normals);
 			GL_OK_OR_GOTO(fail);
 
 			const struct fbx_property *normals_prop = fbx_asset_get_array(fbx, path_normals, LODGE_ARRAYSIZE(path_normals));
@@ -253,6 +288,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 				goto fail;
 			}
 
+#ifndef CONVERT_DOUBLE_ARRAY_TO_FLOAT_ARRAY
 			const double* normals_prop_data = fbx_property_get_array_double(normals_prop);
 			const uint32_t normals_prop_data_count = fbx_property_get_array_count(normals_prop);
 
@@ -264,11 +300,28 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 
 			glVertexAttribPointer(1,
 				3,
-				GL_DOUBLE,
+				GL_FLOAT, // GL_DOUBLE,
 				GL_FALSE,
 				3 * sizeof(double),
 				NULL
 			);
+#else
+			struct float_array *normals_data = float_array_new_from_fbx_double_array(normals_prop);
+			glNamedBufferStorage(asset.buffer_object_normals, normals_data->size, normals_data->data, 0);
+			float_array_free(normals_data);
+			GL_OK_OR_GOTO(fail);
+
+			glEnableVertexAttribArray(1);
+			GL_OK_OR_GOTO(fail);
+
+			glVertexAttribPointer(1,
+				3,
+				GL_FLOAT,
+				GL_FALSE,
+				3 * sizeof(float),
+				NULL
+			);
+#endif
 			GL_OK_OR_GOTO(fail);
 		}
 	}
@@ -288,26 +341,26 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 	}
 
 	enum polygon_type_ {
-		polygon_type_triangle,
-		polygon_type_quad
+		POLYGON_TYPE_TRIANGLE,
+		POLYGON_TYPE_QUAD
 	} polygon_type;
 
 	if(prop_indices_data[2] < 0) {
-		polygon_type = polygon_type_triangle;
+		polygon_type = POLYGON_TYPE_TRIANGLE;
 
 		// make sure all are triangles (not needed?)
-		for(int i = 2; i < prop_indices_data_count; i += 3) {
+		for(uint32_t i = 2; i < prop_indices_data_count; i += 3) {
 			ASSERT(prop_indices_data[i] < 0);
 		}
 
 	} else if(prop_indices_data[3] < 0) {
-		polygon_type = polygon_type_quad;
+		polygon_type = POLYGON_TYPE_QUAD;
 	} else {
 		ASSERT_FAIL("Unknown polygon type");
 		goto fail;
 	}
 
-	if(polygon_type != polygon_type_triangle) {
+	if(polygon_type != POLYGON_TYPE_TRIANGLE) {
 		ASSERT_FAIL("polygon_type != triangle not implemented");
 		goto fail;
 	}
@@ -340,13 +393,10 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			goto uvs_fail;
 		}
 
-		glGenBuffers(1, &asset.buffer_object_uvs);
+		glCreateBuffers(1, &asset.buffer_object_uvs);
 		GL_OK_OR_GOTO(uvs_fail);
 
-		glBindBuffer(GL_ARRAY_BUFFER, asset.buffer_object_uvs);
-		GL_OK_OR_GOTO(uvs_fail);
-
-		glBufferData(GL_ARRAY_BUFFER, array_byte_size(uvs), array_first(uvs), GL_STATIC_DRAW);
+		glNamedBufferStorage(asset.buffer_object_uvs, array_byte_size(uvs), array_first(uvs), 0);
 		GL_OK_OR_GOTO(uvs_fail);
 
 		glEnableVertexAttribArray(2);
@@ -371,19 +421,20 @@ uvs_fail:
 uvs_success:
 
 	/* Indices */
-	glGenBuffers(1, &asset.buffer_object_indices);
+	glCreateBuffers(1, &asset.buffer_object_indices);
 	GL_OK_OR_GOTO(fail);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, asset.buffer_object_indices);
+	glNamedBufferStorage(asset.buffer_object_indices, prop_indices_data_count * sizeof(uint32_t), indices, 0);
 	GL_OK_OR_GOTO(fail);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, prop_indices_data_count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+	glVertexArrayElementBuffer(asset.vertex_array_object, asset.buffer_object_indices);
 	GL_OK_OR_GOTO(fail);
-
 
 	/* Reset bindings to default */
 	glBindVertexArray(0);
 	GL_OK_OR_GOTO(fail);
+
+	free(indices);
 
 	return asset;
 
@@ -419,7 +470,7 @@ void fbx_asset_reset(struct fbx_asset *asset)
 void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp)
 {
 	// FIXME(TS): port to lodge_renderer
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	lodge_renderer_bind_shader(shader);
 	lodge_renderer_set_constant_mvp(shader, &mvp);

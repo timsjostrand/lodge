@@ -24,6 +24,7 @@ void*			array_first(array_t array);
 void*			array_last(array_t array);
 
 void			array_set(array_t array, size_t index, const void *data);
+void*			array_append_no_init(array_t array);
 void			array_append(array_t array, const void* data);
 void			array_remove(array_t array, size_t index);
 void			array_clear(array_t array);
