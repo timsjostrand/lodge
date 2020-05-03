@@ -1,8 +1,6 @@
 #ifndef _LODGE_PLUGINS_H
 #define _LODGE_PLUGINS_H
 
-// TODO(TS): rename `lodge_plugins` => `lodge_core`
-
 #include "str.h"
 
 struct lodge_plugin;
@@ -10,7 +8,8 @@ struct lodge_plugins;
 
 typedef void* lodge_plugin_data_t;
 
-struct lodge_plugins_frame_times {
+struct lodge_plugins_frame_times
+{
 	int			frames;						/* Number of frames drawn since last_frame_report. */
 	double		last_frame_report;			/* When frames were last summed up. */
 	double		last_frame;					/* When the last frame was drawn. */
