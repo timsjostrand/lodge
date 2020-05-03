@@ -24,10 +24,10 @@ struct read_callback
 	void				*userdata;
 };
 
-int						vfs_init(struct vfs *vfs);
-void					vfs_shutdown(struct vfs *vfs);
+int						vfs_new_inplace(struct vfs *vfs);
+void					vfs_free_inplace(struct vfs *vfs);
 void					vfs_update(struct vfs *vfs, float delta_time);
-size_t					vfs_size(); // FIXME(TS): nicer api
+size_t					vfs_sizeof();
 
 void					vfs_mount(struct vfs *vfs, strview_t dir);
 void					vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t fn, void *userdata);

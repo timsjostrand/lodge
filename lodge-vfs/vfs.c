@@ -83,13 +83,13 @@ static void vfs_reload(struct vfs *vfs, struct vfs_file *f, int force)
 	}
 }
 
-int vfs_init(struct vfs *vfs)
+int vfs_new_inplace(struct vfs *vfs)
 {
 	*vfs = (struct vfs) { 0 };
 	return VFS_OK;
 }
 
-void vfs_shutdown(struct vfs *vfs)
+void vfs_free_inplace(struct vfs *vfs)
 {
 	for(int i = 0; i < VFS_MAX_NUM_FILES; i++) {
 		stb_fclose(vfs->file_table[i].file, 0);
@@ -108,7 +108,7 @@ void vfs_update(struct vfs *vfs, float delta_time)
 #endif
 }
 
-size_t vfs_size()
+size_t vfs_sizeof()
 {
 	return sizeof(struct vfs);
 }
@@ -208,7 +208,7 @@ void vfs_run_callbacks(struct vfs *vfs)
 		struct vfs_file *vfs_file = &vfs->file_table[i];
 		
 		for (int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++) {
-			vfs_debug("Loading `%s`...\n", vfs_file->simplename);
+			//vfs_debug("Loading `%s`...\n", vfs_file->simplename);
 
 			read_callback_t cbck = vfs_file->read_callbacks[j].fn;
 			cbck(vfs, strview_wrap(vfs_file->simplename), vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
