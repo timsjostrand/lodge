@@ -4,6 +4,7 @@
 
 #include "vfs.h"
 #include "alist.h"
+#include "lodge_platform.h"
 
 struct alist* assets_list;
 struct alist* assets_list_textures;
@@ -371,11 +372,9 @@ int main(int argc, char* argv[])
 #endif
 	assets_list_misc = alist_new(MAX_ASSETS);
 
-	struct lodge_plugin vfs_plug = vfs_plugin();
-	struct vfs* vfs = (struct vfs *) malloc(vfs_plug.size);
-	struct lodge_ret ret = vfs_plug.init(vfs, NULL);
-	if(!ret.success) {
-		printf("Failed to initialize VFS: " STRVIEW_PRINTF_FMT "\n", STRVIEW_PRINTF_ARG(ret.message));
+	struct vfs* vfs = (struct vfs *) malloc(vfs_sizeof());
+	if(vfs_new_inplace(vfs) != VFS_OK) {
+		printf("Failed to initialize VFS\n");
 		return 1;
 	}
 
