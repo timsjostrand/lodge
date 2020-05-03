@@ -51,7 +51,7 @@ size_t strbuf_setf(strbuf_t dst, const char *format, ...)
 	va_list ap;
 
 	va_start(ap, format);
-	int count = str_vsnprintf(dst.s, dst.size, format, ap);
+	int count = vsnprintf(dst.s, dst.size, format, ap);
 	va_end(ap);
 
 	return count;

@@ -525,8 +525,9 @@ size_t str_trim(char *s, size_t s_len)
 	return s_len;
 }
 
+#if 0
 #ifndef HAVE_VSNPRINTF
-int str_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
+int vsnprintf(char * const outBuf, size_t const size, const char * const format, va_list ap)
 {
 	int count = -1;
 
@@ -537,6 +538,7 @@ int str_vsnprintf(char *outBuf, size_t size, const char *format, va_list ap)
 
 	return count;
 }
+#endif
 #endif
 
 #ifndef HAVE_SNPRINTF
