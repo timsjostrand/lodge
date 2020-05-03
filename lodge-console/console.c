@@ -19,6 +19,7 @@
 #include "drawable.h"
 #include "env.h"
 #include "lodge_keys.h"
+#include "lodge_time.h"
 
 static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -45,7 +46,7 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 
 static double timer_elapsed(double since)
 {
-	return lodge_window_get_time() - since;
+	return lodge_get_time() - since;
 }
 
 static void console_cursor_think(struct console_cursor *cur)
@@ -66,7 +67,7 @@ static void console_cursor_think(struct console_cursor *cur)
 		} else if(timer_elapsed(cur->time_blink) <= 250+400) {
 			s->color.a = 0.0f;
 		} else {
-			cur->time_blink = lodge_window_get_time();
+			cur->time_blink = lodge_get_time();
 		}
 	}
 }
@@ -569,7 +570,7 @@ void console_input_feed_char(struct console *c, unsigned int key, int mods)
 		return;
 	}
 
-	c->cursor.time_input = lodge_window_get_time();
+	c->cursor.time_input = lodge_get_time();
 
 	/* Type char into input if input buffer is not full. */
 	if(c->cursor.pos < CONSOLE_INPUT_MAX-1) {
@@ -609,7 +610,7 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 		return;
 	}
 
-	c->cursor.time_input = lodge_window_get_time();
+	c->cursor.time_input = lodge_get_time();
 
 	if (action == LODGE_PRESS || action == LODGE_REPEAT) {
 		switch(key) {
@@ -692,7 +693,7 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 void console_toggle_focus(struct console *c)
 {
 	c->focused = !c->focused;
-	c->cursor.time_input = lodge_window_get_time();
+	c->cursor.time_input = lodge_get_time();
 }
 
 void console_cmd_new(struct console_cmd *cmd, const char *name, int argc,
