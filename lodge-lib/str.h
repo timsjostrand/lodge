@@ -1,22 +1,23 @@
 #ifndef _STR_H
 #define _STR_H
 
-#include <stdlib.h>
-#include <stdarg.h>
-
 #include "strview.h"
 #include "strbuf.h"
 
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+
 #ifndef HAVE_STRNLEN
-size_t	strnlen(const char *s, size_t maxlen);
+size_t		strnlen(const char *s, size_t maxlen);
 #endif
 
 #ifndef HAVE_VSNPRINTF
-int		vsnprintf(char * const outBuf, size_t const size, const char * const format, va_list ap);
+int			vsnprintf(char * const outBuf, size_t const size, const char * const format, va_list ap);
 #endif
 
 #ifndef HAVE_SNPRINTF
-int		snprintf(char *outBuf, size_t size, const char *format, ...);
+int			snprintf(char *outBuf, size_t size, const char *format, ...);
 #endif
 
 int			str_insert(char *s, size_t s_size, size_t index, const char *sub, size_t sub_len);
