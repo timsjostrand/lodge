@@ -52,12 +52,24 @@ void array_set(array_t array, size_t index, const void *data)
 	array->count = max(array->count, index);
 }
 
+void* array_append_no_init(array_t array)
+{
+	ASSERT(array->data);
+	ASSERT(array->count + 1 <= array->max_count);
+
+	char* tail = array->data;
+	tail += array->element_size * array->count;
+	array->count++;
+
+	return tail;
+}
+
 void array_append(array_t array, const void* data)
 {
-	ASSERT(array->count + 1 < array->max_count);
-	memcpy((char*)&array->data[array->element_size * array->count++], 
-		(char*)data, 
-		array->element_size);
+	void* element = array_append_no_init(array);
+	if(element) {
+		memcpy((char*)element, (const char*)data, array->element_size);
+	}
 }
 
 void array_remove(array_t array, size_t index)

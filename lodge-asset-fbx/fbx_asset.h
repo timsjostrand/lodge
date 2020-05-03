@@ -1,9 +1,10 @@
 #ifndef _FBX_ASSET_H
 #define _FBX_ASSET_H
 
-#include <stdint.h>
 #include "math4.h"
 #include "lodge_renderer.h"
+
+#include <stdint.h>
 
 struct fbx;
 struct shader;
