@@ -1,12 +1,12 @@
 #ifndef _LODGE_PLATFORM_H
 #define _LODGE_PLATFORM_H
 
+#include "lodge_assert.h"
+#include "lodge_time.h"
+
 #include <stddef.h> // size_t
 #include <stdint.h>
 #include <float.h>
-
-#include "lodge_assert.h"
-#include "lodge_time.h"
 
 #ifdef _WIN32
 #define EXPORT __declspec( dllexport )

@@ -59,7 +59,7 @@ size_t strbuf_setf(strbuf_t dst, const char *format, ...)
 
 size_t strbuf_append(strbuf_t dst, const strview_t src)
 {
-	return str_append(dst.s, strbuf_length(dst), src.s, src.length);
+	return str_append(dst.s, strbuf_size(dst), src.s, src.length);
 }
 
 void strbuf_fill(strbuf_t dst, char c)

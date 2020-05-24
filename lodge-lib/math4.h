@@ -172,6 +172,7 @@ quat	quat_mult(const quat lhs, const quat rhs);
 
 
 float	distancef(float x, float y);
+float	parabola(float x, float k);
 
 float	lerp1f(float min, float max, float t); // NOTE(TS): lerp() clashes with OpenAL
 float	clamp(float f, float min, float max);

@@ -849,3 +849,8 @@ float distancef(float x, float y)
 {
 	return sqrtf((x*x) + (y*y));
 }
+
+float parabola(float x, float k)
+{
+	return powf(4.0f * x * (1.0f - x), k);
+}
