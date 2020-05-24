@@ -9,8 +9,8 @@ typedef struct lodge_texture* lodge_texture_t;
 struct lodge_image;
 
 lodge_texture_t		lodge_texture_make();
-lodge_texture_t		lodge_texture_make_rgba(int width, int height);
-lodge_texture_t		lodge_texture_make_depth(int width, int height);
+lodge_texture_t		lodge_texture_make_rgba(uint32_t width, uint32_t height);
+lodge_texture_t		lodge_texture_make_depth(uint32_t width, uint32_t height);
 lodge_texture_t		lodge_texture_make_from_image(const struct lodge_image *image);
 
 void				lodge_texture_reset(lodge_texture_t *texture);

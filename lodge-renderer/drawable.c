@@ -375,6 +375,8 @@ struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum draw_mo
 {
 	struct drawable drawable = { 0 };
 
+	drawable.vertex_count = vertex_buffer_get_element_count(vb);
+
 	/* Generate new vertex array? */
 	glGenVertexArrays(1, &drawable.vao);
 	GL_OK_OR_RETURN(drawable);
@@ -395,23 +397,19 @@ struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum draw_mo
 	GL_OK_OR_RETURN(drawable);
 
 	struct vertex_buffer_attribs attribs = vertex_buffer_get_attribs(vb);
-	size_t offset = 0;
-	for(int i = 0; i < VERTEX_BUFFER_ATTRIBS_MAX; i++)
-	{
-		const size_t attrib_size = attribs.attribs[i];
+	for(int i = 0; i < VERTEX_BUFFER_ATTRIBS_MAX; i++) {
+		const struct vertex_buffer_attrib *vertex_attrib = &attribs.per_vertex[i];
 
-		if(attrib_size > 0)
-		{
+		if(vertex_attrib->size > 0) {
 			glEnableVertexAttribArray(i);
 			glVertexAttribPointer(i,
-				attrib_size / sizeof(GLfloat),
+				vertex_attrib->size / sizeof(GLfloat),
 				GL_FLOAT,
 				GL_FALSE,
 				vertex_buffer_get_element_size(vb),
-				(const void*)(offset)
+				(const void*)(vertex_attrib->offset)
 			);
 
-			offset += attrib_size;
 			GL_OK_OR_RETURN(drawable);
 		}
 	}
