@@ -7,8 +7,7 @@
 #include "log.h"
 #include "str.h"
 #include "txt.h"
-// FIXME(TS): why is the prefix required in VS?
-#include "lodge-collections/array.h"
+#include "array.h"
 
 #define shader_debug(...) debugf("Shader", __VA_ARGS__)
 #define shader_error(...) errorf("Shader", __VA_ARGS__)
