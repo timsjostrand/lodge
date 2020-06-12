@@ -6,6 +6,8 @@
 #include "animatedsprites.h"
 #include "lodge_texture.h"
 
+struct vfs;
+
 struct pyxel_asset {
 	struct atlas	atlas;
 	struct anim		anims[PYXEL_ANIMS_MAX];

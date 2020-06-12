@@ -5,6 +5,7 @@
 #include "math4.h"
 
 struct graphics;
+struct shader;
 
 struct basic_sprite {
 	int						type;

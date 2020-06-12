@@ -20,6 +20,7 @@
 
 #include "txt.h"
 #include "str.h"
+#include "math4.h"
 
 struct txt
 {

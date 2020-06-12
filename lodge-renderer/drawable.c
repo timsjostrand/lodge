@@ -20,11 +20,11 @@
 #include "lodge_opengl.h"
 
 /* Number of components in a vertex(x, y, z, u, v). */
-#define VBO_VERTEX_LEN                  5
+#define VBO_VERTEX_LEN					5
 /* Number of vertices in a quad. */
 #define VBO_QUAD_VERTEX_COUNT			6
 /* Number of components in a quad. */
-#define VBO_QUAD_LEN                    (VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
+#define VBO_QUAD_LEN					(VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
 
 static int32_t lodge_renderer_primitive_to_gl(enum lodge_renderer_primitive dm)
 {
@@ -251,12 +251,12 @@ static void drawable_get_vertices_rect_outline(GLfloat *dst, float x, float y, f
 	dst[4 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 }
 
-static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv_t *vertices, size_t vertex_count)
+static struct drawable drawable_make_xyzuv(enum lodge_renderer_primitive primitive, const xyzuv_t *vertices, size_t vertex_count)
 {
 	ASSERT(vertices);
 	ASSERT(vertex_count > 0);
 
-	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
+	struct drawable drawable = drawable_make(primitive, vertex_count, 0, 0);
 
 	glGenVertexArrays(1, &drawable.vao);
 	GL_OK_OR_RETURN(drawable);
@@ -298,12 +298,12 @@ static struct drawable drawable_make_xyzuv(enum draw_mode draw_mode, const xyzuv
 	return drawable;
 }
 
-static struct drawable drawable_make_vertex(enum draw_mode draw_mode, const vertex_t *vertices, GLuint vertex_count)
+static struct drawable drawable_make_vertex(enum lodge_renderer_primitive primitive, const vertex_t *vertices, GLuint vertex_count)
 {
 	ASSERT(vertices);
 	ASSERT(vertex_count > 0);
 
-	struct drawable drawable = drawable_make(draw_mode, vertex_count, 0, 0);
+	struct drawable drawable = drawable_make(primitive, vertex_count, 0, 0);
 
 	/* Generate new vertex array? */
 	glGenVertexArrays(1, &drawable.vao);
@@ -371,7 +371,7 @@ struct drawable drawable_make(enum lodge_renderer_primitive primitive, GLuint ve
 	};
 }
 
-struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum draw_mode draw_mode)
+struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_renderer_primitive primitive)
 {
 	struct drawable drawable = { 0 };
 

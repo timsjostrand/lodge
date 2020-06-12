@@ -18,8 +18,6 @@ target_sources(lodge-sprite
 )
 
 target_include_directories(lodge-sprite
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

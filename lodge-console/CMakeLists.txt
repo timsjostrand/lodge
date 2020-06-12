@@ -12,8 +12,6 @@ target_sources(lodge-console
 )
 
 target_include_directories(lodge-console
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

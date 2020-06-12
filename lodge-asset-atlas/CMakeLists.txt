@@ -10,8 +10,6 @@ target_sources(lodge-asset-atlas
 )
 
 target_include_directories(lodge-asset-atlas
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

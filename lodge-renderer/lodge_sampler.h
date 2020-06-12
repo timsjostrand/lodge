@@ -31,7 +31,7 @@ enum lodge_sampler_wrap
 struct lodge_sampler_properties
 {
 	enum lodge_sampler_min_filter	min_filter;
-	enum lodge_sampler_max_filter	mag_filter;
+	enum lodge_sampler_mag_filter	mag_filter;
 	enum lodge_sampler_wrap			wrap_x;
 	enum lodge_sampler_wrap			wrap_y;
 	enum lodge_sampler_wrap			wrap_z;

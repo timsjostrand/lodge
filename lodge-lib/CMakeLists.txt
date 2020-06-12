@@ -71,8 +71,6 @@ endif()
 
 
 target_include_directories(lodge-lib
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

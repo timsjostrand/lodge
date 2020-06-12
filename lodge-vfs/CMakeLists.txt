@@ -10,8 +10,6 @@ target_sources(lodge-vfs
 )
 
 target_include_directories(lodge-vfs
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

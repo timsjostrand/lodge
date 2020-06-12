@@ -47,7 +47,6 @@ target_sources(lodge-sound
 
 target_include_directories(lodge-sound
     PRIVATE
-        "${ENGINE_PATH}"
         "${ENGINE_PATH}/lib/"
         "${OPENAL_INCLUDE_DIR}"
     PUBLIC

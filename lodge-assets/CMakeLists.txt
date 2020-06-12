@@ -63,8 +63,6 @@ target_sources(lodge-assets
 )
 
 target_include_directories(lodge-assets
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         ${CMAKE_CURRENT_BINARY_DIR}
 )

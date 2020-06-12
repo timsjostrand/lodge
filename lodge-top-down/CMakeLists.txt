@@ -10,8 +10,6 @@ target_sources(lodge-top-down
 )
 
 target_include_directories(lodge-top-down
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

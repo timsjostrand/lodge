@@ -3,6 +3,7 @@
 
 #include "strview.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 /**

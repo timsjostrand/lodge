@@ -16,8 +16,6 @@ target_sources(lodge-collections
 )
 
 target_include_directories(lodge-collections
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

@@ -8,8 +8,6 @@ target_sources(lodge-monotext
 )
 
 target_include_directories(lodge-monotext
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )
