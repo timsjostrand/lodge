@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifndef HAVE_STRNLEN
 size_t		strnlen(const char *s, size_t maxlen);

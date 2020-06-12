@@ -24,8 +24,6 @@ target_sources(lodge-renderer
 )
 
 target_include_directories(lodge-renderer
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

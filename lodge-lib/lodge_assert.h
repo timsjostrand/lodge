@@ -15,11 +15,11 @@
 
 #include <assert.h>
 
-#define ASSERT(expr, message) \
-	assert( (expr) && (message) )
+#define ASSERT(expr) \
+	assert( (expr) )
 
 #define ASSERT_MESSAGE(expr, message) \
-	ASSERT( expr && message )
+	ASSERT( (expr) && message )
 
 #endif
 

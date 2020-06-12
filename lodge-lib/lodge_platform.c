@@ -1,6 +1,7 @@
 #include "lodge_platform.h"
 
 #include "log.h"
+#include "str.h"
 
 #ifdef _WIN32
 #include <windows.h>

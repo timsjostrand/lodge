@@ -19,6 +19,8 @@
 /* FIXME: generic way to define new sprite types. */
 #define SPRITE_TYPE_TEXT	4
 
+struct vfs;
+
 struct monofont {
 	int				loaded;
 	const char		*name;

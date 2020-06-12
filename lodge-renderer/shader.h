@@ -53,7 +53,7 @@ struct shader {
 
 	strview_t		vert_src;
 	strview_t		frag_src;
-	
+
 	txt_t			vert_transformed;
 	txt_t			frag_transformed;
 
@@ -64,6 +64,8 @@ struct shader {
 
 	struct uniform	*uniforms[UNIFORMS_MAX];
 };
+
+struct vfs;
 
 int     shader_init(struct shader *s,
 				const char* name,

@@ -1,6 +1,7 @@
 #ifndef _STRVIEW_H
 #define _STRVIEW_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 /**
@@ -25,6 +26,6 @@ int			strview_length(const strview_t str);
 #define		strview_wrap(arr) strview_make(arr, strnlen(arr, LODGE_ARRAYSIZE(arr)))
 
 #define		STRVIEW_PRINTF_FMT "%.*s"
-#define		STRVIEW_PRINTF_ARG(STRVIEW) STRVIEW.length, STRVIEW.s
+#define		STRVIEW_PRINTF_ARG(STRVIEW) (int)STRVIEW.length, STRVIEW.s
 
 #endif

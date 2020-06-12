@@ -34,7 +34,7 @@
 void util_reload_sound(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
-		sound_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		sound_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -43,7 +43,7 @@ void util_reload_sound(struct vfs *vfs, strview_t filename, size_t size, const v
 
 	/* Reload sound. */
 	if(sound_buf_load_vorbis(&tmp, data, size) != SOUND_OK) {
-		sound_error("Could not load `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		sound_error("Could not load `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		/* Release current sound (if any). */
 		sound_buf_free((*dst));
@@ -54,7 +54,7 @@ void util_reload_sound(struct vfs *vfs, strview_t filename, size_t size, const v
 }
 
 // FIXME(TS): strbuf and strview?
-static str_copy_without_ext(char *dst, const char *src, const char *ext, size_t len)
+static void str_copy_without_ext(char *dst, const char *src, const char *ext, size_t len)
 {
 	const char *needle = strstr(src, ext);
 	size_t sub_len = needle - src;
@@ -86,7 +86,7 @@ static void util_reload_shader_register_callbacks(struct vfs *vfs, struct shader
 void util_reload_shader(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
-		shader_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		shader_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -124,7 +124,7 @@ void util_reload_shader(struct vfs *vfs, strview_t filename, size_t size, const 
 
 	int ret = shader_init(&tmp, dst->name, dst->vert_src, dst->frag_src, vfs);
 	if(ret != SHADER_OK) {
-		shader_error("Error %d when loading shader `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", ret, STRVIEW_PRINTF_ARG(filename), size);
+		shader_error("Error %d when loading shader `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", ret, STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		/* Clear callbacks for this shader (due to more being added for included files) */
 		vfs_prune_callbacks(vfs, &util_reload_shader, userdata);
@@ -143,14 +143,14 @@ void util_reload_shader(struct vfs *vfs, strview_t filename, size_t size, const 
 void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata)
 {
 	if(size == 0) {
-		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
 	struct lodge_image image;
 	struct lodge_ret image_ret = lodge_image_new(&image, data, size);
 	if(!image_ret.success) {
-		reload_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -158,7 +158,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const
 	lodge_image_free(&image);
 
 	if(!lodge_texture_is_valid(tmp)) {
-   		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+   		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		if(userdata) {
 			// HACK(TS): remove this
@@ -169,7 +169,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const
 
 			(*(lodge_texture_t*) userdata) = tmp;
 		} else {
-			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 			lodge_texture_reset(&tmp);
 		}
 	}
@@ -178,14 +178,14 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const
 void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata, int width, int height)
 {
 	if(size == 0) {
-		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
 	struct lodge_image image;
 	struct lodge_ret image_ret = lodge_image_new(&image, data, size);
 	if(!image_ret.success) {
-		reload_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -193,12 +193,12 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size
 	lodge_image_free(&image);
 
 	if(!lodge_texture_is_valid(tmp)) {
-		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		if(userdata) {
 			(*(lodge_texture_t *) userdata) = tmp;
 		} else {
-			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 			lodge_texture_reset(&tmp);
 		}
 	}
@@ -208,7 +208,7 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size
 void util_reload_console_conf(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
-		console_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		console_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -228,7 +228,7 @@ void util_reload_console_conf(struct vfs *vfs, strview_t filename, size_t size, 
 void util_reload_atlas(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
-		atlas_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
+		atlas_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 		return;
 	}
 
@@ -243,7 +243,7 @@ void util_reload_atlas(struct vfs *vfs, strview_t filename, size_t size, const v
 
 	int ret = atlas_load(&tmp, data);
 	if(ret != ATLAS_OK) {
-		atlas_error("Error %d when loading atlas `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", ret, STRVIEW_PRINTF_ARG(filename), size);
+		atlas_error("Error %d when loading atlas `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", ret, STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		/* Delete the old atlas. */
 		atlas_free(dst);
@@ -259,7 +259,7 @@ void util_reload_atlas(struct vfs *vfs, strview_t filename, size_t size, const v
 void util_reload_pyxel_asset(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
-		pyxel_debug("Skipped reload of %s (%u bytes)\n", filename, size);
+		pyxel_debug("Skipped reload of %s (%zu bytes)\n", filename, size);
 		return;
 	}
 
@@ -274,7 +274,7 @@ void util_reload_pyxel_asset(struct vfs *vfs, strview_t filename, size_t size, c
 
 	int ret = pyxel_asset_load(&tmp, data, size);
 	if(ret != PYXEL_OK) {
-		pyxel_error("Error %d when loading pyxel %s (%u bytes)\n", ret, filename, size);
+		pyxel_error("Error %d when loading pyxel %s (%zu bytes)\n", ret, filename, size);
 	} else {
 		pyxel_asset_free(dst);
 		(*dst) = tmp;

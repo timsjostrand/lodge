@@ -10,6 +10,8 @@ struct drawable;
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;
 
+struct shader;
+
 struct lodge_renderer_alpha_blend_state
 {
 	int	enabled;

@@ -14,8 +14,6 @@ target_sources(lodge-vfs-reload
 )
 
 target_include_directories(lodge-vfs-reload
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

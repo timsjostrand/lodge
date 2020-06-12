@@ -8,8 +8,6 @@ target_sources(lodge-plugin-env
 )
 
 target_include_directories(lodge-plugin-env
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

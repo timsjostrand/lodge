@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "lodge_assert.h"
+#include "math4.h"
 
 struct array* array_new(size_t element_size, size_t max_count)
 {

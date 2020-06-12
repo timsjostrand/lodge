@@ -12,8 +12,6 @@ target_sources(lodge-terrain
 )
 
 target_include_directories(lodge-terrain
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

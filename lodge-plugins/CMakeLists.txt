@@ -12,8 +12,6 @@ target_sources(lodge-plugins
 )
 
 target_include_directories(lodge-plugins
-	PRIVATE
-		"${ENGINE_PATH}"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )
@@ -26,7 +24,8 @@ target_link_libraries(lodge-plugins
 
 		lodge-plugin-vfs		# FIXME(TS): not statically defined
 		lodge-plugin-env		# FIXME(TS): not statically defined
+		lodge-asset-fbx			# FIXME(TS): not statically defined
 		lodge-window			# FIXME(TS): separate plugin module
 		lodge-renderer			# FIXME(TS): separate plugin module
-		lodge-res				# FIXME(TS): for lodge_res_fbx_plugin() and lodge_res_files_plugin()
+		lodge-res				# FIXME(TS): for lodge_res_files_plugin()
 )

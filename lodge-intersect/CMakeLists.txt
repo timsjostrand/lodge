@@ -12,8 +12,6 @@ target_sources(lodge-intersect
 )
 
 target_include_directories(lodge-intersect
-    PRIVATE
-        "${ENGINE_PATH}"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )

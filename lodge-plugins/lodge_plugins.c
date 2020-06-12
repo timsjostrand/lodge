@@ -69,8 +69,8 @@ static void lodge_plugins_add_dependency(struct lodge_plugins *plugins, size_t p
 static void lodge_plugins_register_frame(struct lodge_plugins_frame_times *f, float delta_time)
 {
 	f->frames++;
-	f->frame_time_min = fmin(delta_time, f->frame_time_min);
-	f->frame_time_max = fmax(delta_time, f->frame_time_max);
+	f->frame_time_min = min(delta_time, f->frame_time_min);
+	f->frame_time_max = max(delta_time, f->frame_time_max);
 	f->frame_time_sum += delta_time;
 	
 	if (lodge_window_get_time() - f->last_frame_report >= 1000.0) {
@@ -254,7 +254,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		/* Delta-time. */
 		float delta_time = 0;
 		if(frame_times->last_frame != 0) {
-			delta_time = (before - frame_times->last_frame) * plugins->delta_time_factor;
+			delta_time = (float)((before - frame_times->last_frame) * plugins->delta_time_factor);
 		}
 		frame_times->last_frame = before;
 
