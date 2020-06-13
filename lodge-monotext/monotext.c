@@ -124,10 +124,10 @@ static void monofont_reload(struct vfs *vfs, strview_t filename, unsigned int si
 	dst->texture = tex;
 	dst->sampler = sampler;
 	dst->loaded = 1;
-	dst->width = image.width;
-	dst->height = image.height;
-	dst->grids_x = image.width / dst->letter_width;
-	dst->grids_y = image.height / dst->letter_height;
+	dst->width = image.desc.width;
+	dst->height = image.desc.height;
+	dst->grids_x = image.desc.width / dst->letter_width;
+	dst->grids_y = image.desc.height / dst->letter_height;
 
 	lodge_image_free(&image);
 }
