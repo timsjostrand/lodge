@@ -109,22 +109,22 @@ static int pyxel_asset_layers_blend(uint32_t **bufs, size_t *buf_sizes, int buf_
 		/* Use the dimensions of the first processed layer to allocate memory for the
 		 * final image. */
 		if(final == NULL) {
-			final = (uint32_t *) calloc(image_out.width * image_out.height, sizeof(uint32_t));
+			final = (uint32_t *) calloc(image_out.desc.width * image_out.desc.height, sizeof(uint32_t));
 			if(final == NULL) {
 				pyxel_error("Out of memory\n");
 				goto bail;
 			}
-			(*out_size) = image_out.width * image_out.height * sizeof(uint32_t);
-			(*out_width) = image_out.width;
-			(*out_height) = image_out.height;
+			(*out_size) = image_out.desc.width * image_out.desc.height * sizeof(uint32_t);
+			(*out_width) = image_out.desc.width;
+			(*out_height) = image_out.desc.height;
 		}
 
 		/* Blend color components to produce final image. */
-		for(int x=0; x<image_out.width; x++) {
-			for(int y=0; y<image_out.height; y++) {
-				final[y * image_out.width + x] = pyxel_asset_blend_alpha(
-					image_out.pixel_data[y * image_out.width + x],
-					final[y * image_out.width + x]
+		for(uint32_t x=0; x<image_out.desc.width; x++) {
+			for(uint32_t y=0; y<image_out.desc.height; y++) {
+				final[y * image_out.desc.width + x] = pyxel_asset_blend_alpha(
+					image_out.pixel_data[y * image_out.desc.width + x],
+					final[y * image_out.desc.width + x]
 				);
 			}
 		}
