@@ -7,7 +7,6 @@
 #include "lodge_platform.h"
 
 struct alist* assets_list;
-struct alist* assets_list_textures;
 struct alist* assets_list_sounds;
 struct alist* assets_list_shaders;
 #ifdef ENABLE_LODGE_ASSET_PYXEL
@@ -63,14 +62,6 @@ void write_assets_c()
 	fprintf(fp, "\n");
 	fprintf(fp, "void assets_load(struct vfs *vfs)\n");
 	fprintf(fp, "{\n");
-	fprintf(fp, "\t// Textures\n");
-	foreach_alist(char*, asset, i, assets_list_textures)
-	{
-		fprintf(fp, "\tvfs_register_callback(vfs, strview_static(\"");
-		fprintf(fp, "%s\"), &util_reload_texture, &assets->textures.", asset);
-		write_clean_name(fp, asset);
-		fprintf(fp, ");\n");
-	}
 	fprintf(fp, "\n\t// Sounds\n");
 	foreach_alist(char*, asset, i, assets_list_sounds)
 	{
@@ -101,13 +92,6 @@ void write_assets_c()
 
 	fprintf(fp, "void assets_release()\n");
 	fprintf(fp, "{\n");
-	fprintf(fp, "\t// Textures\n");
-	foreach_alist(char*, asset, i, assets_list_textures)
-	{
-		fprintf(fp, "\tlodge_texture_reset(&assets->textures.");
-		write_clean_name(fp, asset);
-		fprintf(fp, ");\n");
-	}
 	fprintf(fp, "\n\t// Sounds\n");
 	foreach_alist(char*, asset, i, assets_list_sounds)
 	{
@@ -148,31 +132,10 @@ void write_assets_h()
 	fprintf(fp, "#define ASSETS_H\n\n");
 	fprintf(fp, "#include \"game.h\"\n");
 	fprintf(fp, "#include \"shader.h\"\n");
-	fprintf(fp, "#include \"lodge_texture.h\"\n");
 	fprintf(fp, "#include \"sound.h\"\n\n");
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "#include \"pyxel_asset.h\"\n\n");
 #endif
-
-	// Textures
-	fprintf(fp, "struct textures\n");
-	fprintf(fp, "{\n");
-	if(alist_count(assets_list_textures) > 0)
-	{
-		foreach_alist(char*, asset, i, assets_list_textures)
-		{
-			fprintf(fp, "\t");
-			fprintf(fp, "lodge_texture_t\t");
-			write_clean_name(fp, asset);
-			fprintf(fp, ";");
-			fprintf(fp, "\n");
-		}
-	}
-	else
-	{
-		fprintf(fp, "\tint\t__none;\n");
-	}
-	fprintf(fp, "};\n\n");
 
 	// Sounds
 	fprintf(fp, "struct sounds\n");
@@ -248,7 +211,6 @@ void write_assets_h()
 
 	fprintf(fp, "struct assets\n");
 	fprintf(fp, "{\n");
-	fprintf(fp, "\t struct textures textures;\n");
 	fprintf(fp, "\t struct sounds sounds;\n");
 	fprintf(fp, "\t struct shaders shaders;\n");
 #ifdef ENABLE_LODGE_ASSET_PYXEL
@@ -274,7 +236,6 @@ void add_assets(struct vfs *vfs, struct alist *assets_list)
 		alist_append(assets_list, vfs_get_simple_name(vfs, i).s);
 	}
 
-	const char* ext_texture[] = { ".png", ".tga", ".jpeg", ".jpg", ".bmp", ".psd", ".gif", ".hdr", ".pic", ".pnm" };
 	const char* ext_sounds[] = { ".ogg" };
 	const char* ext_shaders[] = { ".frag", ".vert" };
 #ifdef ENABLE_LODGE_ASSET_PYXEL
@@ -284,22 +245,6 @@ void add_assets(struct vfs *vfs, struct alist *assets_list)
 	foreach_alist(char*, asset, index, assets_list)
 	{
 		int added = 0;
-
-		// Textures
-		for (int i = 0, i_size = sizeof(ext_texture) / sizeof(ext_texture[0]); i < i_size; i++)
-		{
-			if (strstr(asset, ext_texture[i]) != 0)
-			{
-				alist_append(assets_list_textures, asset);
-				added = 1;
-				break;
-			}
-		}
-
-		if (added)
-		{
-			continue;
-		}
 
 		// Sounds
 		for (int i = 0, i_size = sizeof(ext_sounds) / sizeof(ext_sounds[0]); i < i_size; i++)
@@ -364,7 +309,6 @@ int main(int argc, char* argv[])
 	}
 
 	assets_list = alist_new(MAX_ASSETS);
-	assets_list_textures = alist_new(MAX_ASSETS);
 	assets_list_sounds = alist_new(MAX_ASSETS);
 	assets_list_shaders = alist_new(MAX_ASSETS);
 #ifdef ENABLE_LODGE_ASSET_PYXEL
