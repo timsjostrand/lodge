@@ -14,6 +14,8 @@
 #include "vfs.h"
 #include "lodge_res_files.h"
 #include "lodge_res_fbx.h"
+#include "lodge_plugin_images.h"
+#include "lodge_plugin_textures.h"
 
 #define LODGE_PLUGINS_MAX				128
 #define LODGE_PLUGIN_DEPENDENCIES_MAX	32
@@ -169,6 +171,8 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, env_plugin());
 	lodge_plugins_append(plugins, lodge_res_files_plugin());
 	lodge_plugins_append(plugins, lodge_res_fbx_plugin());
+	lodge_plugins_append(plugins, lodge_images_plugin());
+	lodge_plugins_append(plugins, lodge_textures_plugin());
 	lodge_plugins_append(plugins, game_plugin());
 
 	for(int i = 0; i < plugins->count; i++) {
