@@ -13,7 +13,7 @@
 #include "game.h"
 #include "vfs.h"
 #include "lodge_res_files.h"
-#include "lodge_res_fbx.h"
+#include "lodge_plugin_fbx.h"
 #include "lodge_plugin_images.h"
 #include "lodge_plugin_textures.h"
 
@@ -170,7 +170,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, lodge_windows_plugin());
 	lodge_plugins_append(plugins, env_plugin());
 	lodge_plugins_append(plugins, lodge_res_files_plugin());
-	lodge_plugins_append(plugins, lodge_res_fbx_plugin());
+	lodge_plugins_append(plugins, lodge_fbx_plugin());
 	lodge_plugins_append(plugins, lodge_images_plugin());
 	lodge_plugins_append(plugins, lodge_textures_plugin());
 	lodge_plugins_append(plugins, game_plugin());
