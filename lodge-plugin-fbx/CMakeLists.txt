@@ -1,20 +1,20 @@
-add_library(lodge-asset-fbx STATIC "")
+add_library(lodge-plugin-fbx STATIC "")
 
-target_sources(lodge-asset-fbx
+target_sources(lodge-plugin-fbx
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/fbx_asset.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_res_fbx.c"
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin_fbx.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/fbx_asset.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_res_fbx.h"
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin_fbx.h"
 )
 
-target_include_directories(lodge-asset-fbx
+target_include_directories(lodge-plugin-fbx
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-target_link_libraries(lodge-asset-fbx
+target_link_libraries(lodge-plugin-fbx
 	PRIVATE
 		lodge-build-flags
 		${GLEW_LIBRARY}
