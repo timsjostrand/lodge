@@ -1,8 +1,8 @@
 #include "lodge_plugin_textures.h"
 
 #include "lodge_plugins.h"
+#include "lodge_plugin_files.h"
 #include "lodge_res.h"
-#include "lodge_res_files.h"
 #include "lodge_texture.h"
 
 #define USERDATA_IMAGES 0

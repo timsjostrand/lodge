@@ -18,5 +18,6 @@ target_link_libraries(lodge-plugin-images
 		lodge-res
 	PUBLIC
 		lodge-plugins
+		lodge-plugin-files
 		lodge-image
 )

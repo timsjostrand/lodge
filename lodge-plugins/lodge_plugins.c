@@ -12,7 +12,7 @@
 #include "env.h"
 #include "game.h"
 #include "vfs.h"
-#include "lodge_res_files.h"
+#include "lodge_plugin_files.h"
 #include "lodge_plugin_fbx.h"
 #include "lodge_plugin_images.h"
 #include "lodge_plugin_textures.h"
