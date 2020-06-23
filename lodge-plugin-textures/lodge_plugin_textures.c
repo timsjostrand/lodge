@@ -41,7 +41,7 @@ static void lodge_assets_texture_free_inplace(struct lodge_res *res, strview_t n
 	lodge_texture_reset(texture);
 }
 
-static struct lodge_ret lodge_texture_plugin_init(struct lodge_res *textures, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_textures_new_inplace(struct lodge_res *textures, struct lodge_plugins *plugins)
 {
 	struct lodge_res *images = lodge_plugins_depend(plugins, textures, strview_static("images"));
 	if(!images) {
@@ -61,19 +61,19 @@ static struct lodge_ret lodge_texture_plugin_init(struct lodge_res *textures, st
 	return lodge_success();
 }
 
-static void lodge_texture_plugin_free(struct lodge_res *textures)
+static void lodge_plugin_texture_free_inplace(struct lodge_res *textures)
 {
 	lodge_res_free_inplace(textures);
 }
 
-struct lodge_plugin lodge_textures_plugin()
+struct lodge_plugin lodge_plugin_textures()
 {
 	return (struct lodge_plugin) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("textures"),
-		.init = &lodge_texture_plugin_init,
-		.free = &lodge_texture_plugin_free,
+		.init = &lodge_plugin_textures_new_inplace,
+		.free = &lodge_plugin_texture_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};
