@@ -389,13 +389,13 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 		GL_OK_OR_RETURN();
 
 		/* Position stream. */
-		GLint attrib_pos = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_POSITION);
+		const int attrib_pos = lodge_shader_get_constant_index(dst->shader, strview_static("vertex_in"));
 		glEnableVertexAttribArray(attrib_pos);
 		glVertexAttribPointer(attrib_pos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), 0);
 		GL_OK_OR_RETURN();
 
 		/* Texcoord stream. */
-		GLint attrib_texcoord = glGetAttribLocation(dst->shader->program, ATTRIB_NAME_TEXCOORD);
+		const int attrib_texcoord = lodge_shader_get_constant_index(dst->shader, strview_static("texcoord_in"));
 		glEnableVertexAttribArray(attrib_texcoord);
 		glVertexAttribPointer(attrib_texcoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat),
 				(void*) (3 * sizeof(GLfloat)));
@@ -424,7 +424,7 @@ void monotext_render(struct monotext *text, struct shader *s)
 	/* Upload matrices and color. */
 	lodge_renderer_set_constant_mvp(s, &mvp);
 	lodge_renderer_set_constant_vec4(s, strview_static("color"), text->color);
-	lodge_renderer_bind_texture_unit(0, text->font->texture, text->font->sampler);
+	lodge_renderer_bind_texture_unit_2d(0, text->font->texture, text->font->sampler);
 
 	/* Bind vertex array. */
 	glBindVertexArray(text->vao);

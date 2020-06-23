@@ -93,7 +93,7 @@ void animatedsprites_render(struct animatedsprites* animatedsprites, struct shad
 	spritebatch_render(animatedsprites->spritebatch, s);
 }
 
-void animatedsprites_render_simple(struct animatedsprites* animatedsprites, struct shader *s, GLuint texture, mat4 projection, mat4 transform)
+void animatedsprites_render_simple(struct animatedsprites* animatedsprites, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform)
 {
 	spritebatch_render_simple(animatedsprites->spritebatch, s, texture, projection, transform);
 }
