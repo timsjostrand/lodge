@@ -18,6 +18,8 @@ size_t		txt_length(txt_t txt);
 txt_t		txt_insert(txt_t txt, size_t index, const strview_t sub);
 void		txt_delete(txt_t txt, size_t index, size_t count);
 void		txt_delete_from_tail(txt_t txt, size_t count);
+void		txt_clear(txt_t txt);
+txt_t		txt_set(txt_t txt, strview_t str);
 
 void		txt_trim(txt_t txt);
 int			txt_begins_with(txt_t txt, const strview_t sub);
