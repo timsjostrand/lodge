@@ -6,12 +6,12 @@
 #include <string.h>
 
 // FIXME(TS): Just for `_plugin()` funcs
-#include "lodge_plugin_vfs.h"
 #include "lodge_window.h"
 #include "lodge_renderer.h"
 #include "env.h"
 #include "game.h"
 #include "vfs.h"
+#include "lodge_plugin_vfs.h"
 #include "lodge_plugin_files.h"
 #include "lodge_plugin_fbx.h"
 #include "lodge_plugin_images.h"
@@ -167,7 +167,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	// HACK(TS)
 	plugins->mount_dir = mount_dir;
 
-	lodge_plugins_append(plugins, vfs_plugin());
+	lodge_plugins_append(plugins, lodge_plugin_vfs());
 	lodge_plugins_append(plugins, lodge_windows_plugin());
 	lodge_plugins_append(plugins, env_plugin());
 	lodge_plugins_append(plugins, lodge_files_plugin());
