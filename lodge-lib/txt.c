@@ -133,6 +133,19 @@ void txt_delete_from_tail(txt_t handle, size_t count)
 	txt->length -= count;
 }
 
+void txt_clear(txt_t handle)
+{
+	struct txt *txt = txt_from_handle(handle);
+	*handle = '\0';
+	txt->length = 0;
+}
+
+txt_t txt_set(txt_t txt, strview_t str)
+{
+	txt_clear(txt);
+	txt_insert(txt, 0, str);
+}
+
 void txt_trim(txt_t handle)
 {
 	struct txt *txt = txt_from_handle(handle);

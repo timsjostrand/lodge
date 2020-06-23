@@ -13,6 +13,14 @@ strview_t strview_make(const char *s, size_t length)
 	};
 }
 
+strview_t strview_make_from_str(const char *s, size_t max_count)
+{
+	return (strview_t) {
+		.length = strnlen(s, max_count),
+		.s = s
+	};
+}
+
 strview_t strview_null()
 {
 	return (strview_t) {
@@ -33,6 +41,9 @@ int strview_empty(const strview_t str)
 
 int strview_length(const strview_t str)
 {
-	ASSERT(str.length == strlen(str.s));
+	// NOTE(TS): this assert is pretty devious since strlen() assumes there will
+	// be a \0 terminator somewhere which may not be true, especially for text
+	// loaded from files and sub stringviews.
+	//ASSERT(str.length == strlen(str.s));
 	return str.length;
 }
