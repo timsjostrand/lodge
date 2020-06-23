@@ -138,7 +138,7 @@ static void lodge_windows_render(struct lodge_windows *windows)
 	}
 }
 
-struct lodge_plugin lodge_windows_plugin()
+struct lodge_plugin lodge_plugin_windows()
 {
 	struct lodge_plugin plugin = {
 		.version = LODGE_PLUGIN_VERSION,

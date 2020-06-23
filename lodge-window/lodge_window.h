@@ -29,7 +29,7 @@ struct lodge_windows
 
 struct lodge_renderer;
 
-struct lodge_plugin	lodge_windows_plugin();
+struct lodge_plugin	lodge_plugin_windows();
 
 lodge_window_t		lodge_window_new(struct lodge_windows *windows, const char *title, int window_width, int window_height, int window_mode);
 void				lodge_window_free(lodge_window_t window);

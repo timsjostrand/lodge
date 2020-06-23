@@ -168,7 +168,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	plugins->mount_dir = mount_dir;
 
 	lodge_plugins_append(plugins, lodge_plugin_vfs());
-	lodge_plugins_append(plugins, lodge_windows_plugin());
+	lodge_plugins_append(plugins, lodge_plugin_windows());
 	lodge_plugins_append(plugins, env_plugin());
 	lodge_plugins_append(plugins, lodge_files_plugin());
 	lodge_plugins_append(plugins, lodge_fbx_plugin());
