@@ -22,5 +22,5 @@ target_link_libraries(lodge-console
 	PUBLIC
 		lodge-sprite
 		lodge-monotext
-		lodge-plugin-env
+		lodge-env
 )

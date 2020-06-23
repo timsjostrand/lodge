@@ -1,10 +1,8 @@
 #ifndef _ENV_H
 #define _ENV_H
 
-#include "lodge_plugin.h"
-
-#define env_debug(...) debugf("Env", __VA_ARGS__)
-#define env_error(...) errorf("Env", __VA_ARGS__)
+#include "strview.h"
+#include "math4.h"
 
 #define ENV_MAX					255 /* Number of environment variables. */
 #define ENV_VAR_NAME_MAX		255
@@ -26,8 +24,6 @@ struct env {
 	struct env_var	vars[ENV_MAX];
 	int				len;
 };
-
-struct lodge_plugin	lodge_plugin_env();
 
 struct env_var*		env_var_get_by_name(struct env *e, const strview_t name);
 
