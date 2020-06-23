@@ -12,6 +12,9 @@
 
 struct atlas;
 
+struct lodge_texture;
+typedef struct lodge_texture_t* lodge_texture;
+
 struct anim
 {
 	int looping;
@@ -51,7 +54,7 @@ void animatedsprites_switchanim(struct sprite* sprite, struct anim* anim);
 void animatedsprites_update(struct animatedsprites* animatedsprites, struct atlas* atlas, float delta_time);
 
 void animatedsprites_render(struct animatedsprites* animatedsprites, struct shader *s);
-void animatedsprites_render_simple(struct animatedsprites* animatedsprites, struct shader *s, GLuint texture, mat4 projection, mat4 transform);
+void animatedsprites_render_simple(struct animatedsprites* animatedsprites, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform);
 
 void animatedsprites_add(struct animatedsprites* animatedsprites, struct sprite* sprite);
 void animatedsprites_clear(struct animatedsprites* animatedsprites);

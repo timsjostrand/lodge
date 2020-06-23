@@ -11,6 +11,8 @@
 #include "shader.h"
 #include "spritebatch.h"
 #include "color.h"
+#include "lodge_opengl.h"
+#include "lodge_renderer.h"
 
 #define STRIDE 5
 #define CURRENT_SPRITE batch->sprite_count * STRIDE * 6
@@ -142,7 +144,7 @@ void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_fun
 
 void spritebatch_render(struct spritebatch* batch, struct shader *s)
 {
-	glUseProgram(s->program);
+	lodge_renderer_bind_shader(s);
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
@@ -151,34 +153,32 @@ void spritebatch_render(struct spritebatch* batch, struct shader *s)
 	glBindVertexArray(batch->vao);
 
 	/* Position stream. */
-	GLint posAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_POSITION);
+	GLint posAttrib = lodge_shader_get_constant_index(s, strview_static("vertex_in"));
 	glEnableVertexAttribArray(posAttrib);
 	glVertexAttribPointer(posAttrib, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *)0);
 
 	/* Texcoord stream. */
-	GLint texcoordAttrib = glGetAttribLocation(s->program, ATTRIB_NAME_TEXCOORD);
+	GLint texcoordAttrib = lodge_shader_get_constant_index(s, strview_static("texcoord_in"));
 	glEnableVertexAttribArray(texcoordAttrib);
 	glVertexAttribPointer(texcoordAttrib, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * STRIDE, (void *)(sizeof(GLfloat) * 3));
 
 	glDrawArrays(GL_TRIANGLES, batch->offset_draw, batch->sprite_count * 6);
 }
 
-void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, GLuint texture, mat4 projection, mat4 transform)
+void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform)
 {
-	glUseProgram(s->program);
+	lodge_renderer_bind_shader(s);
+	lodge_renderer_bind_texture_2d(0, texture);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	lodge_renderer_set_constant_mat4(s, strview_static("transform"), transform);
+	lodge_renderer_set_constant_mat4(s, strview_static("projection"), projection);
+	lodge_renderer_set_constant_mat4(s, strview_static("projection"), projection);
+	lodge_renderer_set_constant_vec4(s, strview_static("color"), COLOR_WHITE);
 
-	GLint uniform_projection = glGetUniformLocation(s->program, "projection");
-	GLint uniform_transform = glGetUniformLocation(s->program, "transform");
+#if 0
 	GLint uniform_tex = glGetUniformLocation(s->program, "tex");
-	GLint uniform_color = glGetUniformLocation(s->program, "color");
-
-	glUniformMatrix4fv(uniform_transform, 1, GL_FALSE, transform.m);
-	glUniformMatrix4fv(uniform_projection, 1, GL_FALSE, projection.m);
 	glUniform1i(uniform_tex, 0);
-	glUniform4fv(uniform_color, 1, COLOR_WHITE.v);
+#endif
 
 	spritebatch_render(batch, s);
 }

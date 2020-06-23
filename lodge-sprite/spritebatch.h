@@ -11,6 +11,7 @@ struct shader;
 
 typedef float GLfloat;
 typedef unsigned int GLuint;
+typedef struct lodge_texture* lodge_texture_t;
 typedef int(*spritebatch_sort_fn)(const GLfloat* buffer_data_a, const GLfloat* buffer_data_b);
 
 struct spritebatch
@@ -34,6 +35,6 @@ void spritebatch_end(struct spritebatch* batch);
 void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_function);
 
 void spritebatch_render(struct spritebatch* batch, struct shader *s);
-void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, GLuint texture, mat4 projection, mat4 transform);
+void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform);
 
 #endif //_SPRITEBATCH_H

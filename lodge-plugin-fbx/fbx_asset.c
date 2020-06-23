@@ -9,6 +9,7 @@
 #include "shader.h"
 #include "fbx.h"
 #include "str.h"
+#include "array.h"
 #include "lodge_renderer.h"
 
 #define CONVERT_DOUBLE_ARRAY_TO_FLOAT_ARRAY
@@ -476,7 +477,7 @@ void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_text
 	lodge_renderer_set_constant_mvp(shader, &mvp);
 
 	// FIXME(TS): material should not be hardcoded, use texture unit instead
-	lodge_renderer_bind_texture(0, tex);
+	lodge_renderer_bind_texture_2d(0, tex);
 
 	glBindVertexArray(asset->vertex_array_object);
 	glDrawElements(GL_TRIANGLES, asset->indices_count, GL_UNSIGNED_INT, NULL);

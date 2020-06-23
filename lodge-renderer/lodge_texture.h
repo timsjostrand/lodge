@@ -3,6 +3,12 @@
 
 #include "lodge_platform.h"
 
+enum lodge_texture_target
+{
+	LODGE_TEXTURE_TARGET_2D,
+	LODGE_TEXTURE_TARGET_CUBE_MAP,
+};
+
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;
 

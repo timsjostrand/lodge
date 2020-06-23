@@ -247,7 +247,6 @@ void console_think(struct console *c)
 
 void console_render(struct console *c, struct shader *s, const mat4 projection)
 {
-	shader_uniforms_think(s);
 	sprite_render(&c->background, s, projection);
 	sprite_render(&c->cursor.sprite, s, projection);
 	monotext_render(&c->txt_display, s);

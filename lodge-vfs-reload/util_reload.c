@@ -26,6 +26,8 @@
 #include "atlas.h"
 #endif
 
+#include "lodge_opengl.h"
+
 #include <string.h>
 
 #define reload_debug(FMT, ...) debugf("Reload", FMT, __VA_ARGS__)
@@ -61,6 +63,7 @@ static void str_copy_without_ext(char *dst, const char *src, const char *ext, si
 	strncpy(dst, src, sub_len < len ? sub_len : len);
 }
 
+#if 0
 static void util_reload_shader_register_callbacks(struct vfs *vfs, struct shader *s)
 {
 	char tmp[SHADER_FILENAME_MAX] = { 0 };
@@ -139,6 +142,7 @@ void util_reload_shader(struct vfs *vfs, strview_t filename, size_t size, const 
 		util_reload_shader_register_callbacks(vfs, dst);
 	}
 }
+#endif
 
 void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata)
 {

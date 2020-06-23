@@ -141,6 +141,20 @@ static void unit_drawables_reset(struct unit_drawables *ud)
 	drawable_reset(&ud->rect);
 }
 
+static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
+{
+	switch(target)
+	{
+	case LODGE_TEXTURE_TARGET_2D:
+		return GL_TEXTURE_2D;
+	case LODGE_TEXTURE_TARGET_CUBE_MAP:
+		return GL_TEXTURE_CUBE_MAP;
+	default:
+		ASSERT("Unknown OpenGL texture target");
+		return GL_TEXTURE_2D;
+	}
+};
+
 struct lodge_renderer* lodge_renderer_new()
 {
 	struct lodge_renderer *renderer = (struct lodge_renderer *) calloc(1, sizeof(struct lodge_renderer));
@@ -263,17 +277,11 @@ struct drawable* lodge_renderer_get_unit_rect(struct lodge_renderer *renderer)
 	return &renderer->unit_drawables.rect;
 }
 
-void lodge_renderer_bind_shader(struct shader *shader)
-{
-	glUseProgram(shader->program);
-	GL_OK_OR_ASSERT("Failed to bind shader");
-}
-
-void lodge_renderer_bind_texture(int slot, const lodge_texture_t texture)
+void lodge_renderer_bind_texture(int slot, const lodge_texture_t texture, enum lodge_texture_target target)
 {
 	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
-	glBindTexture(GL_TEXTURE_2D, lodge_texture_to_gl(texture));
+	glBindTexture(lodge_texture_target_to_gl(target), lodge_texture_to_gl(texture));
 	GL_OK_OR_ASSERT("Failed to bind texture");
 }
 
@@ -283,14 +291,34 @@ void lodge_renderer_bind_sampler(int slot, const lodge_sampler_t sampler)
 	GL_OK_OR_ASSERT("Failed to bind sampler");
 }
 
-void lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+void lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler, enum lodge_texture_target target)
 {
 	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
-	glBindTexture(GL_TEXTURE_2D, lodge_texture_to_gl(texture));
+	glBindTexture(lodge_texture_target_to_gl(target), lodge_texture_to_gl(texture));
 
 	glBindSampler(slot, lodge_sampler_to_gl(sampler));
 	GL_OK_OR_ASSERT("Failed to bind texture unit");
+}
+
+void lodge_renderer_bind_texture_2d(int slot, const lodge_texture_t texture)
+{
+	lodge_renderer_bind_texture(slot, texture, LODGE_TEXTURE_TARGET_2D);
+}
+
+void lodge_renderer_bind_texture_unit_2d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+{
+	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D);
+}
+
+void lodge_renderer_bind_texture_cube_map(int slot, const lodge_texture_t texture)
+{
+	lodge_renderer_bind_texture(slot, texture, LODGE_TEXTURE_TARGET_CUBE_MAP);
+}
+
+void lodge_renderer_bind_texture_unit_cube_map(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+{
+	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_CUBE_MAP);
 }
 
 void lodge_renderer_unbind_texture_unit(int slot)
@@ -300,83 +328,6 @@ void lodge_renderer_unbind_texture_unit(int slot)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindSampler(slot, 0);
 	GL_OK_OR_ASSERT("Failed to unbind texture unit");
-}
-
-void lodge_renderer_set_constant_float(struct shader *s, strview_t name, float f)
-{
-	const GLint id = glGetUniformLocation(s->program, name.s);
-	if(id == -1) {
-		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
-	}
-	glUseProgram(s->program);
-	glUniform1f(id, f);
-	GLint err = glGetError();
-	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_float(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
-	}
-}
-
-void lodge_renderer_set_constant_vec2(struct shader *s, strview_t name, vec2 v)
-{
-	const GLint id = glGetUniformLocation(s->program, name.s);
-	if(id == -1) {
-		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
-	}
-	glUseProgram(s->program);
-	glUniform2f(id, v.x, v.y);
-	GLint err = glGetError();
-	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_vec2(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
-	}
-}
-
-void lodge_renderer_set_constant_vec3(struct shader *s, strview_t name, vec3 v)
-{
-	const GLint id = glGetUniformLocation(s->program, name.s);
-	if(id == -1) {
-		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
-	}
-	glUseProgram(s->program);
-	glUniform3f(id, v.x, v.y, v.z);
-	GLint err = glGetError();
-	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
-	}
-}
-
-void lodge_renderer_set_constant_vec4(struct shader *s, strview_t name, vec4 v)
-{
-	const GLint id = glGetUniformLocation(s->program, name.s);
-	if(id == -1) {
-		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
-	}
-	glUseProgram(s->program);
-	glUniform4f(id, v.x, v.y, v.z, v.w);
-	GLint err = glGetError();
-	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
-	}
-}
-
-void lodge_renderer_set_constant_mat4(struct shader *s, strview_t name, mat4 mat)
-{
-	const GLint id = glGetUniformLocation(s->program, name.s);
-	if(id == -1) {
-		errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
-	}
-	glUseProgram(s->program);
-	glUniformMatrix4fv(id, 1, GL_FALSE, mat.m);
-	GLint err = glGetError();
-	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_mat4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
-	}
-}
-
-void lodge_renderer_set_constant_mvp(struct shader *s, const struct mvp *mvp)
-{
-	lodge_renderer_set_constant_mat4(s, strview_static("model"), mvp->model);
-	lodge_renderer_set_constant_mat4(s, strview_static("view"), mvp->view);
-	lodge_renderer_set_constant_mat4(s, strview_static("projection"), mvp->projection);
 }
 
 #if 0
