@@ -49,7 +49,7 @@ static void lodge_res_fbx_free_inplace(struct lodge_res *res, strview_t name, st
 	fbx_asset_reset(fbx_asset);
 }
 
-static struct lodge_ret lodge_fbx_plugin_init(struct lodge_res *fbx_res, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_fbx_init(struct lodge_res *fbx_res, struct lodge_plugins *plugins)
 {
 	struct lodge_res *files = lodge_plugins_depend(plugins, fbx_res, strview_static("files"));
 	if(!files) {
@@ -70,19 +70,19 @@ static struct lodge_ret lodge_fbx_plugin_init(struct lodge_res *fbx_res, struct 
 	return lodge_success();
 }
 
-static void lodge_fbx_plugin_free(struct lodge_res *fbx_res)
+static void lodge_plugin_fbx_free(struct lodge_res *fbx_res)
 {
 	lodge_res_free_inplace(fbx_res);
 }
 
-struct lodge_plugin lodge_fbx_plugin()
+struct lodge_plugin lodge_plugin_fbx()
 {
 	return (struct lodge_plugin) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("fbx"),
-		.init = &lodge_fbx_plugin_init,
-		.free = &lodge_fbx_plugin_free,
+		.init = &lodge_plugin_fbx_init,
+		.free = &lodge_plugin_fbx_free,
 		.update = NULL,
 		.render = NULL,
 	};
