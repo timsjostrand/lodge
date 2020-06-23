@@ -8,7 +8,6 @@
 
 struct alist* assets_list;
 struct alist* assets_list_sounds;
-struct alist* assets_list_shaders;
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 struct alist* assets_list_pyxels;
 #endif
@@ -70,14 +69,6 @@ void write_assets_c()
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
 	}
-	fprintf(fp, "\n\t// Shaders\n");
-	foreach_alist(char*, asset, i, assets_list_shaders)
-	{
-		fprintf(fp, "\tvfs_register_callback(vfs, strview_static(\"");
-		fprintf(fp, "%s\"), &util_reload_shader, &assets->shaders.", asset);
-		write_clean_name(fp, asset);
-		fprintf(fp, ");\n");
-	}
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "\n\t// Pyxel files\n");
 	foreach_alist(char*, asset, i, assets_list_pyxels)
@@ -98,16 +89,6 @@ void write_assets_c()
 		fprintf(fp, "\tsound_buf_free(assets->sounds.");
 		write_clean_name(fp, asset);
 		fprintf(fp, ");\n");
-	}
-	fprintf(fp, "\n\t// Shaders\n");
-	foreach_alist(char*, asset, i, assets_list_shaders)
-	{
-		if (strstr(asset, ".frag") != 0)
-		{
-			fprintf(fp, "\tshader_free(&assets->shaders.");
-			write_clean_name(fp, asset);
-			fprintf(fp, ");\n");
-		}
 	}
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "\n\t// Pyxel files\n");
@@ -131,7 +112,6 @@ void write_assets_h()
 	fprintf(fp, "#ifndef ASSETS_H\n");
 	fprintf(fp, "#define ASSETS_H\n\n");
 	fprintf(fp, "#include \"game.h\"\n");
-	fprintf(fp, "#include \"shader.h\"\n");
 	fprintf(fp, "#include \"sound.h\"\n\n");
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "#include \"pyxel_asset.h\"\n\n");
@@ -146,31 +126,6 @@ void write_assets_h()
 		{
 			fprintf(fp, "\t");
 			fprintf(fp, "sound_buf_t\t");
-			write_clean_name(fp, asset);
-			fprintf(fp, ";");
-			fprintf(fp, "\n");
-		}
-	}
-	else
-	{
-		fprintf(fp, "\tint\t__none;\n");
-	}
-	fprintf(fp, "};\n\n");
-
-	// Shaders
-	fprintf(fp, "struct shaders\n");
-	fprintf(fp, "{\n");
-	if(alist_count(assets_list_shaders) > 0)
-	{
-		foreach_alist(char*, asset, i, assets_list_shaders)
-		{
-			if (strstr(asset, ".frag") == 0)
-			{
-				continue;
-			}
-
-			fprintf(fp, "\t");
-			fprintf(fp, "struct shader ");
 			write_clean_name(fp, asset);
 			fprintf(fp, ";");
 			fprintf(fp, "\n");
@@ -212,7 +167,6 @@ void write_assets_h()
 	fprintf(fp, "struct assets\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\t struct sounds sounds;\n");
-	fprintf(fp, "\t struct shaders shaders;\n");
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	fprintf(fp, "\t struct pyxels pyxels;\n");
 #endif
@@ -237,7 +191,6 @@ void add_assets(struct vfs *vfs, struct alist *assets_list)
 	}
 
 	const char* ext_sounds[] = { ".ogg" };
-	const char* ext_shaders[] = { ".frag", ".vert" };
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	const char* ext_pyxels[] = { ".pyxel" };
 #endif
@@ -252,22 +205,6 @@ void add_assets(struct vfs *vfs, struct alist *assets_list)
 			if (strstr(asset, ext_sounds[i]) != 0)
 			{
 				alist_append(assets_list_sounds, asset);
-				added = 1;
-				break;
-			}
-		}
-
-		if (added)
-		{
-			continue;
-		}
-
-		// Shaders
-		for (int i = 0, i_size = sizeof(ext_shaders) / sizeof(ext_shaders[0]); i < i_size; i++)
-		{
-			if (strstr(asset, ext_shaders[i]) != 0)
-			{
-				alist_append(assets_list_shaders, asset);
 				added = 1;
 				break;
 			}
@@ -310,7 +247,6 @@ int main(int argc, char* argv[])
 
 	assets_list = alist_new(MAX_ASSETS);
 	assets_list_sounds = alist_new(MAX_ASSETS);
-	assets_list_shaders = alist_new(MAX_ASSETS);
 #ifdef ENABLE_LODGE_ASSET_PYXEL
 	assets_list_pyxels = alist_new(MAX_ASSETS);
 #endif
