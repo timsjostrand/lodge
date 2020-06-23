@@ -19,6 +19,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
             -Werror-implicit-function-declaration   # Do not allow declaring functions without implementing them.
             #-Werror=strict-aliasing                 # Force casting of pointer types. (DISABLED BECAUSE OF STB.H)
             -Werror=return-type                     # Force correct return type.
+			-Wno-missing-braces						# Missing braces warning is bugged when nested type has { 0 }
     )
 endif()
 
