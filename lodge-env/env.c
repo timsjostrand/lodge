@@ -10,21 +10,10 @@
 
 #include "env.h"
 #include "str.h"
-#include "math4.h"
+#include "log.h"
 
-struct lodge_plugin	lodge_plugin_env()
-{
-	struct lodge_plugin plugin = {
-		.version = LODGE_PLUGIN_VERSION,
-		.size = sizeof(struct env),
-		.name = strview_static("env"),
-		.init = NULL,
-		.free = NULL,
-		.update = NULL,
-		.render = NULL,
-	};
-	return plugin;
-}
+#define env_debug(...) debugf("Env", __VA_ARGS__)
+#define env_error(...) errorf("Env", __VA_ARGS__)
 
 struct env_var* env_var_get_by_name(struct env *e, const strview_t name)
 {
