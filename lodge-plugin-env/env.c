@@ -12,7 +12,7 @@
 #include "str.h"
 #include "math4.h"
 
-struct lodge_plugin	env_plugin()
+struct lodge_plugin	lodge_plugin_env()
 {
 	struct lodge_plugin plugin = {
 		.version = LODGE_PLUGIN_VERSION,

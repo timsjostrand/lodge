@@ -27,7 +27,7 @@ struct env {
 	int				len;
 };
 
-struct lodge_plugin	env_plugin();
+struct lodge_plugin	lodge_plugin_env();
 
 struct env_var*		env_var_get_by_name(struct env *e, const strview_t name);
 
