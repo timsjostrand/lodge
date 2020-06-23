@@ -172,7 +172,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, lodge_plugin_env());
 	lodge_plugins_append(plugins, lodge_plugin_files());
 	lodge_plugins_append(plugins, lodge_plugin_fbx());
-	lodge_plugins_append(plugins, lodge_images_plugin());
+	lodge_plugins_append(plugins, lodge_plugin_images());
 	lodge_plugins_append(plugins, lodge_textures_plugin());
 	lodge_plugins_append(plugins, lodge_shaders_plugin());
 	lodge_plugins_append(plugins, game_plugin());
