@@ -170,7 +170,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, lodge_plugin_vfs());
 	lodge_plugins_append(plugins, lodge_plugin_windows());
 	lodge_plugins_append(plugins, lodge_plugin_env());
-	lodge_plugins_append(plugins, lodge_files_plugin());
+	lodge_plugins_append(plugins, lodge_plugin_files());
 	lodge_plugins_append(plugins, lodge_fbx_plugin());
 	lodge_plugins_append(plugins, lodge_images_plugin());
 	lodge_plugins_append(plugins, lodge_textures_plugin());

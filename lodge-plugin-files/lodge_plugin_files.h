@@ -11,6 +11,6 @@ struct lodge_res_file
 	size_t		size;
 };
 
-struct lodge_plugin lodge_files_plugin();
+struct lodge_plugin lodge_plugin_files();
 
 #endif
