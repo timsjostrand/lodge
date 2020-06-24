@@ -1,8 +1,4 @@
-/**
- * In-game terminal emulator.
- *
- * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
- */
+#include "console.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,7 +8,6 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#include "console.h"
 #include "color.h"
 #include "str.h"
 #include "math4.h"
@@ -20,6 +15,7 @@
 #include "env.h"
 #include "lodge_keys.h"
 #include "lodge_time.h"
+#include "monofont.h"
 
 static const vec4 CONSOLE_COLOR_INPUT		= { 1.0f, 1.0f, 1.0f, 1.0f };
 static const vec4 CONSOLE_COLOR_DISPLAY		= { 0.8f, 0.8f, 0.8f, 1.0f };
@@ -38,9 +34,9 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	s->rotation = 0;
 	s->texture = white_tex;
 	s->pos = vec4_make(xyz(txt->bottom_left), 0.0f);
-	s->scale = vec4_make(txt->font->letter_width + txt->font->letter_spacing_x + 1,
-		txt->font->letter_height + txt->font->letter_spacing_y,
-		1, 1);
+	s->scale = vec4_make((float)(txt->font->letter_width + txt->font->letter_spacing_x + 1),
+		(float)(txt->font->letter_height + txt->font->letter_spacing_y),
+		1.0f, 1.0f);
 	s->color = vec4_make(rgba(CONSOLE_COLOR_CURSOR));
 }
 
@@ -129,8 +125,8 @@ float console_height(struct console *c, uint32_t display_lines)
 	return (c->padding * 2.0f) + (display_lines + 1) * (c->font->letter_height + c->font->letter_spacing_y);
 }
 
-void console_new(struct console *c, struct monofont *font, uint32_t view_width,
-		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer)
+void console_new_inplace(struct console *c, struct monofont *font, uint32_t view_width,
+		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env)
 {
 	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;
@@ -153,15 +149,14 @@ void console_new(struct console *c, struct monofont *font, uint32_t view_width,
 			view_width/2.0f,		/* x */
 			bg_h/2.0f,				/* y */
 			0.0f,					/* z */
-			view_width,				/* w */
+			(float)view_width,		/* w */
 			bg_h,					/* h */
 			CONSOLE_COLOR_BG,
 			0.0f,
-			white_tex,
-			renderer);
+			white_tex);
 
-	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, padding, padding, shader);
-	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, padding, padding, shader);
+	monotext_new(&c->txt_input, "", CONSOLE_COLOR_INPUT, font, (float)padding, (float)padding, shader);
+	monotext_new(&c->txt_display, "", CONSOLE_COLOR_DISPLAY, font, (float)padding, (float)padding, shader);
 
 	console_cursor_init(&c->cursor, &c->txt_input, white_tex);
 	console_cmd_new(&c->root_cmd, "root", 0, NULL, NULL);
@@ -169,7 +164,7 @@ void console_new(struct console *c, struct monofont *font, uint32_t view_width,
 	c->initialized = 1;
 }
 
-void console_free(struct console *c)
+void console_free_inplace(struct console *c)
 {
 	free(c->history);
 	list_free(c->input_history, 1);
@@ -234,10 +229,10 @@ void console_print(struct console *c, const char *text, size_t text_len)
 	monotext_update(&c->txt_display, display, display_len);
 }
 
-static void console_render_input(struct console *c, struct shader *s)
+static void console_render_input(struct console *c, struct shader *s, lodge_sampler_t font_sampler)
 {
 	monotext_update(&c->txt_input, c->input, c->input_len);
-	monotext_render(&c->txt_input, s);
+	monotext_render(&c->txt_input, s, font_sampler);
 }
 
 void console_think(struct console *c)
@@ -245,12 +240,12 @@ void console_think(struct console *c)
 	console_cursor_think(&c->cursor);
 }
 
-void console_render(struct console *c, struct shader *s, const mat4 projection)
+void console_render(struct console *c, struct shader *s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler)
 {
-	sprite_render(&c->background, s, projection);
-	sprite_render(&c->cursor.sprite, s, projection);
-	monotext_render(&c->txt_display, s);
-	console_render_input(c, s);
+	sprite_render(&c->background, s, projection, renderer);
+	sprite_render(&c->cursor.sprite, s, projection, renderer);
+	monotext_render(&c->txt_display, s, font_sampler);
+	console_render_input(c, s, font_sampler);
 }
 
 /**
@@ -771,8 +766,7 @@ static void console_common_chars_in_list(char *out, size_t out_size, struct list
  *
  * @return 0 on success, -1 on failure.
  */
-static int console_fit_columns(struct console *c, struct list *strings, int columns,
-		int widths[CONSOLE_COLUMNS_MAX])
+static int console_fit_columns(struct console *c, struct list *strings, int columns, int widths[CONSOLE_COLUMNS_MAX])
 {
 	/* Reset widths table. */
 	memset(widths, 0, CONSOLE_COLUMNS_MAX);

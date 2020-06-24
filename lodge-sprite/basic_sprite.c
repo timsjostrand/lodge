@@ -5,7 +5,7 @@
 
 // TODO(TS): rename sprite_make, return by value
 void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z,
-	float w, float h, const vec4 color, float rotation, lodge_texture_t texture, struct lodge_renderer *renderer)
+	float w, float h, const vec4 color, float rotation, lodge_texture_t texture)
 {
 	sprite->type = type;
 	sprite->pos = vec4_make(x, y, z, 0.0f);
@@ -13,10 +13,9 @@ void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float 
 	sprite->color = vec4_make(xyzw(color));
 	sprite->rotation = rotation;
 	sprite->texture = texture;
-	sprite->renderer = renderer;
 }
 
-void sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection)
+void sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection, struct lodge_renderer *renderer)
 {
 	// Position, rotation and scale
 	mat4 transform_position = mat4_translation(xyz(sprite->pos));
@@ -33,7 +32,7 @@ void sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projectio
 	};
 
 	// TODO(TS): port binding shader, texture
-	drawable_render(lodge_renderer_get_unit_rect(sprite->renderer));
+	drawable_render(lodge_renderer_get_unit_rect(renderer));
 
 #if 0
 	drawable_render_detailed(DRAW_MODE_TRIANGLES,

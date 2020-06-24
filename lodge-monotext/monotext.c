@@ -1,22 +1,6 @@
-/**
- * Simple monospace font rendering.
- *
- * - monofont_new() parses a new font from a PNG file.
- *
- * - monotext_new() creates a new text object with a specific font. The font
- *   MUST have been completely loaded before monotext_new() is used!
- *
- * - monotext_update() updates the vertex buffer for a monotext with a new text
- *   to display, possibly reallocating memory and pushing new vertices to the
- *   GPU.
- *
- * - monotext_updatef() does the same but takes a printf-style format as well.
- *
- * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
- */
-
 #include "monotext.h"
-#include "lodge.h"
+
+#include "monofont.h"
 #include "shader.h"
 #include "vfs.h"
 #include "color.h"
@@ -24,6 +8,7 @@
 #include "lodge_opengl.h"
 #include "lodge_renderer.h"
 #include "lodge_image.h"
+#include "log.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,36 +23,8 @@
 /* Number of components in a quad. */
 #define VBO_QUAD_LEN                    (VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
 
-/**
- * Looks up a character in the texture atlas and returns the texture coordinates
- * for that character mapped to [0,1].
- */
-static int monofont_atlas_coords(float *tx, float *ty, float *tw, float *th,
-		struct monofont *font, const char c)
-{
-	char letter = c - MONOFONT_START_CHAR;
-
-	/* Invalid char. */
-	if(letter > c) {
-		return MONOTEXT_ERROR;
-	}
-	/* Font not loaded. */
-	if(!font->loaded) {
-		monotext_error("Font not loaded: \"%s\"\n", font->name);
-		return MONOTEXT_ERROR;
-	}
-
-	int grid_y = letter / font->grids_x;
-	int grid_x = (letter - (grid_y * font->grids_x)) % font->grids_x;
-
-	/* Map coordinates to [0,1]. */
-	*(tx) = grid_x / (float) font->grids_x;
-	*(ty) = grid_y / (float) font->grids_y;
-	*(tw) = font->letter_width / (float) font->width;
-	*(th) = font->letter_height / (float) font->height;
-
-	return MONOTEXT_OK;
-}
+#define monotext_debug(...) debugf("Monotext", __VA_ARGS__)
+#define monotext_error(...) errorf("Monotext", __VA_ARGS__)
 
 /**
  * Calculates the bounding box required around a string of text, taking into
@@ -89,71 +46,6 @@ static void strnbounds(const char *s, const int len, int *width_max, int *height
 			break;
 		}
 	}
-}
-
-static void monofont_reload(struct vfs *vfs, strview_t filename, unsigned int size, const void *data, void *userdata)
-{
-	if(size == 0) {
-		monotext_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
-		return;
-	}
-
-	struct monofont *dst = (struct monofont *) userdata;
-
-	if(dst == NULL) {
-		monotext_error("Invalid userdata argument to monofont_reload()\n");
-		return;
-	}
-
-	struct lodge_image image;
-	struct lodge_ret ret = lodge_image_new(&image, data, size);
-	if(!ret.success) {
-		monotext_error("Image load failed: `" STRVIEW_PRINTF_FMT "` (%u bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
-		return;
-	}
-
-	lodge_texture_t tex = lodge_texture_make_from_image(&image);
-	lodge_sampler_t sampler = lodge_sampler_make_properties((struct lodge_sampler_properties) {
-		.min_filter = MIN_FILTER_NEAREST,
-		.mag_filter = MAG_FILTER_NEAREST,
-		.wrap_x = WRAP_CLAMP_TO_EDGE,
-		.wrap_y = WRAP_CLAMP_TO_EDGE,
-		.wrap_z = WRAP_CLAMP_TO_EDGE,
-	});
-
-	dst->texture = tex;
-	dst->sampler = sampler;
-	dst->loaded = 1;
-	dst->width = image.desc.width;
-	dst->height = image.desc.height;
-	dst->grids_x = image.desc.width / dst->letter_width;
-	dst->grids_y = image.desc.height / dst->letter_height;
-
-	lodge_image_free(&image);
-}
-
-int monofont_new(struct monofont *font, const char *name,
-		int letter_width, int letter_height,
-		int letter_spacing_x, int letter_spacing_y,
-		struct vfs *vfs)
-{
-	/* Font metadata. */
-	font->name = name;
-	font->letter_width = letter_width;
-	font->letter_height = letter_height;
-	font->letter_spacing_x = letter_spacing_x;
-	font->letter_spacing_y = letter_spacing_y;
-
-	/* Load font texture. */
-	vfs_register_callback(vfs, strview_make(name, strlen(name)), &monofont_reload, font);
-
-	return MONOTEXT_OK;
-}
-
-void monofont_free(struct monofont *font)
-{
-	font->loaded = 0;
-	//lodge_texture_reset(&font->texture);
 }
 
 /**
@@ -254,10 +146,6 @@ static void monotext_print_quad(float *verts, int quad)
 void monotext_new(struct monotext *dst, const char *text, const vec4 color,
 		struct monofont *font, const float blx, const float bly, struct shader *shader)
 {
-	if(!font->loaded) {
-		monotext_error("Font not loaded!\n");
-		return;
-	}
 	dst->font = font;
 	dst->shader = shader;
 	dst->bottom_left = vec3_make(blx, bly, 0.2f);
@@ -346,7 +234,7 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 		float blx = dst->bottom_left.v[0];
 		float bly = dst->bottom_left.v[1];
 		float blz = dst->bottom_left.v[2];
-		struct monofont *f = dst->font;
+		struct monofont *font = dst->font;
 
 		for(int i=0; i < dst->text_len; i++) {
 			char c = dst->text[i];
@@ -360,16 +248,16 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
 				break;
 			default: {
 					float tx, ty, tw, th;
-					if(monofont_atlas_coords(&tx, &ty, &tw, &th, f, c) != MONOTEXT_OK) {
+					if(!monofont_get_atlas_quad_01(font, c, &tx, &ty, &tw, &th)) {
 						monotext_error("Could not get atlas coords for \"%c\"\n", c);
 						continue;
 					}
 					monotext_set_quad(dst->verts, index,
-							blx + x * (f->letter_width + f->letter_spacing_x),	// x
-							bly + y * (f->letter_height + f->letter_spacing_y),	// y
+							blx + x * (font->letter_width + font->letter_spacing_x),	// x
+							bly + y * (font->letter_height + font->letter_spacing_y),	// y
 							blz,												// z
-							(float) f->letter_width,							// w
-							(float) f->letter_height,							// h
+							(float) font->letter_width,							// w
+							(float) font->letter_height,							// h
 							tx, ty, tw, th);
 					index++;
 					x++;
@@ -407,7 +295,7 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
  * FIXME: optimize:
  * - use DrawElements instead of DrawArrays (requires indices array).
  */
-void monotext_render(struct monotext *text, struct shader *s)
+void monotext_render(struct monotext *text, struct shader *s, lodge_sampler_t atlas_sampler)
 {
 	if(text == NULL || text->vao == 0) {
 		return;
@@ -424,7 +312,7 @@ void monotext_render(struct monotext *text, struct shader *s)
 	/* Upload matrices and color. */
 	lodge_renderer_set_constant_mvp(s, &mvp);
 	lodge_renderer_set_constant_vec4(s, strview_static("color"), text->color);
-	lodge_renderer_bind_texture_unit_2d(0, text->font->texture, text->font->sampler);
+	lodge_renderer_bind_texture_unit_2d(0, text->font->atlas_texture, atlas_sampler);
 
 	/* Bind vertex array. */
 	glBindVertexArray(text->vao);
