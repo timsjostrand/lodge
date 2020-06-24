@@ -6,6 +6,7 @@
 
 #include <stddef.h> // size_t
 #include <stdint.h>
+#include <stdbool.h>
 #include <float.h>
 
 #ifdef _WIN32

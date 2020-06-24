@@ -2,8 +2,10 @@ add_library(lodge-monotext STATIC "")
 
 target_sources(lodge-monotext
 	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/monofont.c"
 		"${CMAKE_CURRENT_LIST_DIR}/monotext.c"
 	PUBLIC
+		"${CMAKE_CURRENT_LIST_DIR}/monofont.h"
 		"${CMAKE_CURRENT_LIST_DIR}/monotext.h"
 )
 

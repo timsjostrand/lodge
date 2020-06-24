@@ -1,3 +1,9 @@
+/**
+ * In-game console.
+ *
+ * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
+ */
+
 #ifndef _CONSOLE_H
 #define _CONSOLE_H
 
@@ -7,6 +13,7 @@
 #include "drawable.h"
 #include "basic_sprite.h"
 #include "monotext.h"
+#include "monofont.h"
 #include "log.h"
 
 #define console_debug(...) debugf("Console", __VA_ARGS__)
@@ -72,14 +79,15 @@ struct console {
 	struct console_conf		conf;
 };
 
-void console_new(struct console *c, struct monofont *font, uint32_t view_width,
-		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env, struct lodge_renderer *renderer);
-void console_free(struct console *c);
+void console_new_inplace(struct console *c, struct monofont *font, uint32_t view_width,
+		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env);
+void console_free_inplace(struct console *c);
+
 void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
 void console_vprintf(struct console *c, const char *fmt, va_list args);
 void console_think(struct console *c);
-void console_render(struct console *c, struct shader *s, const mat4 projection);
+void console_render(struct console *c, struct shader *s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler);
 void console_toggle_focus(struct console *c);
 void console_parse_conf(struct console *c, struct console_conf *conf);
 float console_height(struct console *c, uint32_t display_lines);
@@ -88,15 +96,12 @@ void console_input_feed_control(struct console *c, int key, int scancode, int ac
 void console_input_feed_char(struct console *c, unsigned int key, int mods);
 void console_input_clear(struct console *c);
 
-void console_cmd_new(struct console_cmd *cmd, const char *name, int argc,
-		console_cmd_func_t callback, console_cmd_autocomplete_t autocomplete);
+void console_cmd_new(struct console_cmd *cmd, const char *name, int argc, console_cmd_func_t callback, console_cmd_autocomplete_t autocomplete);
 void console_cmd_add(struct console_cmd *cmd, struct console_cmd *parent);
 void console_cmd_free(struct console_cmd *cmd);
-void console_cmd_autocomplete(struct console *c, const char *input,
-		const size_t input_len, const size_t cursor_pos);
+void console_cmd_autocomplete(struct console *c, const char *input, const size_t input_len, const size_t cursor_pos);
 
 void console_parse(struct console *c, const char *in_str, size_t in_str_len);
-int  console_cmd_parse_1f(struct console *c, struct console_cmd *cmd,
-		struct list *argv, float *dst);
+int  console_cmd_parse_1f(struct console *c, struct console_cmd *cmd, struct list *argv, float *dst);
 
 #endif

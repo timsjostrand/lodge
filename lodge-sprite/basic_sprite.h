@@ -14,10 +14,9 @@ struct basic_sprite {
 	vec4					color;
 	float					rotation;
 	lodge_texture_t			texture;
-	struct lodge_renderer	*renderer;
 };
 
-void		sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z, float w, float h, const vec4 color, float rotation, lodge_texture_t texture, struct lodge_renderer *renderer);
-void		sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection);
+void		sprite_init(struct basic_sprite *sprite, int type, float x, float y, float z, float w, float h, const vec4 color, float rotation, lodge_texture_t texture);
+void		sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection, struct lodge_renderer *renderer);
 
 #endif
