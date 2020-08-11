@@ -111,7 +111,7 @@ int sound_init(struct sound *s, vec3 listener_pos, float max_distance)
 	/* Set up 2D listener. */
 	alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 	AL_TEST("distance model");
-	alListener3f(AL_POSITION, xyz(listener_pos));
+	alListener3f(AL_POSITION, xyz_of(listener_pos));
 	AL_TEST("listener position");
 	alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 	AL_TEST("listener velocity");

@@ -17,8 +17,8 @@
 #endif
 
 #define xy_of(v) v.x, v.y
-#define xyz(v) v.x, v.y, v.z
-#define xyzw(v) v.x, v.y, v.z, v.w
+#define xyz_of(v) v.x, v.y, v.z
+#define xyzw_of(v) v.x, v.y, v.z, v.w
 
 #define swapf(t,a,b) t = a;\
 	a = b; \
