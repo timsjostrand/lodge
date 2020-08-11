@@ -45,7 +45,7 @@ static double timer_elapsed(double since)
 	return lodge_get_time() - since;
 }
 
-static void console_cursor_think(struct console_cursor *cur)
+static void console_cursor_update(struct console_cursor *cur)
 {
 	struct basic_sprite *s = &(cur->sprite);
 
@@ -235,9 +235,9 @@ static void console_render_input(struct console *c, struct shader *s, lodge_samp
 	monotext_render(&c->txt_input, s, font_sampler);
 }
 
-void console_think(struct console *c)
+void console_update(struct console *c)
 {
-	console_cursor_think(&c->cursor);
+	console_cursor_update(&c->cursor);
 }
 
 void console_render(struct console *c, struct shader *s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler)
