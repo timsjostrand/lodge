@@ -229,7 +229,7 @@ void lodge_renderer_detach(struct lodge_renderer *renderer)
 
 int lodge_renderer_set_clear_color(struct lodge_renderer *renderer, vec4 color)
 {
-	glClearColor(rgba(color));
+	glClearColor(rgba_of(color));
 	GL_OK_OR_RETURN(0);
 	return 1;
 }

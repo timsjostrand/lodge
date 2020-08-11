@@ -10,7 +10,7 @@ void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float 
 	sprite->type = type;
 	sprite->pos = vec4_make(x, y, z, 0.0f);
 	sprite->scale = vec4_make(w, h, 1.0f, 1.0f);
-	sprite->color = vec4_make(xyzw(color));
+	sprite->color = vec4_make(xyzw_of(color));
 	sprite->rotation = rotation;
 	sprite->texture = texture;
 }
@@ -18,8 +18,8 @@ void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float 
 void sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection, struct lodge_renderer *renderer)
 {
 	// Position, rotation and scale
-	mat4 transform_position = mat4_translation(xyz(sprite->pos));
-	mat4 transform_scale = mat4_scaling(xyz(sprite->scale));
+	mat4 transform_position = mat4_translation(xyz_of(sprite->pos));
+	mat4 transform_scale = mat4_scaling(xyz_of(sprite->scale));
 	mat4 transform_rotation = mat4_rotation_z(sprite->rotation);
 	mat4 transform_final = mat4_mult(transform_position, transform_rotation);
 	transform_final = mat4_mult(transform_final, transform_scale);

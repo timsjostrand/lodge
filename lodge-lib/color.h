@@ -3,8 +3,8 @@
 
 #include "math4.h"
 
-#define rgb(v) xyz(v)
-#define rgba(v) xyzw(v)
+#define rgb_of(v) xyz_of(v)
+#define rgba_of(v) xyzw_of(v)
 #define COLOR_FORMAT "r=%.1f g=%.1f b=%.1f a=%.1f"
 
 #define HEX_TO_RGBA(hex, a) { \

@@ -33,11 +33,11 @@ static void console_cursor_init(struct console_cursor *cur, struct monotext *txt
 	s->type = 0;
 	s->rotation = 0;
 	s->texture = white_tex;
-	s->pos = vec4_make(xyz(txt->bottom_left), 0.0f);
+	s->pos = vec4_make(xyz_of(txt->bottom_left), 0.0f);
 	s->scale = vec4_make((float)(txt->font->letter_width + txt->font->letter_spacing_x + 1),
 		(float)(txt->font->letter_height + txt->font->letter_spacing_y),
 		1.0f, 1.0f);
-	s->color = vec4_make(rgba(CONSOLE_COLOR_CURSOR));
+	s->color = vec4_make(rgba_of(CONSOLE_COLOR_CURSOR));
 }
 
 static double timer_elapsed(double since)
