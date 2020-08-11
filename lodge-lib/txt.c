@@ -143,7 +143,7 @@ void txt_clear(txt_t handle)
 txt_t txt_set(txt_t txt, strview_t str)
 {
 	txt_clear(txt);
-	txt_insert(txt, 0, str);
+	return txt_insert(txt, 0, str);
 }
 
 void txt_trim(txt_t handle)
