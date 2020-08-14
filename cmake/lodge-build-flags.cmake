@@ -42,7 +42,8 @@ if(MSVC)
             "/we4047"                       # "differs in levels of indirection" (trying to pass ptr** instead of ptr*)
             "/we4024"                       # 'function' : different types for formal and actual parameter 'number'
             "/we4029"                       # declared formal parameter list different from declaration
-            "/we4715"                       # function' : not all control paths return a value
+            "/we4715"                       # 'function' : not all control paths return a value
+            "/we4716"                       # 'function': must return a value
             "/we4028"                       # formal parameter 1 different from declaration
             "/we4090"                       # 'initializing': different 'const' qualifiers
             #"/we4244"                       # 'function': conversion from 'int' to 'const float', possible loss of data
