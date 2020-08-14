@@ -24,6 +24,7 @@ struct lodge_shader_source_factory
 
 void	lodge_shader_new_inplace(lodge_shader_t shader, strview_t name, struct lodge_shader_source_factory source_factory);
 void	lodge_shader_free_inplace(lodge_shader_t shader);
+size_t	lodge_shader_sizeof();
 
 bool	lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_source);
 bool	lodge_shader_set_fragment_source(lodge_shader_t shader, strview_t fragment_source);

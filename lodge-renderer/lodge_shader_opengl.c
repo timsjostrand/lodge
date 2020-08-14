@@ -255,6 +255,24 @@ static bool lodge_shader_stage_compile(struct lodge_shader_stage *stage, GLenum 
 	return true;
 }
 
+static void lodge_shader_stage_new_inplace(struct lodge_shader_stage *stage)
+{
+	stage->name[0] = '\0';
+	stage->shader = 0;
+	stage->includes = array_new(SHADER_FILENAME_MAX, SHADER_INCLUDES_MAX);
+	stage->source = txt_new(strview_static(""));
+}
+
+static void lodge_shader_stage_release_includes(struct lodge_shader_stage *stage, struct lodge_shader_source_factory source_factory, strview_t shader_name)
+{
+	array_foreach(stage->includes, const char, include) {
+		printf("release include: %s\n", include);
+
+		strview_t include_stringview = strview_make_from_str(include, SHADER_FILENAME_MAX);
+		source_factory.release_func(source_factory.userdata, shader_name, include_stringview);
+	}
+}
+
 static void lodge_shader_stage_free_inplace(struct lodge_shader_stage *stage)
 {
 	if(glIsShader(stage->shader) == GL_TRUE) {
@@ -272,15 +290,16 @@ void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name, struct lodg
 
 	strbuf_wrap_and(shader->name, strbuf_set, name);
 
-	shader->vertex_stage.includes = array_new(SHADER_FILENAME_MAX, SHADER_INCLUDES_MAX);
-	shader->fragment_stage.includes = array_new(SHADER_FILENAME_MAX, SHADER_INCLUDES_MAX);
-
-	shader->vertex_stage.source = txt_new(strview_static(""));
-	shader->fragment_stage.source = txt_new(strview_static(""));
+	lodge_shader_stage_new_inplace(&shader->vertex_stage);
+	lodge_shader_stage_new_inplace(&shader->fragment_stage);
 }
 
 void lodge_shader_free_inplace(lodge_shader_t shader)
 {
+	// NOTE(TS): shader asset does `lodge_res_clear_dependency` instead. Good?
+	//lodge_shader_stage_release_includes(&shader->vertex_stage, shader->source_factory, strview_wrap(shader->name));
+	//lodge_shader_stage_release_includes(&shader->fragment_stage, shader->source_factory, strview_wrap(shader->name));
+
 	if(glIsProgram(shader->program) == GL_TRUE) {
 		glDeleteProgram(shader->program);
 	}
@@ -288,6 +307,11 @@ void lodge_shader_free_inplace(lodge_shader_t shader)
 
 	lodge_shader_stage_free_inplace(&shader->vertex_stage);
 	lodge_shader_stage_free_inplace(&shader->fragment_stage);
+}
+
+size_t lodge_shader_sizeof()
+{
+	return sizeof(struct shader);
 }
 
 bool lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_source)
