@@ -10,7 +10,7 @@
 #include "core_console.h"
 #endif
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #ifdef CONSOLE_ENABLE
 #define debugf(module, ...) \
 	fprintf(stderr, "DEBUG @ " module ": " __VA_ARGS__); \
