@@ -10,8 +10,8 @@ struct lodge_res;
 
 struct lodge_res_handle
 {
-	struct lodge_res		*resources;
 	strview_t				id;
+	struct lodge_res		*resources;
 };
 
 struct lodge_res_desc
@@ -37,6 +37,7 @@ void						lodge_res_reload(struct lodge_res *res, strview_t name);
 
 const void*					lodge_res_get_depend(struct lodge_res *res, strview_t name, struct lodge_res_handle dependency);
 void						lodge_res_release_depend(struct lodge_res *res, strview_t name, struct lodge_res_handle dependency);
+void						lodge_res_clear_dependency(struct lodge_res *res, struct lodge_res_handle dependency);
 
 void						lodge_res_set_userdata(struct lodge_res *res, size_t index, void *userdata);
 void*						lodge_res_get_userdata(struct lodge_res *res, size_t index);

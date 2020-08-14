@@ -1,10 +1,10 @@
 #include "lodge_res.h"
 
 #include "array.h"
+#include "membuf.h"
 #include "str.h"
 #include "lodge_assert.h"
 #include "lodge_platform.h"
-
 #include "log.h"
 
 #include <stdlib.h>
@@ -20,7 +20,7 @@ struct lodge_res;
 struct lodge_res_deps
 {
 	struct lodge_res_handle		deps[LODGE_RES_DEPS_MAX];
-	uint32_t					count;
+	size_t						count;
 };
 
 struct lodge_res
@@ -87,18 +87,23 @@ size_t lodge_res_sizeof()
 	return sizeof(struct lodge_res);
 }
 
-const void* lodge_res_get_index(struct lodge_res *res, strview_t name, int64_t index)
+static const void* lodge_res_get_or_load_index(struct lodge_res *res, strview_t name, int64_t index)
 {
 	debugf("Res", "Get: `" STRVIEW_PRINTF_FMT "`:`" STRVIEW_PRINTF_FMT "`\n",
 		STRVIEW_PRINTF_ARG(res->desc.name),
 		STRVIEW_PRINTF_ARG(name)
 	);
 
+	//
+	// TODO(TS): should use `data_index` to indicate whether data has been unloaded or not.
+	//
+
 	if(index >= 0) {
 		uint32_t *refcount = &res->ref_counts[index];
 		//ASSERT(*refcount > 0);
 		(*refcount)++;
-		return array_get(res->data, (size_t)index);
+		const uint32_t data_index = res->data_indices[index];
+		return array_get(res->data, (size_t)data_index);
 	} else {
 		index = res->count++;
 
@@ -116,6 +121,7 @@ const void* lodge_res_get_index(struct lodge_res *res, strview_t name, int64_t i
 
 		if(!res->desc.new_inplace(res, name, data_element, res->desc.size)) {
 			// FIXME(TS): roll back and clean up after failed new_inplace
+			ASSERT_NOT_IMPLEMENTED();
 			return NULL;
 		}
 
@@ -128,7 +134,7 @@ const void* lodge_res_get_index(struct lodge_res *res, strview_t name, int64_t i
 const void* lodge_res_get(struct lodge_res *res, strview_t name)
 {
 	const int64_t index = lodge_res_find_by_name(res, name);
-	return lodge_res_get_index(res, name, index);
+	return lodge_res_get_or_load_index(res, name, index);
 }
 
 static void lodge_res_release_index(struct lodge_res *res, size_t index)
@@ -204,10 +210,15 @@ void lodge_res_reload(struct lodge_res *res, strview_t name)
 		}
 	}
 
-	for(int dep_index = 0, count = res->deps[index].count; dep_index < count; dep_index++) {
+	for(size_t dep_index = 0, count = res->deps[index].count; dep_index < count; dep_index++) {
 		struct lodge_res_handle *res_handle = &res->deps[index].deps[dep_index];
 		lodge_res_reload(res_handle->resources, res_handle->id);
 	}
+}
+
+static bool lodge_res_handle_equals(struct lodge_res_handle *a, struct lodge_res_handle *b)
+{
+	return a->resources == b->resources && strview_equals(a->id, b->id);
 }
 
 static void lodge_res_append_dep(struct lodge_res *res, size_t index, struct lodge_res_handle dependency)
@@ -215,11 +226,20 @@ static void lodge_res_append_dep(struct lodge_res *res, size_t index, struct lod
 	ASSERT(index < LODGE_RES_MAX);
 	struct lodge_res_deps *deps = &res->deps[index];
 
+	//
+	// FIXME(TS): need to release dependencies when freeing a `res` or leak dep list
+	//
 	ASSERT(deps->count + 1 < LODGE_RES_DEPS_MAX);
 	if(deps->count + 1 < LODGE_RES_DEPS_MAX) {
-		const uint32_t dep_index = res->deps[index].count++;
+		const size_t dep_index = res->deps[index].count++;
 		ASSERT(dep_index < LODGE_RES_DEPS_MAX);
 		res->deps[index].deps[dep_index] = dependency;
+
+		debugf("Res", "New dependency: `" STRVIEW_PRINTF_FMT "` from `%s` (count: %d)`\n",
+			STRVIEW_PRINTF_ARG(deps->deps[dep_index].id),
+			res->names[index],
+			deps->count
+		);
 	}
 }
 
@@ -228,13 +248,18 @@ static void lodge_res_remove_dep(struct lodge_res *res, size_t index, struct lod
 	ASSERT(index < LODGE_RES_MAX);
 	struct lodge_res_deps *deps = &res->deps[index];
 
-	for(uint32_t dep_index = 0, count = deps->count; dep_index < count; dep_index++) {
+	for(size_t dep_index = 0, count = deps->count; dep_index < count; dep_index++) {
 		struct lodge_res_handle *handle = &deps->deps[dep_index];
-		if(handle->resources == dependency.resources
-			&& strview_equals(handle->id, dependency.id)) {
-			// Not implemented for dep_index > 0, need to memshift and stuff
-			ASSERT(dep_index == 0);
-			deps->count--;
+		if(lodge_res_handle_equals(handle, &dependency)) {
+			debugf("Res", "Lost dependency: `" STRVIEW_PRINTF_FMT "` from `%s` (count: %d)`\n",
+				STRVIEW_PRINTF_ARG(deps->deps[dep_index].id),
+				res->names[index],
+				deps->count
+			);
+
+			membuf_t deps_membuf = membuf_wrap(deps->deps);
+			membuf_delete_swap_tail(deps_membuf, dep_index, &deps->count);
+
 			return;
 		}
 	}
@@ -269,6 +294,32 @@ void lodge_res_release_depend(struct lodge_res *res, strview_t name, struct lodg
 
 	lodge_res_release_index(res, (size_t)index);
 	lodge_res_remove_dep(res, (size_t)index, dependency);
+}
+
+//
+// Removes all this dependency from all assets in the asset manager that may be depending on it.
+//
+void lodge_res_clear_dependency(struct lodge_res *res, struct lodge_res_handle dependency)
+{
+	//
+	// TODO(TS): should have a reverse dependency lookup for this instead
+	//
+
+	for(uint32_t res_index = 0; res_index < res->count; res_index++) {
+		struct lodge_res_deps *deps = &res->deps[res_index];
+		
+		for(size_t dep_index = 0; dep_index < deps->count; dep_index++) {
+			if(lodge_res_handle_equals(&deps->deps[dep_index], &dependency)) {
+				lodge_res_release_index(res, (size_t)res_index);
+				lodge_res_remove_dep(res, (size_t)res_index, dependency);
+
+				//
+				// NOTE(TS): `lodge_res_remove_dep()` will delete_swap_tail
+				//
+				dep_index--;
+			}
+		}
+	}
 }
 
 void lodge_res_set_userdata(struct lodge_res *res, size_t index, void *userdata)
