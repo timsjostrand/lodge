@@ -57,7 +57,7 @@ static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strvi
 
 static bool lodge_shader_asset_new_inplace(struct lodge_res *shaders, strview_t name, lodge_shader_t shader, size_t data_size)
 {
-	ASSERT(sizeof(lodge_shader_t) == data_size);
+	ASSERT(lodge_shader_sizeof() == data_size);
 
 	struct lodge_res *files = lodge_res_get_userdata(shaders, USERDATA_FILES);
 	ASSERT(files);
@@ -114,7 +114,7 @@ static void lodge_shader_asset_free_inplace(struct lodge_res *shaders, strview_t
 	struct lodge_res *files = lodge_res_get_userdata(shaders, USERDATA_FILES);
 	ASSERT(files);
 
-	lodge_res_release_depend(files, name, (struct lodge_res_handle) {
+	lodge_res_clear_dependency(files, (struct lodge_res_handle) {
 		.resources = shaders,
 		.id = name,
 	});
@@ -131,7 +131,7 @@ static struct lodge_ret lodge_plugin_shaders_new_inplace(struct lodge_res *shade
 
 	lodge_res_new_inplace(shaders, (struct lodge_res_desc) {
 		.name = strview_static("shaders"),
-		.size = sizeof(lodge_shader_t),
+		.size = lodge_shader_sizeof(),
 		.new_inplace = &lodge_shader_asset_new_inplace,
 		.reload_inplace = NULL,
 		.free_inplace = &lodge_shader_asset_free_inplace
