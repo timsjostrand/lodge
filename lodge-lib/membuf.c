@@ -115,19 +115,15 @@ void membuf_delete_swap_tail(membuf_t buf, size_t index, size_t *current_count)
 	--(*current_count);
 }
 
-#if 0
-size_t membuf_set(membuf_t dst, const strview_t src)
+void membuf_append(membuf_t dst, const void *src, size_t src_size, size_t *current_count)
 {
-
+	const size_t max_count = membuf_max_count(dst);
+	ASSERT(*current_count < max_count);
+	if(*current_count >= max_count) {
+		return;
+	}
+	membuf_set(dst, (*current_count)++, src, src_size);
 }
-#endif
-
-#if 0
-size_t membuf_append(membuf_t dst, const strview_t src)
-{
-
-}
-#endif
 
 void membuf_fill(membuf_t dst, void *src, size_t src_size)
 {
