@@ -14,7 +14,15 @@
 #include "alist.h"
 
 #define FBX_FILE_MAGIC "Kaydara FBX Binary  "
-#define FBX_NULL_NODE_SIZE 13
+
+#define FBX_VERSION_6_0 6000
+#define FBX_VERSION_6_1 6100
+#define FBX_VERSION_7_0 7000
+#define FBX_VERSION_7_1 7100
+#define FBX_VERSION_7_2 7200
+#define FBX_VERSION_7_3 7300
+#define FBX_VERSION_7_4 7400
+#define FBX_VERSION_7_5 7500	// FBX v7.5 adds large file support and is incompatible with < 7.5.
 
 struct fbx_array_type
 {
@@ -47,9 +55,9 @@ struct fbx_property
 
 struct fbx_node
 {
-	uint32_t				end_offset;
-	uint32_t				properties_count;
-	uint32_t				properties_list_len;
+	uint64_t				end_offset;				// uint32_t for < v7.5
+	uint64_t				properties_count;		// uint32_t for < v7.5
+	uint64_t				properties_list_len;	// uint32_t for < v7.5
 	uint8_t					name_len;
 	char					name[255];
 	struct alist			*properties;
@@ -71,12 +79,12 @@ static void fbx_print_header(const struct fbx *fbx)
 	printf("version: %u\n",		fbx->version);
 }
 
-static void fbx_print_node(const struct fbx_node *node, int indent);
+static void fbx_print_node(const struct fbx_node *node, int print_arrays, int indent);
 
-static void fbx_print_node_list(const struct alist *list, int indent)
+static void fbx_print_node_list(const struct alist *list, int print_arrays, int indent)
 {
 	foreach_alist_p(struct fbx_node*, it, list) {
-		fbx_print_node(*it, indent);
+		fbx_print_node(*it, print_arrays, indent);
 	}
 }
 
@@ -118,7 +126,7 @@ static const char* fbx_property_get_type_string(const char type)
 	}
 }
 
-static void fbx_print_property_list(const struct alist *list, int indent)
+static void fbx_print_property_list(const struct alist *list, int print_arrays, int indent)
 {
 	foreach_alist_p(struct fbx_property*, it, list) {
 		printf("%*sproperty: %s ", indent * 4, "", fbx_property_get_type_string((*it)->type));
@@ -156,9 +164,15 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const float* prop_array_data = fbx_property_get_array_float(*it);
 			printf("(%u) {", prop_array_count);
-			for(uint32_t i = 0; i < prop_array_count; i++) {
-				printf("%.2f ", prop_array_data[i]);
+
+			if(print_arrays) {
+				for(uint32_t i = 0; i < prop_array_count; i++) {
+					printf("%.2f ", prop_array_data[i]);
+				}
+			} else {
+				printf(" ... ");
 			}
+
 			printf("}");
 			break;
 		}
@@ -167,9 +181,15 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const int32_t* prop_array_data = fbx_property_get_array_int32(*it);
 			printf("(%u) {", prop_array_count);
-			for(uint32_t i = 0; i < prop_array_count; i++) {
-				printf("%" PRId32 " ", prop_array_data[i]);
+
+			if(print_arrays) {
+				for(uint32_t i = 0; i < prop_array_count; i++) {
+					printf("%" PRId32 " ", prop_array_data[i]);
+				}
+			} else {
+				printf(" ... ");
 			}
+
 			printf("}");
 			break;
 		}
@@ -178,9 +198,15 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const double* prop_array_data = fbx_property_get_array_double(*it);
 			printf("(%u) {", prop_array_count);
-			for(uint32_t i = 0; i < prop_array_count; i++) {
-				printf("%.2f ", prop_array_data[i]);
+
+			if(print_arrays) {
+				for(uint32_t i = 0; i < prop_array_count; i++) {
+					printf("%.2f ", prop_array_data[i]);
+				}
+			} else {
+				printf(" ... ");
 			}
+
 			printf("}");
 			break;
 		}
@@ -189,9 +215,15 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const int64_t* prop_array_data = fbx_property_get_array_int64(*it);
 			printf("(%u) {", prop_array_count);
-			for(uint32_t i = 0; i < prop_array_count; i++) {
-				printf("%" PRId64 " ", prop_array_data[i]);
+
+			if(print_arrays) {
+				for(uint32_t i = 0; i < prop_array_count; i++) {
+					printf("%" PRId64 " ", prop_array_data[i]);
+				}
+			} else {
+				printf(" ... ");
 			}
+
 			printf("}");
 			break;
 		}
@@ -200,9 +232,15 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const char* prop_array_data = fbx_property_get_array_bool(*it);
 			printf("(%u) {", prop_array_count);
-			for(uint32_t i = 0; i < prop_array_count; i++) {
-				printf("%s ", prop_array_data[i] ? "true" : "false");
+
+			if(print_arrays) {
+				for(uint32_t i = 0; i < prop_array_count; i++) {
+					printf("%s ", prop_array_data[i] ? "true" : "false");
+				}
+			} else {
+				printf(" ... ");
 			}
+
 			printf("}");
 			break;
 		}
@@ -211,9 +249,15 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 			const uint32_t prop_array_count = fbx_property_get_array_count(*it);
 			const char* prop_array_data = fbx_property_get_array_char(*it);
 			printf("(%u) {", prop_array_count);
-			for(uint32_t i = 0; i < prop_array_count; i++) {
-				printf("%c ", prop_array_data[i]);
+
+			if(print_arrays) {
+				for(uint32_t i = 0; i < prop_array_count; i++) {
+					printf("%c ", prop_array_data[i]);
+				}
+			} else {
+				printf(" ... ");
 			}
+
 			printf("}");
 			break;
 		}
@@ -225,9 +269,9 @@ static void fbx_print_property_list(const struct alist *list, int indent)
 	}
 }
 
-static void fbx_print_node(const struct fbx_node *node, int indent)
+static void fbx_print_node(const struct fbx_node *node, int print_arrays, int indent)
 {
-	printf("%*s`%.*s` (%d children, %d props)\n",
+	printf("%*s`%.*s` (%d children, %" PRIu64 " props)\n",
 		indent * 4, "",
 		node->name_len, node->name,
 		node->children ? alist_count(node->children) : 0,
@@ -236,11 +280,11 @@ static void fbx_print_node(const struct fbx_node *node, int indent)
 	indent++;
 
 	if(node->properties) {
-		fbx_print_property_list(node->properties, indent);
+		fbx_print_property_list(node->properties, print_arrays, indent);
 	}
 
 	if(node->children) {
-		fbx_print_node_list(node->children, indent);
+		fbx_print_node_list(node->children, print_arrays, indent);
 	}
 }
 
@@ -485,19 +529,40 @@ static void fbx_node_free(struct fbx_node *node)
 	free(node);
 }
 
-static struct alist* fbx_node_read_children(struct blob_cur *cur);
+static struct alist* fbx_node_read_children(const int32_t version, struct blob_cur *cur);
 
-static struct fbx_node* fbx_node_new(size_t end_offset, struct blob_cur *cur)
+//
+// v7.5+ uses uint64_t and uint32_t for older versions.
+//
+static int fbx_read_size_compat(uint64_t *dst, const uint32_t version, struct blob_cur *cur)
+{
+	if(version >= FBX_VERSION_7_5) {
+		return blob_cur_read(*dst, cur);
+	} else {
+		uint32_t tmp;
+		if(!blob_cur_read(tmp, cur)) {
+			return 0;
+		}
+		*dst = (uint64_t)tmp;
+		return 1;
+	}
+}
+
+static int fbx_read_node_header(const int32_t version, uint64_t *properties_count, uint64_t *properties_list_len, uint8_t *name_len, struct blob_cur *cur)
+{
+	return fbx_read_size_compat(properties_count, version, cur)
+		&& fbx_read_size_compat(properties_list_len, version, cur)
+		&& blob_cur_read(*name_len, cur);
+}
+
+static struct fbx_node* fbx_node_new(const int32_t version, uint64_t end_offset, struct blob_cur *cur)
 {
 	ASSERT(end_offset);
 
 	struct fbx_node *node = (struct fbx_node*)calloc(1, sizeof(struct fbx_node));
 	node->end_offset = end_offset;
 
-	if(!blob_cur_read(node->properties_count, cur)
-		|| !blob_cur_read(node->properties_list_len, cur)
-		|| !blob_cur_read(node->name_len, cur))
-	{
+	if(!fbx_read_node_header(version, &node->properties_count, &node->properties_list_len, &node->name_len, cur)) {
 		ASSERT_FAIL("FBX: Failed to read node header");
 		goto fail;
 	}
@@ -510,9 +575,9 @@ static struct fbx_node* fbx_node_new(size_t end_offset, struct blob_cur *cur)
 	}
 
 	if(node->properties_count > 0) {
-		node->properties = alist_new(node->properties_count);
+		node->properties = alist_new((size_t)node->properties_count);
 
-		for(uint32_t i = 0; i < node->properties_count; i++) {
+		for(uint64_t i = 0; i < node->properties_count; i++) {
 			struct fbx_property *prop = fbx_property_new(cur);
 			if(!prop) {
 				ASSERT_FAIL("FBX: Failed to read property");
@@ -522,9 +587,8 @@ static struct fbx_node* fbx_node_new(size_t end_offset, struct blob_cur *cur)
 		}
 	}
 
-	if(!blob_cur_is_empty(cur))
-	{
-		node->children = fbx_node_read_children(cur);
+	if(!blob_cur_is_empty(cur)) {
+		node->children = fbx_node_read_children(version, cur);
 		if(!node->children) {
 			ASSERT_FAIL("FBX: Failed to read children");
 			goto fail;
@@ -538,26 +602,30 @@ fail:
 	return NULL;
 }
 
-static struct alist* fbx_node_read_children(struct blob_cur *cur)
+static struct alist* fbx_node_read_children(const int32_t version, struct blob_cur *cur)
 {
 	ASSERT(!blob_cur_is_empty(cur));
 
 	struct alist *children = alist_new(8);
 
 	while(!blob_cur_is_empty(cur)) {
-		while(blob_cur_remaining(cur) > FBX_NULL_NODE_SIZE) {
-			uint32_t end_offset = 0;
-			if(!blob_cur_read(end_offset, cur)) {
+		uint64_t end_offset = 0;
+
+		while(1) {
+			if(!fbx_read_size_compat(&end_offset, version, cur)) {
 				ASSERT_FAIL("FBX: Failed to read node header");
 				goto fail;
 			}
 
 			if(end_offset == 0) {
-				return children;
+				//
+				// The end_offset should only be 0 when a null node has been reached; break and check now.
+				//
+				break;
 			}
 
-			struct blob_cur child_cur = blob_cur_make_from_start(cur, end_offset);
-			struct fbx_node *child = fbx_node_new(end_offset, &child_cur);
+			struct blob_cur child_cur = blob_cur_make_from_start(cur, (size_t)end_offset);
+			struct fbx_node *child = fbx_node_new(version, end_offset, &child_cur);
 			if(!child) {
 				ASSERT_FAIL("FBX: Failed to parse root child");
 				goto fail;
@@ -569,11 +637,17 @@ static struct alist* fbx_node_read_children(struct blob_cur *cur)
 			}
 		}
 
-		char null_node_candidate[FBX_NULL_NODE_SIZE] = { 0xff };
-		static char null_node[FBX_NULL_NODE_SIZE] = { 0x00 };
-		if((blob_cur_read(null_node_candidate, cur)
-			&& memcmp(null_node_candidate, null_node, FBX_NULL_NODE_SIZE) == 0)) {
-			//ASSERT_FAIL("Found null record");
+		//
+		// Check that this is a null node, then return children.
+		//
+		uint64_t null_properties_count;
+		uint64_t null_properties_len;
+		uint8_t null_name_len;
+		if(fbx_read_node_header(version, &null_properties_count, &null_properties_len, &null_name_len, cur)
+			&& end_offset == 0
+			&& null_properties_count == 0
+			&& null_properties_len == 0
+			&& null_name_len == 0) {
 			break;
 		} else {
 			ASSERT_FAIL("FBX: Failed to read null node");
@@ -617,16 +691,16 @@ struct fbx* fbx_new(const char *buf, size_t buf_size)
 		//goto fail;
 	}
 
-	fbx->children = fbx_node_read_children(cur);
+	fbx->children = fbx_node_read_children(fbx->version, cur);
 	if(!fbx->children) {
 		ASSERT_FAIL("FBX: Failed to read root children");
 		goto fail;
 	}
 
+	//
+	// TODO(TS): These bytes contain a hash based on the creation timestamp (for validation?), should implement this
+	//
 	printf("FBX: bytes remaining after parse: %u\n", (unsigned int)blob_cur_remaining(cur));
-	
-	//ASSERT_MESSAGE(blob_cur_is_empty(cur), "FBX: Did not consume all bytes");
-	// TODO(TS): fail if cur != end ??
 
 	return fbx;
 
@@ -644,10 +718,10 @@ void fbx_free(struct fbx *fbx)
 	free(fbx);
 }
 
-void fbx_print(const struct fbx *fbx)
+void fbx_print(const struct fbx *fbx, int print_arrays)
 {
 	fbx_print_header(fbx);
-	fbx_print_node_list(fbx->children, 0);
+	fbx_print_node_list(fbx->children, print_arrays, 0);
 }
 
 static struct fbx_node* fbx_get_node_in(struct alist *list, const char *path, size_t path_len)
@@ -675,13 +749,13 @@ struct fbx_node* fbx_get_node(struct fbx *fbx, const char *path[], size_t path_c
 	return curr_node;
 }
 
-uint32_t fbx_node_get_property_count(const struct fbx_node *node)
+uint64_t fbx_node_get_property_count(const struct fbx_node *node)
 {
 	ASSERT(node);
 	return node->properties_count;
 }
 
-const struct fbx_property* fbx_node_get_property(const struct fbx_node *node, uint32_t index)
+const struct fbx_property* fbx_node_get_property(const struct fbx_node *node, uint64_t index)
 {
 	ASSERT(node);
 	if(index >= node->properties_count) {
@@ -691,7 +765,7 @@ const struct fbx_property* fbx_node_get_property(const struct fbx_node *node, ui
 	return (struct fbx_property*)(node->properties->data)[index];
 }
 
-const struct fbx_property* fbx_node_get_property_array(const struct fbx_node *node, uint32_t index)
+const struct fbx_property* fbx_node_get_property_array(const struct fbx_node *node, uint64_t index)
 {
 	const struct fbx_property *prop = fbx_node_get_property(node, index);
 	if(prop && fbx_property_is_array(prop)) {
