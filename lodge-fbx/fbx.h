@@ -53,9 +53,9 @@ struct fbx*					fbx_new(const char *buf, size_t buf_size);
 void						fbx_free(struct fbx *fbx);
 
 struct fbx_node*			fbx_get_node(struct fbx *fbx, const char *path[], size_t path_count);
-uint32_t					fbx_node_get_property_count(const struct fbx_node *node);
-const struct fbx_property*	fbx_node_get_property(const struct fbx_node *node, uint32_t index);
-const struct fbx_property*	fbx_node_get_property_array(const struct fbx_node *node, uint32_t index);
+uint64_t					fbx_node_get_property_count(const struct fbx_node *node);
+const struct fbx_property*	fbx_node_get_property(const struct fbx_node *node, uint64_t index);
+const struct fbx_property*	fbx_node_get_property_array(const struct fbx_node *node, uint64_t index);
 
 enum fbx_property_type		fbx_property_get_type(const struct fbx_property *prop);
 int							fbx_property_is_array(const struct fbx_property *prop);
@@ -75,6 +75,6 @@ const int64_t*				fbx_property_get_array_int64(const struct fbx_property *prop);
 const char*					fbx_property_get_array_bool(const struct fbx_property *prop);
 const char*					fbx_property_get_array_char(const struct fbx_property *prop);
 
-void						fbx_print(const struct fbx *fbx);
+void						fbx_print(const struct fbx *fbx, int print_arrays);
 
 #endif

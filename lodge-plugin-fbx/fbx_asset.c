@@ -18,8 +18,8 @@ static const struct fbx_property* fbx_asset_get_array(struct fbx *fbx, const cha
 {
 	struct fbx_node *node = fbx_get_node(fbx, path, path_count);
 	if(node) {
-		const uint32_t property_count = fbx_node_get_property_count(node);
-		for(uint32_t i = 0; i < property_count; i++) {
+		const uint64_t property_count = fbx_node_get_property_count(node);
+		for(uint64_t i = 0; i < property_count; i++) {
 			const struct fbx_property *prop = fbx_node_get_property_array(node, i);
 			if(prop) {
 				return prop;
@@ -34,8 +34,8 @@ static struct fbx_string fbx_asset_get_string(struct fbx *fbx, const char *path[
 {
 	struct fbx_node *node = fbx_get_node(fbx, path, path_count);
 	if(node) {
-		const uint32_t property_count = fbx_node_get_property_count(node);
-		for(uint32_t i = 0; i < property_count; i++) {
+		const uint64_t property_count = fbx_node_get_property_count(node);
+		for(uint64_t i = 0; i < property_count; i++) {
 			const struct fbx_property *prop = fbx_node_get_property(node, i);
 			if(fbx_property_get_type(prop) == FBX_PROPERTY_TYPE_STRING) {
 				return fbx_property_get_string(prop);
@@ -271,10 +271,19 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			struct fbx_string normals_mapping_type_str = fbx_asset_get_string(fbx, path_normals_mapping_type, LODGE_ARRAYSIZE(path_normals_mapping_type));
 			strview_t normals_mapping_type = strview_make(normals_mapping_type_str.data, normals_mapping_type_str.length);
 
-			if( !strview_equals(normals_mapping_type, strview_static("ByPolygonVertex") ) ) {
+#if 0
+			if(!strview_equals(normals_mapping_type, strview_static("ByPolygonVertex"))) {
 				ASSERT_FAIL("Normal mapping != `ByPolygonVertex` not implemented");
 				goto fail;
 			}
+#else
+			if(!strview_equals(normals_mapping_type, strview_static("ByPolygonVertex"))
+				&& !strview_equals(normals_mapping_type, strview_static("ByVertex"))
+				&& !strview_equals(normals_mapping_type, strview_static("ByVertice"))) {
+				ASSERT_FAIL("Normal mapping != (`ByPolygonVertex`|`ByVertex`) not implemented");
+				goto fail;
+			}
+#endif
 		}
 		
 		/* Upload normal buffer */
