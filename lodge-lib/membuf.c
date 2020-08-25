@@ -92,6 +92,10 @@ size_t membuf_delete(membuf_t buf, size_t index, size_t count, size_t *current_c
 
 void membuf_swap(membuf_t buf, size_t index_a, size_t index_b)
 {
+	if(index_a == index_b) {
+		return;
+	}
+
 	char* tmp = (char*)LODGE_ALLOCA(buf.type_size);
 	ASSERT(tmp);
 	char* a = membuf_get(buf, index_a);
@@ -104,15 +108,24 @@ void membuf_swap(membuf_t buf, size_t index_a, size_t index_b)
 	memcpy(b, tmp, buf.type_size);
 }
 
-void membuf_delete_swap_tail(membuf_t buf, size_t index, size_t *current_count)
+struct membuf_swapret membuf_delete_swap_tail(membuf_t buf, size_t index, size_t *current_count)
 {
-	ASSERT((*current_count - 1) < membuf_max_count(buf));
+	size_t index_b = index;
 
-	//
-	// TODO(TS): optimize, we only need a one way swap
-	//
-	membuf_swap(buf, index, (*current_count-1));
+	if(*current_count > 1)
+	{
+		index_b = (*current_count - 1);
+
+		ASSERT(index_b < membuf_max_count(buf));
+
+		//
+		// TODO(TS): optimize, we only need a one way swap
+		//
+		membuf_swap(buf, index, index_b);
+	}
+
 	--(*current_count);
+	return (struct membuf_swapret) { index, index_b };
 }
 
 void membuf_append(membuf_t dst, const void *src, size_t src_size, size_t *current_count)
@@ -125,7 +138,7 @@ void membuf_append(membuf_t dst, const void *src, size_t src_size, size_t *curre
 	membuf_set(dst, (*current_count)++, src, src_size);
 }
 
-void membuf_fill(membuf_t dst, void *src, size_t src_size)
+void membuf_fill(membuf_t dst, const void *src, size_t src_size)
 {
 	ASSERT(dst.type_size == src_size);
 
