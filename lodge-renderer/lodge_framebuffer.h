@@ -4,6 +4,7 @@
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;
 
+struct framebuffer;
 typedef struct framebuffer* framebuffer_t;
 
 enum framebuffer_target
