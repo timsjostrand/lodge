@@ -233,16 +233,6 @@ static bool lodge_shader_stage_compile(struct lodge_shader_stage *stage, GLenum 
 {
 	ASSERT(glIsShader(stage->shader) == GL_FALSE);
 
-#if 0
-	if(shader_resolve_includes(s, vfs) != SHADER_OK) {
-		return ret;
-	}
-#endif
-
-	//
-	// TODO(TS): expand source
-	//
-
 	/* Compile fragment shader. */
 	stage->shader = glCreateShader(stage_type);
 	const GLint source_length[1] = { (GLint)txt_length(stage->source) }; 
