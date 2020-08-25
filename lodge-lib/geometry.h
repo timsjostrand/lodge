@@ -1,32 +1,51 @@
 #ifndef _GEOMETRY_H
 #define _GEOMETRY_H
 
-// FIXME(TS): min/max instead?
-struct rect {
+//
+// FIXME(TS): should use min/max instead
+//
+struct rect
+{
 	vec2	pos;
 	vec2	size;
 };
 
-struct circle {
+struct circle
+{
 	vec2	pos;
 	float	r;
 };
 
-struct triangle {
+struct triangle
+{
 	vec3	p0;
 	vec3	p1;
 	vec3	p2;
 };
 
-struct ray {
+struct ray
+{
 	vec3	origin;
 	vec3	dir;
 	vec3	dir_inv;
 };
 
-struct aabb {
+struct aabb
+{
 	vec3	min;
 	vec3	max;
+};
+
+struct line
+{
+	vec3	p0;
+	vec3	p1;
+};
+
+struct sphere
+{
+	vec3	pos;
+	float	r;
 };
 
 static struct ray ray_make(const vec3 origin, const vec3 dir)
