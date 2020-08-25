@@ -235,8 +235,10 @@ static void lodge_res_append_dep(struct lodge_res *res, size_t index, struct lod
 		ASSERT(dep_index < LODGE_RES_DEPS_MAX);
 		res->deps[index].deps[dep_index] = dependency;
 
-		debugf("Res", "New dependency: `" STRVIEW_PRINTF_FMT "` from `%s` (count: %d)`\n",
+		debugf("Res", "New dependency: `" STRVIEW_PRINTF_FMT "`:`" STRVIEW_PRINTF_FMT "` from `" STRVIEW_PRINTF_FMT "`:`%s` (count: %d)`\n",
+			STRVIEW_PRINTF_ARG(deps->deps[dep_index].resources->desc.name),
 			STRVIEW_PRINTF_ARG(deps->deps[dep_index].id),
+			STRVIEW_PRINTF_ARG(res->desc.name),
 			res->names[index],
 			deps->count
 		);
