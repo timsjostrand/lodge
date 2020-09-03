@@ -6,6 +6,12 @@
 #include "lodge_sampler.h"
 #include <GL/glew.h>
 
+struct lodge_drawable;
+typedef struct lodge_drawable* lodge_drawable_t;
+
+struct lodge_buffer_object;
+typedef struct lodge_buffer_object* lodge_buffer_object_t;
+
 /**
  * Exhausts the OpenGL Error queue and returns when done (optionally with a return value).
  */
@@ -58,6 +64,30 @@ static GLuint lodge_sampler_to_gl(lodge_sampler_t sampler)
 static lodge_sampler_t lodge_sampler_from_gl(GLuint name)
 {
 	return (lodge_sampler_t)name;
+}
+
+static GLuint lodge_drawable_to_gl(const lodge_drawable_t drawable)
+{
+	ASSERT(drawable != NULL);
+	return (GLuint)drawable;
+}
+
+static lodge_drawable_t lodge_drawable_from_gl(GLuint drawable)
+{
+	ASSERT(drawable > 0);
+	return (lodge_drawable_t)drawable;
+}
+
+static lodge_buffer_object_t lodge_buffer_object_from_gl(const GLuint buffer_object)
+{
+	ASSERT(buffer_object > 0);
+	return (lodge_buffer_object_t)buffer_object;
+}
+
+static GLuint lodge_buffer_object_to_gl(const lodge_buffer_object_t buffer_object)
+{
+	ASSERT(buffer_object != NULL);
+	return (GLuint)buffer_object;
 }
 
 #endif

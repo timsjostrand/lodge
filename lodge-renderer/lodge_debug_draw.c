@@ -4,6 +4,8 @@
 
 #include "lodge_renderer.h"
 #include "lodge_static_mesh.h"
+#include "lodge_drawable.h"
+#include "lodge_buffer_object.h"
 
 struct line_vertex
 {
