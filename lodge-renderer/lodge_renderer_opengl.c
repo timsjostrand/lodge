@@ -191,29 +191,6 @@ struct lodge_ret lodge_renderer_attach(struct lodge_renderer *renderer)
 	glDebugMessageCallback((GLDEBUGPROC)&loc_opengl_debug_message_callback, 0);
 	GL_OK_OR_RETURN(lodge_error("Failed call glDebugMessageCallback`"));
 
-	/* OpenGL. */
-	//glViewport( 0, 0, view_width, view_height );
-	glClearColor(0.33f, 0.33f, 0.33f, 0.0f);
-
-#define DEPTH
-
-#ifdef DEPTH
-	glDepthFunc(GL_LEQUAL);
-	glEnable(GL_DEPTH_TEST);
-#else
-	glDisable(GL_DEPTH_TEST);
-#endif
-	GL_OK_OR_RETURN(lodge_error("Failed to set `GL_DEPTH_TEST`"));
-
-	glEnable(GL_CULL_FACE);
-	//glDisable(GL_CULL_FACE);
-	GL_OK_OR_RETURN(lodge_error("Failed to set `GL_CULL_FACE`"));
-
-	glEnable(GL_BLEND);
-	GL_OK_OR_RETURN(lodge_error("Failed to set `GL_BLEND`"));
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	GL_OK_OR_RETURN(lodge_error("Failed to set `glBlendFunc`"));
-
 	struct lodge_ret unit_drawables_ret = unit_drawables_init(&renderer->unit_drawables);
 	if(!unit_drawables_ret.success) {
 		return unit_drawables_ret;
@@ -225,46 +202,6 @@ struct lodge_ret lodge_renderer_attach(struct lodge_renderer *renderer)
 void lodge_renderer_detach(struct lodge_renderer *renderer)
 {
 	unit_drawables_reset(&renderer->unit_drawables);
-}
-
-int lodge_renderer_set_clear_color(struct lodge_renderer *renderer, vec4 color)
-{
-	glClearColor(rgba_of(color));
-	GL_OK_OR_RETURN(0);
-	return 1;
-}
-
-int lodge_renderer_set_cull_face(struct lodge_renderer *renderer, enum lodge_renderer_cull_face cull_face)
-{
-	//TODO(TS): is it worth having on/off + set_mode for remembering last mode?
-	switch(cull_face)
-	{
-	case LODGE_RENDERER_CULL_FACE_DISABLE:
-		glDisable(GL_CULL_FACE);
-		break;
-	case LODGE_RENDERER_CULL_FACE_FRONT:
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT);
-		break;
-	case LODGE_RENDERER_CULL_FACE_BACK:
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		break;
-	case LODGE_RENDERER_CULL_FACE_FRONT_AND_BACK:
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT_AND_BACK);
-		break;
-	}
-	GL_OK_OR_RETURN(0);
-	return 1;
-}
-
-int lodge_renderer_set_alpha_blend_state(struct lodge_renderer *renderer, struct lodge_renderer_alpha_blend_state state)
-{
-	ASSERT_NOT_IMPLEMENTED();
-
-	GL_OK_OR_RETURN(0);
-	return 1;
 }
 
 strview_t lodge_renderer_get_library(struct lodge_renderer *renderer)
