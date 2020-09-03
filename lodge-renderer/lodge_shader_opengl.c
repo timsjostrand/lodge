@@ -363,8 +363,7 @@ void lodge_renderer_set_constant_float(lodge_shader_t shader, strview_t name, fl
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
 		return;
 	}
-	glUseProgram(shader->program);
-	glUniform1f(id, f);
+	glProgramUniform1f(shader->program, id, f);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
 		errorf("OpenGL", "lodge_renderer_set_constant_float(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
@@ -378,8 +377,7 @@ void lodge_renderer_set_constant_vec2(lodge_shader_t shader, strview_t name, vec
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
 		return;
 	}
-	glUseProgram(shader->program);
-	glUniform2f(id, v.x, v.y);
+	glProgramUniform2f(shader->program, id, v.x, v.y);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
 		errorf("OpenGL", "lodge_renderer_set_constant_vec2(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
@@ -393,8 +391,7 @@ void lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name, vec
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
 		return;
 	}
-	glUseProgram(shader->program);
-	glUniform3f(id, v.x, v.y, v.z);
+	glProgramUniform3f(shader->program, id, v.x, v.y, v.z);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
 		errorf("OpenGL", "lodge_renderer_set_constant_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
@@ -408,8 +405,7 @@ void lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
 		return;
 	}
-	glUseProgram(shader->program);
-	glUniform4f(id, v.x, v.y, v.z, v.w);
+	glProgramUniform4f(shader->program, id, v.x, v.y, v.z, v.w);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
 		errorf("OpenGL", "lodge_renderer_set_constant_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
@@ -423,8 +419,7 @@ void lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
 		return;
 	}
-	glUseProgram(shader->program);
-	glUniformMatrix4fv(id, 1, GL_FALSE, mat.m);
+	glProgramUniformMatrix4fv(shader->program, id, 1, GL_FALSE, mat.m);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
 		errorf("OpenGL", "lodge_renderer_set_constant_mat4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
