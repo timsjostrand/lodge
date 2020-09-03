@@ -66,6 +66,9 @@ struct lodge_pipeline_desc lodge_pipeline_desc_make()
 
 void lodge_pipeline_reset(lodge_pipeline_t pipeline)
 {
+	//
+	// TODO(TS): make sure the stack does not contain `pipeline`
+	//
 	ASSERT_NOT_IMPLEMENTED();
 }
 
@@ -237,7 +240,7 @@ static void lodge_pipeline_bind(lodge_pipeline_t pipeline)
 }
 
 //
-// TODO(TS): this should be aware of the current glContext, 1 pipeline per context...
+// TODO(TS): this should be aware of the current glContext, 1 pipeline stack per context...
 //
 void lodge_pipeline_push(lodge_pipeline_t pipeline)
 {

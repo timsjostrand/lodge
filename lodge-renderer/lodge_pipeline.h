@@ -2,7 +2,11 @@
 // `lodge_pipeline` attempts to model the graphics pipeline as a single object.
 // 
 // A pipeline can be created from a desc struct, and then applied
-// (`lodge_pipeline_bind`) to fully configure the draw state.
+// (`lodge_pipeline_push`) to fully configure the draw state, and then
+// withdrawn (`lodge_pipeline_pop`) to return to the previous state.
+//
+// A local cache compares the state changes before calling into the underlying
+// graphics API.
 //
 // NOTE(TS): The strategy to implementing this in a sane manner is to add
 // features as needed, rather than to strive for completeness.
@@ -13,8 +17,8 @@
 
 #include <stdbool.h>
 
-#define LODGE_PIPELINES_MAX 256
-#define LODGE_PIPELINE_STACK_MAX 256
+#define LODGE_PIPELINES_MAX				256
+#define LODGE_PIPELINE_STACK_MAX		256
 
 struct lodge_pipeline;
 typedef struct lodge_pipeline* lodge_pipeline_t;
@@ -101,8 +105,6 @@ struct lodge_pipeline_desc				lodge_pipeline_desc_make();
 
 lodge_pipeline_t						lodge_pipeline_make(struct lodge_pipeline_desc desc);
 void									lodge_pipeline_reset(lodge_pipeline_t pipeline);
-
-//void									lodge_pipeline_bind(lodge_pipeline_t pipeline);
 
 void									lodge_pipeline_push(lodge_pipeline_t pipeline);
 void									lodge_pipeline_pop();

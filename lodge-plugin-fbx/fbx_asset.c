@@ -479,9 +479,6 @@ void fbx_asset_reset(struct fbx_asset *asset)
 
 void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp)
 {
-	// FIXME(TS): port to lodge_renderer
-	//glDisable(GL_CULL_FACE);
-
 	lodge_renderer_bind_shader(shader);
 	lodge_renderer_set_constant_mvp(shader, &mvp);
 
