@@ -12,42 +12,42 @@
 #define framebuffer_debug(...) debugf("framebuffer", __VA_ARGS__)
 #define framebuffer_error(...) errorf("framebuffer", __VA_ARGS__)
 
-struct framebuffer
+lodge_framebuffer_t lodge_framebuffer_make()
 {
-	GLuint id;
-};
+	GLuint framebuffer;
 
-framebuffer_t framebuffer_create()
-{
-	struct framebuffer* framebuffer = malloc(sizeof(struct framebuffer));
-
-	glGenFramebuffers(1, &framebuffer->id);
+	glGenFramebuffers(1, &framebuffer);
 	
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR) {
 		framebuffer_error("glGenFramebuffers failed: %d\n", err);
 	}
 	
-	return framebuffer;
+	return lodge_framebuffer_from_gl(framebuffer);
 }
 
-void framebuffer_destroy(framebuffer_t framebuffer)
+void lodge_framebuffer_reset(lodge_framebuffer_t framebuffer)
 {
-	glDeleteFramebuffers(1, &framebuffer->id);
+	glDeleteFramebuffers(1, &(GLuint){ lodge_framebuffer_to_gl(framebuffer) });
 	free(framebuffer);
 }
 
-void framebuffer_bind(framebuffer_t framebuffer)
+lodge_framebuffer_t	lodge_framebuffer_default()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer->id);
+	return lodge_framebuffer_from_gl(0);
 }
 
-void framebuffer_unbind()
+void lodge_framebuffer_bind(lodge_framebuffer_t framebuffer)
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, lodge_framebuffer_to_gl(framebuffer));
+}
+
+void lodge_framebuffer_unbind()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-static const char* framebuffer_status_to_text(GLenum status)
+static const char* lodge_framebuffer_status_to_text(GLenum status)
 {
 	switch(status)
 	{
@@ -68,7 +68,7 @@ static const char* framebuffer_status_to_text(GLenum status)
 	}
 }
 
-void framebuffer_attach_texture(framebuffer_t framebuffer, const lodge_texture_t texture, enum framebuffer_target target)
+void lodge_framebuffer_attach_texture(lodge_framebuffer_t framebuffer, const lodge_texture_t texture, enum framebuffer_target target)
 {
 	GLint gl_target;
 
@@ -87,6 +87,8 @@ void framebuffer_attach_texture(framebuffer_t framebuffer, const lodge_texture_t
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, gl_target, GL_TEXTURE_2D, lodge_texture_to_gl(texture), 0);
 
+	// TODO(TS): use glDrawBuffer(GL_NONE) if depth only
+
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR) {
 		framebuffer_error("glFramebufferTexture2D failed: %d\n", err);
@@ -94,6 +96,34 @@ void framebuffer_attach_texture(framebuffer_t framebuffer, const lodge_texture_t
 
 	err = glCheckFramebufferStatus(GL_FRAMEBUFFER); 
 	if(err != GL_FRAMEBUFFER_COMPLETE) {
-		framebuffer_error("Error: %s\n", framebuffer_status_to_text(err));
+		framebuffer_error("Error: %s\n", lodge_framebuffer_status_to_text(err));
 	}
 }
+
+void lodge_framebuffer_clear_color(lodge_framebuffer_t framebuffer, uint32_t index, vec4 clear_value)
+{
+	glClearNamedFramebufferfv(lodge_framebuffer_to_gl(framebuffer), GL_COLOR, (GLint)index, clear_value.v);
+	GL_OK_OR_ASSERT("Failed to clear framebuffer color");
+}
+
+void lodge_framebuffer_clear_depth(lodge_framebuffer_t framebuffer, float depth_value)
+{
+	// FIXME(TS): must index always be == 0?
+	glClearNamedFramebufferfv(lodge_framebuffer_to_gl(framebuffer), GL_DEPTH, (GLint)0, &(GLfloat){ depth_value });
+	GL_OK_OR_ASSERT("Failed to clear framebuffer depth");
+}
+
+void lodge_framebuffer_clear_stencil(lodge_framebuffer_t framebuffer, int32_t stencil_value)
+{
+	// FIXME(TS): must index always be == 0?
+	glClearNamedFramebufferiv(lodge_framebuffer_to_gl(framebuffer), GL_STENCIL, (GLint)0, &(GLint){ stencil_value });
+	GL_OK_OR_ASSERT("Failed to clear framebuffer stencil");
+}
+
+#if 0
+void lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, float depth_value, int32_t stencil_value)
+{
+	glClearNamedFramebufferfi(lodge_framebuffer_to_gl(framebuffer), GL_DEPTH_STENCIL, (GLfloat)depth_value, (GLint)stencil_value);
+	GL_OK_OR_ASSERT("Failed to clear framebuffer depth + stencil");
+}
+#endif
