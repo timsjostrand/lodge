@@ -121,3 +121,14 @@ void lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, floa
 	GL_OK_OR_ASSERT("Failed to clear framebuffer depth + stencil");
 }
 #endif
+
+void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_framebuffer_rect dst_rect, struct lodge_framebuffer_rect src_rect)
+{
+	glBlitNamedFramebuffer(
+		lodge_framebuffer_to_gl(src),
+		lodge_framebuffer_to_gl(dst),
+		src_rect.x0, src_rect.y0, src_rect.x1, src_rect.y1,
+		dst_rect.x0, dst_rect.y0, dst_rect.x1, dst_rect.y1,
+		GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST
+	);
+}
