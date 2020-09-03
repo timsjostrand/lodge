@@ -11,7 +11,7 @@
 #define VFS_ERROR -1
 
 #define VFS_MAX_FILENAME_LEN 256
-#define VFS_MAX_NUM_FILES 256
+#define VFS_MAX_NUM_FILES 1024
 #define VFS_MOUNT_PATH_MAX 256
 
 struct vfs;
