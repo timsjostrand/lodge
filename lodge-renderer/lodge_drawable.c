@@ -20,10 +20,6 @@ lodge_drawable_t lodge_drawable_make(struct lodge_drawable_desc desc)
 		lodge_drawable_set_index_buffer(lodge_drawable_from_gl(drawable), desc.indices);
 	}
 
-	// Reset VAO binding
-	glBindVertexArray(0);
-	GL_OK_OR_GOTO(fail);
-
 	return lodge_drawable_from_gl(drawable);
 
 fail:
@@ -67,22 +63,14 @@ lodge_drawable_t lodge_drawable_make_from_static_mesh(const struct lodge_static_
 
 void lodge_drawable_reset(lodge_drawable_t drawable)
 {
-	const GLuint drawable_id = lodge_drawable_to_gl(drawable);
-	glDeleteVertexArrays(1, &drawable_id);
+	glDeleteVertexArrays(1, &(GLuint){ lodge_drawable_to_gl(drawable) });
 	GL_OK_OR_ASSERT("Failed to reset drawable");
 }
 
 void lodge_drawable_set_index_buffer(lodge_drawable_t drawable, lodge_buffer_object_t index_buffer)
 {
-	glBindVertexArray(lodge_drawable_to_gl(drawable));
-	GL_OK_OR_GOTO(fail);
-
 	glVertexArrayElementBuffer(lodge_drawable_to_gl(drawable), lodge_buffer_object_to_gl(index_buffer));
 	GL_OK_OR_GOTO(fail);
-
-	glBindVertexArray(0);
-	GL_OK_OR_GOTO(fail);
-
 	return;
 
 fail:
@@ -94,32 +82,11 @@ void lodge_drawable_set_buffer_object(lodge_drawable_t drawable, uint32_t index,
 	ASSERT(!strview_empty(attrib.name));
 	ASSERT(attrib.buffer_object);
 
-	glBindVertexArray(lodge_drawable_to_gl(drawable));
-	GL_OK_OR_GOTO(fail);
-
-	glEnableVertexAttribArray(index);
-	GL_OK_OR_GOTO(fail);
-
-	if(attrib.buffer_object) {
-		glBindBuffer(GL_ARRAY_BUFFER, lodge_buffer_object_to_gl(attrib.buffer_object));
-		GL_OK_OR_GOTO(fail);
-	}
-
-	glVertexAttribPointer(index,
-		attrib.float_count,
-		GL_FLOAT,
-		GL_FALSE,
-		attrib.stride,
-		(const void*)attrib.offset
-	);
-	GL_OK_OR_GOTO(fail);
-
-	if(attrib.instanced) {
-		glVertexAttribDivisor(index, attrib.instanced);
-	}
-	GL_OK_OR_GOTO(fail);
-
-	glBindVertexArray(0);
+	GLuint vertex_array = lodge_drawable_to_gl(drawable);
+	glEnableVertexArrayAttrib(vertex_array, index);
+	glVertexArrayVertexBuffer(vertex_array, index, lodge_buffer_object_to_gl(attrib.buffer_object), attrib.offset, (GLsizei)attrib.stride);
+	glVertexArrayAttribFormat(vertex_array, index, attrib.float_count, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vertex_array, index, index);
 	GL_OK_OR_GOTO(fail);
 
 	return;
@@ -156,7 +123,7 @@ void lodge_drawable_render_indexed_instanced(const lodge_drawable_t drawable, si
 {
 	glBindVertexArray(lodge_drawable_to_gl(drawable));
 	GL_OK_OR_ASSERT("Failed to bind drawable");
-	
+
 	glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, NULL, instances);
 	GL_OK_OR_ASSERT("Failed to render drawable");
 	
