@@ -16,7 +16,7 @@ struct lodge_ret lodge_image_new(struct lodge_image *image_out, const uint8_t *d
 	*image_out = (struct lodge_image){ 0 };
 
 	int width, height, channels;
-	uint8_t *tmp = stbi_load_from_memory(data, len, &width, &height, &channels, STBI_rgb_alpha);
+	uint8_t *tmp = stbi_load_from_memory(data, len, &width, &height, &channels, 0);
 
 	image_out->desc = (struct lodge_image_desc) {
 		.width = width,
