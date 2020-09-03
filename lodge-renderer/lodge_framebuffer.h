@@ -14,28 +14,27 @@ typedef struct lodge_texture* lodge_texture_t;
 struct lodge_framebuffer;
 typedef struct lodge_framebuffer* lodge_framebuffer_t;
 
-enum framebuffer_target
+struct lodge_framebuffer_desc
 {
-	FRAMEBUFFER_TARGET_COLOR = 0,
-	FRAMEBUFFER_TARGET_DEPTH,
-	FRAMEBUFFER_TARGET_STENCIL
+	uint32_t			colors_count;
+	lodge_texture_t		colors[16];
+	lodge_texture_t		depth;
+	lodge_texture_t		stencil;
 };
 
-lodge_framebuffer_t	lodge_framebuffer_make();
-void				lodge_framebuffer_reset(lodge_framebuffer_t framebuffer);
+lodge_framebuffer_t		lodge_framebuffer_make(struct lodge_framebuffer_desc desc);
+void					lodge_framebuffer_reset(lodge_framebuffer_t framebuffer);
 
-lodge_framebuffer_t	lodge_framebuffer_default();
+lodge_framebuffer_t		lodge_framebuffer_default();
 
-void				lodge_framebuffer_attach_texture(lodge_framebuffer_t framebuffer, const lodge_texture_t texture, enum framebuffer_target target);
+void					lodge_framebuffer_bind(lodge_framebuffer_t framebuffer);
+void					lodge_framebuffer_unbind();
 
-void				lodge_framebuffer_bind(lodge_framebuffer_t framebuffer);
-void				lodge_framebuffer_unbind();
-
-void				lodge_framebuffer_clear_color(lodge_framebuffer_t framebuffer, uint32_t index, vec4 clear_value);
-void				lodge_framebuffer_clear_depth(lodge_framebuffer_t framebuffer, float depth_value);
-void				lodge_framebuffer_clear_stencil(lodge_framebuffer_t framebuffer, int32_t stencil_value);
+void					lodge_framebuffer_clear_color(lodge_framebuffer_t framebuffer, uint32_t index, vec4 clear_value);
+void					lodge_framebuffer_clear_depth(lodge_framebuffer_t framebuffer, float depth_value);
+void					lodge_framebuffer_clear_stencil(lodge_framebuffer_t framebuffer, int32_t stencil_value);
 #if 0
-void				lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, float depth_value, int32_t stencil_value);
+void					lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, float depth_value, int32_t stencil_value);
 #endif
 
 #endif // _FRAMEBUFFER_H
