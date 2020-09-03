@@ -102,10 +102,11 @@ mat4	mat4_mult(const mat4 lhs, const mat4 rhs);
 mat4	mat4_mult_scalar(const mat4 m, const float s);
 vec4	mat4_mult_vec4(const mat4 lhs, const vec4 rhs);
 
-mat4	mat4_ortho(float left, float right, float top, float bottom, float near, float far);
+mat4	mat4_ortho(float left, float right, float bottom, float top, float near, float far);
 mat4	mat4_frustum(float left, float right, float bottom, float top, float near, float far);
 mat4	mat4_perspective(float fov, float ratio, float near, float far);
 mat4	mat4_lookat(const vec3 eye_pos, const vec3 lookat_pos, const vec3 up);
+mat4	mat4_look(const vec3 eye_pos, const vec3 dir, const vec3 up);
 
 mat4	mat4_translation(float x, float y, float z);
 mat4	mat4_scaling(float x, float y, float z);
@@ -137,11 +138,15 @@ float	vec2_distance(const vec2 a, const vec2 b);
 vec3	vec3_make(const float x, const float y, const float z);
 vec3	vec3_zero();
 vec3	vec3_ones();
+vec3	vec3_max(const vec3 lhs, const vec3 rhs);
+vec3	vec3_min(const vec3 lhs, const vec3 rhs);
 void	vec3_print(const vec3 v);
 vec3	vec3_add(const vec3 lhs, const vec3 rhs);
 vec3	vec3_sub(const vec3 lhs, const vec3 rhs);
 vec3	vec3_mult(const vec3 lhs, const vec3 rhs);
 vec3	vec3_mult_scalar(const vec3 lhs, float rhs);
+vec3	vec3_div(const vec3 lhs, const vec3 rhs);
+vec3	vec3_div_scalar(const vec3 lhs, float rhs);
 vec3	vec3_negate(const vec3 v);
 vec3	vec3_cross(const vec3 lhs, const vec3 rhs);
 float	vec3_dot(const vec3 lhs, const vec3 rhs);
@@ -153,8 +158,11 @@ float	vec3_distance_squared(const vec3 a, const vec3 b);
 
 
 vec4	vec4_make(const float x, const float y, const float z, const float w);
+vec4	vec4_make_from_vec3(const vec3 v, const float w);
 vec4	vec4_zero();
 vec4	vec4_ones();
+vec4	vec4_max(const vec4 lhs, const vec4 rhs);
+vec4	vec4_min(const vec4 lhs, const vec4 rhs);
 vec4	vec4_lerp(const vec4 min, const vec4 max, float t);
 float	vec4_length(const vec4 v);
 void	vec4_print(const vec4 v);

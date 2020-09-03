@@ -45,7 +45,7 @@ mat4 mat4_ones()
 	};
 }
 
-mat4 mat4_ortho(float left, float right, float top, float bottom, float nearZ, float farZ)
+mat4 mat4_ortho(float left, float right, float bottom, float top, float nearZ, float farZ)
 {
 	const float ral = right + left;
 	const float rsl = right - left;
@@ -115,19 +115,28 @@ mat4 mat4_perspective(float fov_y, float ratio, float near, float far)
 
 mat4 mat4_lookat(const vec3 eye_pos, const vec3 lookat_pos, const vec3 up)
 {
-	const vec3 n = vec3_norm(vec3_add(eye_pos, vec3_negate(lookat_pos)));
+	const vec3 n = vec3_norm(vec3_sub(lookat_pos, eye_pos));
 	const vec3 u = vec3_norm(vec3_cross(up, n));
 	const vec3 v = vec3_cross(n, u);
 	
 	return (mat4) {
-		u.v[0], v.v[0], n.v[0], 0.0f,
-		u.v[1], v.v[1], n.v[1], 0.0f,
-		u.v[2], v.v[2], n.v[2], 0.0f,
-		vec3_dot(vec3_negate(u), eye_pos),
-		vec3_dot(vec3_negate(v), eye_pos),
-		vec3_dot(vec3_negate(n), eye_pos),
+		u.x, v.x, n.x,				0.0f,
+		u.y, v.y, n.y,				0.0f,
+		u.z, v.z, n.z,				0.0f,
+		-vec3_dot(u, eye_pos),
+		-vec3_dot(v, eye_pos),
+		-vec3_dot(n, eye_pos),
 		1.0f
 	};
+}
+
+mat4 mat4_look(const vec3 eye_pos, const vec3 dir, const vec3 up)
+{
+	//
+	// FIXME(TS): dir needs to be negated -- fix in mat4_lookat?
+	//
+
+	return mat4_lookat(eye_pos, vec3_add(eye_pos, dir), up);
 }
 
 mat4 mat4_identity()
@@ -181,12 +190,21 @@ mat4 mat4_scale(const mat4 m, float sx, float sy, float sz)
 
 vec4 mat4_mult_vec4(const mat4 m, const vec4 a)
 {
+#if 1
+	return (vec4) {
+		m.m[0]  * a.v[0] + m.m[4]  * a.v[1] + m.m[8]  * a.v[2] + m.m[12]  * a.v[3],
+		m.m[1]  * a.v[0] + m.m[5]  * a.v[1] + m.m[9]  * a.v[2] + m.m[13]  * a.v[3],
+		m.m[2]  * a.v[0] + m.m[6]  * a.v[1] + m.m[10] * a.v[2] + m.m[14] * a.v[3],
+		m.m[3] * a.v[0] + m.m[7] * a.v[1] + m.m[11] * a.v[2] + m.m[15] * a.v[3],
+	};
+#else
 	return (vec4) {
 		m.m[0]  * a.v[0] + m.m[1]  * a.v[1] + m.m[2]  * a.v[2] + m.m[3]  * a.v[3],
 		m.m[4]  * a.v[0] + m.m[5]  * a.v[1] + m.m[6]  * a.v[2] + m.m[7]  * a.v[3],
 		m.m[8]  * a.v[0] + m.m[9]  * a.v[1] + m.m[10] * a.v[2] + m.m[11] * a.v[3],
 		m.m[12] * a.v[0] + m.m[13] * a.v[1] + m.m[14] * a.v[2] + m.m[15] * a.v[3],
 	};
+#endif
 }
 
 mat4 mat4_rotation_x(const float radians)
@@ -349,6 +367,24 @@ vec3 vec3_mult_scalar(const vec3 lhs, float rhs)
 		lhs.v[0] * rhs,
 		lhs.v[1] * rhs,
 		lhs.v[2] * rhs
+	};
+}
+
+vec3 vec3_div(const vec3 left, const vec3 right)
+{
+	return (vec3) {
+		left.v[0] / right.v[0],
+		left.v[1] / right.v[1],
+		left.v[2] / right.v[2],
+	};
+}
+
+vec3 vec3_div_scalar(const vec3 lhs, float rhs)
+{
+	return (vec3) {
+		lhs.v[0] / rhs,
+		lhs.v[1] / rhs,
+		lhs.v[2] / rhs
 	};
 }
 
@@ -588,6 +624,24 @@ vec3 vec3_ones()
 	return vec3_make(1.0f, 1.0f, 1.0f);
 }
 
+vec3 vec3_max(const vec3 lhs, const vec3 rhs)
+{
+	return (vec3) {
+		.x = max(lhs.x, rhs.x),
+		.y = max(lhs.y, rhs.y),
+		.z = max(lhs.z, rhs.z),
+	};
+}
+
+vec3 vec3_min(const vec3 lhs, const vec3 rhs)
+{
+	return (vec3) {
+		.x = min(lhs.x, rhs.x),
+		.y = min(lhs.y, rhs.y),
+		.z = min(lhs.z, rhs.z),
+	};
+}
+
 void vec3_print(const vec3 v)
 {
 	printf(PRINTF_3F "\n", v.v[0], v.v[1], v.v[2]);
@@ -672,6 +726,16 @@ vec4 vec4_make(const float x, const float y, const float z, const float w)
 	return (vec4) { x, y, z, w };
 }
 
+vec4 vec4_make_from_vec3(const vec3 v, const float w)
+{
+	return (vec4) {
+		.x = v.x,
+		.y = v.y,
+		.z = v.z,
+		.w = w
+	};
+}
+
 vec4 vec4_zero()
 {
 	return vec4_make(0.0f, 0.0f, 0.0f, 0.0f);
@@ -680,6 +744,26 @@ vec4 vec4_zero()
 vec4 vec4_ones()
 {
 	return vec4_make(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+vec4 vec4_max(const vec4 lhs, const vec4 rhs)
+{
+	return (vec4) {
+		.x = max(lhs.x, rhs.x),
+		.y = max(lhs.y, rhs.y),
+		.z = max(lhs.z, rhs.z),
+		.w = max(lhs.w, rhs.w),
+	};
+}
+
+vec4 vec4_min(const vec4 lhs, const vec4 rhs)
+{
+	return (vec4) {
+		.x = min(lhs.x, rhs.x),
+		.y = min(lhs.y, rhs.y),
+		.z = min(lhs.z, rhs.z),
+		.w = min(lhs.w, rhs.w),
+	};
 }
 
 vec4 vec4_lerp(const vec4 min, const vec4 max, float t)
