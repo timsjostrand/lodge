@@ -12,21 +12,6 @@ typedef struct lodge_texture* lodge_texture_t;
 
 struct shader;
 
-struct lodge_renderer_alpha_blend_state
-{
-	int	enabled;
-	int	src_blend;
-	int dst_blend;
-};
-
-enum lodge_renderer_cull_face
-{
-	LODGE_RENDERER_CULL_FACE_DISABLE,
-	LODGE_RENDERER_CULL_FACE_FRONT,
-	LODGE_RENDERER_CULL_FACE_BACK,
-	LODGE_RENDERER_CULL_FACE_FRONT_AND_BACK,
-};
-
 enum lodge_renderer_primitive
 {
 	LODGE_RENDERER_PRIMITIVE_POINTS,
@@ -48,16 +33,9 @@ typedef void* lodge_window_t;
 struct lodge_renderer*	lodge_renderer_new();
 void					lodge_renderer_free(struct lodge_renderer *renderer);
 
-#if 0
-void					lodge_renderer_add_func(struct lodge_renderer *renderer, lodge_render_func render_func, void *userdata);
-#endif
 struct lodge_ret		lodge_renderer_attach(struct lodge_renderer *renderer);
 
 strview_t				lodge_renderer_get_library(struct lodge_renderer *renderer);
-
-int						lodge_renderer_set_clear_color(struct lodge_renderer *renderer, vec4 color);
-int						lodge_renderer_set_cull_face(struct lodge_renderer *renderer, enum lodge_renderer_cull_face cull_face);
-int						lodge_renderer_set_alpha_blend_state(struct lodge_renderer *renderer, struct lodge_renderer_alpha_blend_state state);
 
 struct drawable*		lodge_renderer_get_unit_rect(struct lodge_renderer *renderer);
 
