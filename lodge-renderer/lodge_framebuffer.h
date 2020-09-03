@@ -22,6 +22,14 @@ struct lodge_framebuffer_desc
 	lodge_texture_t		stencil;
 };
 
+struct lodge_framebuffer_rect
+{
+	int32_t				x0;
+	int32_t				y0;
+	int32_t				x1;
+	int32_t				y1;
+};
+
 lodge_framebuffer_t		lodge_framebuffer_make(struct lodge_framebuffer_desc desc);
 void					lodge_framebuffer_reset(lodge_framebuffer_t framebuffer);
 
@@ -36,5 +44,7 @@ void					lodge_framebuffer_clear_stencil(lodge_framebuffer_t framebuffer, int32_
 #if 0
 void					lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, float depth_value, int32_t stencil_value);
 #endif
+
+void					lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_framebuffer_rect dst_rect, struct lodge_framebuffer_rect src_rect); 
 
 #endif // _FRAMEBUFFER_H
