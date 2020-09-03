@@ -116,6 +116,57 @@ lodge_texture_t lodge_texture_make_from_image(const struct lodge_image *image)
 	return lodge_texture_make_from_pixels(image->pixel_data, format, image->desc.width, image->desc.height);
 }
 
+static bool lodge_texture_load_cubemap_side(const struct lodge_image *image, GLenum side)
+{
+	if(!image) {
+		return false;
+	}
+
+	// non-power-of-2 dimensions check
+	if((image->desc.width & (image->desc.width - 1)) != 0 || (image->desc.height & (image->desc.height - 1)) != 0) {
+		ASSERT_FAIL("Cubemap texture is not power-of-2 dimensions");
+	}
+
+	// copy image data into 'target' side of cube map
+	struct gl_pixel_format format = lodge_image_to_gl_pixel_format(image);
+	glTexImage2D(side, 0, format.internal_format, image->desc.width, image->desc.height, 0, format.pixel_format, format.channel_type, image->pixel_data);
+	GL_OK_OR_RETURN(false);
+
+	return true;
+}
+
+lodge_texture_t lodge_texture_make_cubemap(struct lodge_texture_cubemap_desc desc)
+{
+	GLuint texture;
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+	GL_OK_OR_GOTO(fail);
+
+	if(desc.front && !lodge_texture_load_cubemap_side(desc.front, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)) {
+		goto fail;
+	}
+	if(desc.back && !lodge_texture_load_cubemap_side(desc.back, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y)) {
+		goto fail;
+	}
+	if(desc.top && !lodge_texture_load_cubemap_side(desc.top, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)) {
+		goto fail;
+	}
+	if(desc.bottom && !lodge_texture_load_cubemap_side(desc.bottom, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+		goto fail;
+	}
+	if(desc.left && !lodge_texture_load_cubemap_side(desc.left, GL_TEXTURE_CUBE_MAP_NEGATIVE_X)) {
+		goto fail;
+	}
+	if(desc.right && !lodge_texture_load_cubemap_side(desc.right, GL_TEXTURE_CUBE_MAP_POSITIVE_X)) {
+		goto fail;
+	}
+
+	return lodge_texture_from_gl(texture);
+
+fail:
+	ASSERT_FAIL("Failed to make cubemap texture");
+	return NULL;
+}
 
 void lodge_texture_reset(lodge_texture_t *texture)
 {
