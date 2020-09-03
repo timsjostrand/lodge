@@ -97,14 +97,14 @@ static lodge_framebuffer_t lodge_framebuffer_from_gl(const GLuint framebuffer)
 {
 	// Framebuffer 0 <=> default fb
 	//ASSERT(framebuffer > 0);
-	return (lodge_framebuffer_t)framebuffer;
+	return (lodge_framebuffer_t)(framebuffer + 1);
 }
 
 static GLuint lodge_framebuffer_to_gl(const lodge_framebuffer_t framebuffer)
 {
 	// Framebuffer 0 <=> default fb
-	//ASSERT(framebuffer != NULL);
-	return (GLuint)framebuffer;
+	ASSERT(framebuffer != NULL);
+	return (GLuint)(framebuffer) - 1;
 }
 
 #endif

@@ -36,41 +36,35 @@ static const char* lodge_framebuffer_status_to_text(GLenum status)
 lodge_framebuffer_t lodge_framebuffer_make(struct lodge_framebuffer_desc desc)
 {
 	GLuint framebuffer;
-	glGenFramebuffers(1, &framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	glCreateFramebuffers(1, &framebuffer);
 	GL_OK_OR_GOTO(fail);
 
 	if(desc.colors_count == 0) {
 		glNamedFramebufferDrawBuffer(framebuffer, GL_NONE);
 	} else {
 		for(uint32_t i = 0; i < desc.colors_count; i++) {
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, lodge_texture_to_gl(desc.colors[i]), 0);
+			glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0 + i, lodge_texture_to_gl(desc.colors[i]), 0);
 		}
 	}
 
 	if(desc.depth) {
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, lodge_texture_to_gl(desc.depth), 0);
+		glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, lodge_texture_to_gl(desc.depth), 0);
 	}
 
 	if(desc.stencil) {
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, lodge_texture_to_gl(desc.stencil), 0);
+		glNamedFramebufferTexture(framebuffer, GL_STENCIL_ATTACHMENT, lodge_texture_to_gl(desc.stencil), 0);
 	}
 
-	GLenum err = glCheckFramebufferStatus(GL_FRAMEBUFFER); 
+	GLenum err = glCheckNamedFramebufferStatus(framebuffer, GL_FRAMEBUFFER); 
 	if(err != GL_FRAMEBUFFER_COMPLETE) {
-		ASSERT_FAIL("Framebuffer not complete");
 		framebuffer_error("Error: %s\n", lodge_framebuffer_status_to_text(err));
+		goto fail;
 	}
 
 	return lodge_framebuffer_from_gl(framebuffer);
 
 fail:
 	ASSERT_FAIL("Failed to make framebuffer");
-	//
-	// NOTE(TS): NULL is actually the default framebuffer -- probably want to
-	// map some arbitrary value to the 0 framebuffer instead so we can do bool
-	// logic on the "invalid" handle.
-	//
 	return NULL;
 }
 
@@ -91,7 +85,7 @@ void lodge_framebuffer_bind(lodge_framebuffer_t framebuffer)
 
 void lodge_framebuffer_unbind()
 {
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	lodge_framebuffer_bind(lodge_framebuffer_default());
 }
 
 void lodge_framebuffer_clear_color(lodge_framebuffer_t framebuffer, uint32_t index, vec4 clear_value)
