@@ -12,6 +12,9 @@ typedef struct lodge_drawable* lodge_drawable_t;
 struct lodge_buffer_object;
 typedef struct lodge_buffer_object* lodge_buffer_object_t;
 
+struct lodge_framebuffer;
+typedef struct lodge_framebuffer* lodge_framebuffer_t;
+
 /**
  * Exhausts the OpenGL Error queue and returns when done (optionally with a return value).
  */
@@ -88,6 +91,20 @@ static GLuint lodge_buffer_object_to_gl(const lodge_buffer_object_t buffer_objec
 {
 	ASSERT(buffer_object != NULL);
 	return (GLuint)buffer_object;
+}
+
+static lodge_framebuffer_t lodge_framebuffer_from_gl(const GLuint framebuffer)
+{
+	// Framebuffer 0 <=> default fb
+	//ASSERT(framebuffer > 0);
+	return (lodge_framebuffer_t)framebuffer;
+}
+
+static GLuint lodge_framebuffer_to_gl(const lodge_framebuffer_t framebuffer)
+{
+	// Framebuffer 0 <=> default fb
+	//ASSERT(framebuffer != NULL);
+	return (GLuint)framebuffer;
 }
 
 #endif
