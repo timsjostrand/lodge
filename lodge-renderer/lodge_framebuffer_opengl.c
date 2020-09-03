@@ -29,7 +29,6 @@ lodge_framebuffer_t lodge_framebuffer_make()
 void lodge_framebuffer_reset(lodge_framebuffer_t framebuffer)
 {
 	glDeleteFramebuffers(1, &(GLuint){ lodge_framebuffer_to_gl(framebuffer) });
-	free(framebuffer);
 }
 
 lodge_framebuffer_t	lodge_framebuffer_default()
