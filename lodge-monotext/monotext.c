@@ -306,7 +306,7 @@ void monotext_render(struct monotext *text, struct shader *s, lodge_sampler_t at
 	struct mvp mvp = {
 		.model = mat4_identity(),
 		.view = mat4_identity(),
-		.projection = mat4_ortho(0, 640, 360, 0, -1, 1),
+		.projection = mat4_ortho(0, 640, 0, 360, -1, 1),
 	};
 
 	/* Upload matrices and color. */
