@@ -1,59 +1,73 @@
 #include "lodge_debug_draw.h"
 
 #include "membuf.h"
+#include "frustum.h"
 
 #include "lodge_renderer.h"
 #include "lodge_static_mesh.h"
 #include "lodge_drawable.h"
 #include "lodge_buffer_object.h"
+#include "lodge_texture.h"
 
 struct line_vertex
 {
-	vec3							p0;
-	vec3							p1;
+	vec3								p0;
+	vec3								p1;
 };
 
 struct line_color
 {
-	vec4							p0;
-	vec4							p1;
+	vec4								p0;
+	vec4								p1;
 };
 
 struct lodge_debug_draw_lines
 {
-	struct line_vertex				vertices[LODGE_DEBUG_DRAW_LINES_MAX];
-	struct line_color				colors[LODGE_DEBUG_DRAW_LINES_MAX];
-	float							lifetimes[LODGE_DEBUG_DRAW_LINES_MAX];
-	size_t							count;
+	struct line_vertex					vertices[LODGE_DEBUG_DRAW_LINES_MAX];
+	struct line_color					colors[LODGE_DEBUG_DRAW_LINES_MAX];
+	float								lifetimes[LODGE_DEBUG_DRAW_LINES_MAX];
+	size_t								count;
 
-	bool							gpu_dirty;
+	bool								gpu_dirty;
 
-	lodge_drawable_t				drawable;
-	lodge_buffer_object_t			buffer_object_vertices;
-	lodge_buffer_object_t			buffer_object_colors;
+	lodge_drawable_t					drawable;
+	lodge_buffer_object_t				buffer_object_vertices;
+	lodge_buffer_object_t				buffer_object_colors;
 };
 
 struct lodge_debug_draw_spheres
 {
-	struct lodge_static_mesh		static_mesh;
-	lodge_drawable_t				drawable;
-	size_t							index_count;
+	struct lodge_static_mesh			static_mesh;
+	lodge_drawable_t					drawable;
+	size_t								index_count;
 
-	vec4							spheres[LODGE_DEBUG_DRAW_SPHERES_MAX];
-	vec4							colors[LODGE_DEBUG_DRAW_SPHERES_MAX];
-	float							lifetimes[LODGE_DEBUG_DRAW_SPHERES_MAX];
-	size_t							count;
+	vec4								spheres[LODGE_DEBUG_DRAW_SPHERES_MAX];
+	vec4								colors[LODGE_DEBUG_DRAW_SPHERES_MAX];
+	float								lifetimes[LODGE_DEBUG_DRAW_SPHERES_MAX];
+	size_t								count;
 
-	bool							gpu_dirty;
+	bool								gpu_dirty;
 
-	lodge_buffer_object_t			buffer_object_pos_radius;
-	lodge_buffer_object_t			buffer_object_colors;
+	lodge_buffer_object_t				buffer_object_pos_radius;
+	lodge_buffer_object_t				buffer_object_colors;
+};
+
+struct lodge_debug_draw_textures
+{
+	lodge_drawable_t					drawable;
+	lodge_buffer_object_t				buffer_object;
+	lodge_sampler_t						sampler;
+
+	lodge_texture_t						textures[LODGE_DEBUG_DRAW_TEXTURES_MAX];
+	float								lifetimes[LODGE_DEBUG_DRAW_TEXTURES_MAX];
+	size_t								count;
 };
 
 struct lodge_debug_draw
 {
-	struct lodge_debug_draw_lines	lines;
-	struct lodge_debug_draw_spheres	spheres;
+	struct lodge_debug_draw_lines		lines;
+	struct lodge_debug_draw_spheres		spheres;
+	struct lodge_debug_draw_textures	textures;
 };
 
 static size_t lodge_debug_draw_calc_sphere_vertex_count(uint32_t sector_count, uint32_t stack_count)
@@ -195,6 +209,7 @@ static void lodge_debug_draw_spheres_new_inplace(struct lodge_debug_draw_spheres
 	lodge_drawable_set_buffer_object(spheres->drawable, 3, (struct lodge_drawable_attrib) {
 		.name = strview_static("pos_radius"),
 		.buffer_object = spheres->buffer_object_pos_radius,
+		.offset = 0,
 		.float_count = 4,
 		.stride = sizeof(vec4),
 		.instanced = 1
@@ -202,6 +217,7 @@ static void lodge_debug_draw_spheres_new_inplace(struct lodge_debug_draw_spheres
 	lodge_drawable_set_buffer_object(spheres->drawable, 4, (struct lodge_drawable_attrib) {
 		.name = strview_static("color"),
 		.buffer_object = spheres->buffer_object_colors,
+		.offset = 0,
 		.float_count = 4,
 		.stride = sizeof(vec4),
 		.instanced = 1
@@ -213,12 +229,133 @@ static void lodge_debug_draw_spheres_new_inplace(struct lodge_debug_draw_spheres
 #undef INDEX_COUNT
 }
 
+void lodge_debug_draw_textures_new_inplace(struct lodge_debug_draw_textures *textures)
+{
+#if 1
+	const float x = 0.0f;
+	const float y = 0.0f;
+
+	const float w = 1.0f / 2.0f;
+	const float h = 1.0f / 2.0f;
+
+	const float vertex_data[] = {
+		/* Top-left */
+		x - w,		// x
+		y + h,		// y
+		0.0f,		// z
+		0.0f,		// u
+		0.0f,		// v
+		/* Bottom-Left */
+		x - w,		// x
+		y - h,		// y
+		0.0f,		// z
+		0.0f,		// u
+		1.0f,		// v
+		/* Top-right */
+		x + w,		// x
+		y + h,		// y
+		0.0f,		// z
+		1.0f,		// u
+		0.0f,		// v
+		/* Top-right */
+		x + w,		// x
+		y + h,		// y
+		0.0f,		// z
+		1.0f,		// u
+		0.0f,		// v
+		/* Bottom-left */
+		x - w,		// x
+		y - h,		// y
+		0.0f,		// z
+		0.0f,		// u
+		1.0f,		// v
+		/* Bottom-right */
+		x + w,		// x
+		y - h,		// y
+		0.0f,		// z
+		1.0f,		// u
+		1.0f,		// v
+	};
+#else
+	const float vertex_data[] = {
+		/* Top-left */
+		0.0f,		// x
+		1.0f,		// y
+		0.0f,		// z
+		0.0f,		// u
+		0.0f,		// v
+		/* Bottom-Left */
+		0.0f,		// x
+		0.0f,		// y
+		0.0f,		// z
+		0.0f,		// u
+		1.0f,		// v
+		/* Top-right */
+		1.0f,		// x
+		1.0f,		// y
+		0.0f,		// z
+		1.0f,		// u
+		0.0f,		// v
+		/* Top-right */
+		1.0f,		// x
+		1.0f,		// y
+		0.0f,		// z
+		1.0f,		// u
+		0.0f,		// v
+		/* Bottom-left */
+		0.0f,		// x
+		0.0f,		// y
+		0.0f,		// z
+		0.0f,		// u
+		1.0f,		// v
+		/* Bottom-right */
+		1.0f,		// x
+		0.0f,		// y
+		0.0f,		// z
+		1.0f,		// u
+		1.0f,		// v
+	};
+#endif
+
+	textures->buffer_object = lodge_buffer_object_make_static(vertex_data, sizeof(vertex_data));
+	textures->sampler = lodge_sampler_make_properties((struct lodge_sampler_properties) {
+		.min_filter = MAG_FILTER_LINEAR,
+		.mag_filter = MAG_FILTER_LINEAR,
+		.wrap_x = WRAP_CLAMP_TO_EDGE,
+		.wrap_y = WRAP_CLAMP_TO_EDGE,
+		.wrap_z = WRAP_CLAMP_TO_EDGE
+	});
+
+	textures->drawable = lodge_drawable_make((struct lodge_drawable_desc) {
+		.attribs_count = 2,
+		.attribs = {
+			(struct lodge_drawable_attrib) {
+				.name = strview_static("pos"),
+				.buffer_object = textures->buffer_object,
+				.offset = 0,
+				.float_count = 3,
+				.stride = 5 * sizeof(float),
+				.instanced = 0
+			},
+			(struct lodge_drawable_attrib) {
+				.name = strview_static("uv"),
+				.buffer_object = textures->buffer_object,
+				.offset = 3 * sizeof(float),
+				.float_count = 2,
+				.stride = 5 * sizeof(float),
+				.instanced = 0
+			},
+		}
+	});
+}
+
 void lodge_debug_draw_new_inplace(struct lodge_debug_draw *debug_draw)
 {
 	*debug_draw = (struct lodge_debug_draw) { 0 };
 
 	lodge_debug_draw_lines_new_inplace(&debug_draw->lines);
 	lodge_debug_draw_spheres_new_inplace(&debug_draw->spheres);
+	lodge_debug_draw_textures_new_inplace(&debug_draw->textures);
 }
 
 static void lodge_debug_draw_lines_free_inplace(struct lodge_debug_draw_lines *lines)
@@ -236,9 +373,17 @@ static void lodge_debug_draw_spheres_free_inplace(struct lodge_debug_draw_sphere
 	lodge_drawable_reset(spheres->drawable);
 }
 
+static void lodge_debug_draw_textures_free_inplace(struct lodge_debug_draw_textures *textures)
+{
+	lodge_buffer_object_reset(textures->buffer_object);
+	lodge_drawable_reset(textures->drawable);
+}
+
 void lodge_debug_draw_free_inplace(struct lodge_debug_draw *debug_draw)
 {
 	lodge_debug_draw_lines_free_inplace(&debug_draw->lines);
+	lodge_debug_draw_spheres_free_inplace(&debug_draw->spheres);
+	lodge_debug_draw_textures_free_inplace(&debug_draw->textures);
 }
 
 size_t lodge_debug_draw_sizeof()
@@ -286,10 +431,31 @@ static void lodge_debug_draw_spheres_update(struct lodge_debug_draw_spheres *sph
 	}
 }
 
+static void lodge_debug_draw_textures_update(struct lodge_debug_draw_textures *textures, float dt)
+{
+	for(size_t i = 0; i < textures->count; i++) {
+		textures->lifetimes[i] -= dt;
+
+		if(textures->lifetimes[i] < 0.0f) {
+			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(textures->textures), i, &textures->count);
+
+			if(ret.index_a != ret.index_b) {
+				membuf_swap(membuf_wrap(textures->lifetimes), ret.index_a, ret.index_b);
+			}
+
+			i--;
+
+			//textures->gpu_dirty = true;
+		}
+	}
+}
+
+
 void lodge_debug_draw_update(struct lodge_debug_draw *debug_draw, float dt)
 {
 	lodge_debug_draw_lines_update(&debug_draw->lines, dt);
 	lodge_debug_draw_spheres_update(&debug_draw->spheres, dt);
+	lodge_debug_draw_textures_update(&debug_draw->textures, dt);
 }
 
 static void lodge_debug_draw_lines_render(struct lodge_debug_draw_lines *lines, lodge_shader_t shader, struct mvp mvp)
@@ -321,13 +487,45 @@ static void lodge_debug_draw_spheres_render(struct lodge_debug_draw_spheres *sph
 	lodge_drawable_render_indexed_instanced(spheres->drawable, spheres->index_count, spheres->count);
 }
 
+static void lodge_debug_draw_textures_render(struct lodge_debug_draw_textures *textures, lodge_shader_t shader)
+{
+	if(textures->count == 0) {
+		return;
+	}
+
+	lodge_renderer_bind_shader(shader);
+
+	const uint32_t grid_size = (uint32_t)ceil(sqrt((double)textures->count));
+	const float grid_size_screen = 1.0f/(grid_size);
+
+	for(size_t i = 0; i < textures->count; i++) {
+		const uint32_t grid_x = i % grid_size;
+		const uint32_t grid_y = i / grid_size;
+
+		const float x = grid_x * grid_size_screen - grid_size_screen*(grid_size-1)/2.0f;
+		const float y = grid_y * grid_size_screen - grid_size_screen*(grid_size-1)/2.0f;
+
+		const struct mvp mvp = {
+			.model = mat4_mult(mat4_translation(x, y, 0.0f), mat4_scaling(grid_size_screen, grid_size_screen, 1.0f)),
+			//.model = mat4_translation(x, y, 0.0f),
+			.view = mat4_identity(),
+			//.projection = mat4_ortho(0.0f, grid_size, grid_size, 0.0f, -1.0f, 1.0f)
+			.projection = mat4_ortho(-0.5f, 0.5f, 0.5f, -0.5f, -1.0f, 1.0f)
+		};
+		lodge_renderer_set_constant_mvp(shader, &mvp);
+		lodge_renderer_bind_texture_unit_2d(0, textures->textures[i], textures->sampler);
+		lodge_drawable_render_triangles(textures->drawable, 0, 6);
+	}
+}
+
 //
 // FIXME(TS): should have nicer api than passing several shaders
 //
-void lodge_debug_draw_render(struct lodge_debug_draw *debug_draw, lodge_shader_t shader[2], struct mvp mvp)
+void lodge_debug_draw_render(struct lodge_debug_draw *debug_draw, lodge_shader_t shader[3], struct mvp mvp)
 {
 	lodge_debug_draw_lines_render(&debug_draw->lines, shader[0], mvp);
 	lodge_debug_draw_spheres_render(&debug_draw->spheres, shader[1], mvp);
+	lodge_debug_draw_textures_render(&debug_draw->textures, shader[2]);
 }
 
 static void lodge_debug_draw_line_impl(struct lodge_debug_draw_lines *lines, struct line line, vec4 color, float lifetime)
@@ -404,6 +602,30 @@ void lodge_debug_draw_aabb_outline(struct lodge_debug_draw *debug_draw, struct a
 	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = points[1],	.p1 = aabb.max },		color, lifetime);
 }
 
+void lodge_debug_draw_frustum(struct lodge_debug_draw *debug_draw, struct frustum_corners c, vec4 color, float lifetime)
+{
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][0], .p1 = c.vertices[0][0][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][0][0], .p1 = c.vertices[1][0][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][1][0], .p1 = c.vertices[0][1][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][1][0], .p1 = c.vertices[1][1][1] }, color, lifetime);
+
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][0], .p1 = c.vertices[0][1][0] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][0][0], .p1 = c.vertices[1][1][0] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][1], .p1 = c.vertices[0][1][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][0][1], .p1 = c.vertices[1][1][1] }, color, lifetime);
+
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][0], .p1 = c.vertices[1][0][0] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][1][0], .p1 = c.vertices[1][1][0] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][1], .p1 = c.vertices[1][0][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][1][1], .p1 = c.vertices[1][1][1] }, color, lifetime);
+}
+
+void lodge_debug_draw_texture(struct lodge_debug_draw *debug_draw, lodge_texture_t texture, float lifetime)
+{
+	membuf_append(membuf_wrap(debug_draw->textures.textures), &texture, sizeof(lodge_texture_t), &debug_draw->textures.count);
+	membuf_set(membuf_wrap(debug_draw->textures.lifetimes), debug_draw->textures.count - 1, &lifetime, sizeof(float));
+}
+
 size_t lodge_debug_draw_get_line_count(struct lodge_debug_draw *debug_draw)
 {
 	return debug_draw->lines.count;
@@ -412,4 +634,9 @@ size_t lodge_debug_draw_get_line_count(struct lodge_debug_draw *debug_draw)
 size_t lodge_debug_draw_get_sphere_count(struct lodge_debug_draw *debug_draw)
 {
 	return debug_draw->spheres.count;
+}
+
+size_t lodge_debug_draw_get_texture_count(struct lodge_debug_draw *debug_draw)
+{
+	return debug_draw->textures.count;
 }
