@@ -8,11 +8,11 @@
 
 #include "vfs.h"
 #include "sound.h"
-#include "shader.h"
 #include "array.h"
 
 #include "lodge_image.h"
 #include "lodge_texture.h"
+#include "lodge_shader.h"
 
 #ifdef ENABLE_LODGE_CONSOLE
 #include "console.h"
