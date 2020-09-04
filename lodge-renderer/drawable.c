@@ -371,6 +371,7 @@ struct drawable drawable_make(enum lodge_renderer_primitive primitive, GLuint ve
 	};
 }
 
+#if 0
 struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_renderer_primitive primitive)
 {
 	struct drawable drawable = { 0 };
@@ -420,6 +421,7 @@ struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_r
 
 	return drawable;
 }
+#endif
 
 void drawable_reset(struct drawable *d)
 {
@@ -722,6 +724,7 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 	return drawable;
 }
 
+#if 0
 void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
 {
 	dst->primitive = LODGE_RENDERER_PRIMITIVE_TRIANGLES;
@@ -783,8 +786,9 @@ void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
 	/* Cleanup. */
 	free(vertices);
 }
+#endif
 
-
+#if 0
 void drawable_new_circle_outlinef(struct drawable *dst, float x, float y, float r, int segments)
 {
 	dst->primitive = GL_LINE_STRIP;
@@ -818,7 +822,9 @@ void drawable_new_circle_outline(struct drawable *dst, struct circle *circle, in
 {
 	drawable_new_circle_outlinef(dst, circle->pos.x, circle->pos.y, circle->r, segments);
 }
+#endif
 
+#if 0
 struct drawable drawable_make_line(vec3 start, vec3 end)
 {
 	const xyzuv_t vertices[] = {
@@ -874,3 +880,4 @@ struct drawable drawable_make_unit_cube()
 
 	return drawable_make_xyzuv(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, LODGE_ARRAYSIZE(vertices));
 }
+#endif
