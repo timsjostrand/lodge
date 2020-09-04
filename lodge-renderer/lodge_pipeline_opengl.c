@@ -22,7 +22,7 @@ static size_t pipeline_stack_count;
 
 static struct lodge_pipeline_impl* lodge_pipeline_to_impl(lodge_pipeline_t pipeline)
 {
-	size_t index = (size_t)pipeline;
+	const size_t index = (size_t)pipeline;
 	ASSERT(index > 0);
 	ASSERT(index <= pipelines_count);
 	return &pipelines[index - 1];
