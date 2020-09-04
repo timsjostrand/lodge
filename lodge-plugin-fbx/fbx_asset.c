@@ -6,11 +6,11 @@
 
 #include "lodge_platform.h"
 #include "math4.h"
-#include "shader.h"
 #include "fbx.h"
 #include "str.h"
 #include "array.h"
 #include "lodge_renderer.h"
+#include "lodge_shader.h"
 
 #define CONVERT_DOUBLE_ARRAY_TO_FLOAT_ARRAY
 

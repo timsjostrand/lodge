@@ -2,9 +2,9 @@
 #define _DRAWABLE_H
 
 #include "math4.h"
-#include "shader.h"
 #include "geometry.h"
 #include "lodge_renderer.h"
+#include "lodge_shader.h"
 
 struct drawable
 {

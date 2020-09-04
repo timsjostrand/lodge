@@ -8,11 +8,11 @@
 #include <stdio.h>
 #include <GL/glew.h>
 
-#include "shader.h"
 #include "spritebatch.h"
 #include "color.h"
 #include "lodge_opengl.h"
 #include "lodge_renderer.h"
+#include "lodge_shader.h"
 
 #define STRIDE 5
 #define CURRENT_SPRITE batch->sprite_count * STRIDE * 6

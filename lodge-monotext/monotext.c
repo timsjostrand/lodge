@@ -1,14 +1,14 @@
 #include "monotext.h"
 
 #include "monofont.h"
-#include "shader.h"
 #include "vfs.h"
 #include "color.h"
 #include "str.h"
+#include "log.h"
 #include "lodge_opengl.h"
 #include "lodge_renderer.h"
 #include "lodge_image.h"
-#include "log.h"
+#include "lodge_shader.h"
 
 #include <stdlib.h>
 #include <stdio.h>
