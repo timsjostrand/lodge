@@ -28,7 +28,7 @@ struct lodge_shader_stage
 	txt_t								source;
 };
 
-struct shader
+struct lodge_shader
 {
 	GLuint								program;
 	char								name[SHADER_FILENAME_MAX];
@@ -275,7 +275,7 @@ static void lodge_shader_stage_free_inplace(struct lodge_shader_stage *stage)
 
 void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name, struct lodge_shader_source_factory source_factory)
 {
-	*shader = (struct shader) { 0 };
+	*shader = (struct lodge_shader) { 0 };
 	shader->source_factory = source_factory;
 
 	strbuf_wrap_and(shader->name, strbuf_set, name);
@@ -301,7 +301,7 @@ void lodge_shader_free_inplace(lodge_shader_t shader)
 
 size_t lodge_shader_sizeof()
 {
-	return sizeof(struct shader);
+	return sizeof(struct lodge_shader);
 }
 
 bool lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_source)

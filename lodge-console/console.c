@@ -126,7 +126,7 @@ float console_height(struct console *c, uint32_t display_lines)
 }
 
 void console_new_inplace(struct console *c, struct monofont *font, uint32_t view_width,
-		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env)
+		uint32_t padding, lodge_texture_t white_tex, lodge_shader_t shader, struct env *env)
 {
 	c->env = env;
 	c->display_lines = CONSOLE_DISPLAY_LINES;
@@ -229,7 +229,7 @@ void console_print(struct console *c, const char *text, size_t text_len)
 	monotext_update(&c->txt_display, display, display_len);
 }
 
-static void console_render_input(struct console *c, struct shader *s, lodge_sampler_t font_sampler)
+static void console_render_input(struct console *c, lodge_shader_t s, lodge_sampler_t font_sampler)
 {
 	monotext_update(&c->txt_input, c->input, c->input_len);
 	monotext_render(&c->txt_input, s, font_sampler);
@@ -240,7 +240,7 @@ void console_update(struct console *c)
 	console_cursor_update(&c->cursor);
 }
 
-void console_render(struct console *c, struct shader *s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler)
+void console_render(struct console *c, lodge_shader_t s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler)
 {
 	sprite_render(&c->background, s, projection, renderer);
 	sprite_render(&c->cursor.sprite, s, projection, renderer);

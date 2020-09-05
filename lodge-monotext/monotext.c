@@ -144,7 +144,7 @@ static void monotext_print_quad(float *verts, int quad)
  * @param font	The font to render with.
  */
 void monotext_new(struct monotext *dst, const char *text, const vec4 color,
-		struct monofont *font, const float blx, const float bly, struct shader *shader)
+		struct monofont *font, const float blx, const float bly, lodge_shader_t shader)
 {
 	dst->font = font;
 	dst->shader = shader;
@@ -295,7 +295,7 @@ void monotext_update(struct monotext *dst, const char *text, const size_t len)
  * FIXME: optimize:
  * - use DrawElements instead of DrawArrays (requires indices array).
  */
-void monotext_render(struct monotext *text, struct shader *s, lodge_sampler_t atlas_sampler)
+void monotext_render(struct monotext *text, lodge_shader_t s, lodge_sampler_t atlas_sampler)
 {
 	if(text == NULL || text->vao == 0) {
 		return;

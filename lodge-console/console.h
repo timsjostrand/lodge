@@ -33,6 +33,9 @@ struct console_cmd;
 typedef void (*console_cmd_func_t)(struct console *c, struct console_cmd *cmd, struct list *argv);
 typedef void (*console_cmd_autocomplete_t)(struct console *c, struct console_cmd *cmd, struct list *argv, struct list *completions);
 
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
+
 struct console_cmd {
 	char						name[CONSOLE_CMD_NAME_MAX];	/* Name of this command. */
 	int							argc;						/* How many (non sub-command) arguments this command takes. */
@@ -80,14 +83,14 @@ struct console {
 };
 
 void console_new_inplace(struct console *c, struct monofont *font, uint32_t view_width,
-		uint32_t padding, lodge_texture_t white_tex, struct shader *shader, struct env *env);
+		uint32_t padding, lodge_texture_t white_tex, lodge_shader_t shader, struct env *env);
 void console_free_inplace(struct console *c);
 
 void console_print(struct console *c, const char *text, size_t text_len);
 void console_printf(struct console *c, const char *fmt, ...);
 void console_vprintf(struct console *c, const char *fmt, va_list args);
 void console_update(struct console *c);
-void console_render(struct console *c, struct shader *s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler);
+void console_render(struct console *c, lodge_shader_t s, const mat4 projection, struct lodge_renderer *renderer, lodge_sampler_t font_sampler);
 void console_toggle_focus(struct console *c);
 void console_parse_conf(struct console *c, struct console_conf *conf);
 float console_height(struct console *c, uint32_t display_lines);

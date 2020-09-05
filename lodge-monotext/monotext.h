@@ -24,6 +24,9 @@
 
 typedef struct lodge_sampler* lodge_sampler_t;
 
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
+
 struct monotext {
 	vec3			bottom_left;				/* Bottom-Left origin coordinate. */
 	char			text[MONOTEXT_STR_MAX];		/* The text to render. */
@@ -40,13 +43,13 @@ struct monotext {
 	int				quads_count;				/* The number of quads required (text_len - newlines). */
 	unsigned int	vbo;						/* VBO for the vertex array. */
 	unsigned int	vao;
-	struct shader	*shader;
+	lodge_shader_t	shader;
 };
 
-void monotext_new(struct monotext *dst, const char *text, const vec4 color, struct monofont *font, const float blx, const float bly, struct shader *shader);
+void monotext_new(struct monotext *dst, const char *text, const vec4 color, struct monofont *font, const float blx, const float bly, lodge_shader_t shader);
 void monotext_updatef(struct monotext *dst, const char *fmt, ...);
 void monotext_update(struct monotext *dst, const char *text, const size_t len);
-void monotext_render(struct monotext *text, struct shader *s, lodge_sampler_t font_sampler);
+void monotext_render(struct monotext *text, lodge_shader_t s, lodge_sampler_t font_sampler);
 void monotext_free(struct monotext *text);
 
 #endif

@@ -8,9 +8,8 @@
 
 #define SHADER_FILENAME_MAX 255
 
-// TODO(TS): rename `struct lodge_shader`
-struct shader;
-typedef struct shader* lodge_shader_t;
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
 
 typedef bool (*lodge_shader_get_source_func_t)(void *userdata, strview_t shader_name, strview_t name, strview_t *source_out);
 typedef bool (*lodge_shader_release_source_func_t)(void *userdata, strview_t shader_name, strview_t name);

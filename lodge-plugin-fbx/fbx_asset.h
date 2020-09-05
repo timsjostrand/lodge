@@ -7,7 +7,9 @@
 #include <stdint.h>
 
 struct fbx;
-struct shader;
+
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
 
 struct fbx_asset
 {
@@ -22,6 +24,6 @@ struct fbx_asset
 struct fbx_asset	fbx_asset_make(struct fbx *fbx);
 void				fbx_asset_reset(struct fbx_asset *asset);
 
-void				fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp);
+void				fbx_asset_render(struct fbx_asset *asset, lodge_shader_t shader, lodge_texture_t tex, struct mvp mvp);
 
 #endif

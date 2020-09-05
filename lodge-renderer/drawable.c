@@ -441,7 +441,7 @@ void drawable_render(const struct drawable *d)
 }
 
 #if 0
-void drawable_render_detailed(enum lodge_renderer_primitive primitive, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp)
+void drawable_render_detailed(enum lodge_renderer_primitive primitive, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, lodge_shader_t s, struct mvp mvp)
 {
 	ASSERT(vertex_count > 0);
 	ASSERT(s->program != 0);
@@ -496,7 +496,7 @@ void drawable_render_detailed(enum lodge_renderer_primitive primitive, GLuint va
 	GL_OK_OR_RETURN();
 }
 
-void drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 view)
+void drawable_render_simple(struct drawable *d, lodge_shader_t s, GLuint *tex, vec4 color, mat4 view)
 {
 	struct mvp mvp = {
 		.model = mat4_identity(),
@@ -725,7 +725,7 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 }
 
 #if 0
-void drawable_new_rect_fullscreen(struct drawable *dst, struct shader *s)
+void drawable_new_rect_fullscreen(struct drawable *dst, lodge_shader_t s)
 {
 	dst->primitive = LODGE_RENDERER_PRIMITIVE_TRIANGLES;
 	/* Allocate memory for vertices. */
