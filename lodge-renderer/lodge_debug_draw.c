@@ -41,7 +41,7 @@ struct lodge_debug_draw_spheres
 	lodge_drawable_t					drawable;
 	size_t								index_count;
 
-	vec4								spheres[LODGE_DEBUG_DRAW_SPHERES_MAX];
+	vec4								pos_radius[LODGE_DEBUG_DRAW_SPHERES_MAX];
 	vec4								colors[LODGE_DEBUG_DRAW_SPHERES_MAX];
 	float								lifetimes[LODGE_DEBUG_DRAW_SPHERES_MAX];
 	size_t								count;
@@ -187,7 +187,7 @@ static void lodge_debug_draw_spheres_new_inplace(struct lodge_debug_draw_spheres
 #define INDEX_COUNT		(((STACK_COUNT - 2) * (SECTOR_COUNT * 2) * 3) + (2 * (SECTOR_COUNT) * 3)) // 2 triangles per sector excluding first and last stacks
 
 	// Sanity checks
-	ASSERT(sizeof_member(struct lodge_debug_draw_spheres, spheres) == sizeof(vec4) * LODGE_DEBUG_DRAW_SPHERES_MAX);
+	ASSERT(sizeof_member(struct lodge_debug_draw_spheres, pos_radius) == sizeof(vec4) * LODGE_DEBUG_DRAW_SPHERES_MAX);
 	ASSERT(sizeof_member(struct lodge_debug_draw_spheres, colors) == sizeof(vec4) * LODGE_DEBUG_DRAW_SPHERES_MAX);
 
 	vec3 vertices[VERTEX_COUNT];
@@ -203,7 +203,7 @@ static void lodge_debug_draw_spheres_new_inplace(struct lodge_debug_draw_spheres
 
 	spheres->drawable = lodge_drawable_make_from_static_mesh(&spheres->static_mesh);
 
-	spheres->buffer_object_pos_radius = lodge_buffer_object_make_dynamic(sizeof(spheres->spheres));
+	spheres->buffer_object_pos_radius = lodge_buffer_object_make_dynamic(sizeof(spheres->pos_radius));
 	spheres->buffer_object_colors = lodge_buffer_object_make_dynamic(sizeof(spheres->colors));
 		
 	lodge_drawable_set_buffer_object(spheres->drawable, 3, (struct lodge_drawable_attrib) {
@@ -417,7 +417,7 @@ static void lodge_debug_draw_spheres_update(struct lodge_debug_draw_spheres *sph
 		spheres->lifetimes[i] -= dt;
 
 		if(spheres->lifetimes[i] < 0.0f) {
-			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(spheres->spheres), i, &spheres->count);
+			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(spheres->pos_radius), i, &spheres->count);
 
 			if(ret.index_a != ret.index_b) {
 				membuf_swap(membuf_wrap(spheres->colors), ret.index_a, ret.index_b);
@@ -478,7 +478,7 @@ static void lodge_debug_draw_spheres_render(struct lodge_debug_draw_spheres *sph
 	if(spheres->gpu_dirty && spheres->count > 0) {
 		spheres->gpu_dirty = false;
 
-		lodge_buffer_object_set(spheres->buffer_object_pos_radius, 0, spheres->spheres, sizeof(vec4) * spheres->count);
+		lodge_buffer_object_set(spheres->buffer_object_pos_radius, 0, spheres->pos_radius, sizeof(vec4) * spheres->count);
 		lodge_buffer_object_set(spheres->buffer_object_colors, 0, spheres->colors, sizeof(vec4) * spheres->count);
 	}
 
@@ -507,9 +507,7 @@ static void lodge_debug_draw_textures_render(struct lodge_debug_draw_textures *t
 
 		const struct mvp mvp = {
 			.model = mat4_mult(mat4_translation(x, y, 0.0f), mat4_scaling(grid_size_screen, grid_size_screen, 1.0f)),
-			//.model = mat4_translation(x, y, 0.0f),
 			.view = mat4_identity(),
-			//.projection = mat4_ortho(0.0f, grid_size, grid_size, 0.0f, -1.0f, 1.0f)
 			.projection = mat4_ortho(-0.5f, 0.5f, 0.5f, -0.5f, -1.0f, 1.0f)
 		};
 		lodge_renderer_set_constant_mvp(shader, &mvp);
@@ -552,7 +550,7 @@ void lodge_debug_draw_line(struct lodge_debug_draw *debug_draw, struct line line
 
 static void lodge_debug_draw_sphere_impl(struct lodge_debug_draw_spheres *spheres, struct sphere sphere, vec4 color, float lifetime)
 {
-	membuf_append(membuf_wrap(spheres->spheres), &(vec4) { .x = sphere.pos.x, .y = sphere.pos.y, .z = sphere.pos.z, .w = sphere.r }, sizeof(vec4), &spheres->count);
+	membuf_append(membuf_wrap(spheres->pos_radius), &(vec4) { .x = sphere.pos.x, .y = sphere.pos.y, .z = sphere.pos.z, .w = sphere.r }, sizeof(vec4), &spheres->count);
 	membuf_set(membuf_wrap(spheres->colors), spheres->count - 1, &color, sizeof(vec4));
 	membuf_set(membuf_wrap(spheres->lifetimes), spheres->count - 1, &lifetime, sizeof(float));
 
