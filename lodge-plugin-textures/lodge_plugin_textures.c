@@ -24,7 +24,7 @@ static bool lodge_assets_texture_new_inplace(struct lodge_res *res, strview_t na
 		return false;
 	}
 
-	*texture = lodge_texture_make_from_image(image);
+	*texture = lodge_texture_2d_make_from_image(image);
 
 	return true;
 }

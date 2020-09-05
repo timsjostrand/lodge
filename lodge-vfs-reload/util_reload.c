@@ -158,10 +158,10 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const
 		return;
 	}
 
-	lodge_texture_t tmp = lodge_texture_make_from_image(&image);
+	lodge_texture_t tmp = lodge_texture_2d_make_from_image(&image);
 	lodge_image_free(&image);
 
-	if(!lodge_texture_is_valid(tmp)) {
+	if(!tmp) {
    		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		if(userdata) {
@@ -193,10 +193,10 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size
 		return;
 	}
 
-	lodge_texture_t tmp = lodge_texture_make_from_image(&image);
+	lodge_texture_t tmp = lodge_texture_2d_make_from_image(&image);
 	lodge_image_free(&image);
 
-	if(!lodge_texture_is_valid(tmp)) {
+	if(!tmp) {
 		reload_error("Texture load failed: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
 	} else {
 		if(userdata) {
