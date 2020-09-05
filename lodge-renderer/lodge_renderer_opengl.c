@@ -10,7 +10,6 @@
 struct unit_drawables
 {
 	struct drawable			rect;
-	//renderobject_t		cube;
 };
 
 struct lodge_renderer
@@ -266,68 +265,3 @@ void lodge_renderer_unbind_texture_unit(int slot)
 	glBindSampler(slot, 0);
 	GL_OK_OR_ASSERT("Failed to unbind texture unit");
 }
-
-#if 0
-void lodge_renderer_draw(struct lodge_renderer *renderer, struct lodge_draw_call *draw_call)
-{
-	lodge_renderer_bind_shader(draw_call->shader);
-
-	for(size_t i = 0; i < LODGE_ARRAYSIZE(draw_call->texture_slots); i++) {
-		struct lodge_texture_slot *slot = &draw_call->texture_slots[i];
-		lodge_renderer_bind_texture_unit(i, slot->texture, slot->sampler);
-
-		// TODO(TS): when to break?
-	}
-
-	for(size_t i = 0; i < LODGE_ARRAYSIZE(draw_call->uniforms); i++) {
-		struct lodge_uniform *uniform = &draw_call->uniforms[i];
-		switch(uniform->type.type)
-		{
-		case LODGE_TYPE_VEC3:
-		{
-			lodge_renderer_shader_set_vec3(i, slot->texture, slot->sampler);
-			break;
-		}
-		case LODGE_TYPE_USER:
-		{
-			lodge_renderer_shader_set_data(uniform->name, uniform->data, uniform->type.size);
-			break;
-		}
-		default:
-		{
-			ASSERT_NOT_IMPLEMENTED();
-			break;
-		}
-		}
-	}
-
-	struct drawable *d;
-	ASSERT_NOT_IMPLEMENTED();
-
-	glBindVertexArray(d->vao);
-	glDrawArrays(lodge_renderer_primitive_to_gl(d->primitive), 0, d->vertex_count);
-}}
-#endif
-
-#if 0
-renderobject_t lodge_renderer_get_unit_cube(struct lodge_renderer *renderer)
-{
-	return renderer->unit_vaos.cube;
-}
-#endif
-
-#if 0
-struct lodge_plugin lodge_renderer_plugin()
-{
-	struct lodge_plugin plugin = {
-		.version = LODGE_PLUGIN_VERSION,
-		.size = sizeof(struct lodge_renderer),
-		.name = strview_static("renderer"),
-		.init = &lodge_renderer_opengl_init,
-		.free = &lodge_renderer_opengl_free,
-		.update = NULL,
-		.render = NULL
-	};
-	return plugin;
-}
-#endif

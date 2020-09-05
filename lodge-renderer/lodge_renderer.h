@@ -55,8 +55,5 @@ void					lodge_renderer_set_constant_vec3(struct shader *shader, strview_t name,
 void					lodge_renderer_set_constant_vec4(struct shader *shader, strview_t name, vec4 v);
 void					lodge_renderer_set_constant_mat4(struct shader *shader, strview_t name, mat4 mat);
 void					lodge_renderer_set_constant_mvp(struct shader *shader, const struct mvp *mvp);
-#if 0
-void					lodge_renderer_draw(struct lodge_draw_call *draw_call);
-#endif
 
 #endif
