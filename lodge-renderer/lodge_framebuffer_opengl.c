@@ -125,4 +125,6 @@ void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, st
 		dst_rect.x0, dst_rect.y0, dst_rect.x1, dst_rect.y1,
 		GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST
 	);
+
+	GL_OK_OR_ASSERT("Framebuffer copy failed");
 }

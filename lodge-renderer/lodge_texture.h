@@ -12,26 +12,71 @@ enum lodge_texture_target
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;
 
-struct lodge_texture_cubemap_desc
+enum lodge_texture_format
 {
-	const struct lodge_image *front;
-	const struct lodge_image *back;
-	const struct lodge_image *top;
-	const struct lodge_image *bottom;
-	const struct lodge_image *left;
-	const struct lodge_image *right;
+	LODGE_TEXTURE_FORMAT_R8,
+	LODGE_TEXTURE_FORMAT_R16,
+	LODGE_TEXTURE_FORMAT_RGB8,
+	LODGE_TEXTURE_FORMAT_RGB16,
+	LODGE_TEXTURE_FORMAT_RGBA8,
+	LODGE_TEXTURE_FORMAT_RGBA16,
+	LODGE_TEXTURE_FORMAT_R32F,
+	LODGE_TEXTURE_FORMAT_DEPTH16,
+	LODGE_TEXTURE_FORMAT_DEPTH32,
+};
+
+enum lodge_pixel_format
+{
+	LODGE_PIXEL_FORMAT_R,
+	LODGE_PIXEL_FORMAT_RGB,
+	LODGE_PIXEL_FORMAT_RGBA,
+	LODGE_PIXEL_FORMAT_DEPTH,
+	//LODGE_PIXEL_FORMAT_STENCIL,
+};
+
+enum lodge_pixel_data_type
+{
+	LODGE_PIXEL_TYPE_UINT8,
+	LODGE_PIXEL_TYPE_UINT16,
+	LODGE_PIXEL_TYPE_INT8,
+	LODGE_PIXEL_TYPE_INT16,
+	LODGE_PIXEL_TYPE_FLOAT,
+};
+
+struct lodge_texture_2d_desc
+{
+	uint32_t					width;
+	uint32_t					height;
+	uint32_t					levels_count; // if 0 = calc default
+
+	enum lodge_texture_format	texture_format;
+	enum lodge_pixel_format		pixel_format;
+	enum lodge_pixel_data_type	pixel_type;
+
+	const void					*data;
 };
 
 struct lodge_image;
 
-lodge_texture_t		lodge_texture_make();
-lodge_texture_t		lodge_texture_make_rgba(uint32_t width, uint32_t height);
-lodge_texture_t		lodge_texture_make_depth(uint32_t width, uint32_t height);
-lodge_texture_t		lodge_texture_make_from_image(const struct lodge_image *image);
-lodge_texture_t		lodge_texture_make_cubemap(struct lodge_texture_cubemap_desc desc);
+struct lodge_texture_cubemap_desc
+{
+	const struct lodge_image	*front;
+	const struct lodge_image	*back;
+	const struct lodge_image	*top;
+	const struct lodge_image	*bottom;
+	const struct lodge_image	*left;
+	const struct lodge_image	*right;
+};
 
-void				lodge_texture_reset(lodge_texture_t *texture);
+struct lodge_texture_2d_desc	lodge_texture_2d_desc_make_from_image(const struct lodge_image *image);
 
-int					lodge_texture_is_valid(lodge_texture_t texture);
+lodge_texture_t					lodge_texture_2d_make(struct lodge_texture_2d_desc desc);
+lodge_texture_t					lodge_texture_2d_make_from_image(const struct lodge_image *image);
+lodge_texture_t					lodge_texture_2d_make_rgba(uint32_t width, uint32_t height);
+lodge_texture_t					lodge_texture_2d_make_depth(uint32_t width, uint32_t height);
+
+lodge_texture_t					lodge_texture_cubemap_make(struct lodge_texture_cubemap_desc desc);
+
+void							lodge_texture_reset(lodge_texture_t *texture);
 
 #endif
