@@ -10,6 +10,9 @@
 
 #define PARTICLES_MAX	1024
 
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
+
 struct particle;
 
 typedef void (*particle_think_t)(struct particle *p, float dt);
@@ -37,7 +40,7 @@ struct particles {
 void particles_init(struct particles *em, int particles_max);
 void particles_free(struct particles *em);
 void particles_think(struct particles *em, struct atlas *atlas, float dt);
-void particles_render(struct particles *em, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform);
+void particles_render(struct particles *em, lodge_shader_t s, lodge_texture_t texture, mat4 projection, mat4 transform);
 
 void particles_emit(struct particles *em,
 		struct anim *anim,

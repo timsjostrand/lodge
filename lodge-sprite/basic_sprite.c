@@ -15,7 +15,7 @@ void sprite_init(struct basic_sprite *sprite, int type, float x, float y, float 
 	sprite->texture = texture;
 }
 
-void sprite_render(struct basic_sprite *sprite, struct shader *s, mat4 projection, struct lodge_renderer *renderer)
+void sprite_render(struct basic_sprite *sprite, lodge_shader_t s, mat4 projection, struct lodge_renderer *renderer)
 {
 	// Position, rotation and scale
 	mat4 transform_position = mat4_translation(xyz_of(sprite->pos));

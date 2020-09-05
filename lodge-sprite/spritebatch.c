@@ -142,7 +142,7 @@ void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_fun
 	qsort((void*)batch->gpu_vertices, (size_t)batch->sprite_count, sizeof(GLfloat) * 30, sorting_function);
 }
 
-void spritebatch_render(struct spritebatch* batch, struct shader *s)
+void spritebatch_render(struct spritebatch* batch, lodge_shader_t s)
 {
 	lodge_renderer_bind_shader(s);
 
@@ -165,7 +165,7 @@ void spritebatch_render(struct spritebatch* batch, struct shader *s)
 	glDrawArrays(GL_TRIANGLES, batch->offset_draw, batch->sprite_count * 6);
 }
 
-void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform)
+void spritebatch_render_simple(struct spritebatch* batch, lodge_shader_t s, lodge_texture_t texture, mat4 projection, mat4 transform)
 {
 	lodge_renderer_bind_shader(s);
 	lodge_renderer_bind_texture_2d(0, texture);

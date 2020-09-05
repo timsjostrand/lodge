@@ -7,7 +7,8 @@
 #define SPRITEBATCH_CHUNK 3072000
 #define SPRITEBATCH_VERTEX_SIZE (5 * sizeof(GLfloat))
 
-struct shader;
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
 
 typedef float GLfloat;
 typedef unsigned int GLuint;
@@ -34,7 +35,7 @@ void spritebatch_add(struct spritebatch* batch, vec3 pos, vec2 scale, vec2 tex_p
 void spritebatch_end(struct spritebatch* batch);
 void spritebatch_sort(struct spritebatch* batch, spritebatch_sort_fn sorting_function);
 
-void spritebatch_render(struct spritebatch* batch, struct shader *s);
-void spritebatch_render_simple(struct spritebatch* batch, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform);
+void spritebatch_render(struct spritebatch* batch, lodge_shader_t s);
+void spritebatch_render_simple(struct spritebatch* batch, lodge_shader_t s, lodge_texture_t texture, mat4 projection, mat4 transform);
 
 #endif //_SPRITEBATCH_H

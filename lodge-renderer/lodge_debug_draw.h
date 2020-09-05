@@ -11,8 +11,8 @@
 
 struct lodge_debug_draw;
 
-struct shader;
-typedef struct shader* lodge_shader_t;
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
 
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;

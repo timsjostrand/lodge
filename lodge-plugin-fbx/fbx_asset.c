@@ -477,7 +477,7 @@ void fbx_asset_reset(struct fbx_asset *asset)
 	*asset = tmp;
 }
 
-void fbx_asset_render(struct fbx_asset *asset, struct shader *shader, lodge_texture_t tex, struct mvp mvp)
+void fbx_asset_render(struct fbx_asset *asset, lodge_shader_t shader, lodge_texture_t tex, struct mvp mvp)
 {
 	lodge_renderer_bind_shader(shader);
 	lodge_renderer_set_constant_mvp(shader, &mvp);

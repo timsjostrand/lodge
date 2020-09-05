@@ -112,7 +112,7 @@ void tiles_think(struct tiles *tiles, vec2 view_offset, struct atlas *atlas, flo
 	animatedsprites_update(tiles->batcher, atlas, dt);
 }
 
-void tiles_render(struct tiles *tiles, struct shader *s, lodge_texture_t texture, mat4 projection, mat4 transform)
+void tiles_render(struct tiles *tiles, lodge_shader_t s, lodge_texture_t texture, mat4 projection, mat4 transform)
 {
 	animatedsprites_render_simple(tiles->batcher, s, texture, projection, transform);
 }
