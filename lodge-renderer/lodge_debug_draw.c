@@ -602,20 +602,20 @@ void lodge_debug_draw_aabb_outline(struct lodge_debug_draw *debug_draw, struct a
 
 void lodge_debug_draw_frustum(struct lodge_debug_draw *debug_draw, struct frustum_corners c, vec4 color, float lifetime)
 {
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][0], .p1 = c.vertices[0][0][1] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][0][0], .p1 = c.vertices[1][0][1] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][1][0], .p1 = c.vertices[0][1][1] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][1][0], .p1 = c.vertices[1][1][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 0, 0, 0), .p1 = *frustum_corners_get(&c, 1, 0, 0) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 1, 0, 0), .p1 = *frustum_corners_get(&c, 0, 1, 0) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 0, 1, 0), .p1 = *frustum_corners_get(&c, 1, 1, 0) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 1, 1, 0), .p1 = *frustum_corners_get(&c, 0, 0, 0) }, color, lifetime);
 
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][0], .p1 = c.vertices[0][1][0] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][0][0], .p1 = c.vertices[1][1][0] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][1], .p1 = c.vertices[0][1][1] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[1][0][1], .p1 = c.vertices[1][1][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 0, 0, 1), .p1 = *frustum_corners_get(&c, 1, 0, 1) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 1, 0, 1), .p1 = *frustum_corners_get(&c, 0, 1, 1) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 0, 1, 1), .p1 = *frustum_corners_get(&c, 1, 1, 1) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 1, 1, 1), .p1 = *frustum_corners_get(&c, 0, 0, 1) }, color, lifetime);
 
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][0], .p1 = c.vertices[1][0][0] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][1][0], .p1 = c.vertices[1][1][0] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][0][1], .p1 = c.vertices[1][0][1] }, color, lifetime);
-	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = c.vertices[0][1][1], .p1 = c.vertices[1][1][1] }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 0, 0, 0), .p1 = *frustum_corners_get(&c, 0, 0, 1) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 0, 1, 0), .p1 = *frustum_corners_get(&c, 0, 1, 1) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 1, 1, 0), .p1 = *frustum_corners_get(&c, 1, 1, 1) }, color, lifetime);
+	lodge_debug_draw_line(debug_draw, (struct line) { .p0 = *frustum_corners_get(&c, 1, 0, 0), .p1 = *frustum_corners_get(&c, 1, 0, 1) }, color, lifetime);
 }
 
 void lodge_debug_draw_texture(struct lodge_debug_draw *debug_draw, lodge_texture_t texture, float lifetime)

@@ -47,8 +47,11 @@ void					lodge_renderer_bind_texture(int slot, const lodge_texture_t texture, en
 
 void					lodge_renderer_bind_texture_unit_2d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
 void					lodge_renderer_bind_texture_2d(int slot, const lodge_texture_t texture);
+
 void					lodge_renderer_bind_texture_unit_cube_map(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
 void					lodge_renderer_bind_texture_cube_map(int slot, const lodge_texture_t texture);
+
+void					lodge_renderer_bind_texture_unit_2d_array(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
 
 void					lodge_renderer_set_constant_float(lodge_shader_t shader, strview_t name, float f);
 void					lodge_renderer_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v);

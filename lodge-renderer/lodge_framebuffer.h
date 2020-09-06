@@ -45,6 +45,8 @@ void					lodge_framebuffer_clear_stencil(lodge_framebuffer_t framebuffer, int32_
 void					lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, float depth_value, int32_t stencil_value);
 #endif
 
+void					lodge_framebuffer_set_depth_layer(lodge_framebuffer_t framebuffer, lodge_texture_t texture, uint32_t layer);
+
 void					lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_framebuffer_rect dst_rect, struct lodge_framebuffer_rect src_rect); 
 
 #endif // _FRAMEBUFFER_H

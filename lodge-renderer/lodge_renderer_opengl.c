@@ -146,6 +146,8 @@ static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
 	{
 	case LODGE_TEXTURE_TARGET_2D:
 		return GL_TEXTURE_2D;
+	case LODGE_TEXTURE_TARGET_2D_ARRAY:
+		return GL_TEXTURE_2D_ARRAY;
 	case LODGE_TEXTURE_TARGET_CUBE_MAP:
 		return GL_TEXTURE_CUBE_MAP;
 	default:
@@ -232,9 +234,10 @@ void lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t texture, c
 	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
 	glBindTexture(lodge_texture_target_to_gl(target), lodge_texture_to_gl(texture));
+	GL_OK_OR_ASSERT("Failed to bind texture");
 
 	glBindSampler(slot, lodge_sampler_to_gl(sampler));
-	GL_OK_OR_ASSERT("Failed to bind texture unit");
+	GL_OK_OR_ASSERT("Failed to bind sampler");
 }
 
 void lodge_renderer_bind_texture_2d(int slot, const lodge_texture_t texture)
@@ -255,6 +258,11 @@ void lodge_renderer_bind_texture_cube_map(int slot, const lodge_texture_t textur
 void lodge_renderer_bind_texture_unit_cube_map(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
 {
 	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_CUBE_MAP);
+}
+
+void lodge_renderer_bind_texture_unit_2d_array(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+{
+	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D_ARRAY);
 }
 
 void lodge_renderer_unbind_texture_unit(int slot)
