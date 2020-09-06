@@ -116,6 +116,12 @@ void lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, floa
 }
 #endif
 
+void lodge_framebuffer_set_depth_layer(lodge_framebuffer_t framebuffer, lodge_texture_t texture, uint32_t layer)
+{
+	glNamedFramebufferTextureLayer(lodge_framebuffer_to_gl(framebuffer), GL_DEPTH_ATTACHMENT, lodge_texture_to_gl(texture), 0, layer);
+	GL_OK_OR_ASSERT("Failed to set framebuffer depth layer");
+}
+
 void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_framebuffer_rect dst_rect, struct lodge_framebuffer_rect src_rect)
 {
 	glBlitNamedFramebuffer(

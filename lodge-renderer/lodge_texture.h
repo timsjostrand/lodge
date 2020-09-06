@@ -6,6 +6,7 @@
 enum lodge_texture_target
 {
 	LODGE_TEXTURE_TARGET_2D,
+	LODGE_TEXTURE_TARGET_2D_ARRAY,
 	LODGE_TEXTURE_TARGET_CUBE_MAP,
 };
 
@@ -74,6 +75,8 @@ lodge_texture_t					lodge_texture_2d_make(struct lodge_texture_2d_desc desc);
 lodge_texture_t					lodge_texture_2d_make_from_image(const struct lodge_image *image);
 lodge_texture_t					lodge_texture_2d_make_rgba(uint32_t width, uint32_t height);
 lodge_texture_t					lodge_texture_2d_make_depth(uint32_t width, uint32_t height);
+
+lodge_texture_t					lodge_texture_3d_make_depth(uint32_t width, uint32_t height, uint32_t depth);
 
 lodge_texture_t					lodge_texture_cubemap_make(struct lodge_texture_cubemap_desc desc);
 

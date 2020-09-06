@@ -234,6 +234,45 @@ static bool lodge_texture_cubemap_load_side(GLuint texture, GLenum side, const s
 	return true;
 }
 
+static lodge_texture_t lodge_texture_3d_make(struct lodge_texture_2d_desc desc)
+{
+	GLuint texture = 0;
+	glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &texture);
+	GL_OK_OR_GOTO(fail);
+
+	const uint32_t levels_count = desc.levels_count != 0 ? desc.levels_count : lodge_texture_calc_num_levels(desc.width, desc.height, 1);
+
+	glTextureStorage3D(texture, 1, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height, levels_count);
+	GL_OK_OR_GOTO(fail);
+
+	if(desc.data) {
+		ASSERT_NOT_IMPLEMENTED();
+		//glTextureSubImage3D(texture, 0, 0, 0, desc.width, desc.height, lodge_pixel_format_to_gl(desc.pixel_format), lodge_pixel_type_to_gl(desc.pixel_type), desc.data);
+		//GL_OK_OR_GOTO(fail);
+	}
+
+	return lodge_texture_from_gl(texture);
+
+fail:
+	ASSERT_FAIL("Failed to make texture");
+	return NULL;
+}
+
+lodge_texture_t lodge_texture_3d_make_depth(uint32_t width, uint32_t height, uint32_t depth)
+{
+	return lodge_texture_3d_make((struct lodge_texture_2d_desc) {
+		.width = width,
+		.height = height,
+		.levels_count = depth,
+	
+		.texture_format = LODGE_TEXTURE_FORMAT_DEPTH32,
+		.pixel_format = LODGE_PIXEL_FORMAT_DEPTH,
+		.pixel_type = LODGE_PIXEL_TYPE_FLOAT,
+	
+		.data = NULL
+	});
+}
+
 enum
 {
 	LODGE_CUBEMAP_X_POS,
