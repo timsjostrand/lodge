@@ -16,7 +16,7 @@ lodge_buffer_object_t lodge_buffer_object_make_static(const void *data, size_t d
 	return lodge_buffer_object_from_gl(buffer_object);
 
 fail:
-	ASSERT_FAIL("Failed to make dynamic buffer object");
+	ASSERT_FAIL("Failed to make static buffer object");
 	if(buffer_object) {
 		glDeleteBuffers(1, &buffer_object);
 	}
