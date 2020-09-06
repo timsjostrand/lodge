@@ -1,16 +1,17 @@
 #include "fbx_asset.h"
 
-#include "lodge_opengl.h" // TODO(TS): should depend on a renderer interface instead
-
-#include <string.h>
-
-#include "lodge_platform.h"
-#include "math4.h"
 #include "fbx.h"
+#include "math4.h"
 #include "str.h"
 #include "array.h"
+
+#include "lodge_platform.h"
 #include "lodge_renderer.h"
 #include "lodge_shader.h"
+#include "lodge_buffer_object.h"
+#include "lodge_drawable.h"
+
+#include <string.h>
 
 #define CONVERT_DOUBLE_ARRAY_TO_FLOAT_ARRAY
 
@@ -206,17 +207,8 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 {
 	struct fbx_asset asset = { 0 };
 
-	glGenVertexArrays(1, &asset.vertex_array_object);
-	GL_OK_OR_GOTO(fail);
-
-	glBindVertexArray(asset.vertex_array_object);
-	GL_OK_OR_GOTO(fail);
-
 	/* Vertices */
 	{
-		glCreateBuffers(1, &asset.buffer_object_vertices);
-		GL_OK_OR_GOTO(fail);
-
 		static const char* path_vertices[] = { "Objects", "Geometry", "Vertices" };
 
 		const struct fbx_property *vertices_prop = fbx_asset_get_array(fbx, path_vertices, LODGE_ARRAYSIZE(path_vertices));
@@ -244,21 +236,13 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		GL_OK_OR_GOTO(fail);
 #else
 		struct float_array *vertices_data = float_array_new_from_fbx_double_array(vertices_prop);
-		glNamedBufferStorage(asset.buffer_object_vertices, vertices_data->size, vertices_data->data, 0);
+
+		asset.static_mesh.vertices = lodge_buffer_object_make_static(vertices_data->data, vertices_data->size);
 		float_array_free(vertices_data);
-		GL_OK_OR_GOTO(fail);
 
-		glEnableVertexAttribArray(0);
-		GL_OK_OR_GOTO(fail);
-
-		glVertexAttribPointer(0,
-			3,
-			GL_FLOAT,
-			GL_FALSE,
-			3 * sizeof(float),
-			NULL
-		);
-		GL_OK_OR_GOTO(fail);
+		if(!asset.static_mesh.vertices) {
+			goto fail;
+		}
 #endif
 	}
 
@@ -290,9 +274,6 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		{
 			static const char* path_normals[] = { "Objects", "Geometry", "LayerElementNormal", "Normals" };
 
-			glCreateBuffers(1, &asset.buffer_object_normals);
-			GL_OK_OR_GOTO(fail);
-
 			const struct fbx_property *normals_prop = fbx_asset_get_array(fbx, path_normals, LODGE_ARRAYSIZE(path_normals));
 			if(!normals_prop) {
 				goto fail;
@@ -317,22 +298,14 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 			);
 #else
 			struct float_array *normals_data = float_array_new_from_fbx_double_array(normals_prop);
-			glNamedBufferStorage(asset.buffer_object_normals, normals_data->size, normals_data->data, 0);
+
+			asset.static_mesh.normals = lodge_buffer_object_make_static(normals_data->data, normals_data->size);
 			float_array_free(normals_data);
-			GL_OK_OR_GOTO(fail);
 
-			glEnableVertexAttribArray(1);
-			GL_OK_OR_GOTO(fail);
-
-			glVertexAttribPointer(1,
-				3,
-				GL_FLOAT,
-				GL_FALSE,
-				3 * sizeof(float),
-				NULL
-			);
+			if(!asset.static_mesh.normals) {
+				goto fail;
+			}
 #endif
-			GL_OK_OR_GOTO(fail);
 		}
 	}
 
@@ -382,7 +355,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		indices[i] = index >= 0 ? (uint32_t)index : (uint32_t)(~index);
 	}
 
-	asset.indices_count = prop_indices_data_count;
+	asset.static_mesh.indices_count = prop_indices_data_count;
 
 	/* UVs */
 	{
@@ -392,7 +365,7 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		static const char* path_uvs_indices[] = { "Objects", "Geometry", "LayerElementUV", "UVIndex" };
 
 		struct array *uvs = fbx_asset_new_layer_element(fbx,
-			indices,				asset.indices_count,
+			indices,				asset.static_mesh.indices_count,
 			path_uv_mapping_type,	LODGE_ARRAYSIZE(path_uv_mapping_type),
 			path_uvs_ref_type,		LODGE_ARRAYSIZE(path_uvs_ref_type),
 			path_uvs_data,			LODGE_ARRAYSIZE(path_uvs_data),
@@ -400,55 +373,31 @@ struct fbx_asset fbx_asset_make(struct fbx *fbx)
 		);
 
 		if(!uvs) {
-			goto uvs_fail;
+			goto fail;
 		}
 
-		glCreateBuffers(1, &asset.buffer_object_uvs);
-		GL_OK_OR_GOTO(uvs_fail);
+		asset.static_mesh.tex_coords = lodge_buffer_object_make_static(array_first(uvs), array_byte_size(uvs));
+		array_destroy(uvs);
 
-		glNamedBufferStorage(asset.buffer_object_uvs, array_byte_size(uvs), array_first(uvs), 0);
-		GL_OK_OR_GOTO(uvs_fail);
+		if(!asset.static_mesh.tex_coords) {
+			goto fail;
+		}
+	}
 
-		glEnableVertexAttribArray(2);
-		GL_OK_OR_GOTO(uvs_fail);
+	/* Indices */
+	asset.static_mesh.indices = lodge_buffer_object_make_static(indices, prop_indices_data_count * sizeof(uint32_t));
+	free(indices);
 
-		glVertexAttribPointer(2,
-			2,
-			GL_FLOAT,
-			GL_FALSE,
-			sizeof(vec2),
-			NULL
-		);
-		GL_OK_OR_GOTO(uvs_fail);
-
-		goto uvs_success;
-
-uvs_fail:
-		array_free(uvs);
+	if(!asset.static_mesh.indices) {
 		goto fail;
 	}
 
-uvs_success:
-
-	/* Indices */
-	glCreateBuffers(1, &asset.buffer_object_indices);
-	GL_OK_OR_GOTO(fail);
-
-	glNamedBufferStorage(asset.buffer_object_indices, prop_indices_data_count * sizeof(uint32_t), indices, 0);
-	GL_OK_OR_GOTO(fail);
-
-	glVertexArrayElementBuffer(asset.vertex_array_object, asset.buffer_object_indices);
-	GL_OK_OR_GOTO(fail);
-
-	/* Reset bindings to default */
-	glBindVertexArray(0);
-	GL_OK_OR_GOTO(fail);
-
-	free(indices);
+	asset.drawable = lodge_drawable_make_from_static_mesh(&asset.static_mesh);
 
 	return asset;
 
 fail:
+	ASSERT_FAIL("Failed to create fbx asset");
 	free(indices);
 	fbx_asset_reset(&asset);
 	return asset;
@@ -456,28 +405,12 @@ fail:
 
 void fbx_asset_reset(struct fbx_asset *asset)
 {
-	if(asset->buffer_object_indices) {
-		glDeleteBuffers(1, &asset->buffer_object_indices);
-		GL_OK_OR_ASSERT("Failed to delete indices buffer object");
-	}
-	if(asset->buffer_object_vertices) {
-		glDeleteBuffers(1, &asset->buffer_object_vertices);
-		GL_OK_OR_ASSERT("Failed to delete vertices buffer object");
-	}
-	if(asset->buffer_object_normals) {
-		glDeleteBuffers(1, &asset->buffer_object_normals);
-		GL_OK_OR_ASSERT("Failed to delete normals buffer object");
-	}
-	if(asset->vertex_array_object) {
-		glDeleteVertexArrays(1, &asset->vertex_array_object);
-		GL_OK_OR_ASSERT("Failed to delete vertex array");
-	}
-
-	struct fbx_asset tmp = { 0 };
-	*asset = tmp;
+	lodge_static_mesh_reset(&asset->static_mesh);
+	lodge_drawable_reset(asset->drawable);
+	*asset = (struct fbx_asset) { 0 };
 }
 
-void fbx_asset_render(struct fbx_asset *asset, lodge_shader_t shader, lodge_texture_t tex, struct mvp mvp)
+void fbx_asset_render(const struct fbx_asset *asset, lodge_shader_t shader, lodge_texture_t tex, struct mvp mvp)
 {
 	lodge_renderer_bind_shader(shader);
 	lodge_renderer_set_constant_mvp(shader, &mvp);
@@ -485,24 +418,5 @@ void fbx_asset_render(struct fbx_asset *asset, lodge_shader_t shader, lodge_text
 	// FIXME(TS): material should not be hardcoded, use texture unit instead
 	lodge_renderer_bind_texture_2d(0, tex);
 
-	glBindVertexArray(asset->vertex_array_object);
-	glDrawElements(GL_TRIANGLES, asset->indices_count, GL_UNSIGNED_INT, NULL);
-	GL_OK_OR_ASSERT("Failed to draw");
-
-
-#if 0
-	struct lodge_draw_call draw_call = lodge_draw_call_make(
-		{
-			lodge_texture_slot_make(strview_static("material"), lodge_sampler_make(), tex),
-		},
-		{
-			lodge_uniform_make("projection", LODGE_TYPE_MAT4x4, mvp.projection.m),
-			lodge_uniform_make("view", LODGE_TYPE_MAT4x4, mvp.view.m_),
-			lodge_uniform_make("model", LODGE_TYPE_MAT4x4, mvp.model.m),
-		},
-		asset
-	);
-
-	lodge_renderer_draw(draw_call);
-#endif
+	lodge_drawable_render_indexed(asset->drawable, asset->static_mesh.indices_count);
 }
