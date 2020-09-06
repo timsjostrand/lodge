@@ -163,19 +163,6 @@ void vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t 
 	}
 }
 
-void vfs_register_callback_filter(struct vfs *vfs, strview_t filter, read_callback_t fn, void* userdata)
-{
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		// FIXME(TS): safe version of `strstr`
-		if (strstr(vfs->file_table[i].name, filter.s) != 0) {
-			struct read_callback cbck;
-			cbck.fn = fn;
-			cbck.userdata = userdata;
-			stb_arr_push(vfs->file_table[i].read_callbacks, cbck);
-		}
-	}
-}
-
 struct vfs_file* vfs_get_file_entry(struct vfs *vfs, strview_t filename)
 {
 	for (size_t i = 0; i < vfs->file_count; i++) {
@@ -199,20 +186,6 @@ bool vfs_reload_file(struct vfs *vfs, strview_t filename)
 
 	vfs_reload(vfs, f, 1);
 	return true;
-}
-
-void vfs_run_callbacks(struct vfs *vfs)
-{
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct vfs_file *vfs_file = &vfs->file_table[i];
-		
-		for (int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++) {
-			//vfs_debug("Loading `%s`...\n", vfs_file->simplename);
-
-			read_callback_t cbck = vfs_file->read_callbacks[j].fn;
-			cbck(vfs, strview_wrap(vfs_file->simplename), vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
-		}
-	}
 }
 
 void vfs_mount(struct vfs *vfs, strview_t dir)
