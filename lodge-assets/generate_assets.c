@@ -22,7 +22,7 @@ void write_clean_name(FILE *fp, char* name)
 		fprintf(fp, "_");
 	}
 
-	for (int i = 0, i_size = strlen(name); i < i_size; i++)
+	for (size_t i = 0, i_size = strlen(name); i < i_size; i++)
 	{
 		char c = name[i];
 
@@ -185,7 +185,7 @@ void write_assets_h()
 
 void add_assets(struct vfs *vfs, struct alist *assets_list)
 {
-	for (int i = 0, i_size = vfs_file_count(vfs); i < i_size; i++)
+	for (size_t i = 0, i_size = vfs_file_count(vfs); i < i_size; i++)
 	{
 		alist_append(assets_list, vfs_get_simple_name(vfs, i).s);
 	}
@@ -253,10 +253,7 @@ int main(int argc, char* argv[])
 	assets_list_misc = alist_new(MAX_ASSETS);
 
 	struct vfs* vfs = (struct vfs *) malloc(vfs_sizeof());
-	if(vfs_new_inplace(vfs) != VFS_OK) {
-		printf("Failed to initialize VFS\n");
-		return 1;
-	}
+	vfs_new_inplace(vfs);
 
 	strview_t mount_dir = strview_make(argv[1], strlen(argv[1]));
 

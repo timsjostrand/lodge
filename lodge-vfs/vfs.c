@@ -34,7 +34,7 @@ struct vfs_file
 struct vfs
 {
 	struct vfs_file			file_table[VFS_MAX_NUM_FILES];
-	int						file_count;
+	size_t					file_count;
 };
 
 #define vfs_error(...) errorf("VFS", __VA_ARGS__)
@@ -83,10 +83,9 @@ static void vfs_reload(struct vfs *vfs, struct vfs_file *f, int force)
 	}
 }
 
-int vfs_new_inplace(struct vfs *vfs)
+void vfs_new_inplace(struct vfs *vfs)
 {
 	*vfs = (struct vfs) { 0 };
-	return VFS_OK;
 }
 
 void vfs_free_inplace(struct vfs *vfs)
@@ -102,7 +101,7 @@ void vfs_free_inplace(struct vfs *vfs)
 void vfs_update(struct vfs *vfs, float delta_time)
 {
 #ifdef VFS_ENABLE_FILEWATCH
-	for(int i = 0; i < vfs->file_count; i++) {
+	for(size_t i = 0; i < vfs->file_count; i++) {
 		vfs_reload(vfs, &vfs->file_table[i], 0);
 	}
 #endif
@@ -121,7 +120,7 @@ void vfs_prune_callbacks(struct vfs *vfs, read_callback_t fn, void* userdata)
 	cbck.fn = fn;
 	cbck.userdata = userdata;
 
-	for(int i = 0; i < vfs->file_count; i++) {
+	for(size_t i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *file = &vfs->file_table[i];
 
 		for(int j = 0; j < stb_arr_len(file->read_callbacks); j++) {
@@ -143,7 +142,7 @@ void vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t 
 	cbck.fn = fn;
 	cbck.userdata = userdata;
 
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		if (strview_equals(filename, strview_wrap(vfs->file_table[i].simplename))) {
 			stb_arr_push(vfs->file_table[i].read_callbacks, cbck);
 			added = 1;
@@ -166,7 +165,7 @@ void vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t 
 
 void vfs_register_callback_filter(struct vfs *vfs, strview_t filter, read_callback_t fn, void* userdata)
 {
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		// FIXME(TS): safe version of `strstr`
 		if (strstr(vfs->file_table[i].name, filter.s) != 0) {
 			struct read_callback cbck;
@@ -179,7 +178,7 @@ void vfs_register_callback_filter(struct vfs *vfs, strview_t filter, read_callba
 
 struct vfs_file* vfs_get_file_entry(struct vfs *vfs, strview_t filename)
 {
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *f = &vfs->file_table[i];
 
 		if (strview_equals(filename, strview_wrap(f->simplename))) {
@@ -190,21 +189,21 @@ struct vfs_file* vfs_get_file_entry(struct vfs *vfs, strview_t filename)
 	return NULL;
 }
 
-int vfs_reload_file(struct vfs *vfs, strview_t filename)
+bool vfs_reload_file(struct vfs *vfs, strview_t filename)
 {
 	struct vfs_file *f = vfs_get_file_entry(vfs, filename);
 
 	if(f == NULL) {
-		return VFS_ERROR;
+		return false;
 	}
 
 	vfs_reload(vfs, f, 1);
-	return VFS_OK;
+	return true;
 }
 
 void vfs_run_callbacks(struct vfs *vfs)
 {
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *vfs_file = &vfs->file_table[i];
 		
 		for (int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++) {
@@ -256,7 +255,7 @@ void vfs_mount(struct vfs *vfs, strview_t dir)
 		strcpy(new_file.simplename, filenames[i] + strbuf_length(path) + 1);
 
 		int replaced = 0;
-		for (int j = 0; j < vfs->file_count; j++) {
+		for (size_t j = 0; j < vfs->file_count; j++) {
 			struct vfs_file *current_file = &vfs->file_table[j];
 
 			if (strcmp(current_file->simplename, new_file.simplename) == 0) {
@@ -295,7 +294,7 @@ void vfs_mount(struct vfs *vfs, strview_t dir)
 
 void* vfs_get_file(struct vfs *vfs, strview_t filename, size_t* out_num_bytes)
 {
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *f = &vfs->file_table[i];
 
 		if (strview_equals(filename, strview_wrap(f->simplename))
@@ -310,7 +309,7 @@ void* vfs_get_file(struct vfs *vfs, strview_t filename, size_t* out_num_bytes)
 
 void vfs_free_memory(struct vfs *vfs, strview_t filename)
 {
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *f = &vfs->file_table[i];
 
 		if (strview_equals(filename, strview_wrap(f->simplename))) {
@@ -320,7 +319,7 @@ void vfs_free_memory(struct vfs *vfs, strview_t filename)
 	}
 }
 
-int vfs_file_count(struct vfs *vfs)
+size_t vfs_file_count(struct vfs *vfs)
 {
 	return vfs->file_count;
 }
@@ -332,7 +331,7 @@ strview_t vfs_get_simple_name(struct vfs *vfs, const int index)
 
 strview_t vfs_get_absolute_path(struct vfs *vfs, strview_t filename)
 {
-	for (int i = 0; i < vfs->file_count; i++) {
+	for (size_t i = 0; i < vfs->file_count; i++) {
 		struct vfs_file *f = &vfs->file_table[i];
 		
 		if (strview_equals(filename, strview_wrap(f->simplename))
