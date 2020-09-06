@@ -4,11 +4,8 @@
 
 struct lodge_ret lodge_plugin_vfs_new_inplace(struct vfs *vfs, struct lodge_plugins *plugins)
 {
-	if(vfs_new_inplace(vfs) == VFS_OK) {
-		return lodge_success();
-	} else {
-		return lodge_error("Failed to init VFS");
-	}
+	vfs_new_inplace(vfs);
+	return lodge_success();
 }
 
 struct lodge_plugin lodge_plugin_vfs()
