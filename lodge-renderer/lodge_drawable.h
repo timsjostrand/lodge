@@ -30,6 +30,8 @@ struct lodge_drawable_desc
 	uint32_t						attribs_count;
 };
 
+struct lodge_drawable_desc			lodge_drawable_desc_make_from_static_mesh(const struct lodge_static_mesh *static_mesh);
+
 lodge_drawable_t					lodge_drawable_make(struct lodge_drawable_desc desc);
 lodge_drawable_t					lodge_drawable_make_from_static_mesh(const struct lodge_static_mesh *static_mesh);
 void								lodge_drawable_reset(lodge_drawable_t drawable); 
@@ -39,6 +41,6 @@ void								lodge_drawable_set_buffer_object(lodge_drawable_t drawable, uint32_t
 void								lodge_drawable_render_lines(const lodge_drawable_t drawable, size_t offset, size_t count);
 void								lodge_drawable_render_triangles(const lodge_drawable_t drawable, size_t offset, size_t count);
 void								lodge_drawable_render_indexed_instanced(const lodge_drawable_t drawable, size_t index_count, size_t instances);
-
+void								lodge_drawable_render_indexed(const lodge_drawable_t drawable, size_t index_count);
 
 #endif

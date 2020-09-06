@@ -14,6 +14,7 @@ struct lodge_static_mesh
 	lodge_buffer_object_t	normals;
 	lodge_buffer_object_t	tex_coords;
 	lodge_buffer_object_t	indices;
+	uint32_t				indices_count;
 };
 
 struct lodge_static_mesh	lodge_static_mesh_make(const vec3 *vertices, size_t vertices_count, const vec3 *normals, size_t normals_count, const vec2 *tex_coords, size_t tex_coords_count, const uint32_t *indices, size_t indices_count);

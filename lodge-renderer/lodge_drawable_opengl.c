@@ -3,6 +3,37 @@
 #include "lodge_static_mesh.h"
 #include "lodge_opengl.h"
 
+struct lodge_drawable_desc lodge_drawable_desc_make_from_static_mesh(const struct lodge_static_mesh *static_mesh)
+{
+	return (struct lodge_drawable_desc) {
+		.indices = static_mesh->indices,
+		.attribs_count = 3,
+		.attribs = {
+			{
+				.name = strview_static("vertex"),
+				.buffer_object = static_mesh->vertices,
+				.float_count = 3,
+				.stride = sizeof(vec3),
+				.instanced = 0,
+			},
+			{
+				.name = strview_static("normal"),
+				.buffer_object = static_mesh->normals,
+				.float_count = 3,
+				.stride = sizeof(vec3),
+				.instanced = 0,
+			},
+			{
+				.name = strview_static("tex_coord"),
+				.buffer_object = static_mesh->tex_coords,
+				.float_count = 2,
+				.stride = sizeof(vec2),
+				.instanced = 0,
+			}
+		}
+	};
+}
+
 lodge_drawable_t lodge_drawable_make(struct lodge_drawable_desc desc)
 {
 	GLuint drawable = 0;
@@ -32,33 +63,7 @@ fail:
 
 lodge_drawable_t lodge_drawable_make_from_static_mesh(const struct lodge_static_mesh *static_mesh)
 {
-	return lodge_drawable_make((struct lodge_drawable_desc) {
-		.indices = static_mesh->indices,
-		.attribs_count = 3,
-		.attribs = {
-			{
-				.name = strview_static("vertex"),
-				.buffer_object = static_mesh->vertices,
-				.float_count = 3,
-				.stride = sizeof(vec3),
-				.instanced = 0,
-			},
-			{
-				.name = strview_static("normal"),
-				.buffer_object = static_mesh->normals,
-				.float_count = 3,
-				.stride = sizeof(vec3),
-				.instanced = 0,
-			},
-			{
-				.name = strview_static("tex_coord"),
-				.buffer_object = static_mesh->tex_coords,
-				.float_count = 2,
-				.stride = sizeof(vec2),
-				.instanced = 0,
-			}
-		}
-	});
+	return lodge_drawable_make(lodge_drawable_desc_make_from_static_mesh(static_mesh));
 }
 
 void lodge_drawable_reset(lodge_drawable_t drawable)
@@ -87,6 +92,7 @@ void lodge_drawable_set_buffer_object(lodge_drawable_t drawable, uint32_t index,
 	glVertexArrayVertexBuffer(vertex_array, index, lodge_buffer_object_to_gl(attrib.buffer_object), attrib.offset, (GLsizei)attrib.stride);
 	glVertexArrayAttribFormat(vertex_array, index, attrib.float_count, GL_FLOAT, GL_FALSE, 0);
 	glVertexArrayAttribBinding(vertex_array, index, index);
+	glVertexArrayBindingDivisor(vertex_array, index, attrib.instanced);
 	GL_OK_OR_GOTO(fail);
 
 	return;
@@ -125,6 +131,18 @@ void lodge_drawable_render_indexed_instanced(const lodge_drawable_t drawable, si
 	GL_OK_OR_ASSERT("Failed to bind drawable");
 
 	glDrawElementsInstanced(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, NULL, instances);
+	GL_OK_OR_ASSERT("Failed to render drawable");
+	
+	glBindVertexArray(0);
+	GL_OK_OR_ASSERT("Failed to unbind drawable");
+}
+
+void lodge_drawable_render_indexed(const lodge_drawable_t drawable, size_t index_count)
+{
+	glBindVertexArray(lodge_drawable_to_gl(drawable));
+	GL_OK_OR_ASSERT("Failed to bind drawable");
+
+	glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, NULL);
 	GL_OK_OR_ASSERT("Failed to render drawable");
 	
 	glBindVertexArray(0);

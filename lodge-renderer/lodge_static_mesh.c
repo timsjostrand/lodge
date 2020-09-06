@@ -12,6 +12,7 @@ struct lodge_static_mesh lodge_static_mesh_make(const vec3 *vertices, size_t ver
 		.normals = lodge_buffer_object_make_static(normals, normals_count * sizeof(vec3)),
 		.tex_coords = lodge_buffer_object_make_static(tex_coords, tex_coords_count * sizeof(vec2)),
 		.indices = lodge_buffer_object_make_static(indices, indices_count * sizeof(uint32_t)),
+		.indices_count = indices_count,
 	};
 }
 
