@@ -267,10 +267,10 @@ void pyxel_asset_free(struct pyxel_asset *asset)
 	atlas_free(&asset->atlas);
 
 	for(int i=0; i<PYXEL_LAYERS_MAX; i++) {
-		lodge_texture_reset(&asset->layers[i]);
+		lodge_texture_reset(asset->layers[i]);
 	}
 
-	lodge_texture_reset(&asset->layers_blended);
+	lodge_texture_reset(asset->layers_blended);
 }
 
 /**

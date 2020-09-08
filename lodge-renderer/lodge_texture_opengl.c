@@ -90,6 +90,10 @@ static GLenum lodge_texture_format_to_gl(enum lodge_texture_format texture_forma
 		return GL_RGBA8;
 	case LODGE_TEXTURE_FORMAT_RGBA16:
 		return GL_RGBA16;
+	case LODGE_TEXTURE_FORMAT_RGBA16F:
+		return GL_RGBA16F;
+	case LODGE_TEXTURE_FORMAT_RGBA32F:
+		return GL_RGBA32F;
 	case LODGE_TEXTURE_FORMAT_DEPTH16:
 		return GL_DEPTH_COMPONENT16;
 	case LODGE_TEXTURE_FORMAT_DEPTH32:
@@ -144,9 +148,9 @@ lodge_texture_t lodge_texture_2d_make(struct lodge_texture_2d_desc desc)
 	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
 	GL_OK_OR_GOTO(fail);
 
-	const uint32_t levels_count = desc.levels_count != 0 ? desc.levels_count : lodge_texture_calc_num_levels(desc.width, desc.height, 1);
+	const uint32_t mipmaps_count = desc.mipmaps_count != 0 ? desc.mipmaps_count : lodge_texture_calc_num_levels(desc.width, desc.height, 1);
 
-	glTextureStorage2D(texture, levels_count, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height);
+	glTextureStorage2D(texture, mipmaps_count, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height);
 	GL_OK_OR_GOTO(fail);
 
 	if(desc.data) {
@@ -154,7 +158,7 @@ lodge_texture_t lodge_texture_2d_make(struct lodge_texture_2d_desc desc)
 		GL_OK_OR_GOTO(fail);
 	}
 
-	if(levels_count > 1) {
+	if(mipmaps_count > 1) {
 		glGenerateTextureMipmap(texture);
 		GL_OK_OR_GOTO(fail);
 	}
@@ -176,7 +180,8 @@ lodge_texture_t lodge_texture_2d_make_rgba(uint32_t width, uint32_t height)
 	return lodge_texture_2d_make((struct lodge_texture_2d_desc) {
 		.width = width,
 		.height = height,
-		.levels_count = 1,
+		
+		.mipmaps_count = 1,
 	
 		.texture_format = LODGE_TEXTURE_FORMAT_RGBA8,
 		.pixel_format = LODGE_PIXEL_FORMAT_RGBA,
@@ -191,7 +196,8 @@ lodge_texture_t lodge_texture_2d_make_depth(uint32_t width, uint32_t height)
 	return lodge_texture_2d_make((struct lodge_texture_2d_desc) {
 		.width = width,
 		.height = height,
-		.levels_count = 1,
+		
+		.mipmaps_count = 1,
 	
 		.texture_format = LODGE_TEXTURE_FORMAT_DEPTH32,
 		.pixel_format = LODGE_PIXEL_FORMAT_DEPTH,
@@ -207,7 +213,8 @@ struct lodge_texture_2d_desc lodge_texture_2d_desc_make_from_image(const struct 
 	return (struct lodge_texture_2d_desc) {
 		.width = image->desc.height,
 		.height = image->desc.width,
-		.levels_count = 0,
+		
+		.mipmaps_count = 0,
 
 		.texture_format = lodge_texture_format_from_image(image),
 		.pixel_format = lodge_pixel_format_from_image(image),
@@ -234,22 +241,38 @@ static bool lodge_texture_cubemap_load_side(GLuint texture, GLenum side, const s
 	return true;
 }
 
-static lodge_texture_t lodge_texture_3d_make(struct lodge_texture_2d_desc desc)
+struct lodge_texture_2d_array_desc
+{
+	uint32_t					width;
+	uint32_t					height;
+	uint32_t					depth;
+
+	uint32_t					mipmaps_count; // if 0 = calc default
+
+	enum lodge_texture_format	texture_format;
+	enum lodge_pixel_format		pixel_format;
+	enum lodge_pixel_data_type	pixel_type;
+
+	//const void				*data;
+};
+
+static lodge_texture_t lodge_texture_2d_array_make(struct lodge_texture_2d_array_desc desc)
 {
 	GLuint texture = 0;
 	glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &texture);
 	GL_OK_OR_GOTO(fail);
 
-	const uint32_t levels_count = desc.levels_count != 0 ? desc.levels_count : lodge_texture_calc_num_levels(desc.width, desc.height, 1);
+	const uint32_t levels_count = desc.mipmaps_count != 0 ? desc.mipmaps_count : lodge_texture_calc_num_levels(desc.width, desc.height, 1);
 
-	glTextureStorage3D(texture, 1, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height, levels_count);
+	glTextureStorage3D(texture, desc.mipmaps_count, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height, desc.depth);
 	GL_OK_OR_GOTO(fail);
 
+#if 0
 	if(desc.data) {
-		ASSERT_NOT_IMPLEMENTED();
-		//glTextureSubImage3D(texture, 0, 0, 0, desc.width, desc.height, lodge_pixel_format_to_gl(desc.pixel_format), lodge_pixel_type_to_gl(desc.pixel_type), desc.data);
-		//GL_OK_OR_GOTO(fail);
+		glTextureSubImage3D(texture, 0, 0, 0, desc.width, desc.height, lodge_pixel_format_to_gl(desc.pixel_format), lodge_pixel_type_to_gl(desc.pixel_type), desc.data);
+		GL_OK_OR_GOTO(fail);
 	}
+#endif
 
 	return lodge_texture_from_gl(texture);
 
@@ -258,18 +281,22 @@ fail:
 	return NULL;
 }
 
-lodge_texture_t lodge_texture_3d_make_depth(uint32_t width, uint32_t height, uint32_t depth)
+lodge_texture_t lodge_texture_2d_array_make_depth(uint32_t width, uint32_t height, uint32_t depth)
 {
-	return lodge_texture_3d_make((struct lodge_texture_2d_desc) {
+	return lodge_texture_2d_array_make((struct lodge_texture_2d_array_desc) {
 		.width = width,
 		.height = height,
-		.levels_count = depth,
+		.depth = depth,
+
+		.mipmaps_count = 1,
 	
 		.texture_format = LODGE_TEXTURE_FORMAT_DEPTH32,
 		.pixel_format = LODGE_PIXEL_FORMAT_DEPTH,
 		.pixel_type = LODGE_PIXEL_TYPE_FLOAT,
-	
+
+#if 0
 		.data = NULL
+#endif
 	});
 }
 
@@ -318,12 +345,12 @@ fail:
 	return NULL;
 }
 
-void lodge_texture_reset(lodge_texture_t *texture)
+void lodge_texture_reset(lodge_texture_t texture)
 {
-	GLuint name = lodge_texture_to_gl(*texture);
+	if(!texture) {
+		return;
+	}
 
-	ASSERT(name > 0);
-	glDeleteTextures(1, &name);
-	GL_OK_OR_ASSERT("Failed to delete texture");
-	texture = NULL;
+	glDeleteTextures(1, &(GLuint){ lodge_texture_to_gl(texture) });
+	GL_OK_OR_ASSERT("Failed to reset texture");
 }

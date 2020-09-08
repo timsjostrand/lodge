@@ -41,18 +41,44 @@ lodge_framebuffer_t lodge_framebuffer_make(struct lodge_framebuffer_desc desc)
 
 	if(desc.colors_count == 0) {
 		glNamedFramebufferDrawBuffer(framebuffer, GL_NONE);
+		GL_OK_OR_GOTO(fail);
 	} else {
 		for(uint32_t i = 0; i < desc.colors_count; i++) {
 			glNamedFramebufferTexture(framebuffer, GL_COLOR_ATTACHMENT0 + i, lodge_texture_to_gl(desc.colors[i]), 0);
+			GL_OK_OR_GOTO(fail);
 		}
+
+		const GLenum color_names[] = {
+			GL_COLOR_ATTACHMENT0,
+			GL_COLOR_ATTACHMENT1,
+			GL_COLOR_ATTACHMENT2,
+			GL_COLOR_ATTACHMENT3,
+			GL_COLOR_ATTACHMENT4,
+			GL_COLOR_ATTACHMENT5,
+			GL_COLOR_ATTACHMENT6,
+			GL_COLOR_ATTACHMENT7,
+			GL_COLOR_ATTACHMENT8,
+			GL_COLOR_ATTACHMENT9,
+			GL_COLOR_ATTACHMENT10,
+			GL_COLOR_ATTACHMENT11,
+			GL_COLOR_ATTACHMENT12,
+			GL_COLOR_ATTACHMENT13,
+			GL_COLOR_ATTACHMENT14,
+			GL_COLOR_ATTACHMENT15
+		};
+
+		glNamedFramebufferDrawBuffers(framebuffer, desc.colors_count, color_names);
+		GL_OK_OR_GOTO(fail);
 	}
 
 	if(desc.depth) {
 		glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, lodge_texture_to_gl(desc.depth), 0);
+		GL_OK_OR_GOTO(fail);
 	}
 
 	if(desc.stencil) {
 		glNamedFramebufferTexture(framebuffer, GL_STENCIL_ATTACHMENT, lodge_texture_to_gl(desc.stencil), 0);
+		GL_OK_OR_GOTO(fail);
 	}
 
 	GLenum err = glCheckNamedFramebufferStatus(framebuffer, GL_FRAMEBUFFER); 
@@ -70,6 +96,9 @@ fail:
 
 void lodge_framebuffer_reset(lodge_framebuffer_t framebuffer)
 {
+	if(!framebuffer) {
+		return;
+	}
 	glDeleteFramebuffers(1, &(GLuint){ lodge_framebuffer_to_gl(framebuffer) });
 }
 
