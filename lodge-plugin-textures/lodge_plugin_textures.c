@@ -38,7 +38,7 @@ static void lodge_assets_texture_free_inplace(struct lodge_res *res, strview_t n
 		.resources = res,
 		.id = name,
 	});
-	lodge_texture_reset(texture);
+	lodge_texture_reset(*texture);
 }
 
 static struct lodge_ret lodge_plugin_textures_new_inplace(struct lodge_res *textures, struct lodge_plugins *plugins)

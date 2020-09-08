@@ -21,6 +21,8 @@ enum lodge_texture_format
 	LODGE_TEXTURE_FORMAT_RGB16,
 	LODGE_TEXTURE_FORMAT_RGBA8,
 	LODGE_TEXTURE_FORMAT_RGBA16,
+	LODGE_TEXTURE_FORMAT_RGBA16F,
+	LODGE_TEXTURE_FORMAT_RGBA32F,
 	LODGE_TEXTURE_FORMAT_R32F,
 	LODGE_TEXTURE_FORMAT_DEPTH16,
 	LODGE_TEXTURE_FORMAT_DEPTH32,
@@ -48,7 +50,8 @@ struct lodge_texture_2d_desc
 {
 	uint32_t					width;
 	uint32_t					height;
-	uint32_t					levels_count; // if 0 = calc default
+
+	uint32_t					mipmaps_count; // if 0 = calc default
 
 	enum lodge_texture_format	texture_format;
 	enum lodge_pixel_format		pixel_format;
@@ -76,10 +79,10 @@ lodge_texture_t					lodge_texture_2d_make_from_image(const struct lodge_image *i
 lodge_texture_t					lodge_texture_2d_make_rgba(uint32_t width, uint32_t height);
 lodge_texture_t					lodge_texture_2d_make_depth(uint32_t width, uint32_t height);
 
-lodge_texture_t					lodge_texture_3d_make_depth(uint32_t width, uint32_t height, uint32_t depth);
+lodge_texture_t					lodge_texture_2d_array_make_depth(uint32_t width, uint32_t height, uint32_t depth);
 
 lodge_texture_t					lodge_texture_cubemap_make(struct lodge_texture_cubemap_desc desc);
 
-void							lodge_texture_reset(lodge_texture_t *texture);
+void							lodge_texture_reset(lodge_texture_t texture);
 
 #endif

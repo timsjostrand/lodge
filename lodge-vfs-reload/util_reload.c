@@ -93,7 +93,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const
 			(*(lodge_texture_t*) userdata) = tmp;
 		} else {
 			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
-			lodge_texture_reset(&tmp);
+			lodge_texture_reset(tmp);
 		}
 	}
 }
@@ -122,7 +122,7 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size
 			(*(lodge_texture_t *) userdata) = tmp;
 		} else {
 			reload_debug("Unassigned texture: `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
-			lodge_texture_reset(&tmp);
+			lodge_texture_reset(tmp);
 		}
 	}
 }
