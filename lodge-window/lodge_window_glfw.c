@@ -41,6 +41,9 @@ struct glfw_window
 	lodge_window_mousebutton_callback_t callback_mousebutton;
 	void								*callback_mousebutton_userdata;
 
+	lodge_window_scroll_callback_t		callback_scroll;
+	void								*callback_scroll_userdata;
+
 	lodge_window_input_callback_t		callback_input;
 	void								*callback_input_userdata;
 
@@ -66,6 +69,14 @@ static void glfw_mousebutton_callback(GLFWwindow *window, int button, int action
 	struct glfw_window* glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
 	if(glfw_window->callback_mousebutton) {
 		glfw_window->callback_mousebutton(to_handle(glfw_window), button, action, mods, glfw_window->callback_mousebutton_userdata);
+	}
+}
+
+static void glfw_scroll_callback(GLFWwindow *window, double x, double y)
+{
+	struct glfw_window* glfw_window = (struct glfw_window*)glfwGetWindowUserPointer(window);
+	if(glfw_window->callback_scroll) {
+		glfw_window->callback_scroll(to_handle(glfw_window), x, y, glfw_window->callback_mousebutton_userdata);
 	}
 }
 
@@ -204,6 +215,7 @@ GLFWwindow* glfw_window_create(const char *title, int window_width, int window_h
 	glfwSetKeyCallback(window, &glfw_key_callback);
 	glfwSetCharModsCallback(window, &glfw_char_callback);
 	glfwSetMouseButtonCallback(window, &glfw_mousebutton_callback);
+	glfwSetScrollCallback(window, &glfw_scroll_callback);
 	glfwSetFramebufferSizeCallback(window, &glfw_resize_callback);
 
 	return window;
@@ -221,6 +233,8 @@ lodge_window_t lodge_window_new(struct lodge_windows *windows, const char *title
 	glfw_window->window_mode = window_mode;
 	glfw_window->callback_mousebutton = NULL;
 	glfw_window->callback_mousebutton_userdata = NULL;
+	glfw_window->callback_scroll = NULL;
+	glfw_window->callback_scroll_userdata = NULL;
 	glfw_window->callback_input = NULL;
 	glfw_window->callback_input_userdata = NULL;
 	glfw_window->callback_char = NULL;
@@ -328,6 +342,13 @@ void lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_m
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfw_window->callback_mousebutton = callback;
 	glfw_window->callback_mousebutton_userdata = userdata;
+}
+
+void lodge_window_set_scroll_callback(lodge_window_t window, lodge_window_scroll_callback_t callback, void *userdata)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	glfw_window->callback_scroll = callback;
+	glfw_window->callback_scroll_userdata = userdata;
 }
 
 void lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback, void *userdata)
