@@ -5,7 +5,7 @@
 #include "geometry.h"
 #include "frustum.h"
 
-#define LODGE_DEBUG_DRAW_LINES_MAX		(1024 * 8)
+#define LODGE_DEBUG_DRAW_LINES_MAX		(1024 * 32)
 #define LODGE_DEBUG_DRAW_SPHERES_MAX	1024
 #define LODGE_DEBUG_DRAW_TEXTURES_MAX	256
 

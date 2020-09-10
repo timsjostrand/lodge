@@ -351,7 +351,7 @@ void lodge_debug_draw_textures_new_inplace(struct lodge_debug_draw_textures *tex
 
 void lodge_debug_draw_new_inplace(struct lodge_debug_draw *debug_draw)
 {
-	*debug_draw = (struct lodge_debug_draw) { 0 };
+	memset(debug_draw, 0, sizeof(struct lodge_debug_draw));
 
 	lodge_debug_draw_lines_new_inplace(&debug_draw->lines);
 	lodge_debug_draw_spheres_new_inplace(&debug_draw->spheres);
