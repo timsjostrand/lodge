@@ -48,6 +48,7 @@ if(MSVC)
             "/we4090"                       # 'initializing': different 'const' qualifiers
             #"/we4244"                       # 'function': conversion from 'int' to 'const float', possible loss of data
             "/we4013"                       # 'symbol' undefined; assuming extern returning int
+            "/we4133"                       # 'initializing|function': incompatible types - from '<type> *' to '<other_type> *'
     )
 endif()
 

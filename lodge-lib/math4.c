@@ -766,6 +766,14 @@ vec4 vec4_min(const vec4 lhs, const vec4 rhs)
 	};
 }
 
+float vec4_dot(const vec4 lhs, const vec4 rhs)
+{
+	return lhs.v[0] * rhs.v[0]
+		+ lhs.v[1] * rhs.v[1]
+		+ lhs.v[2] * rhs.v[2]
+		+ lhs.v[3] * rhs.v[3];
+}
+
 vec4 vec4_lerp(const vec4 min, const vec4 max, float t)
 {
 	return (vec4) {

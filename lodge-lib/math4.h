@@ -163,6 +163,7 @@ vec4	vec4_zero();
 vec4	vec4_ones();
 vec4	vec4_max(const vec4 lhs, const vec4 rhs);
 vec4	vec4_min(const vec4 lhs, const vec4 rhs);
+float	vec4_dot(const vec4 lhs, const vec4 rhs);
 vec4	vec4_lerp(const vec4 min, const vec4 max, float t);
 float	vec4_length(const vec4 v);
 void	vec4_print(const vec4 v);
