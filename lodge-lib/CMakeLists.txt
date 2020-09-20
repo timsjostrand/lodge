@@ -7,6 +7,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge.c"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_time.c"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_platform.c"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_hash.c"
         "${CMAKE_CURRENT_LIST_DIR}/txt.c"
         "${CMAKE_CURRENT_LIST_DIR}/strview.c"
         "${CMAKE_CURRENT_LIST_DIR}/strbuf.c"
@@ -18,11 +19,15 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge_callbacks.c"
         "${CMAKE_CURRENT_LIST_DIR}/membuf.c"
         "${CMAKE_CURRENT_LIST_DIR}/frustum.c"
+
+        "${CMAKE_CURRENT_LIST_DIR}/lib/murmur3/murmur3.h"
+        "${CMAKE_CURRENT_LIST_DIR}/lib/murmur3/murmur3.c"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/lodge.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_time.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_assert.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_platform.h"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_hash.h"
         "${CMAKE_CURRENT_LIST_DIR}/log.h"
         "${CMAKE_CURRENT_LIST_DIR}/txt.h"
         "${CMAKE_CURRENT_LIST_DIR}/strview.h"

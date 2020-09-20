@@ -19,3 +19,8 @@
 [submodule "lib/zlib"]
 	path = lib/zlib
 	url = https://github.com/timsjostrand/zlib.git
+[submodule "lodge-lib/lib/murmur3"]
+	path = lodge-lib/lib/murmur3
+	url = https://github.com/timsjostrand/murmur3
+[submodule "murmur3"]
+	url = https://github.com/timsjostrand/murmur3
