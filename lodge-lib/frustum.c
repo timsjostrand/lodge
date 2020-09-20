@@ -2,33 +2,65 @@
 
 #include <float.h>
 
-#if 0
-
-struct frustum_planes frustum_planes_make_from_projection(const mat4 mat)
+struct frustum_planes frustum_planes_make(const mat4 view_proj)
 {
 	struct frustum_planes tmp;
 
-	for (int i = 4; i--; ) tmp.planes[FRUSTUM_PLANE_LEFT].v[i]		= mat.rows[i].v[3] + mat.rows[i].v[0];
-	for (int i = 4; i--; ) tmp.planes[FRUSTUM_PLANE_RIGHT].v[i]		= mat.rows[i].v[3] - mat.rows[i].v[0]; 
-	for (int i = 4; i--; ) tmp.planes[FRUSTUM_PLANE_TOP].v[i]		= mat.rows[i].v[3] + mat.rows[i].v[1];
-	for (int i = 4; i--; ) tmp.planes[FRUSTUM_PLANE_BOTTOM].v[i]	= mat.rows[i].v[3] - mat.rows[i].v[1];
-	for (int i = 4; i--; ) tmp.planes[FRUSTUM_PLANE_NEAR].v[i]		= mat.rows[i].v[3] + mat.rows[i].v[2];
-	for (int i = 4; i--; ) tmp.planes[FRUSTUM_PLANE_FAR].v[i]		= mat.rows[i].v[3] - mat.rows[i].v[2];
+	for(int i = 4; i--;) tmp.planes[FRUSTUM_PLANE_LEFT].v[i]	= view_proj.rows[i].v[3] + view_proj.rows[i].v[0];
+	for(int i = 4; i--;) tmp.planes[FRUSTUM_PLANE_RIGHT].v[i]	= view_proj.rows[i].v[3] - view_proj.rows[i].v[0]; 
+	for(int i = 4; i--;) tmp.planes[FRUSTUM_PLANE_TOP].v[i]		= view_proj.rows[i].v[3] + view_proj.rows[i].v[1];
+	for(int i = 4; i--;) tmp.planes[FRUSTUM_PLANE_BOTTOM].v[i]	= view_proj.rows[i].v[3] - view_proj.rows[i].v[1];
+	for(int i = 4; i--;) tmp.planes[FRUSTUM_PLANE_NEAR].v[i]	= view_proj.rows[i].v[3] + view_proj.rows[i].v[2];
+	for(int i = 4; i--;) tmp.planes[FRUSTUM_PLANE_FAR].v[i]		= view_proj.rows[i].v[3] - view_proj.rows[i].v[2];
 	
 	return tmp;
 }
 
-bool frustum_planes_is_visible_sphere(struct frustum_planes *frustum, struct sphere sphere)
+//
+// https://www.iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm
+//
+bool frustum_planes_vs_aabb(struct frustum_planes *frustum, struct aabb aabb)
 {
-	for(int i = 0; i < 6; i++)
-	{
-		float dist = vec3_dot(sphere.pos, vec3_make(xyz_of(frustum->planes[i]))) + frustum->planes[i].w + sphere.r;
+	//
+    // Check box outside/inside of frustum
+	//
+    for(int i=0; i < FRUSTUM_PLANE_MAX; i++) {
+        int out = 0;
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.min.x, aabb.min.y, aabb.min.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.max.x, aabb.min.y, aabb.min.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.min.x, aabb.max.y, aabb.min.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.max.x, aabb.max.y, aabb.min.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.min.x, aabb.min.y, aabb.max.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.max.x, aabb.min.y, aabb.max.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.min.x, aabb.max.y, aabb.max.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        out += ((vec4_dot( frustum->planes[i], vec4_make(aabb.max.x, aabb.max.y, aabb.max.z, 1.0f) ) < 0.0 ) ? 1 : 0);
+        if( out==8 ) return false;
+    }
+
+#if 0
+	//
+    // Check frustum outside/inside box
+	//
+    int out;
+    out=0; for(int i=0; i<8; i++) out += ((frustum->vertices[i].x > aabb.max.x) ? 1 : 0); if(out==8) return false;
+    out=0; for(int i=0; i<8; i++) out += ((frustum->vertices[i].x < aabb.min.x) ? 1 : 0); if(out==8) return false;
+    out=0; for(int i=0; i<8; i++) out += ((frustum->vertices[i].y > aabb.max.y) ? 1 : 0); if(out==8) return false;
+    out=0; for(int i=0; i<8; i++) out += ((frustum->vertices[i].y < aabb.min.y) ? 1 : 0); if(out==8) return false;
+    out=0; for(int i=0; i<8; i++) out += ((frustum->vertices[i].z > aabb.max.z) ? 1 : 0); if(out==8) return false;
+    out=0; for(int i=0; i<8; i++) out += ((frustum->vertices[i].z < aabb.min.z) ? 1 : 0); if(out==8) return false;
+#endif
+
+    return true;
+}
+
+bool frustum_planes_vs_sphere(struct frustum_planes *frustum, struct sphere *sphere)
+{
+	for(int i = 0; i < 6; i++) {
+		float dist = vec3_dot(sphere->pos, vec3_make(xyz_of(frustum->planes[i]))) + frustum->planes[i].w + sphere->r;
 		if(dist < 0) return false;
 	}
 	return true;
 }
-
-#endif
 
 struct frustum_corners frustum_corners_make_ndc()
 {

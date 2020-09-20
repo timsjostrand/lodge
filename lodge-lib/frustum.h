@@ -6,8 +6,6 @@
 
 #include <stdbool.h>
 
-#if 0
-
 enum frustum_planes_index
 {
 	FRUSTUM_PLANE_LEFT = 0,
@@ -16,6 +14,7 @@ enum frustum_planes_index
 	FRUSTUM_PLANE_BOTTOM = 3,
 	FRUSTUM_PLANE_NEAR = 4,
 	FRUSTUM_PLANE_FAR = 5,
+	FRUSTUM_PLANE_MAX = 6,
 };
 
 struct frustum_planes
@@ -23,14 +22,12 @@ struct frustum_planes
 	vec4 planes[6];
 };
 
-struct frustum_planes	frustum_planes_make_from_projection(const mat4 mat);
-bool					frustum_planes_is_visible_sphere(struct frustum_planes *frustum, struct sphere sphere);
-
-#endif
+struct frustum_planes	frustum_planes_make(const mat4 view_proj);
+bool					frustum_planes_vs_aabb(struct frustum_planes *frustum, struct aabb aabb);
+bool					frustum_planes_vs_sphere(struct frustum_planes *frustum, struct sphere *sphere);
 
 struct frustum_corners
 {
-	//vec3 vertices[2][2][2];
 	vec3 vertices[8];
 };
 
