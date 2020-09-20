@@ -1,6 +1,8 @@
 #ifndef _LODGE_RENDERER_H
 #define _LODGE_RENDERER_H
 
+#include "strview.h"
+
 #include "lodge_plugin.h"
 #include "lodge_sampler.h"
 
@@ -59,5 +61,8 @@ void					lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name,
 void					lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v);
 void					lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat);
 void					lodge_renderer_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp);
+
+void					lodge_renderer_annotate_begin(strview_t message);
+void					lodge_renderer_annotate_end();
 
 #endif

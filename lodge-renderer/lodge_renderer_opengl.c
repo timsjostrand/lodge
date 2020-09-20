@@ -273,3 +273,14 @@ void lodge_renderer_unbind_texture_unit(int slot)
 	glBindSampler(slot, 0);
 	GL_OK_OR_ASSERT("Failed to unbind texture unit");
 }
+
+void lodge_renderer_annotate_begin(strview_t message)
+{
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, message.length, message.s);
+}
+
+void lodge_renderer_annotate_end()
+{
+	glPopDebugGroup();
+}
+
