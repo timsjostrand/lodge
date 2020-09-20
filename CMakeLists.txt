@@ -11,9 +11,6 @@ set(CMAKE_MACOSX_RPATH 1)
 option(ENABLE_CONSOLE "Compile with console support" ON)
 option(ENABLE_SHARED "Enable game hotswapping" ON)
 
-# Enable asset hotswap.
-add_definitions(-DVFS_ENABLE_FILEWATCH)
-
 # Check for compatibility.
 include(CheckFunctionExists)
 include(CheckSymbolExists)
