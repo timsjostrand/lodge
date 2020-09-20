@@ -9,6 +9,7 @@
 
 #include "lodge_assert.h"
 #include "str.h"
+#include "strview.h"
 #include "blob.h"
 #include "blob_cur.h"
 #include "alist.h"
@@ -66,9 +67,9 @@ struct fbx_node
 
 struct fbx
 {
-	char					magic[21];	// Bytes 0 - 20: `Kaydara FBX Binary  \x00` (file - magic, with 2 spaces at the end, then a NULL terminator).
-	char					pad[2];		// Bytes 21 - 22: [0x1A, 0x00] (unknown but all observed files show these bytes).
-	uint32_t				version;	// Bytes 23 - 26: unsigned int, the version number. 7300 for version 7.3 for example.
+	char					magic[21];	// Bytes 0 - 20: `Kaydara FBX Binary  \x00` (file - magic, with 2 spaces at the end, then a NULL terminator)
+	char					pad[2];		// Bytes 21 - 22: [0x1A, 0x00] (unknown but all observed files show these bytes)
+	uint32_t				version;	// Bytes 23 - 26: unsigned int (7300 => FBX_VERSION_7_3)
 	struct alist			*children;
 };
 
@@ -271,7 +272,7 @@ static void fbx_print_property_list(const struct alist *list, int print_arrays, 
 
 static void fbx_print_node(const struct fbx_node *node, int print_arrays, int indent)
 {
-	printf("%*s`%.*s` (%d children, %" PRIu64 " props)\n",
+	printf("%*s`%.*s` (%zu children, %" PRIu64 " props)\n",
 		indent * 4, "",
 		node->name_len, node->name,
 		node->children ? alist_count(node->children) : 0,
@@ -315,7 +316,7 @@ static struct fbx_property_array* fbx_property_array_new(size_t element_size, st
 
 	if(prop_array->encoding) {
 		if(blob_cur_can_read(cur, compressed_length)
-			&& stbi_zlib_decode_buffer(prop_array->data, array_size, cur->it, prop_array->compressed_length) != array_size) {
+			&& stbi_zlib_decode_buffer(prop_array->data, (int)array_size, cur->it, prop_array->compressed_length) != array_size) {
 			ASSERT_FAIL("FBX: Property array decode failed");
 			goto fail;
 		}
@@ -793,7 +794,7 @@ enum fbx_property_type fbx_property_get_type(const struct fbx_property *prop)
 }
 
 #define FBX_PROPERTY_GET(prop, fbx_type, c_type) \
-	(prop->type == fbx_type) ? NULL :  (const c_type*)(prop->static_data);
+	(prop->type != fbx_type) ? NULL :  (const c_type*)(&prop->static_data);
 
 const int16_t* fbx_property_get_int16(const struct fbx_property *prop)
 {
@@ -891,4 +892,54 @@ struct fbx_string fbx_property_get_binary(const struct fbx_property *prop)
 		.length = prop_data->length,
 		.data = prop_data->data
 	};
+}
+
+const struct fbx_node* fbx_get_typed_property(struct fbx *fbx, const char *path[], size_t path_count, const char *property_name)
+{
+	struct fbx_node *node = fbx_get_node(fbx, path, path_count);
+	if(!node) {
+		ASSERT_FAIL("FBX: Failed to find node path");
+		return NULL;
+	}
+
+	struct fbx_node *properties_node = fbx_get_node_in(node->children, "Properties70", sizeof("Properties70")-1);
+	if(!properties_node) {
+		ASSERT_FAIL("FBX: Failed to find Properties70 node");
+		return NULL;
+	}
+
+	strview_t property_name_view = strview_make(property_name, strlen(property_name));
+
+	for(size_t i = 0, count = alist_count(properties_node->children); i < count; i++) {
+		const struct fbx_node *child = alist_get(properties_node->children, i);
+
+		ASSERT(child->name_len == 1 && child->name[0] == 'P' && child->properties_count >= 5);
+
+		const struct fbx_property* name_prop = fbx_node_get_property(child, 0);
+		struct fbx_string name = fbx_property_get_string(name_prop);
+
+		if(strview_equals(property_name_view, strview_make(name.data, name.length))) {
+			return child;
+		}
+	}
+
+	ASSERT_FAIL("FBX: Failed to find compound property");
+	return NULL;
+}
+
+const int32_t* fbx_get_typed_property_int32(struct fbx *fbx, const char *path[], size_t path_count, const char *property_name)
+{
+	const struct fbx_node *node = fbx_get_typed_property(fbx, path, path_count, property_name);
+	if(!node) {
+		return NULL;
+	}
+
+	// NOTE(TS): its possible to check FBX_TYPED_PROPERTY_TYPE for a specific type here
+
+	const struct fbx_property *value_property = fbx_node_get_property(node, FBX_TYPED_PROPERTY_VALUE);
+	if(!value_property) {
+		return NULL;
+	}
+
+	return fbx_property_get_int32(value_property);
 }
