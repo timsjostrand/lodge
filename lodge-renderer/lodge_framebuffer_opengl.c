@@ -110,6 +110,7 @@ lodge_framebuffer_t	lodge_framebuffer_default()
 void lodge_framebuffer_bind(lodge_framebuffer_t framebuffer)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, lodge_framebuffer_to_gl(framebuffer));
+	GL_OK_OR_ASSERT("Failed to bind framebuffer");
 }
 
 void lodge_framebuffer_unbind()
@@ -151,15 +152,15 @@ void lodge_framebuffer_set_depth_layer(lodge_framebuffer_t framebuffer, lodge_te
 	GL_OK_OR_ASSERT("Failed to set framebuffer depth layer");
 }
 
-void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_framebuffer_rect dst_rect, struct lodge_framebuffer_rect src_rect)
+void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_rect2i dst_rect, struct lodge_rect2i src_rect)
 {
 	glBlitNamedFramebuffer(
 		lodge_framebuffer_to_gl(src),
 		lodge_framebuffer_to_gl(dst),
 		src_rect.x0, src_rect.y0, src_rect.x1, src_rect.y1,
 		dst_rect.x0, dst_rect.y0, dst_rect.x1, dst_rect.y1,
-		GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST
+		GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT,
+		GL_NEAREST
 	);
-
 	GL_OK_OR_ASSERT("Framebuffer copy failed");
 }
