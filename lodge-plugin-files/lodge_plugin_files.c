@@ -13,7 +13,7 @@ static void vfs_callback_wrapper(struct vfs *vfs, strview_t filename, size_t siz
 	//ASSERT(ret);
 }
 
-static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, struct lodge_res_file *out, size_t size)
+static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct lodge_res_file *out, size_t size)
 {
 	struct vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
 	ASSERT(vfs);
@@ -38,7 +38,7 @@ static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, s
 	return true;
 }
 
-static int lodge_res_files_free_inplace(struct lodge_res *res, strview_t name, struct files_res *data)
+static int lodge_res_files_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct files_res *data)
 {
 	struct vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
 	ASSERT(vfs);

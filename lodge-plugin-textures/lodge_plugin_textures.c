@@ -9,7 +9,7 @@
 
 // TODO(TS): implement reload_inplace() to reuse tex id
 
-static bool lodge_assets_texture_new_inplace(struct lodge_res *res, strview_t name, void *lodge_texture_ptr, size_t size)
+static bool lodge_assets_texture_new_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, void *lodge_texture_ptr, size_t size)
 {
 	lodge_texture_t *texture = (lodge_texture_t *)lodge_texture_ptr;
 
@@ -18,7 +18,7 @@ static bool lodge_assets_texture_new_inplace(struct lodge_res *res, strview_t na
 
 	const struct lodge_image *image = lodge_res_get_depend(images, name, (struct lodge_res_handle) {
 		.resources = res,
-		.id = name,
+		.id = id,
 	});
 	if(!image) {
 		return false;
@@ -29,14 +29,14 @@ static bool lodge_assets_texture_new_inplace(struct lodge_res *res, strview_t na
 	return true;
 }
 
-static void lodge_assets_texture_free_inplace(struct lodge_res *res, strview_t name, lodge_texture_t *texture)
+static void lodge_assets_texture_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, lodge_texture_t *texture)
 {
 	struct lodge_res *images = lodge_res_get_userdata(res, USERDATA_IMAGES);
 	ASSERT(images);
 
 	lodge_res_release_depend(images, name, (struct lodge_res_handle) {
 		.resources = res,
-		.id = name,
+		.id = id,
 	});
 	lodge_texture_reset(*texture);
 }

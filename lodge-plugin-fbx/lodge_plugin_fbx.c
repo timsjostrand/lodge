@@ -10,7 +10,7 @@
 
 #define USERDATA_FILES 0
 
-static bool lodge_res_fbx_new_inplace(struct lodge_res *res, strview_t name, void *fbx_asset_ptr, size_t size)
+static bool lodge_res_fbx_new_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, void *fbx_asset_ptr, size_t size)
 {
 	struct fbx_asset *fbx_asset = (struct fbx_asset *)fbx_asset_ptr;
 
@@ -19,7 +19,7 @@ static bool lodge_res_fbx_new_inplace(struct lodge_res *res, strview_t name, voi
 
 	const struct lodge_res_file *file = lodge_res_get_depend(files, name, (struct lodge_res_handle) {
 		.resources = res,
-		.id = name,
+		.id = id,
 	});
 	if(!file) {
 		return false;
@@ -37,14 +37,14 @@ static bool lodge_res_fbx_new_inplace(struct lodge_res *res, strview_t name, voi
 	return true;
 }
 
-static void lodge_res_fbx_free_inplace(struct lodge_res *res, strview_t name, struct fbx_asset *fbx_asset)
+static void lodge_res_fbx_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct fbx_asset *fbx_asset)
 {
 	struct lodge_res *files = lodge_res_get_userdata(res, USERDATA_FILES);
 	ASSERT(files);
 
 	lodge_res_release_depend(files, name, (struct lodge_res_handle) {
 		.resources = res,
-		.id = name,
+		.id = id,
 	});
 	fbx_asset_reset(fbx_asset);
 }

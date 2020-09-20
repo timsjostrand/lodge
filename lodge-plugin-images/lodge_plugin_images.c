@@ -7,7 +7,7 @@
 
 #define USERDATA_FILES 0
 
-static bool lodge_assets_image_new_inplace(struct lodge_res *res, strview_t name, void *lodge_image_ptr, size_t size)
+static bool lodge_assets_image_new_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, void *lodge_image_ptr, size_t size)
 {
 	struct lodge_image *image = (struct lodge_image *)lodge_image_ptr;
 
@@ -16,7 +16,7 @@ static bool lodge_assets_image_new_inplace(struct lodge_res *res, strview_t name
 
 	const struct lodge_res_file *file = lodge_res_get_depend(files, name, (struct lodge_res_handle) {
 		.resources = res,
-		.id = name,
+		.id = id,
 	});
 	if(!file) {
 		return false;
@@ -30,14 +30,14 @@ static bool lodge_assets_image_new_inplace(struct lodge_res *res, strview_t name
 	return true;
 }
 
-static void lodge_assets_image_free_inplace(struct lodge_res *res, strview_t name, struct lodge_image *image)
+static void lodge_assets_image_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct lodge_image *image)
 {
 	struct lodge_res *files = lodge_res_get_userdata(res, USERDATA_FILES);
 	ASSERT(files);
 
 	lodge_res_release_depend(files, name, (struct lodge_res_handle) {
 		.resources = res,
-		.id = name,
+		.id = id,
 	});
 	lodge_image_free(image);
 }

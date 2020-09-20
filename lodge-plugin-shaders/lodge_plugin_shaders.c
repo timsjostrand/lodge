@@ -21,9 +21,11 @@ static bool lodge_shader_source_factory_get(struct lodge_res *shaders, strview_t
 		return false;
 	}
 
+	lodge_res_id_t shader_res_id = lodge_res_name_to_id(shaders, shader_name);
+
 	struct lodge_res_handle handle = {
 		.resources = shaders,
-		.id = shader_name,
+		.id = shader_res_id,
 	};
 
 	const struct lodge_res_file *src = lodge_res_get_depend(files, name, handle);
@@ -37,7 +39,7 @@ static bool lodge_shader_source_factory_get(struct lodge_res *shaders, strview_t
 	return false;
 }
 
-static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strview_t shader_name, strview_t name)
+static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strview_t shader_name, lodge_res_id_t id, strview_t name)
 {
 	struct lodge_res *files = lodge_res_get_userdata(shaders, USERDATA_FILES);
 	ASSERT(files);
@@ -47,7 +49,7 @@ static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strvi
 
 	struct lodge_res_handle handle = {
 		.resources = shaders,
-		.id = shader_name,
+		.id = id,
 	};
 
 	lodge_res_release_depend(files, name, handle);
@@ -55,7 +57,7 @@ static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strvi
 	return true;
 }
 
-static bool lodge_shader_asset_new_inplace(struct lodge_res *shaders, strview_t name, lodge_shader_t shader, size_t data_size)
+static bool lodge_shader_asset_new_inplace(struct lodge_res *shaders, strview_t name, lodge_res_id_t id, lodge_shader_t shader, size_t data_size)
 {
 	ASSERT(lodge_shader_sizeof() == data_size);
 
@@ -79,7 +81,7 @@ static bool lodge_shader_asset_new_inplace(struct lodge_res *shaders, strview_t 
 
 	const struct lodge_res_handle handle = {
 		.resources = shaders,
-		.id = name,
+		.id = id,
 	};
 
 	{
@@ -109,14 +111,14 @@ static bool lodge_shader_asset_new_inplace(struct lodge_res *shaders, strview_t 
 	return true;
 }
 
-static void lodge_shader_asset_free_inplace(struct lodge_res *shaders, strview_t name, lodge_shader_t shader)
+static void lodge_shader_asset_free_inplace(struct lodge_res *shaders, strview_t name, lodge_res_id_t id, lodge_shader_t shader)
 {
 	struct lodge_res *files = lodge_res_get_userdata(shaders, USERDATA_FILES);
 	ASSERT(files);
 
 	lodge_res_clear_dependency(files, (struct lodge_res_handle) {
 		.resources = shaders,
-		.id = name,
+		.id = id,
 	});
 
 	lodge_shader_free_inplace(shader);

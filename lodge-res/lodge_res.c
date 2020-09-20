@@ -3,6 +3,7 @@
 #include "array.h"
 #include "membuf.h"
 #include "str.h"
+#include "lodge_hash.h"
 #include "lodge_assert.h"
 #include "lodge_platform.h"
 #include "log.h"
@@ -28,6 +29,7 @@ struct lodge_res
 	struct lodge_res_desc		desc;
 
 	char						names[LODGE_RES_MAX][LODGE_RES_NAME_MAX];
+	lodge_res_id_t				ids[LODGE_RES_MAX];
 	uint32_t					ref_counts[LODGE_RES_MAX];
 	uint32_t					count;
 
@@ -49,6 +51,20 @@ static int64_t lodge_res_find_by_name(const struct lodge_res *res, strview_t nam
 		strview_t res_name = strview_wrap(res->names[i]);
 
 		if(strview_equals(res_name, name)) {
+			ASSERT(i < LODGE_RES_MAX);
+			return i;
+		}
+	}
+	return -1;
+}
+
+//
+// TODO(TS): Sorted + binary search
+//
+static int64_t lodge_res_find_by_id(const struct lodge_res *res, lodge_res_id_t id)
+{
+	for(uint32_t i = 0, count = res->count; i < count; i++) {
+		if(res->ids[i] == id) {
 			ASSERT(i < LODGE_RES_MAX);
 			return i;
 		}
@@ -113,13 +129,15 @@ static const void* lodge_res_get_or_load_index(struct lodge_res *res, strview_t 
 		void* data_element = array_append_no_init(res->data);
 		const size_t data_index = array_count(res->data) - 1;
 
-		res->data_indices[index] = data_index;
+		res->data_indices[index] = (uint32_t)data_index;
 
 		strbuf_wrap_and(res->names[index], strbuf_set, name);
 
+		res->ids[index] = lodge_hash_murmur3_32(name.s, name.length);
+
 		// TODO(TS): check return of new_inplace
 
-		if(!res->desc.new_inplace(res, name, data_element, res->desc.size)) {
+		if(!res->desc.new_inplace(res, name, res->ids[index], data_element, res->desc.size)) {
 			// FIXME(TS): roll back and clean up after failed new_inplace
 			ASSERT_NOT_IMPLEMENTED();
 			return NULL;
@@ -172,6 +190,49 @@ void lodge_res_release(struct lodge_res *res, strview_t name)
 	lodge_res_release_index(res, (size_t)index);
 }
 
+static void lodge_res_reload_by_index(struct lodge_res *res, size_t index);
+
+static void lodge_res_reload_by_id(struct lodge_res *res, lodge_res_id_t id)
+{
+	const int64_t index = lodge_res_find_by_id(res, id);
+	if(index < 0) {
+		ASSERT_FAIL("Asset not found");
+		return;
+	}
+	lodge_res_reload_by_index(res, index);
+}
+
+static void lodge_res_reload_by_index(struct lodge_res *res, size_t index)
+{
+	ASSERT(index < LODGE_RES_MAX);
+
+	// FIXME(TS): should try reload first, and roll back changes on failure
+
+	if(res->desc.reload_inplace)
+	{
+		ASSERT_NOT_IMPLEMENTED();
+	}
+	else
+	{
+		const size_t data_index = res->data_indices[index];
+		void* data_element = array_get(res->data, data_index);
+		strview_t name = strbuf_to_strview(strbuf_wrap(res->names[index]));
+		lodge_res_id_t id = res->ids[index];
+
+		res->desc.free_inplace(res, name, id, data_element);
+
+		if(!res->desc.new_inplace(res, name, id, data_element, res->desc.size)) {
+			ASSERT_FAIL("TODO: implement rollback");
+			return;
+		}
+	}
+
+	for(size_t dep_index = 0, count = res->deps[index].count; dep_index < count; dep_index++) {
+		struct lodge_res_handle *res_handle = &res->deps[index].deps[dep_index];
+		lodge_res_reload_by_id(res_handle->resources, res_handle->id);
+	}
+}
+
 void lodge_res_reload(struct lodge_res *res, strview_t name)
 {
 	debugf("Res", "Reload: `" STRVIEW_PRINTF_FMT "`:`" STRVIEW_PRINTF_FMT "`\n",
@@ -185,40 +246,12 @@ void lodge_res_reload(struct lodge_res *res, strview_t name)
 		return;
 	}
 
-	ASSERT(index < LODGE_RES_MAX);
-
-	// FIXME(TS): should try reload first, and roll back changes on failure
-
-	if(res->desc.reload_inplace)
-	{
-		ASSERT_NOT_IMPLEMENTED();
-	}
-	else
-	{
-		const size_t data_index = res->data_indices[index];
-
-		void* data_element = array_get(res->data, data_index);
-
-		res->desc.free_inplace(res, name, data_element);
-
-		if(!res->desc.new_inplace(res,
-			name,
-			data_element,
-			res->desc.size)) {
-			ASSERT_FAIL("TODO: implement rollback");
-			return;
-		}
-	}
-
-	for(size_t dep_index = 0, count = res->deps[index].count; dep_index < count; dep_index++) {
-		struct lodge_res_handle *res_handle = &res->deps[index].deps[dep_index];
-		lodge_res_reload(res_handle->resources, res_handle->id);
-	}
+	lodge_res_reload_by_index(res, index);
 }
 
 static bool lodge_res_handle_equals(struct lodge_res_handle *a, struct lodge_res_handle *b)
 {
-	return a->resources == b->resources && strview_equals(a->id, b->id);
+	return (a->resources == b->resources) && (a->id == b->id);
 }
 
 static void lodge_res_append_dep(struct lodge_res *res, size_t index, struct lodge_res_handle dependency)
@@ -235,9 +268,11 @@ static void lodge_res_append_dep(struct lodge_res *res, size_t index, struct lod
 		ASSERT(dep_index < LODGE_RES_DEPS_MAX);
 		res->deps[index].deps[dep_index] = dependency;
 
-		debugf("Res", "New dependency: `" STRVIEW_PRINTF_FMT "`:`" STRVIEW_PRINTF_FMT "` from `" STRVIEW_PRINTF_FMT "`:`%s` (count: %d)`\n",
+		strview_t dep_name = lodge_res_handle_find_name(&deps->deps[dep_index]);
+
+		debugf("Res", "New dependency: `" STRVIEW_PRINTF_FMT "`:`" STRVIEW_PRINTF_FMT "` from `" STRVIEW_PRINTF_FMT "`:`%s` (count: %zd)`\n",
 			STRVIEW_PRINTF_ARG(deps->deps[dep_index].resources->desc.name),
-			STRVIEW_PRINTF_ARG(deps->deps[dep_index].id),
+			STRVIEW_PRINTF_ARG(dep_name),
 			STRVIEW_PRINTF_ARG(res->desc.name),
 			res->names[index],
 			deps->count
@@ -253,8 +288,9 @@ static void lodge_res_remove_dep(struct lodge_res *res, size_t index, struct lod
 	for(size_t dep_index = 0, count = deps->count; dep_index < count; dep_index++) {
 		struct lodge_res_handle *handle = &deps->deps[dep_index];
 		if(lodge_res_handle_equals(handle, &dependency)) {
-			debugf("Res", "Lost dependency: `" STRVIEW_PRINTF_FMT "` from `%s` (count: %d)`\n",
-				STRVIEW_PRINTF_ARG(deps->deps[dep_index].id),
+			strview_t dep_name = lodge_res_handle_find_name(&deps->deps[dep_index]);
+			debugf("Res", "Lost dependency: `" STRVIEW_PRINTF_FMT "` from `%s` (count: %zd)`\n",
+				STRVIEW_PRINTF_ARG(dep_name),
 				res->names[index],
 				deps->count
 			);
@@ -334,4 +370,33 @@ void* lodge_res_get_userdata(struct lodge_res *res, size_t index)
 {
 	ASSERT(index < LODGE_RES_USERDATA_MAX);
 	return res->userdata[index];
+}
+
+strview_t lodge_res_id_to_name(struct lodge_res *res, lodge_res_id_t id)
+{
+	for(size_t i = 0, count = res->count; i < count; i++) {
+		if(res->ids[i] == id) {
+			return strbuf_to_strview(strbuf_wrap(res->names[i]));
+		}
+	}
+	
+	ASSERT_FAIL("Resource ID not found");
+	return strview_static("n/a");
+}
+
+lodge_res_id_t lodge_res_name_to_id(struct lodge_res *res, strview_t name)
+{
+	for(size_t i = 0, count = res->count; i < count; i++) {
+		if(strview_equals(strview_wrap(res->names[i]), name)) {
+			return res->ids[i];
+		}
+	}
+	
+	ASSERT_FAIL("Resource name not found");
+	return 0; // TODO(TS): can't really trust any one value to be incorrect
+}
+
+strview_t lodge_res_handle_find_name(struct lodge_res_handle *handle)
+{
+	return lodge_res_id_to_name(handle->resources, handle->id);
 }
