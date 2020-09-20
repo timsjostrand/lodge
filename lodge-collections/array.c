@@ -50,7 +50,7 @@ void array_set(array_t array, size_t index, const void *data)
 		(const char*)data,
 		array->element_size);
 
-	array->count = max(array->count, index);
+	array->count = max(array->count, index + 1);
 }
 
 void* array_append_no_init(array_t array)
