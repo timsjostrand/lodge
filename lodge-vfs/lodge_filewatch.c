@@ -9,6 +9,7 @@
 
 #define LODGE_FILEWATCH_EVENT_QUEUE_MAX	256
 #define LODGE_FILEWATCH_DIRS_MAX		256
+#define LODGE_FILWATCH_PATH_MAX			4096
 
 #ifdef _WIN32
 
@@ -16,6 +17,14 @@
 //
 // https://medium.com/tresorit-engineering/how-to-get-notifications-about-file-system-changes-on-windows-519dd8c4fb01
 // http://old.zaynar.co.uk/cppdoc/latest/projects/lib.sysdep.win/wdir_watch.cpp.html
+//
+// Future work:
+//		- When adding a dir to watch; check for any common parent with currently mounted
+//		  dirs. If they share a parent, mount that instead and use for both watches. This
+//		  will need some tweaking so that not all watches end up watching say the C:/ dir.
+//		  Use lodge_filewatch_entry::ref_count to track when it is safe to remove a watch. 
+//		- Add support for watching individual files. This will add a dir watch internally,
+//		  but allows registering a separate callback for that individual file.
 
 #include <stdio.h>
 #include <windows.h>
@@ -25,8 +34,8 @@ struct lodge_filewatch_entry
 {
 	size_t							index;
 
-	uint32_t						refs;
-	char							path[4096];
+	uint32_t						ref_count;
+	char							path[LODGE_FILWATCH_PATH_MAX];
 
 	HANDLE							dir_handle;
 
@@ -38,7 +47,7 @@ struct lodge_filewatch_entry
 struct lodge_filewatch_event
 {
 	size_t							entry_index;
-	char							path[4096];
+	char							path[LODGE_FILWATCH_PATH_MAX];
 	enum lodge_filewatch_reason		reason;
 };
 
@@ -98,6 +107,17 @@ static void lodge_filewatch_queue_events(struct lodge_filewatch *filewatch, stru
     }
 }
 
+static void lodge_filewatch_broadcast_events(struct lodge_filewatch *filewatch)
+{
+	for(size_t i = 0; i < filewatch->event_queue_count; i++) {
+		struct lodge_filewatch_event *event = &filewatch->event_queue[i];
+		const size_t dir_index = event->entry_index;
+		filewatch->funcs[dir_index](strbuf_wrap_and(event->path, strbuf_to_strview), event->reason, filewatch->userdatas[dir_index]);
+	}
+
+	filewatch->event_queue_count = 0;
+}
+
 static void lodge_filewatch_poll(struct lodge_filewatch *filewatch)
 {
     DWORD bytes_transferred;
@@ -110,7 +130,7 @@ static void lodge_filewatch_poll(struct lodge_filewatch *filewatch)
 
     const intptr_t entry_index = (intptr_t)key;
     struct lodge_filewatch_entry *entry = &filewatch->entries[entry_index];
-    if(!entry || entry->refs == 0) {
+    if(!entry || entry->ref_count == 0) {
         return;
 	}
 
@@ -122,22 +142,11 @@ static void lodge_filewatch_poll(struct lodge_filewatch *filewatch)
                          FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE |
                          FILE_NOTIFY_CHANGE_CREATION;
     const DWORD buf_size = sizeof(entry->change_buf);
+    memset(&entry->change_buf, 0, sizeof(entry->change_buf));
     memset(&entry->overlapped, 0, sizeof(entry->overlapped));
 	
-	// much faster than watching every dir separately. see dir_add_watch.
     BOOL ret = ReadDirectoryChangesW(entry->dir_handle, entry->change_buf, buf_size, TRUE, filter, &entry->bytes_returned, &entry->overlapped, 0);
     ASSERT(ret);
-}
-
-static void lodge_filewatch_broadcast_events(struct lodge_filewatch *filewatch)
-{
-	for(size_t i = 0; i < filewatch->event_queue_count; i++) {
-		struct lodge_filewatch_event *event = &filewatch->event_queue[i];
-		const size_t dir_index = event->entry_index;
-		filewatch->funcs[dir_index](strbuf_wrap_and(event->path, strbuf_to_strview), event->reason, filewatch->userdatas[dir_index]);
-	}
-
-	filewatch->event_queue_count = 0;
 }
 
 struct lodge_filewatch* lodge_filewatch_new()
@@ -161,76 +170,40 @@ void lodge_filewatch_free(struct lodge_filewatch *notify)
 
 static void lodge_vfs_notify_add_dir_impl(struct lodge_filewatch *notify, size_t index, strview_t dir, bool recursive, lodge_filewatch_func_t func, void *func_userdata)
 {
-    {
 	#if 0
-		// check if this is a subdirectory of an already watched dir tree
-		// (much faster than issuing a new watch for every subdir).
-		// this also prevents watching the same directory twice.
-		for(WatchIt it = watches->begin(); it != watches->end(); ++it)
-		{
-			Watch* const w = it->second;
-			if(!w)
-				continue;
-			const char* old_dir = w->dir_name.c_str();
-			if(path_is_subpath(dir, old_dir))
-			{
-				reqnum = w->reqnum;
-				w->refs++;
-				goto done;
-			}
-		}
+	// TODO(TS): check if a common parent exists
 	#endif
 
-		// open handle to directory
-		const DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-		const DWORD flags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-		const HANDLE dir_handle = CreateFile(dir.s, FILE_LIST_DIRECTORY, share, 0, OPEN_EXISTING, flags, 0);
-		if(dir_handle == INVALID_HANDLE_VALUE) {
-			goto fail;
-		}
+	const DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+	const DWORD flags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
+	const HANDLE dir_handle = CreateFile(dir.s, FILE_LIST_DIRECTORY, share, 0, OPEN_EXISTING, flags, 0);
+	if(dir_handle == INVALID_HANDLE_VALUE) {
+		goto fail;
+	}
 
-		// associate Watch* with the directory handle. when we receive a packet
-		// from the IOCP, we will need to re-issue the watch.
-		const ULONG_PTR key = (ULONG_PTR)index;
+	const ULONG_PTR key = (ULONG_PTR)index;
 
-		// create IOCP (if not already done) and attach hDir to it
-		notify->io_completion_port_handle = CreateIoCompletionPort(dir_handle, notify->io_completion_port_handle, key, 0);
-		if(notify->io_completion_port_handle == 0 || notify->io_completion_port_handle == INVALID_HANDLE_VALUE) {
-			CloseHandle(dir_handle);
-			goto fail;
-		}
+	notify->io_completion_port_handle = CreateIoCompletionPort(dir_handle, notify->io_completion_port_handle, key, 0);
+	if(notify->io_completion_port_handle == 0 || notify->io_completion_port_handle == INVALID_HANDLE_VALUE) {
+		CloseHandle(dir_handle);
+		goto fail;
+	}
 
-		membuf_set(membuf_wrap(notify->entries), index, &(struct lodge_filewatch_entry) {
-			.refs = 1,
-			.index = index,
-			.dir_handle = dir_handle,
-		}, sizeof(struct lodge_filewatch_entry));
+	membuf_set(membuf_wrap(notify->entries), index, &(struct lodge_filewatch_entry) {
+		.ref_count = 1,
+		.index = index,
+		.dir_handle = dir_handle,
+	}, sizeof(struct lodge_filewatch_entry));
 
-		strbuf_set(strbuf_wrap(notify->entries[index].path), dir);
+	strbuf_set(strbuf_wrap(notify->entries[index].path), dir);
 
-		// post a dummy kickoff packet; the IOCP polling code will "re"issue
-		// the corresponding watch. this keeps the ReadDirectoryChangesW call
-		// and directory <--> Watch association code in one place.
-		//
-		// we call get_packet so that it's issued immediately,
-		// instead of only at the next call to dir_get_changed_file.
-		PostQueuedCompletionStatus(notify->io_completion_port_handle, 0, key, 0);
-		lodge_filewatch_poll(notify);
-    }
+	PostQueuedCompletionStatus(notify->io_completion_port_handle, 0, key, 0);
+	lodge_filewatch_poll(notify);
 
-done:
 	return;
 
 fail:
 	ASSERT_FAIL("Failed to watch dir");
-}
-
-void lodge_filewatch_add_dir(struct lodge_filewatch *filewatch, strview_t dir, bool recursive, lodge_filewatch_func_t func, void *func_userdata)
-{
-	membuf_append(membuf_wrap(filewatch->funcs), &func, sizeof(lodge_filewatch_func_t), &filewatch->count);
-	membuf_set(membuf_wrap(filewatch->userdatas), filewatch->count-1, &func_userdata, sizeof(void*));
-
-	lodge_vfs_notify_add_dir_impl(filewatch, filewatch->count-1, dir, recursive, func, func_userdata);
 }
 
 void lodge_filewatch_update(struct lodge_filewatch *filewatch, float dt)
@@ -239,6 +212,14 @@ void lodge_filewatch_update(struct lodge_filewatch *filewatch, float dt)
 	lodge_filewatch_poll(filewatch);
 	// Broadcast events now that listeners are restarted (these may take a while).
 	lodge_filewatch_broadcast_events(filewatch);
+}
+
+void lodge_filewatch_add_dir(struct lodge_filewatch *filewatch, strview_t dir, bool recursive, lodge_filewatch_func_t func, void *func_userdata)
+{
+	membuf_append(membuf_wrap(filewatch->funcs), &func, sizeof(lodge_filewatch_func_t), &filewatch->count);
+	membuf_set(membuf_wrap(filewatch->userdatas), filewatch->count-1, &func_userdata, sizeof(void*));
+
+	lodge_vfs_notify_add_dir_impl(filewatch, filewatch->count-1, dir, recursive, func, func_userdata);
 }
 
 #else
