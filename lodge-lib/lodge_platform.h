@@ -35,6 +35,11 @@
 
 #define sizeof_member(type, member) sizeof(((type *)0)->member)
 
+#ifdef _WIN32
+#include <malloc.h>
+#define LODGE_ALLOCA _alloca
+#endif
+
 double	lodge_get_time();
 
 void*	lodge_lib_load(const char *filenae);

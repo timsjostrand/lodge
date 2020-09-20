@@ -2,11 +2,8 @@
 
 #include <string.h>
 
-// TODO(TS): platform independent LODGE_ALLOCA
-#include <malloc.h>
-#define LODGE_ALLOCA _alloca
-
 #include "lodge_assert.h"
+#include "lodge_platform.h"
 #include "math4.h"
 
 static inline void* membuf_tail(membuf_t buf)
@@ -156,6 +153,7 @@ void* membuf_get(membuf_t buf, size_t index)
 	if(index >= max_count) {
 		return NULL;
 	}
+	ASSERT(buf.ptr);
 	return buf.ptr + (index * buf.type_size);
 }
 
