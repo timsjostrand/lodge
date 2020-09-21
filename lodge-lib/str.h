@@ -34,7 +34,7 @@ int			str_equals(const char *a, size_t a_len, const char *b, size_t b_len);
 int			str_equals_ignore_case(const char *a, size_t a_len, const char *b, size_t b_len);
 int			str_set(char *dst, size_t dst_size, const strview_t src);
 int			str_empty(const char *s, size_t s_size);
-int			str_begins_with(const char *s, size_t s_len, const char *begins_with);
+int			str_begins_with(const char *s, size_t s_len, const char *begins_with, size_t begins_with_len);
 void		str_to_lower(char *s, size_t s_len);
 void		str_to_upper(char *s, size_t s_len);
 

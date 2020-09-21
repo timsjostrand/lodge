@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /**
  * A temporary view of a string, including the length (excluding the null terminator).
@@ -18,9 +19,11 @@ typedef struct strview
 strview_t	strview_make(const char *s, size_t length);
 strview_t	strview_make_from_str(const char *s, size_t max_count);
 strview_t	strview_null();
-int			strview_equals(const strview_t lhs, const strview_t rhs);
-int			strview_empty(const strview_t str);
-int			strview_length(const strview_t str);
+bool		strview_equals(const strview_t lhs, const strview_t rhs);
+bool		strview_empty(const strview_t str);
+size_t		strview_length(const strview_t str);
+
+bool		strview_begins_with(const strview_t str, const strview_t begins_with);
 
 #if 0
 #define		strview_static(s) strview_make((s), sizeof((s))-1)

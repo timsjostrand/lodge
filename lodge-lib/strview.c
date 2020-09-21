@@ -29,21 +29,26 @@ strview_t strview_null()
 	};
 }
 
-int strview_equals(const strview_t lhs, const strview_t rhs)
+bool strview_equals(const strview_t lhs, const strview_t rhs)
 {
 	return str_equals(lhs.s, lhs.length, rhs.s, rhs.length);
 }
 
-int strview_empty(const strview_t str)
+bool strview_empty(const strview_t str)
 {
 	return strview_length(str) == 0;
 }
 
-int strview_length(const strview_t str)
+size_t strview_length(const strview_t str)
 {
 	// NOTE(TS): this assert is pretty devious since strlen() assumes there will
 	// be a \0 terminator somewhere which may not be true, especially for text
 	// loaded from files and sub stringviews.
 	//ASSERT(str.length == strlen(str.s));
 	return str.length;
+}
+
+bool strview_begins_with(const strview_t str, const strview_t begins_with)
+{
+	return str_begins_with(str.s, str.length, begins_with.s, begins_with.length);
 }

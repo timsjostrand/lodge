@@ -469,9 +469,12 @@ int str_empty(const char *s, size_t s_size)
 /**
  * @return True if the string starts with 'start_with'.
  */
-int str_begins_with(const char *s, size_t s_len, const char *begins_with)
+int str_begins_with(const char *s, size_t s_len, const char *begins_with, size_t begins_with_len)
 {
-	return strncmp(s, begins_with, s_len) == 0;
+	if(begins_with_len > s_len) {
+		return 0;
+	}
+	return strncmp(s, begins_with, begins_with_len) == 0;
 }
 
 void str_to_lower(char *s, size_t s_len)
