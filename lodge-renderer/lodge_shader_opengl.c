@@ -11,7 +11,6 @@
 #include "txt.h"
 #include "strview.h"
 #include "blob.h"
-#include "vfs.h"
 #include "array.h"
 #include "lodge_opengl.h"
 
@@ -130,20 +129,6 @@ static bool lodge_shader_include(const lodge_shader_t shader, txt_t *txt, size_t
 	array_append(includes, include_file.s); // NOTE(TS): possibly leaking because of non-null terminated
 	
 	return true;
-
-
-#if 0
-	size_t include_data_size = 0;
-	const char* include_data = vfs_get_file(vfs, strview_make(include_file, strlen(include_file)), &include_data_size);
-	if(!include_data) {
-		return 0;
-	} else {
-		*txt = txt_insert(*txt, start, strview_make(include_data, include_data_size));
-		*txt = txt_insert(*txt, start + include_data_size, strview_static("\n"));
-		array_append(includes, include_file);
-		return 1;
-	}
-#endif
 }
 
 static bool lodge_shader_stage_resolve_includes(lodge_shader_t shader, struct lodge_shader_stage *stage, strview_t source)

@@ -9,7 +9,7 @@
 #include "lodge_window.h"
 #include "lodge_renderer.h"
 #include "game.h"
-#include "vfs.h"
+#include "lodge_vfs.h"
 #include "lodge_plugin_vfs.h"
 #include "lodge_plugin_env.h"
 #include "lodge_plugin_files.h"
@@ -231,7 +231,7 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 			// HACK(TS): Need nice way to mount default dir
 			if(strview_equals(plugin->name, strview_static("vfs")))
 			{
-				vfs_mount((struct vfs*)cur, plugins->mount_dir);
+				lodge_vfs_mount((struct lodge_vfs*)cur, plugins->mount_dir);
 			}
 		}
 

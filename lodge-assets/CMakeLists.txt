@@ -5,8 +5,8 @@ set(ASSETS_STAMP_FILE "${CMAKE_BINARY_DIR}/assets.stamp")
 add_executable(generate_assets
     "${CMAKE_CURRENT_LIST_DIR}/generate_assets.c"
     "${ENGINE_PATH}/lib/stb/stb.h"
-    "${ENGINE_PATH}/lodge-vfs/vfs.h"
-    "${ENGINE_PATH}/lodge-vfs/vfs.c"
+    "${ENGINE_PATH}/lodge-vfs/lodge_vfs.h"
+    "${ENGINE_PATH}/lodge-vfs/lodge_vfs.c"
     "${ENGINE_PATH}/lodge-lib/strview.c"
     "${ENGINE_PATH}/lodge-lib/str.c"
     "${ENGINE_PATH}/lodge-lib/strbuf.c"

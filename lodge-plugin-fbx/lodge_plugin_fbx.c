@@ -4,7 +4,6 @@
 #include "lodge_plugin_files.h"
 #include "lodge_res.h"
 
-#include "vfs.h"
 #include "fbx.h"
 #include "fbx_asset.h"
 
@@ -64,7 +63,6 @@ static struct lodge_ret lodge_plugin_fbx_init(struct lodge_res *fbx_res, struct 
 		.free_inplace = &lodge_res_fbx_free_inplace
 	} );
 
-	// FIXME(TS): where to store `vfs` ptr?
 	lodge_res_set_userdata(fbx_res, USERDATA_FILES, files);
 
 	return lodge_success();

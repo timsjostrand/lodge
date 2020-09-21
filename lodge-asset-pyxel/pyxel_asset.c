@@ -148,7 +148,7 @@ bail:
 	return PYXEL_ERROR;
 }
 
-int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len, struct vfs *vfs)
+int pyxel_asset_load(struct pyxel_asset *asset, void *data, size_t data_len, struct lodge_vfs *vfs)
 {
 	/* Parse .pyxel-file. */
 	struct pyxel pyxel;

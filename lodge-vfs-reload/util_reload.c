@@ -6,7 +6,7 @@
 
 #include "util_reload.h"
 
-#include "vfs.h"
+#include "lodge_vfs.h"
 #include "sound.h"
 #include "array.h"
 
@@ -33,7 +33,7 @@
 #define reload_debug(FMT, ...) debugf("Reload", FMT, __VA_ARGS__)
 #define reload_error(FMT, ...) errorf("Reload", FMT, __VA_ARGS__)
 
-void util_reload_sound(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
+void util_reload_sound(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		sound_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -63,7 +63,7 @@ static void str_copy_without_ext(char *dst, const char *src, const char *ext, si
 	strncpy(dst, src, sub_len < len ? sub_len : len);
 }
 
-void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata)
+void util_reload_texture(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata)
 {
 	if(size == 0) {
 		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -98,7 +98,7 @@ void util_reload_texture(struct vfs *vfs, strview_t filename, size_t size, const
 	}
 }
 
-void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata, int width, int height)
+void util_reload_texture_pixels(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, void* userdata, int width, int height)
 {
 	if(size == 0) {
 		reload_debug("Skipped reload of texture `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -128,7 +128,7 @@ void util_reload_texture_pixels(struct vfs *vfs, strview_t filename, size_t size
 }
 
 #ifdef ENABLE_LODGE_CONSOLE
-void util_reload_console_conf(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
+void util_reload_console_conf(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		console_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -148,7 +148,7 @@ void util_reload_console_conf(struct vfs *vfs, strview_t filename, size_t size, 
 #endif
 
 #ifdef ENABLE_LODGE_ASSET_ATLAS
-void util_reload_atlas(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
+void util_reload_atlas(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		atlas_debug("Skipped reload of `" STRVIEW_PRINTF_FMT "` (%zu bytes)\n", STRVIEW_PRINTF_ARG(filename), size);
@@ -179,7 +179,7 @@ void util_reload_atlas(struct vfs *vfs, strview_t filename, size_t size, const v
 #endif
 
 #ifdef ENABLE_LODGE_ASSET_PYXEL
-void util_reload_pyxel_asset(struct vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
+void util_reload_pyxel_asset(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, void *userdata)
 {
 	if(size == 0) {
 		pyxel_debug("Skipped reload of %s (%zu bytes)\n", filename, size);

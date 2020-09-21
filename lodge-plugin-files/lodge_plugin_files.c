@@ -3,11 +3,11 @@
 #include "lodge_plugins.h"
 #include "lodge_res.h"
 
-#include "vfs.h"
+#include "lodge_vfs.h"
 
 #define USERDATA_VFS 0
 
-static void vfs_callback_wrapper(struct vfs *vfs, strview_t filename, size_t size, const void *data, struct lodge_res *userdata)
+static void vfs_callback_wrapper(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, struct lodge_res *userdata)
 {
 	lodge_res_reload(userdata, filename);
 	//ASSERT(ret);
@@ -15,19 +15,19 @@ static void vfs_callback_wrapper(struct vfs *vfs, strview_t filename, size_t siz
 
 static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct lodge_res_file *out, size_t size)
 {
-	struct vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
+	struct lodge_vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
 	ASSERT(vfs);
 	if(!vfs) {
 		return false;
 	}
 
 	size_t vfs_size = 0;
-	const void* vfs_data = vfs_get_file(vfs, name, &vfs_size);
+	const void* vfs_data = lodge_vfs_get_file(vfs, name, &vfs_size);
 	if(!vfs_data) {
 		return false;
 	}
 
-	vfs_register_callback(vfs, name, &vfs_callback_wrapper, res);
+	lodge_vfs_register_callback(vfs, name, &vfs_callback_wrapper, res);
 
 	*out = (struct lodge_res_file) {
 		.name = name,
@@ -40,20 +40,20 @@ static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, l
 
 static int lodge_res_files_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct files_res *data)
 {
-	struct vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
+	struct lodge_vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
 	ASSERT(vfs);
 	if(!vfs) {
 		return false;
 	}
 
 	// FIXME(TS): should just remove one callback
-	vfs_prune_callbacks(vfs, &vfs_callback_wrapper, res);
+	lodge_vfs_prune_callbacks(vfs, &vfs_callback_wrapper, res);
 	return true;
 }
 
 static struct lodge_ret lodge_plugin_files_init(struct lodge_res *files, struct lodge_plugins *plugins)
 {
-	struct vfs *vfs = lodge_plugins_depend(plugins, files, strview_static("vfs"));
+	struct lodge_vfs *vfs = lodge_plugins_depend(plugins, files, strview_static("vfs"));
 	if(!vfs) {
 		return lodge_error("Files failed to find VFS");
 	}

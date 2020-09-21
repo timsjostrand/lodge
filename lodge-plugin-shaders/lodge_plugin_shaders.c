@@ -1,6 +1,5 @@
 #include "lodge_plugin_shaders.h"
 
-#include "vfs.h"
 #include "strview.h"
 #include "txt.h"
 #include "strbuf.h"

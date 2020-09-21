@@ -4,10 +4,10 @@ add_library(lodge-vfs STATIC "")
 
 target_sources(lodge-vfs
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/vfs.c"
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_vfs.c"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_filewatch.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/vfs.h"
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_vfs.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_filewatch.h"
 )
 

@@ -1,7 +1,6 @@
 #include "monotext.h"
 
 #include "monofont.h"
-#include "vfs.h"
 #include "color.h"
 #include "str.h"
 #include "log.h"

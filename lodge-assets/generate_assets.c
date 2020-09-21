@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "vfs.h"
+#include "lodge_vfs.h"
 #include "alist.h"
 #include "lodge_platform.h"
 
@@ -51,7 +51,7 @@ void write_assets_c()
 	fp = fopen("assets.c", "w+");
 
 	fprintf(fp, "#include \"assets.h\"\n\n");
-	fprintf(fp, "#include \"vfs.h\"\n");
+	fprintf(fp, "#include \"lodge_vfs.h\"\n");
 	fprintf(fp, "#include \"util_reload.h\"\n");
 	fprintf(fp, "\n");
 
@@ -59,7 +59,7 @@ void write_assets_c()
 	fprintf(fp, "struct assets *assets = &assets_mem;\n");
 
 	fprintf(fp, "\n");
-	fprintf(fp, "void assets_load(struct vfs *vfs)\n");
+	fprintf(fp, "void assets_load(struct lodge_vfs *vfs)\n");
 	fprintf(fp, "{\n");
 	fprintf(fp, "\n\t// Sounds\n");
 	foreach_alist(char*, asset, i, assets_list_sounds)
@@ -175,7 +175,7 @@ void write_assets_h()
 	fprintf(fp, "extern struct assets assets_mem;\n");
 	fprintf(fp, "extern struct assets *assets;\n\n");
 
-	fprintf(fp, "void assets_load(struct vfs *vfs);\n");
+	fprintf(fp, "void assets_load(struct lodge_vfs *vfs);\n");
 	fprintf(fp, "void assets_release();\n");
 
 	fprintf(fp, "\n#endif //ASSETS_H\n");
@@ -183,11 +183,11 @@ void write_assets_h()
 	fclose(fp);
 }
 
-void add_assets(struct vfs *vfs, struct alist *assets_list)
+void add_assets(struct lodge_vfs *vfs, struct alist *assets_list)
 {
-	for (size_t i = 0, i_size = vfs_file_count(vfs); i < i_size; i++)
+	for (size_t i = 0, i_size = lodge_vfs_file_count(vfs); i < i_size; i++)
 	{
-		alist_append(assets_list, vfs_get_simple_name(vfs, i).s);
+		alist_append(assets_list, lodge_vfs_get_simple_name(vfs, i).s);
 	}
 
 	const char* ext_sounds[] = { ".ogg" };
@@ -239,8 +239,7 @@ void add_assets(struct vfs *vfs, struct alist *assets_list)
 
 int main(int argc, char* argv[])
 {
-	if (argc < 2)
-	{
+	if (argc < 2) {
 		printf("VFS mount directory not set for generate_assets");
 		return 0;
 	}
@@ -252,12 +251,12 @@ int main(int argc, char* argv[])
 #endif
 	assets_list_misc = alist_new(MAX_ASSETS);
 
-	struct vfs* vfs = (struct vfs *) malloc(vfs_sizeof());
-	vfs_new_inplace(vfs);
+	struct lodge_vfs* vfs = (struct lodge_vfs *) malloc(lodge_vfs_sizeof());
+	lodge_vfs_new_inplace(vfs);
 
 	strview_t mount_dir = strview_make(argv[1], strlen(argv[1]));
 
-	vfs_mount(vfs, mount_dir);
+	lodge_vfs_mount(vfs, mount_dir);
 	add_assets(vfs, assets_list);
 
 	write_assets_c();

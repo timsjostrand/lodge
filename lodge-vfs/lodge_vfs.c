@@ -1,44 +1,44 @@
 /**
-* A simple virtual file system.
-*
-* Call vfs_init() on startup and vfs_shutdown() on shutdown.
-* Use vfs_mount(const char* dir) to read all files in dir to memory.
-* Use vfs_register_callback(const char* filename, read_callback_t fn) to read file
-*
-* Author: Johan Yngman <johan.yngman@gmail.com>
-*         Tim Sjöstrand <tim.sjostrand@gmail.com>
-*/
+ * Author: Johan Yngman <johan.yngman@gmail.com>
+ *         Tim Sjöstrand <tim.sjostrand@gmail.com>
+ */
 
-#include "vfs.h"
+//
+// TODO(TS):
+//
+//		- Multiple mount points: /, /assets, etc
+//		- Handle reloads from overloaded mount point
+//
+//
+
+#include "lodge_vfs.h"
 
 #include "strbuf.h"
-#include "log.h"
 #include "lodge_platform.h"
 #include "lodge_filewatch.h"
 
 #include "stb/stb.h"
 
-struct vfs_file
+struct lodge_vfs_file
 {
-	FILE*					file;
-	char					name[VFS_MAX_FILENAME_LEN];
-	char					simplename[VFS_MAX_FILENAME_LEN];
+	char					name[LODGE_VFS_FILENAME_MAX];
+	char					simplename[LODGE_VFS_FILENAME_MAX];
 	struct read_callback*	read_callbacks;
 	size_t					size;
 	void					*data;
 };
 
-struct vfs
+struct lodge_vfs
 {
-	struct vfs_file			file_table[VFS_MAX_NUM_FILES];
+	struct lodge_vfs_file	file_table[LODGE_VFS_FILES_MAX];
 	size_t					file_count;
 	struct lodge_filewatch	*filewatch;
 };
 
-static struct vfs_file* vfs_get_file_entry(struct vfs *vfs, strview_t filename)
+static struct lodge_vfs_file* vfs_get_file_entry(struct lodge_vfs *vfs, strview_t filename)
 {
 	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct vfs_file *f = &vfs->file_table[i];
+		struct lodge_vfs_file *f = &vfs->file_table[i];
 
 		if (strview_equals(filename, strview_wrap(f->simplename))) {
 			return f;
@@ -48,21 +48,22 @@ static struct vfs_file* vfs_get_file_entry(struct vfs *vfs, strview_t filename)
 	return NULL;
 }
 
-static void vfs_reload_from_filewatch(strview_t path, enum lodge_filewatch_reason reason, struct vfs *vfs)
+static void vfs_reload_from_filewatch(strview_t path, enum lodge_filewatch_reason reason, struct lodge_vfs *vfs)
 {
-	struct vfs_file *vfs_file = vfs_get_file_entry(vfs, path);
+	struct lodge_vfs_file *vfs_file = vfs_get_file_entry(vfs, path);
 	ASSERT(vfs_file);
 	if(!vfs_file) {
+		ASSERT_FAIL("File path not found in VFS");
 		return;
 	}
 
-	vfs_file->file = fopen(vfs_file->name, "rb");
-
-	if(vfs_file->file == 0) {
+	FILE *file = fopen(vfs_file->name, "rb");
+	if(!file) {
+		ASSERT_FAIL("Failed to open file");
 		return;
 	}
 
-	fseek(vfs_file->file, 0, SEEK_SET);
+	fseek(file, 0, SEEK_SET);
 
 	free(vfs_file->data);
 
@@ -71,50 +72,48 @@ static void vfs_reload_from_filewatch(strview_t path, enum lodge_filewatch_reaso
 	size_t last_size = -1;
 	vfs_file->size = 0;
 	while(vfs_file->size == 0 || last_size != vfs_file->size) {
-		vfs_file->size = stb_filelen(vfs_file->file);
+		vfs_file->size = stb_filelen(file);
 		last_size = vfs_file->size;
 	}
 
 	vfs_file->data = malloc(vfs_file->size);
-	fread(vfs_file->data, 1, vfs_file->size, vfs_file->file);
-	stb_fclose(vfs_file->file, 0);
+	fread(vfs_file->data, 1, vfs_file->size, file);
+	stb_fclose(file, 0);
 
 	for(int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++) {
-		read_callback_t cbck = vfs_file->read_callbacks[j].fn;
-		cbck(vfs, strview_wrap(vfs_file->simplename), vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
+		read_callback_t func = vfs_file->read_callbacks[j].fn;
+		func(vfs, strview_wrap(vfs_file->simplename), vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
 	}
 }
 
-void vfs_new_inplace(struct vfs *vfs)
+void lodge_vfs_new_inplace(struct lodge_vfs *vfs)
 {
-	*vfs = (struct vfs) { 0 };
-
+	memset(vfs, 0, sizeof(struct lodge_vfs));
 	vfs->filewatch = lodge_filewatch_new();
 }
 
-void vfs_free_inplace(struct vfs *vfs)
+void lodge_vfs_free_inplace(struct lodge_vfs *vfs)
 {
 	lodge_filewatch_free(vfs->filewatch);
 
-	for(int i = 0; i < VFS_MAX_NUM_FILES; i++) {
-		stb_fclose(vfs->file_table[i].file, 0);
+	for(int i = 0; i < LODGE_VFS_FILES_MAX; i++) {
 		if(vfs->file_table[i].data != NULL) {
 			free(vfs->file_table[i].data);
 		}
 	}
 }
 
-void vfs_update(struct vfs *vfs, float delta_time)
+void lodge_vfs_update(struct lodge_vfs *vfs, float delta_time)
 {
 	lodge_filewatch_update(vfs->filewatch, delta_time);
 }
 
-size_t vfs_sizeof()
+size_t lodge_vfs_sizeof()
 {
-	return sizeof(struct vfs);
+	return sizeof(struct lodge_vfs);
 }
 
-void vfs_prune_callbacks(struct vfs *vfs, read_callback_t fn, void* userdata)
+void lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, read_callback_t fn, void* userdata)
 {
 	int added = 0;
 
@@ -123,7 +122,7 @@ void vfs_prune_callbacks(struct vfs *vfs, read_callback_t fn, void* userdata)
 	cbck.userdata = userdata;
 
 	for(size_t i = 0; i < vfs->file_count; i++) {
-		struct vfs_file *file = &vfs->file_table[i];
+		struct lodge_vfs_file *file = &vfs->file_table[i];
 
 		for(int j = 0; j < stb_arr_len(file->read_callbacks); j++) {
 			struct read_callback *callback = &file->read_callbacks[j];
@@ -136,7 +135,7 @@ void vfs_prune_callbacks(struct vfs *vfs, read_callback_t fn, void* userdata)
 	}
 }
 
-void vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t fn, void* userdata)
+void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t filename, read_callback_t fn, void* userdata)
 {
 	int added = 0;
 
@@ -152,10 +151,9 @@ void vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t 
 	}
 
 	if (!added) {
-		struct vfs_file *new_file = &vfs->file_table[vfs->file_count++];
+		struct lodge_vfs_file *new_file = &vfs->file_table[vfs->file_count++];
 
 		new_file->data = 0;
-		new_file->file = 0;
 		strbuf_wrap_and(new_file->name, strbuf_set, filename);
 		strbuf_wrap_and(new_file->simplename, strbuf_set, filename);
 		new_file->size = 0;
@@ -163,10 +161,10 @@ void vfs_register_callback(struct vfs *vfs, strview_t filename, read_callback_t 
 	}
 }
 
-bool vfs_reload_file(struct vfs *vfs, strview_t filename)
+bool lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t filename)
 {
 #if 0
-	struct vfs_file *f = vfs_get_file_entry(vfs, filename);
+	struct lodge_vfs_file *f = vfs_get_file_entry(vfs, filename);
 
 	if(f == NULL) {
 		return false;
@@ -180,7 +178,7 @@ bool vfs_reload_file(struct vfs *vfs, strview_t filename)
 #endif
 }
 
-void vfs_mount(struct vfs *vfs, strview_t dir)
+void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t dir)
 {
 	if (strview_empty(dir)) {
 		ASSERT_FAIL("Failed to mount directory");
@@ -190,7 +188,7 @@ void vfs_mount(struct vfs *vfs, strview_t dir)
 	// FIXME(TS): use strbuf
 	strbuf_t path;
 	{
-		char path_buf[VFS_MOUNT_PATH_MAX] = { 0 };
+		char path_buf[LODGE_VFS_MOUNT_PATH_MAX] = { 0 };
 		path = strbuf_wrap(path_buf);
 	}
 	strbuf_set(path, dir);
@@ -217,24 +215,26 @@ void vfs_mount(struct vfs *vfs, strview_t dir)
 
 	int num_new_files = stb_arr_len(filenames);
 	for (int i = 0; i < num_new_files; i++) {
-		struct vfs_file new_file;
+		struct lodge_vfs_file new_file;
 		strcpy(new_file.name, filenames[i]);
 		strcpy(new_file.simplename, filenames[i] + strbuf_length(path) + 1);
 
 		int replaced = 0;
 		for (size_t j = 0; j < vfs->file_count; j++) {
-			struct vfs_file *current_file = &vfs->file_table[j];
+			struct lodge_vfs_file *current_file = &vfs->file_table[j];
 
 			if (strcmp(current_file->simplename, new_file.simplename) == 0) {
-				stb_fclose(current_file->file, 0);
 				free(current_file->data);
 
 				strcpy(current_file->name, new_file.name);
-				current_file->file = stb_fopen(current_file->name, "rb");
-				current_file->size = stb_filelen(current_file->file);
-				current_file->data = malloc(current_file->size);
-				fread(current_file->data, 1, current_file->size, current_file->file);
-				stb_fclose(current_file->file, 0); // NOTE(TS): was file_table[i] -- bug?
+
+				{
+					FILE *file = stb_fopen(current_file->name, "rb");
+					current_file->size = stb_filelen(file);
+					current_file->data = malloc(current_file->size);
+					fread(current_file->data, 1, current_file->size, file);
+					stb_fclose(file, 0);
+				}
 
 				replaced = 1;
 				break;
@@ -243,11 +243,14 @@ void vfs_mount(struct vfs *vfs, strview_t dir)
 
 		if (!replaced) {
 			new_file.read_callbacks = 0;
-			new_file.file = stb_fopen(new_file.name, "rb");
-			new_file.size = stb_filelen(new_file.file);
-			new_file.data = malloc(new_file.size);
-			fread(new_file.data, 1, new_file.size, new_file.file);
-			stb_fclose(new_file.file, 0);
+
+			{
+				FILE *file = stb_fopen(new_file.name, "rb");
+				new_file.size = stb_filelen(file);
+				new_file.data = malloc(new_file.size);
+				fread(new_file.data, 1, new_file.size, file);
+				stb_fclose(file, 0);
+			}
 
 			vfs->file_table[vfs->file_count] = new_file;
 			vfs->file_count++;
@@ -255,47 +258,47 @@ void vfs_mount(struct vfs *vfs, strview_t dir)
 	}
 }
 
-void* vfs_get_file(struct vfs *vfs, strview_t filename, size_t* out_num_bytes)
+void* lodge_vfs_get_file(struct lodge_vfs *vfs, strview_t filename, size_t* out_num_bytes)
 {
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct vfs_file *f = &vfs->file_table[i];
+	for(size_t i = 0; i < vfs->file_count; i++) {
+		struct lodge_vfs_file *f = &vfs->file_table[i];
 
-		if (strview_equals(filename, strview_wrap(f->simplename))
+		if(strview_equals(filename, strview_wrap(f->simplename))
 			&& f->data != 0) {
 			*out_num_bytes = f->size;
 			return f->data;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
-void vfs_free_memory(struct vfs *vfs, strview_t filename)
+void lodge_vfs_free_memory(struct lodge_vfs *vfs, strview_t filename)
 {
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct vfs_file *f = &vfs->file_table[i];
+	for(size_t i = 0; i < vfs->file_count; i++) {
+		struct lodge_vfs_file *f = &vfs->file_table[i];
 
-		if (strview_equals(filename, strview_wrap(f->simplename))) {
+		if(strview_equals(filename, strview_wrap(f->simplename))) {
 			free(f->data);
 			f->data = 0;
 		}
 	}
 }
 
-size_t vfs_file_count(struct vfs *vfs)
+size_t lodge_vfs_file_count(struct lodge_vfs *vfs)
 {
 	return vfs->file_count;
 }
 
-strview_t vfs_get_simple_name(struct vfs *vfs, const int index)
+strview_t lodge_vfs_get_simple_name(struct lodge_vfs *vfs, const int index)
 {
 	return strview_wrap(vfs->file_table[index].simplename);
 }
 
-strview_t vfs_get_absolute_path(struct vfs *vfs, strview_t filename)
+strview_t lodge_vfs_get_absolute_path(struct lodge_vfs *vfs, strview_t filename)
 {
 	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct vfs_file *f = &vfs->file_table[i];
+		struct lodge_vfs_file *f = &vfs->file_table[i];
 		
 		if (strview_equals(filename, strview_wrap(f->simplename))
 			&& f->data != 0) {

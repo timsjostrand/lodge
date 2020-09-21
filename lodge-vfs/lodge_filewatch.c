@@ -151,24 +151,24 @@ static void lodge_filewatch_poll(struct lodge_filewatch *filewatch)
 
 struct lodge_filewatch* lodge_filewatch_new()
 {
-	struct lodge_filewatch *notify = (struct lodge_filewatch*) calloc(1, sizeof(struct lodge_filewatch));
-	return notify;
+	struct lodge_filewatch *filewatch = (struct lodge_filewatch*) calloc(1, sizeof(struct lodge_filewatch));
+	return filewatch;
 }
 
-void lodge_filewatch_free(struct lodge_filewatch *notify)
+void lodge_filewatch_free(struct lodge_filewatch *filewatch)
 {
-	for(size_t i = 0; i < notify->count; i++) {
-		BOOL ret = CloseHandle(notify->entries[i].dir_handle);
+	for(size_t i = 0; i < filewatch->count; i++) {
+		BOOL ret = CloseHandle(filewatch->entries[i].dir_handle);
 		ASSERT(ret);
 	}
 
-	BOOL ret = CloseHandle(notify->io_completion_port_handle);
+	BOOL ret = CloseHandle(filewatch->io_completion_port_handle);
 	ASSERT(ret);
 
-	free(notify);
+	free(filewatch);
 }
 
-static void lodge_vfs_notify_add_dir_impl(struct lodge_filewatch *notify, size_t index, strview_t dir, bool recursive, lodge_filewatch_func_t func, void *func_userdata)
+static void lodge_filewatch_add_dir_impl(struct lodge_filewatch *filewatch, size_t index, strview_t dir, bool recursive, lodge_filewatch_func_t func, void *func_userdata)
 {
 	#if 0
 	// TODO(TS): check if a common parent exists
@@ -183,22 +183,22 @@ static void lodge_vfs_notify_add_dir_impl(struct lodge_filewatch *notify, size_t
 
 	const ULONG_PTR key = (ULONG_PTR)index;
 
-	notify->io_completion_port_handle = CreateIoCompletionPort(dir_handle, notify->io_completion_port_handle, key, 0);
-	if(notify->io_completion_port_handle == 0 || notify->io_completion_port_handle == INVALID_HANDLE_VALUE) {
+	filewatch->io_completion_port_handle = CreateIoCompletionPort(dir_handle, filewatch->io_completion_port_handle, key, 0);
+	if(filewatch->io_completion_port_handle == 0 || filewatch->io_completion_port_handle == INVALID_HANDLE_VALUE) {
 		CloseHandle(dir_handle);
 		goto fail;
 	}
 
-	membuf_set(membuf_wrap(notify->entries), index, &(struct lodge_filewatch_entry) {
+	membuf_set(membuf_wrap(filewatch->entries), index, &(struct lodge_filewatch_entry) {
 		.ref_count = 1,
 		.index = index,
 		.dir_handle = dir_handle,
 	}, sizeof(struct lodge_filewatch_entry));
 
-	strbuf_set(strbuf_wrap(notify->entries[index].path), dir);
+	strbuf_set(strbuf_wrap(filewatch->entries[index].path), dir);
 
-	PostQueuedCompletionStatus(notify->io_completion_port_handle, 0, key, 0);
-	lodge_filewatch_poll(notify);
+	PostQueuedCompletionStatus(filewatch->io_completion_port_handle, 0, key, 0);
+	lodge_filewatch_poll(filewatch);
 
 	return;
 
@@ -219,7 +219,7 @@ void lodge_filewatch_add_dir(struct lodge_filewatch *filewatch, strview_t dir, b
 	membuf_append(membuf_wrap(filewatch->funcs), &func, sizeof(lodge_filewatch_func_t), &filewatch->count);
 	membuf_set(membuf_wrap(filewatch->userdatas), filewatch->count-1, &func_userdata, sizeof(void*));
 
-	lodge_vfs_notify_add_dir_impl(filewatch, filewatch->count-1, dir, recursive, func, func_userdata);
+	lodge_filewatch_add_dir_impl(filewatch, filewatch->count-1, dir, recursive, func, func_userdata);
 }
 
 #else
