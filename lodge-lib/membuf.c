@@ -125,14 +125,14 @@ struct membuf_swapret membuf_delete_swap_tail(membuf_t buf, size_t index, size_t
 	return (struct membuf_swapret) { index, index_b };
 }
 
-void membuf_append(membuf_t dst, const void *src, size_t src_size, size_t *current_count)
+void* membuf_append(membuf_t dst, const void *src, size_t src_size, size_t *current_count)
 {
 	const size_t max_count = membuf_max_count(dst);
 	ASSERT(*current_count < max_count);
 	if(*current_count >= max_count) {
-		return;
+		return NULL;
 	}
-	membuf_set(dst, (*current_count)++, src, src_size);
+	return membuf_set(dst, (*current_count)++, src, src_size);
 }
 
 void membuf_fill(membuf_t dst, const void *src, size_t src_size)
@@ -157,18 +157,19 @@ void* membuf_get(membuf_t buf, size_t index)
 	return buf.ptr + (index * buf.type_size);
 }
 
-void membuf_set(membuf_t buf, size_t index, const void *src, size_t src_size)
+void* membuf_set(membuf_t buf, size_t index, const void *src, size_t src_size)
 {
 	ASSERT(buf.type_size == src_size);
 	if(!buf.type_size == src_size) {
-		return;
+		return NULL;
 	}
 
 	void* dst = membuf_get(buf, index);
 	ASSERT(dst);
 	if(!dst) {
-		return;
+		return NULL;
 	}
 
 	memcpy(dst, src, src_size);
+	return dst;
 }
