@@ -133,7 +133,11 @@ static const void* lodge_res_get_or_load_index(struct lodge_res *res, strview_t 
 
 		strbuf_wrap_and(res->names[index], strbuf_set, name);
 
-		res->ids[index] = lodge_hash_murmur3_32(name.s, name.length);
+		uint32_t hash = lodge_hash_murmur3_32(name.s, name.length);
+		res->ids[index] = lodge_res_id_make(hash);
+
+		ASSERT(lodge_res_id_is_valid(res->ids[index]));
+		ASSERT(hash == lodge_res_id_get_hash(res->ids[index]));
 
 		// TODO(TS): check return of new_inplace
 
@@ -194,6 +198,8 @@ static void lodge_res_reload_by_index(struct lodge_res *res, size_t index);
 
 static void lodge_res_reload_by_id(struct lodge_res *res, lodge_res_id_t id)
 {
+	ASSERT(lodge_res_id_is_valid(id));
+
 	const int64_t index = lodge_res_find_by_id(res, id);
 	if(index < 0) {
 		ASSERT_FAIL("Asset not found");
@@ -374,6 +380,8 @@ void* lodge_res_get_userdata(struct lodge_res *res, size_t index)
 
 strview_t lodge_res_id_to_name(struct lodge_res *res, lodge_res_id_t id)
 {
+	ASSERT(lodge_res_id_is_valid(id));
+
 	for(size_t i = 0, count = res->count; i < count; i++) {
 		if(res->ids[i] == id) {
 			return strbuf_to_strview(strbuf_wrap(res->names[i]));
@@ -393,10 +401,38 @@ lodge_res_id_t lodge_res_name_to_id(struct lodge_res *res, strview_t name)
 	}
 	
 	ASSERT_FAIL("Resource name not found");
-	return 0; // TODO(TS): can't really trust any one value to be incorrect
+	return lodge_res_id_make_invalid();
 }
 
 strview_t lodge_res_handle_find_name(struct lodge_res_handle *handle)
 {
 	return lodge_res_id_to_name(handle->resources, handle->id);
+}
+
+lodge_res_id_t lodge_res_id_make_invalid()
+{
+	return 0;
+}
+
+lodge_res_id_t lodge_res_id_make(uint32_t hash)
+{
+	return (uint64_t)LODGE_BIT(64) | (uint64_t)hash;
+}
+
+bool lodge_res_id_is_valid(lodge_res_id_t id)
+{
+	// Get 1st bit
+	return id >> 63;
+}
+
+uint32_t lodge_res_id_get_hash(lodge_res_id_t id)
+{
+	// Get lower 32 bits
+	return (uint32_t)id;
+}
+
+uint32_t lodge_res_id_get_reserved_uint31(lodge_res_id_t id)
+{
+	// Remove hash + valid bit
+	return (id >> 32) & 0x7FFFFFFF;
 }

@@ -8,17 +8,23 @@
 
 struct lodge_res;
 
+// Resource ID type.
 //
-// NOTE(TS): maybe use uint64_t and store flags in upper bits:
-//		- Valid handle (want to return 0 from utility functions to signal invalid)
-//		- Unique number (sanity check for hash collision?)
+// Designed so that the literal `0` will always be an invalid Resource ID, and
+// if two IDs compare equal they will be referring to the same resource.
 //
-typedef uint32_t lodge_res_id_t;
+// Bit layout:
+//
+//		[64..64]		Valid flag: true/false.
+//		[63..31]		Reserved for future implementation of unique counter.
+//		[32..00]		Name hash.
+//
+typedef uint64_t lodge_res_id_t;
 
-#define LODGE_RES_ID_FMT "%u"
+#define LODGE_RES_ID_FMT "{ %u (valid: %d, hash: %u) }"
 
-// TODO(TS): should replace this with a hash; name/id can be fetched via lodge_res_handle_to_name()
-// this is due to the strview potentially being garbage ptr depending on what happens in *resources
+#define LODGE_RES_ID_ARG(res_id) lodge_res_id_is_valid(res_id), lodge_res_id_get_hash(res_id)
+
 struct lodge_res_handle
 {
 	lodge_res_id_t			id;
@@ -57,5 +63,11 @@ strview_t					lodge_res_id_to_name(struct lodge_res *res, lodge_res_id_t id);
 lodge_res_id_t				lodge_res_name_to_id(struct lodge_res *res, strview_t name);
 
 strview_t					lodge_res_handle_find_name(struct lodge_res_handle *handle);
+
+lodge_res_id_t				lodge_res_id_make_invalid();
+lodge_res_id_t				lodge_res_id_make(uint32_t hash);
+bool						lodge_res_id_is_valid(lodge_res_id_t id);
+uint32_t					lodge_res_id_get_hash(lodge_res_id_t id);
+uint32_t					lodge_res_id_get_reserved_uint31(lodge_res_id_t id);
 
 #endif

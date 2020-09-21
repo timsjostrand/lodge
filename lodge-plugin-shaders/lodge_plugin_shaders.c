@@ -22,6 +22,7 @@ static bool lodge_shader_source_factory_get(struct lodge_res *shaders, strview_t
 	}
 
 	lodge_res_id_t shader_res_id = lodge_res_name_to_id(shaders, shader_name);
+	ASSERT(lodge_res_id_is_valid(shader_res_id));
 
 	struct lodge_res_handle handle = {
 		.resources = shaders,
@@ -39,7 +40,7 @@ static bool lodge_shader_source_factory_get(struct lodge_res *shaders, strview_t
 	return false;
 }
 
-static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strview_t shader_name, lodge_res_id_t id, strview_t name)
+static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strview_t shader_name, strview_t name)
 {
 	struct lodge_res *files = lodge_res_get_userdata(shaders, USERDATA_FILES);
 	ASSERT(files);
@@ -47,9 +48,12 @@ static bool lodge_shader_source_factory_release(struct lodge_res *shaders, strvi
 		return false;
 	}
 
+	lodge_res_id_t shader_res_id = lodge_res_name_to_id(shaders, shader_name);
+	ASSERT(lodge_res_id_is_valid(shader_res_id));
+
 	struct lodge_res_handle handle = {
 		.resources = shaders,
-		.id = id,
+		.id = shader_res_id,
 	};
 
 	lodge_res_release_depend(files, name, handle);
