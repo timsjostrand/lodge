@@ -3,87 +3,77 @@
  *         Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
-//
-// TODO(TS):
-//
-//		- Multiple mount points: /, /assets, etc
-//		- Handle reloads from overloaded mount point
-//
-//
-
 #include "lodge_vfs.h"
 
 #include "strbuf.h"
+#include "membuf.h"
 #include "lodge_platform.h"
 #include "lodge_filewatch.h"
 
 #include "stb/stb.h"
 
-struct lodge_vfs_file
+struct lodge_vfs_mount
 {
-	char					name[LODGE_VFS_FILENAME_MAX];
-	char					simplename[LODGE_VFS_FILENAME_MAX];
-	struct read_callback*	read_callbacks;
-	size_t					size;
-	void					*data;
+	char							point[LODGE_VFS_MOUNT_POINT_MAX];
+	char							path[LODGE_VFS_MOUNT_PATH_MAX];
+};
+
+struct lodge_vfs_func
+{
+	lodge_vfs_func_t				fn;
+	void							*userdata;
+};
+
+struct lodge_vfs_file_funcs
+{
+	char							virtual_path[LODGE_VFS_FILENAME_MAX];
+	struct lodge_vfs_func*			funcs;
 };
 
 struct lodge_vfs
 {
-	struct lodge_vfs_file	file_table[LODGE_VFS_FILES_MAX];
-	size_t					file_count;
-	struct lodge_filewatch	*filewatch;
+	struct lodge_vfs_mount			mounts[LODGE_VFS_MOUNT_POINTS_MAX];
+	size_t							mounts_count;
+
+	struct lodge_vfs_file_funcs		funcs[LODGE_VFS_FILES_MAX];
+	size_t							funcs_count;
+
+	struct lodge_filewatch			*filewatch;
 };
 
-static struct lodge_vfs_file* vfs_get_file_entry(struct lodge_vfs *vfs, strview_t filename)
+static struct lodge_vfs_file_funcs* lodge_vfs_get_func_entry(struct lodge_vfs *vfs, strview_t virtual_path)
 {
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct lodge_vfs_file *f = &vfs->file_table[i];
+	for (size_t i = 0; i < vfs->funcs_count; i++) {
+		struct lodge_vfs_file_funcs *func_entry = &vfs->funcs[i];
 
-		if (strview_equals(filename, strview_wrap(f->simplename))) {
-			return f;
+		if (strview_equals(virtual_path, strview_wrap(func_entry->virtual_path))) {
+			return func_entry;
 		}
 	}
-
 	return NULL;
 }
 
-static void vfs_reload_from_filewatch(strview_t path, enum lodge_filewatch_reason reason, struct lodge_vfs *vfs)
+static void lodge_vfs_broadcast_file_funcs(struct lodge_vfs *vfs, struct lodge_vfs_file_funcs *file_funcs)
 {
-	struct lodge_vfs_file *vfs_file = vfs_get_file_entry(vfs, path);
-	ASSERT(vfs_file);
-	if(!vfs_file) {
-		ASSERT_FAIL("File path not found in VFS");
+	for(int i = 0, count = stb_arr_len(file_funcs->funcs); i < count; i++) {
+		struct lodge_vfs_func *func = &file_funcs->funcs[i];
+		func->fn(vfs, strview_wrap(file_funcs->virtual_path), func->userdata);
+	}
+}
+
+static void lodge_vfs_filewatch_event(strview_t path, enum lodge_filewatch_reason reason, struct lodge_vfs *vfs)
+{
+	struct lodge_vfs_file_funcs *file_funcs = lodge_vfs_get_func_entry(vfs, path);
+	if(!file_funcs) {
+		ASSERT_FAIL("No callbacks for this file");
 		return;
 	}
 
-	FILE *file = fopen(vfs_file->name, "rb");
-	if(!file) {
-		ASSERT_FAIL("Failed to open file");
-		return;
-	}
+	// TODO(TS): we are currently firing reload events for files reloaded in mounts with lower precedence;
+	// `path` should be a disk_path, and should reverse resolve into a virtual_path
+	// It currently works, because the listener needs to resolve in _read_file() anyways
 
-	fseek(file, 0, SEEK_SET);
-
-	free(vfs_file->data);
-
-	// Hacky solution to make sure the OS is finished with the fseek call
-	// How can this be solved better?
-	size_t last_size = -1;
-	vfs_file->size = 0;
-	while(vfs_file->size == 0 || last_size != vfs_file->size) {
-		vfs_file->size = stb_filelen(file);
-		last_size = vfs_file->size;
-	}
-
-	vfs_file->data = malloc(vfs_file->size);
-	fread(vfs_file->data, 1, vfs_file->size, file);
-	stb_fclose(file, 0);
-
-	for(int j = 0, j_size = stb_arr_len(vfs_file->read_callbacks); j < j_size; j++) {
-		read_callback_t func = vfs_file->read_callbacks[j].fn;
-		func(vfs, strview_wrap(vfs_file->simplename), vfs_file->size, vfs_file->data, vfs_file->read_callbacks[j].userdata);
-	}
+	lodge_vfs_broadcast_file_funcs(vfs, file_funcs);
 }
 
 void lodge_vfs_new_inplace(struct lodge_vfs *vfs)
@@ -96,10 +86,8 @@ void lodge_vfs_free_inplace(struct lodge_vfs *vfs)
 {
 	lodge_filewatch_free(vfs->filewatch);
 
-	for(int i = 0; i < LODGE_VFS_FILES_MAX; i++) {
-		if(vfs->file_table[i].data != NULL) {
-			free(vfs->file_table[i].data);
-		}
+	for(int i = 0; i < vfs->funcs_count; i++) {
+		stb_arr_free(vfs->funcs[i].funcs);
 	}
 }
 
@@ -113,52 +101,47 @@ size_t lodge_vfs_sizeof()
 	return sizeof(struct lodge_vfs);
 }
 
-void lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, read_callback_t fn, void* userdata)
+void lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, lodge_vfs_func_t fn, void* userdata)
 {
 	int added = 0;
 
-	struct read_callback cbck;
+	struct lodge_vfs_func cbck;
 	cbck.fn = fn;
 	cbck.userdata = userdata;
 
-	for(size_t i = 0; i < vfs->file_count; i++) {
-		struct lodge_vfs_file *file = &vfs->file_table[i];
+	for(size_t i = 0; i < vfs->funcs_count; i++) {
+		struct lodge_vfs_file_funcs *func_entry = &vfs->funcs[i];
 
-		for(int j = 0; j < stb_arr_len(file->read_callbacks); j++) {
-			struct read_callback *callback = &file->read_callbacks[j];
+		for(int j = 0; j < stb_arr_len(func_entry->funcs); j++) {
+			struct lodge_vfs_func *callback = &func_entry->funcs[j];
 
 			if(callback->fn == fn && callback->userdata == userdata) {
-				stb_arr_delete(file->read_callbacks, j);
+				stb_arr_delete(func_entry->funcs, j);
 				j--;
 			}
 		}
 	}
 }
 
-void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t filename, read_callback_t fn, void* userdata)
+void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t virtual_path, lodge_vfs_func_t fn, void* userdata)
 {
-	int added = 0;
+	struct lodge_vfs_file_funcs *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
 
-	struct read_callback cbck;
-	cbck.fn = fn;
-	cbck.userdata = userdata;
+	struct lodge_vfs_func cbck = {
+		.fn = fn,
+		.userdata = userdata,
+	};
 
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		if (strview_equals(filename, strview_wrap(vfs->file_table[i].simplename))) {
-			stb_arr_push(vfs->file_table[i].read_callbacks, cbck);
-			added = 1;
-		}
+	if(!func_entry) {
+		struct lodge_vfs_file_funcs new_entry;
+		new_entry.funcs = NULL;
+		strbuf_set(strbuf_wrap(new_entry.virtual_path), virtual_path);
+
+		func_entry = membuf_append(membuf_wrap(vfs->funcs), &new_entry, sizeof(new_entry), &vfs->funcs_count);
 	}
 
-	if (!added) {
-		struct lodge_vfs_file *new_file = &vfs->file_table[vfs->file_count++];
-
-		new_file->data = 0;
-		strbuf_wrap_and(new_file->name, strbuf_set, filename);
-		strbuf_wrap_and(new_file->simplename, strbuf_set, filename);
-		new_file->size = 0;
-		stb_arr_push(new_file->read_callbacks, cbck);
-	}
+	ASSERT(func_entry);
+	stb_arr_push(func_entry->funcs, cbck);
 }
 
 bool lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t filename)
@@ -178,14 +161,13 @@ bool lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t filename)
 #endif
 }
 
-void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t dir)
+void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t mount_point, strview_t dir)
 {
 	if (strview_empty(dir)) {
 		ASSERT_FAIL("Failed to mount directory");
 		return;
 	}
 
-	// FIXME(TS): use strbuf
 	strbuf_t path;
 	{
 		char path_buf[LODGE_VFS_MOUNT_PATH_MAX] = { 0 };
@@ -204,107 +186,79 @@ void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t dir)
 		path.s[pathlen - 1] = '\0';
 	}
 
-	lodge_filewatch_add_dir(vfs->filewatch, strbuf_to_strview(path), true, &vfs_reload_from_filewatch, vfs);
+	lodge_filewatch_add_dir(vfs->filewatch, strbuf_to_strview(path), true, &lodge_vfs_filewatch_event, vfs);
 
-	char** filenames = stb_readdir_recursive(path.s, NULL);
-
-	if (filenames == NULL) {
-		ASSERT_FAIL("Could not read directory");
-		return;
+	{
+		struct lodge_vfs_mount new_mount;
+		strbuf_set(strbuf_wrap(new_mount.point), mount_point);
+		strbuf_set(strbuf_wrap(new_mount.path), dir);
+		membuf_append(membuf_wrap(vfs->mounts), &new_mount, sizeof(struct lodge_vfs_mount), &vfs->mounts_count);
 	}
 
-	int num_new_files = stb_arr_len(filenames);
-	for (int i = 0; i < num_new_files; i++) {
-		struct lodge_vfs_file new_file;
-		strcpy(new_file.name, filenames[i]);
-		strcpy(new_file.simplename, filenames[i] + strbuf_length(path) + 1);
+	// TODO(TS): we need to scan new mount and fire modify callbacks for all new files we have callbacks for,
+	// since this mount will take precedence
 
-		int replaced = 0;
-		for (size_t j = 0; j < vfs->file_count; j++) {
-			struct lodge_vfs_file *current_file = &vfs->file_table[j];
+	char** filenames = stb_readdir_recursive(path.s, NULL);
+	ASSERT(filenames);
+	for(int i=0, count = stb_arr_len(filenames); i < count; i++) {
+		const size_t filename_len = strlen(filenames[i]);
+		strview_t virtual_filename = strview_make(filenames[i] + strbuf_length(path) + 1, filename_len - strbuf_length(path));
 
-			if (strcmp(current_file->simplename, new_file.simplename) == 0) {
-				free(current_file->data);
-
-				strcpy(current_file->name, new_file.name);
-
-				{
-					FILE *file = stb_fopen(current_file->name, "rb");
-					current_file->size = stb_filelen(file);
-					current_file->data = malloc(current_file->size);
-					fread(current_file->data, 1, current_file->size, file);
-					stb_fclose(file, 0);
-				}
-
-				replaced = 1;
-				break;
-			}
-		}
-
-		if (!replaced) {
-			new_file.read_callbacks = 0;
-
-			{
-				FILE *file = stb_fopen(new_file.name, "rb");
-				new_file.size = stb_filelen(file);
-				new_file.data = malloc(new_file.size);
-				fread(new_file.data, 1, new_file.size, file);
-				stb_fclose(file, 0);
-			}
-
-			vfs->file_table[vfs->file_count] = new_file;
-			vfs->file_count++;
+		struct lodge_vfs_file_funcs* file_funcs = lodge_vfs_get_func_entry(vfs, virtual_filename);
+		if(file_funcs) {
+			lodge_vfs_broadcast_file_funcs(vfs, file_funcs);
 		}
 	}
 }
 
-void* lodge_vfs_get_file(struct lodge_vfs *vfs, strview_t filename, size_t* out_num_bytes)
+void* lodge_vfs_read_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t* out_num_bytes)
 {
-	for(size_t i = 0; i < vfs->file_count; i++) {
-		struct lodge_vfs_file *f = &vfs->file_table[i];
+	char disk_path[LODGE_VFS_FILENAME_MAX];
 
-		if(strview_equals(filename, strview_wrap(f->simplename))
-			&& f->data != 0) {
-			*out_num_bytes = f->size;
-			return f->data;
-		}
+	if(lodge_vfs_resolve_disk_path(vfs, virtual_path, strbuf_wrap(disk_path))) {
+		FILE *file = stb_fopen(disk_path, "rb");
+		*out_num_bytes = stb_filelen(file);
+		char *data = malloc(*out_num_bytes);
+		fread(data, 1, *out_num_bytes, file);
+		stb_fclose(file, 0);
+		return data;
 	}
 
 	return NULL;
 }
 
-void lodge_vfs_free_memory(struct lodge_vfs *vfs, strview_t filename)
+bool lodge_vfs_resolve_disk_path(struct lodge_vfs *vfs, strview_t virtual_path, strbuf_t disk_path_out)
 {
-	for(size_t i = 0; i < vfs->file_count; i++) {
-		struct lodge_vfs_file *f = &vfs->file_table[i];
-
-		if(strview_equals(filename, strview_wrap(f->simplename))) {
-			free(f->data);
-			f->data = 0;
-		}
-	}
-}
-
-size_t lodge_vfs_file_count(struct lodge_vfs *vfs)
-{
-	return vfs->file_count;
-}
-
-strview_t lodge_vfs_get_simple_name(struct lodge_vfs *vfs, const int index)
-{
-	return strview_wrap(vfs->file_table[index].simplename);
-}
-
-strview_t lodge_vfs_get_absolute_path(struct lodge_vfs *vfs, strview_t filename)
-{
-	for (size_t i = 0; i < vfs->file_count; i++) {
-		struct lodge_vfs_file *f = &vfs->file_table[i];
-		
-		if (strview_equals(filename, strview_wrap(f->simplename))
-			&& f->data != 0) {
-			return strview_wrap(f->name);
-		}
+	if(virtual_path.length == 0) {
+		return false;
 	}
 
-	return strview_null();
+	// Make sure `virtual_path` begins with `/`
+	char virtual_path_tmp[4096];
+	strbuf_t virtual_path_tmp_buf = strbuf_wrap(virtual_path_tmp);
+	if(virtual_path.s[0] != '/') {
+		strbuf_setf(virtual_path_tmp_buf, "/" STRVIEW_PRINTF_FMT, STRVIEW_PRINTF_ARG(virtual_path));
+		virtual_path = strbuf_to_strview(virtual_path_tmp_buf);
+	}
+
+	// TODO(TS): add resolve cache, sync from file watcher
+
+	for(size_t i=0, count=vfs->mounts_count; i<count; i++) {
+		const size_t index = count - 1 - i;
+		struct lodge_vfs_mount *mount = &vfs->mounts[index];
+
+		strbuf_t mount_point_buf = strbuf_wrap(mount->point);
+		const size_t mount_point_len = strbuf_length(mount_point_buf);
+
+		if(strview_begins_with(virtual_path, strbuf_to_strview(mount_point_buf))) {
+			strview_t substring = strview_substring_from_start(virtual_path, mount_point_len);
+			strbuf_setf(disk_path_out, "%s/" STRVIEW_PRINTF_FMT, mount->path, STRVIEW_PRINTF_ARG(substring));
+
+			if(stb_fexists(disk_path_out.s)) {
+				return true;
+			}
+		}
+	}
+
+	return false;
 }

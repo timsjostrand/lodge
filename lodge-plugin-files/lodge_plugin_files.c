@@ -7,7 +7,7 @@
 
 #define USERDATA_VFS 0
 
-static void vfs_callback_wrapper(struct lodge_vfs *vfs, strview_t filename, size_t size, const void *data, struct lodge_res *userdata)
+static void vfs_callback_wrapper(struct lodge_vfs *vfs, strview_t filename, struct lodge_res *userdata)
 {
 	lodge_res_reload(userdata, filename);
 	//ASSERT(ret);
@@ -22,7 +22,7 @@ static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, l
 	}
 
 	size_t vfs_size = 0;
-	const void* vfs_data = lodge_vfs_get_file(vfs, name, &vfs_size);
+	char* vfs_data = lodge_vfs_read_file(vfs, name, &vfs_size);
 	if(!vfs_data) {
 		return false;
 	}
@@ -38,8 +38,12 @@ static bool lodge_res_files_new_inplace(struct lodge_res *res, strview_t name, l
 	return true;
 }
 
-static int lodge_res_files_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct files_res *data)
+static int lodge_res_files_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct lodge_res_file *data)
 {
+	if(data->data) {
+		free(data->data);
+	}
+
 	struct lodge_vfs *vfs = lodge_res_get_userdata(res, USERDATA_VFS);
 	ASSERT(vfs);
 	if(!vfs) {

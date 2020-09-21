@@ -231,7 +231,7 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 			// HACK(TS): Need nice way to mount default dir
 			if(strview_equals(plugin->name, strview_static("vfs")))
 			{
-				lodge_vfs_mount((struct lodge_vfs*)cur, plugins->mount_dir);
+				lodge_vfs_mount((struct lodge_vfs*)cur, strview_static("/"), plugins->mount_dir);
 			}
 		}
 

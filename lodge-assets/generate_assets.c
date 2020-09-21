@@ -185,10 +185,13 @@ void write_assets_h()
 
 void add_assets(struct lodge_vfs *vfs, struct alist *assets_list)
 {
+// NOTE(TS): bork!
+#if 0
 	for (size_t i = 0, i_size = lodge_vfs_file_count(vfs); i < i_size; i++)
 	{
 		alist_append(assets_list, lodge_vfs_get_simple_name(vfs, i).s);
 	}
+#endif
 
 	const char* ext_sounds[] = { ".ogg" };
 #ifdef ENABLE_LODGE_ASSET_PYXEL
@@ -256,7 +259,7 @@ int main(int argc, char* argv[])
 
 	strview_t mount_dir = strview_make(argv[1], strlen(argv[1]));
 
-	lodge_vfs_mount(vfs, mount_dir);
+	lodge_vfs_mount(vfs, strview_static("/"), mount_dir);
 	add_assets(vfs, assets_list);
 
 	write_assets_c();

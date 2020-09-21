@@ -163,7 +163,8 @@ static bool lodge_shader_stage_resolve_includes(lodge_shader_t shader, struct lo
 				post_whitespace++;
 			}
 
-			if(str_begins_with(&stage->source[post_whitespace], INCLUDE_LENGTH, "#include ")) {
+			const strview_t include_str = strview_static("#include ");
+			if(str_begins_with(&stage->source[post_whitespace], INCLUDE_LENGTH, include_str.s, include_str.length)) {
 				txt_t include_file = txt_new(strview_make(&stage->source[start + INCLUDE_LENGTH], len - INCLUDE_LENGTH));
 
 				// Trim whitespace

@@ -7,7 +7,7 @@
 struct lodge_res_file
 {
 	strview_t	name;
-	const void	*data;
+	char		*data;
 	size_t		size;
 };
 
