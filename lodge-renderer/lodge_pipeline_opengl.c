@@ -32,11 +32,11 @@ lodge_pipeline_t lodge_pipeline_make(struct lodge_pipeline_desc desc)
 {
 	membuf_append(
 		membuf_wrap(pipelines),
+		&pipelines_count,
 		&(struct lodge_pipeline_impl) {
 			.desc = desc
 		},
-		sizeof(struct lodge_pipeline_impl),
-		&pipelines_count
+		sizeof(struct lodge_pipeline_impl)
 	);
 
 	return (lodge_pipeline_t)pipelines_count;
@@ -244,7 +244,7 @@ static void lodge_pipeline_bind(lodge_pipeline_t pipeline)
 //
 void lodge_pipeline_push(lodge_pipeline_t pipeline)
 {
-	membuf_append(membuf_wrap(pipeline_stack), &pipeline, sizeof(lodge_pipeline_t), &pipeline_stack_count);
+	membuf_append(membuf_wrap(pipeline_stack), &pipeline_stack_count, &pipeline, sizeof(lodge_pipeline_t));
 	lodge_pipeline_bind(pipeline_stack[pipeline_stack_count - 1]);
 }
 

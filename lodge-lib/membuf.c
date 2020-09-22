@@ -105,7 +105,7 @@ void membuf_swap(membuf_t buf, size_t index_a, size_t index_b)
 	memcpy(b, tmp, buf.type_size);
 }
 
-struct membuf_swapret membuf_delete_swap_tail(membuf_t buf, size_t index, size_t *current_count)
+struct membuf_swapret membuf_delete_swap_tail(membuf_t buf, size_t *current_count, size_t index)
 {
 	size_t index_b = index;
 
@@ -125,7 +125,7 @@ struct membuf_swapret membuf_delete_swap_tail(membuf_t buf, size_t index, size_t
 	return (struct membuf_swapret) { index, index_b };
 }
 
-void* membuf_append(membuf_t dst, const void *src, size_t src_size, size_t *current_count)
+void* membuf_append(membuf_t dst, size_t *current_count, const void *src, size_t src_size)
 {
 	const size_t max_count = membuf_max_count(dst);
 	ASSERT(*current_count < max_count);

@@ -216,7 +216,7 @@ void lodge_filewatch_update(struct lodge_filewatch *filewatch, float dt)
 
 void lodge_filewatch_add_dir(struct lodge_filewatch *filewatch, strview_t dir, bool recursive, lodge_filewatch_func_t func, void *func_userdata)
 {
-	membuf_append(membuf_wrap(filewatch->funcs), &func, sizeof(lodge_filewatch_func_t), &filewatch->count);
+	membuf_append(membuf_wrap(filewatch->funcs), &filewatch->count, &func, sizeof(lodge_filewatch_func_t));
 	membuf_set(membuf_wrap(filewatch->userdatas), filewatch->count-1, &func_userdata, sizeof(void*));
 
 	lodge_filewatch_add_dir_impl(filewatch, filewatch->count-1, dir, recursive, func, func_userdata);

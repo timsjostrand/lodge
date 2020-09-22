@@ -137,7 +137,7 @@ void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t virtual_path, 
 		new_entry.funcs = NULL;
 		strbuf_set(strbuf_wrap(new_entry.virtual_path), virtual_path);
 
-		func_entry = membuf_append(membuf_wrap(vfs->funcs), &new_entry, sizeof(new_entry), &vfs->funcs_count);
+		func_entry = membuf_append(membuf_wrap(vfs->funcs), &vfs->funcs_count, &new_entry, sizeof(new_entry));
 	}
 
 	ASSERT(func_entry);
@@ -192,7 +192,7 @@ void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t mount_point, strview_t dir
 		struct lodge_vfs_mount new_mount;
 		strbuf_set(strbuf_wrap(new_mount.point), mount_point);
 		strbuf_set(strbuf_wrap(new_mount.path), dir);
-		membuf_append(membuf_wrap(vfs->mounts), &new_mount, sizeof(struct lodge_vfs_mount), &vfs->mounts_count);
+		membuf_append(membuf_wrap(vfs->mounts), &vfs->mounts_count, &new_mount, sizeof(struct lodge_vfs_mount));
 	}
 
 	// TODO(TS): we need to scan new mount and fire modify callbacks for all new files we have callbacks for,

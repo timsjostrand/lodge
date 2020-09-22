@@ -103,15 +103,15 @@ static lodge_debug_draw_calc_sphere_vertices(const uint32_t sector_count, const 
 			// vertex position (x, y, z)
 			vertex.x = xy * cosf(sector_angle);				// r * cos(u) * cos(v)
 			vertex.y = xy * sinf(sector_angle);				// r * cos(u) * sin(v)
-			membuf_append(vertices, &vertex, sizeof(vec3), &vertices_count);
+			membuf_append(vertices, &vertices_count, &vertex, sizeof(vec3));
 
 			// normalized vertex normal (nx, ny, nz)
 			const vec3 normal = vec3_mult_scalar(vertex, length_inv);
-			membuf_append(normals, &normal, sizeof(vec3), &normals_count);
+			membuf_append(normals, &normals_count, &normal, sizeof(vec3));
 
 			// vertex tex coord (s, t) range between [0, 1]
 			const vec2 tex_coord = vec2_make((float)j / sector_count, (float)i / stack_count);
-			membuf_append( tex_coords, &tex_coord, sizeof(vec2), &tex_coord_count);
+			membuf_append( tex_coords, &tex_coord_count, &tex_coord, sizeof(vec2));
 		}
 	}
 }
@@ -133,16 +133,16 @@ static void lodge_debug_draw_calc_sphere_indices(const uint32_t sector_count, co
 			// 2 triangles per sector excluding first and last stacks
 			// k1 => k2 => k1+1
 			if(i != 0) {
-				membuf_append(indices, &k1, sizeof(uint32_t), &indices_count);
-				membuf_append(indices, &k2, sizeof(uint32_t), &indices_count);
-				membuf_append(indices, &(uint32_t){ k1 + 1 }, sizeof(uint32_t), &indices_count);
+				membuf_append(indices, &indices_count, &k1, sizeof(uint32_t));
+				membuf_append(indices, &indices_count, &k2, sizeof(uint32_t));
+				membuf_append(indices, &indices_count, &(uint32_t){ k1 + 1 }, sizeof(uint32_t));
 			}
 
 			// k1+1 => k2 => k2+1
 			if(i != (stack_count - 1)) {
-				membuf_append(indices, &(uint32_t){ k1 + 1 }, sizeof(uint32_t), &indices_count);
-				membuf_append(indices, &k2, sizeof(uint32_t), &indices_count);
-				membuf_append(indices, &(uint32_t){ k2 + 1 }, sizeof(uint32_t), &indices_count);
+				membuf_append(indices, &indices_count, &(uint32_t){ k1 + 1 }, sizeof(uint32_t));
+				membuf_append(indices, &indices_count, &k2, sizeof(uint32_t));
+				membuf_append(indices, &indices_count, &(uint32_t){ k2 + 1 }, sizeof(uint32_t));
 			}
 		}
 	}
@@ -397,7 +397,7 @@ static void lodge_debug_draw_lines_update(struct lodge_debug_draw_lines *lines, 
 		lines->lifetimes[i] -= dt;
 
 		if(lines->lifetimes[i] < 0.0f) {
-			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(lines->vertices), i, &lines->count);
+			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(lines->vertices), &lines->count, i);
 
 			if(ret.index_a != ret.index_b) {
 				membuf_swap(membuf_wrap(lines->colors), ret.index_a, ret.index_b);
@@ -417,7 +417,7 @@ static void lodge_debug_draw_spheres_update(struct lodge_debug_draw_spheres *sph
 		spheres->lifetimes[i] -= dt;
 
 		if(spheres->lifetimes[i] < 0.0f) {
-			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(spheres->pos_radius), i, &spheres->count);
+			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(spheres->pos_radius), &spheres->count, i);
 
 			if(ret.index_a != ret.index_b) {
 				membuf_swap(membuf_wrap(spheres->colors), ret.index_a, ret.index_b);
@@ -437,7 +437,7 @@ static void lodge_debug_draw_textures_update(struct lodge_debug_draw_textures *t
 		textures->lifetimes[i] -= dt;
 
 		if(textures->lifetimes[i] < 0.0f) {
-			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(textures->textures), i, &textures->count);
+			struct membuf_swapret ret = membuf_delete_swap_tail(membuf_wrap(textures->textures), &textures->count, i);
 
 			if(ret.index_a != ret.index_b) {
 				membuf_swap(membuf_wrap(textures->lifetimes), ret.index_a, ret.index_b);
@@ -528,10 +528,10 @@ void lodge_debug_draw_render(struct lodge_debug_draw *debug_draw, lodge_shader_t
 
 static void lodge_debug_draw_line_impl(struct lodge_debug_draw_lines *lines, struct line line, vec4 color, float lifetime)
 {
-	membuf_append(membuf_wrap(lines->vertices), &(struct line_vertex) {
+	membuf_append(membuf_wrap(lines->vertices), &lines->count, &(struct line_vertex) {
 		.p0 = line.p0,
 		.p1 = line.p1,
-	}, sizeof(struct line_vertex), &lines->count);
+	}, sizeof(struct line_vertex));
 
 	membuf_set(membuf_wrap(lines->colors), lines->count - 1, &(struct line_color) {
 		.p0 = color,
@@ -550,7 +550,7 @@ void lodge_debug_draw_line(struct lodge_debug_draw *debug_draw, struct line line
 
 static void lodge_debug_draw_sphere_impl(struct lodge_debug_draw_spheres *spheres, struct sphere sphere, vec4 color, float lifetime)
 {
-	membuf_append(membuf_wrap(spheres->pos_radius), &(vec4) { .x = sphere.pos.x, .y = sphere.pos.y, .z = sphere.pos.z, .w = sphere.r }, sizeof(vec4), &spheres->count);
+	membuf_append(membuf_wrap(spheres->pos_radius), &spheres->count, &(vec4) { .x = sphere.pos.x, .y = sphere.pos.y, .z = sphere.pos.z, .w = sphere.r }, sizeof(vec4));
 	membuf_set(membuf_wrap(spheres->colors), spheres->count - 1, &color, sizeof(vec4));
 	membuf_set(membuf_wrap(spheres->lifetimes), spheres->count - 1, &lifetime, sizeof(float));
 
@@ -620,7 +620,7 @@ void lodge_debug_draw_frustum(struct lodge_debug_draw *debug_draw, struct frustu
 
 void lodge_debug_draw_texture(struct lodge_debug_draw *debug_draw, lodge_texture_t texture, float lifetime)
 {
-	membuf_append(membuf_wrap(debug_draw->textures.textures), &texture, sizeof(lodge_texture_t), &debug_draw->textures.count);
+	membuf_append(membuf_wrap(debug_draw->textures.textures), &debug_draw->textures.count, &texture, sizeof(lodge_texture_t));
 	membuf_set(membuf_wrap(debug_draw->textures.lifetimes), debug_draw->textures.count - 1, &lifetime, sizeof(float));
 }
 

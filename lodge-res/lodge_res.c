@@ -302,7 +302,7 @@ static void lodge_res_remove_dep(struct lodge_res *res, size_t index, struct lod
 			);
 
 			membuf_t deps_membuf = membuf_wrap(deps->deps);
-			membuf_delete_swap_tail(deps_membuf, dep_index, &deps->count);
+			membuf_delete_swap_tail(deps_membuf, &deps->count, dep_index);
 
 			return;
 		}
