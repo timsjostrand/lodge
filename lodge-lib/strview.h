@@ -19,6 +19,11 @@ typedef struct strview
 strview_t	strview_make(const char *s, size_t length);
 strview_t	strview_make_from_str(const char *s, size_t max_count);
 strview_t	strview_null();
+
+strview_t	strview_substring(strview_t str, size_t offset, size_t count);
+strview_t	strview_substring_from_start(strview_t str, size_t offset);
+strview_t	strview_substring_from_end(strview_t str, size_t offset);
+
 bool		strview_equals(const strview_t lhs, const strview_t rhs);
 bool		strview_empty(const strview_t str);
 size_t		strview_length(const strview_t str);
