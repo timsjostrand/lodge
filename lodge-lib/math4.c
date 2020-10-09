@@ -60,15 +60,6 @@ mat4 mat4_ortho(float left, float right, float bottom, float top, float nearZ, f
 		0.0f, 0.0f, -2.0f / fsn, 0.0f,
 		-ral / rsl, -tab / tsb, -fan / fsn, 1.0f
 	};
-#if 0
-	mat4 m = {
-		2/(r-l),			0.0f,				0.0f,			0.0f,
-		0.0f,				2/(t-b),			0.0f,			0.0f,
-		0.0f,				0.0f,				(-2)/(f-n),		0.0f,
-		-((r+l)/(r-l)),		-((t+b)/(t-b)),		-((f+n)/(f-n)), 1.0f
-	};
-	return m;
-#endif
 }
 
 mat4 mat4_frustum(float left, float right, float bottom, float top, float near, float far)
