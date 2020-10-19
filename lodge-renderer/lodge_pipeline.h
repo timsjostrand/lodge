@@ -37,6 +37,7 @@ enum lodge_pipeline_compare_func
 
 struct lodge_depth_stencil_state
 {
+	bool								depth_test;
 	bool								depth_write;
 	enum lodge_pipeline_compare_func	depth_compare_func;
 	bool								stencil_write;
@@ -65,13 +66,27 @@ enum lodge_blend_factor
 	LODGE_BLEND_FACTOR_ONE_MINUS_SRC1_ALPHA,
 };
 
+enum lodge_blend_op
+{
+	LODGE_BLEND_OP_ADD,
+	LODGE_BLEND_OP_SUBTRACT,
+	LODGE_BLEND_OP_REVERSE_SUBTRACT,
+	LODGE_BLEND_OP_MAX,
+};
+
 struct lodge_blend_state
 {
 	bool								enabled;
+
 	enum lodge_blend_factor				src_factor_rgb;
 	enum lodge_blend_factor				dst_factor_rgb;
 	enum lodge_blend_factor				src_factor_alpha;
 	enum lodge_blend_factor				dst_factor_alpha;
+
+	enum lodge_blend_op					blend_op_rgb;
+	enum lodge_blend_op					blend_op_alpha;
+
+
 };
 
 enum lodge_rasterizer_cull_mode
@@ -88,10 +103,18 @@ enum lodge_rasterizer_fill_mode
 	LODGE_RASTERIZER_FILL_MODE_FILL,
 };
 
+enum lodge_rasterizer_face_winding
+{
+	LODGE_RASTERIZER_FACE_WINDING_CW,
+	LODGE_RASTERIZER_FACE_WINDING_CCW,
+	LODGE_RASTERIZER_FACE_WINDING_MAX,
+};
+
 struct lodge_rasterizer_state
 {
 	enum lodge_rasterizer_cull_mode		cull_mode;
 	enum lodge_rasterizer_fill_mode		fill_mode;
+	enum lodge_rasterizer_face_winding	face_winding;
 };
 
 struct lodge_pipeline_desc

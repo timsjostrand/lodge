@@ -46,6 +46,7 @@ struct lodge_pipeline_desc lodge_pipeline_desc_make()
 {
 	return (struct lodge_pipeline_desc) {
 		.depth_stencil = {
+			.depth_test = true,
 			.depth_write = true,
 			.depth_compare_func = LODGE_PIPELINE_COMPARE_LESS,
 			.stencil_write = true,
@@ -56,10 +57,13 @@ struct lodge_pipeline_desc lodge_pipeline_desc_make()
 			.dst_factor_rgb = GL_ZERO,
 			.src_factor_alpha = GL_ONE,
 			.dst_factor_alpha = GL_ZERO,
+			.blend_op_alpha = LODGE_BLEND_OP_ADD,
+			.blend_op_rgb = LODGE_BLEND_OP_ADD,
 		},
 		.rasterizer = {
 			.cull_mode = LODGE_RASTERIZER_CULL_MODE_BACK,
 			.fill_mode = LODGE_RASTERIZER_FILL_MODE_FILL,
+			.face_winding = LODGE_RASTERIZER_FACE_WINDING_CW,
 		}
 	};
 }
@@ -100,8 +104,15 @@ static GLenum lodge_pipeline_compare_func_to_gl(enum lodge_pipeline_compare_func
 
 static void lodge_depth_stencil_state_bind(struct lodge_depth_stencil_state *new_state, struct lodge_depth_stencil_state *prev_state)
 {
+	if(LODGE_PIPELINE_STATE_CHANGED(depth_test)) {
+		if(new_state->depth_test) {
+			glEnable(GL_DEPTH_TEST);
+		} else {
+			glDisable(GL_DEPTH_TEST);
+		}
+	}
+
 	if(LODGE_PIPELINE_STATE_CHANGED(depth_compare_func)) {
-		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(lodge_pipeline_compare_func_to_gl(new_state->depth_compare_func));
 	}
 
@@ -164,6 +175,22 @@ static GLenum lodge_blend_factor_to_gl(enum lodge_blend_factor blend_factor)
 	}
 }
 
+static GLenum lodge_blend_op_to_gl(enum lodge_blend_op blend_op)
+{
+	switch(blend_op)
+	{
+	case LODGE_BLEND_OP_ADD:
+		return GL_FUNC_ADD;
+	case LODGE_BLEND_OP_SUBTRACT:
+		return GL_FUNC_SUBTRACT;
+	case LODGE_BLEND_OP_REVERSE_SUBTRACT:
+		return GL_FUNC_REVERSE_SUBTRACT;
+	default:
+		ASSERT_NOT_IMPLEMENTED();
+		return GL_FUNC_ADD;
+	}
+}
+
 static void lodge_blend_state_bind(struct lodge_blend_state *new_state, struct lodge_blend_state *prev_state)
 {
 	if(LODGE_PIPELINE_STATE_CHANGED(enabled)) {
@@ -186,6 +213,13 @@ static void lodge_blend_state_bind(struct lodge_blend_state *new_state, struct l
 		);
 	}
 
+	if(LODGE_PIPELINE_STATE_CHANGED(blend_op_rgb) || LODGE_PIPELINE_STATE_CHANGED(blend_op_rgb)) {
+		glBlendEquationSeparate(
+			lodge_blend_op_to_gl(new_state->blend_op_rgb),
+			lodge_blend_op_to_gl(new_state->blend_op_alpha)
+		);
+	}
+
 	GL_OK_OR_ASSERT("Failed to bind blend state");
 }
 
@@ -205,6 +239,20 @@ static GLenum lodge_rasterizer_fill_mode_to_gl(enum lodge_rasterizer_fill_mode f
 	}
 }
 
+static GLenum lodge_rasterizer_face_winding_gl(enum lodge_rasterizer_face_winding face_winding)
+{
+	switch(face_winding) 
+	{
+	case LODGE_RASTERIZER_FACE_WINDING_CW:
+		return GL_CW;
+	case LODGE_RASTERIZER_FACE_WINDING_CCW:
+		return GL_CCW;
+	default:
+		ASSERT_NOT_IMPLEMENTED();
+		return GL_CW;
+	}
+}
+
 static void lodge_rasterizer_state_bind(struct lodge_rasterizer_state *new_state, struct lodge_rasterizer_state *prev_state)
 {
 	if(LODGE_PIPELINE_STATE_CHANGED(fill_mode)) {
@@ -218,6 +266,10 @@ static void lodge_rasterizer_state_bind(struct lodge_rasterizer_state *new_state
 			glEnable(GL_CULL_FACE);
 			glCullFace(new_state->cull_mode == LODGE_RASTERIZER_CULL_MODE_FRONT ? GL_FRONT : GL_BACK);
 		}
+	}
+
+	if(LODGE_PIPELINE_STATE_CHANGED(face_winding)) {
+		glFrontFace(lodge_rasterizer_face_winding_gl(new_state->face_winding));
 	}
 
 	GL_OK_OR_ASSERT("Failed to bind rasterizer state");
@@ -235,6 +287,12 @@ static void lodge_pipeline_bind(lodge_pipeline_t pipeline)
 	lodge_depth_stencil_state_bind(&impl->desc.depth_stencil, pipeline_current ? &pipeline_current->desc.depth_stencil : NULL);
 	lodge_blend_state_bind(&impl->desc.blend, pipeline_current ? &pipeline_current->desc.blend : NULL);
 	lodge_rasterizer_state_bind(&impl->desc.rasterizer, pipeline_current ? &pipeline_current->desc.rasterizer : NULL);
+
+	// FIXME(TS): apply defaults if this is first pipeline
+	if(!pipeline_current) {
+		glEnable(GL_SCISSOR_TEST);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	}
 
 	pipeline_current = impl;
 }
