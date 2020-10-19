@@ -274,6 +274,16 @@ void lodge_renderer_unbind_texture_unit(int slot)
 	GL_OK_OR_ASSERT("Failed to unbind texture unit");
 }
 
+void lodge_renderer_set_viewport(int32_t x, int32_t y, size_t width, size_t height)
+{
+	glViewport(x, y, width, height);
+}
+
+void lodge_renderer_set_scissor(int32_t x, int32_t y, size_t width, size_t height)
+{
+	glScissor(x, y, width, height);
+}
+
 void lodge_renderer_annotate_begin(strview_t message)
 {
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, message.length, message.s);

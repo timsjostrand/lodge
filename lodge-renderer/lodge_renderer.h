@@ -31,8 +31,6 @@ enum lodge_renderer_primitive
 	LODGE_RENDERER_PRIMITIVE_PATCHES
 };
 
-typedef void* lodge_window_t;
-
 struct lodge_renderer*	lodge_renderer_new();
 void					lodge_renderer_free(struct lodge_renderer *renderer);
 
@@ -61,6 +59,9 @@ void					lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name,
 void					lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v);
 void					lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat);
 void					lodge_renderer_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp);
+
+void					lodge_renderer_set_viewport(int32_t x, int32_t y, size_t width, size_t height);
+void					lodge_renderer_set_scissor(int32_t x, int32_t y, size_t width, size_t height);
 
 void					lodge_renderer_annotate_begin(strview_t message);
 void					lodge_renderer_annotate_end();
