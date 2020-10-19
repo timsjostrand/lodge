@@ -93,6 +93,7 @@ int env_bind_vec2(struct env *env, const strview_t name, vec2 *v)
 
 	env_var_set(var, name, ENV_VAR_TYPE_2F, v, sizeof(vec2));
 
+#if 0
 	/* Utility setters. */
 	char cmd_name[ENV_VAR_NAME_MAX] = { 0 };
 	strbuf_t cmd_name_buf = strbuf_wrap(cmd_name);
@@ -104,6 +105,7 @@ int env_bind_vec2(struct env *env, const strview_t name, vec2 *v)
 	/* "name".y utility setter. */
 	strbuf_setf(cmd_name_buf, STRVIEW_PRINTF_FMT ".y", STRVIEW_PRINTF_ARG(name));
 	env_bind_float(env, strbuf_to_strview(cmd_name_buf), &v->y);
+#endif
 
 	return 0;
 }
@@ -136,6 +138,7 @@ int env_bind_vec3(struct env *env, const strview_t name, vec3 *v)
 		}
 	}
 
+#if 0
 	/* Utility setters. */
 	char cmd_name[ENV_VAR_NAME_MAX] = { 0 };
 	strbuf_t cmd_name_buf = strbuf_wrap(cmd_name);
@@ -151,6 +154,7 @@ int env_bind_vec3(struct env *env, const strview_t name, vec3 *v)
 	/* "name".z utility setter. */
 	strbuf_setf(cmd_name_buf, STRVIEW_PRINTF_FMT ".z", STRVIEW_PRINTF_ARG(name));
 	env_bind_float(env, strbuf_to_strview(cmd_name_buf), &v->z);
+#endif
 
 	env_var_set(var, name, ENV_VAR_TYPE_3F, v, sizeof(vec3));
 	return 0;
@@ -174,22 +178,22 @@ int env_set_vec3(struct env *env, const strview_t name, const vec3 v)
 	return 0;
 }
 
-int env_bind_bool(struct env *env, const strview_t name, int *value)
+int env_bind_bool(struct env *env, const strview_t name, bool *value)
 {
 	struct env_var *var = env_var_get_by_name(env, name);
 
 	if(var == NULL) {
-		if(env_var_new(env, name, ENV_VAR_TYPE_BOOL, value, sizeof(int), &var) != 0) {
+		if(env_var_new(env, name, ENV_VAR_TYPE_BOOL, value, sizeof(bool), &var) != 0) {
 			env_error("Too many variables in environment\n");
 			return -1;
 		}
 	}
 
-	env_var_set(var, name, ENV_VAR_TYPE_BOOL, value, sizeof(int));
+	env_var_set(var, name, ENV_VAR_TYPE_BOOL, value, sizeof(bool));
 	return 0;
 }
 
-int env_set_bool(struct env *env, const strview_t name, const int value)
+int env_set_bool(struct env *env, const strview_t name, const bool value)
 {
 	struct env_var *var = env_var_get_by_name(env, name);
 
@@ -201,6 +205,6 @@ int env_set_bool(struct env *env, const strview_t name, const int value)
 		return -1;
 	}
 
-	(*((int *) var->value)) = value;
+	(*((bool *) var->value)) = value;
 	return 0;
 }

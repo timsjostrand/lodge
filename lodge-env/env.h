@@ -36,7 +36,7 @@ int					env_set_vec2(struct env *env, const strview_t name, const vec2 v);
 int					env_bind_vec3(struct env *env, const strview_t name, vec3 *v);
 int					env_set_vec3(struct env *env, const strview_t name, const vec3 v);
 
-int					env_bind_bool(struct env *env, const strview_t name, int *value);
-int					env_set_bool(struct env *env, const strview_t name, const int value);
+int					env_bind_bool(struct env *env, const strview_t name, bool *value);
+int					env_set_bool(struct env *env, const strview_t name, const bool value);
 
 #endif
