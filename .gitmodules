@@ -22,5 +22,6 @@
 [submodule "lodge-lib/lib/murmur3"]
 	path = lodge-lib/lib/murmur3
 	url = https://github.com/timsjostrand/murmur3
-[submodule "murmur3"]
-	url = https://github.com/timsjostrand/murmur3
+[submodule "lodge-gui/lib/nuklear"]
+	path = lodge-gui/lib/nuklear
+	url = https://github.com/Immediate-Mode-UI/Nuklear.git

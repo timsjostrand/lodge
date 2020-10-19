@@ -150,6 +150,12 @@ function(add_game_library game_name)
     target_link_libraries(${game_name} lodge-build-flags)
 
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${game_name})
+
+    set_target_properties(${game_name} PROPERTIES
+    	VS_DEBUGGER_COMMAND_ARGUMENTS "--windowed --mount=${ASSET_PATH}"
+    	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    )
+
     
 #[==[
     if(ENABLE_SHARED)
