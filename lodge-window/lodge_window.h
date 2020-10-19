@@ -13,7 +13,8 @@
 
 #define LODGE_WINDOWS_MAX				128
 
-typedef void* lodge_window_t;
+struct lodge_window;
+typedef struct lodge_window* lodge_window_t;
 
 typedef void(*lodge_window_mousebutton_callback_t)(lodge_window_t window, int button, int action, int mods, void *userdata);
 typedef void(*lodge_window_scroll_callback_t)(lodge_window_t window, double x, double y, void *userdata);
@@ -23,9 +24,9 @@ typedef void(*lodge_window_resize_callback_t)(lodge_window_t window, int width, 
 
 struct lodge_windows
 {
-	strview_t				library;
-	lodge_window_t			windows[LODGE_WINDOWS_MAX];
-	int						windows_count;
+	strview_t		library;
+	lodge_window_t	windows[LODGE_WINDOWS_MAX];
+	int				windows_count;
 };
 
 struct lodge_renderer;
@@ -51,8 +52,9 @@ void				lodge_window_set_input_callback(lodge_window_t window, lodge_window_inpu
 void				lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback, void *userdata);
 void				lodge_window_set_resize_callback(lodge_window_t window, lodge_window_resize_callback_t callback, void *userdata);
 
-void				lodge_window_get_size(lodge_window_t window, int* width, int* height);
-void				lodge_window_get_cursor(lodge_window_t window, float* x, float* y);
+void				lodge_window_get_size(lodge_window_t window, int *width, int *height);
+void				lodge_window_get_cursor(lodge_window_t window, float *x, float *y);
+int					lodge_window_get_mouse_button(lodge_window_t window, int mouse_button);
 
 double				lodge_window_get_time();
 void				lodge_window_get_screen_size(int* width, int* height);
@@ -64,5 +66,8 @@ int					lodge_window_is_focused(lodge_window_t window);
 int					lodge_window_key_down(lodge_window_t window, int key);
 int					lodge_window_key_pressed(lodge_window_t window, int key);
 int					lodge_window_key_released(lodge_window_t window, int key);
+
+strview_t			lodge_window_get_clipboard(lodge_window_t window);
+void				lodge_window_set_clipboard(lodge_window_t window, strview_t str);
 
 #endif

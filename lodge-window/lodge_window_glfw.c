@@ -401,6 +401,12 @@ void lodge_window_get_cursor(lodge_window_t window, float* x, float* y)
 	*y = (float)tmp_y;
 }
 
+int lodge_window_get_mouse_button(lodge_window_t window, int mouse_button)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+	return glfwGetMouseButton(glfw_window->window, mouse_button);
+}
+
 int lodge_window_is_focused(lodge_window_t window)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
@@ -437,13 +443,35 @@ int lodge_window_key_down(lodge_window_t window, int key)
 int lodge_window_key_pressed(lodge_window_t window, int key)
 {
 	struct glfw_window *glfw_window = cast_handle(window);
-	return (glfw_window->input.keys[key] && !glfw_window->input.last_keys[key]);
+	//return (glfw_window->input.keys[key] && !glfw_window->input.last_keys[key]);
+	return glfwGetKey(glfw_window->window, key);
 }
 
 int lodge_window_key_released(lodge_window_t window, int key)
 {
 	struct glfw_window *glfw_window = cast_handle(window);
 	return (!glfw_window->input.keys[key] && glfw_window->input.last_keys[key]);
+}
+
+strview_t lodge_window_get_clipboard(lodge_window_t window)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+
+	const char *str = glfwGetClipboardString(glfw_window->window);
+	const size_t str_len = strlen(str);
+	return strview_make(str, str_len);
+}
+
+void lodge_window_set_clipboard(lodge_window_t window, strview_t str)
+{
+	struct glfw_window* glfw_window = cast_handle(window);
+
+	// Make sure str is null terminated
+	char *tmp = malloc(str.length + 1);
+	memcpy(tmp, str.s, str.length);
+	tmp[str.length] = '\0';
+	glfwSetClipboardString(glfw_window->window, tmp);
+	free(tmp);
 }
 
 #endif
