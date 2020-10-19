@@ -847,5 +847,5 @@ void fbx_asset_render(const struct fbx_asset *asset, lodge_shader_t shader, lodg
 	// FIXME(TS): material should not be hardcoded, use texture unit instead
 	lodge_renderer_bind_texture_2d(0, tex);
 
-	lodge_drawable_render_indexed(asset->drawable, asset->static_mesh.indices_count);
+	lodge_drawable_render_indexed(asset->drawable, asset->static_mesh.indices_count, 0);
 }

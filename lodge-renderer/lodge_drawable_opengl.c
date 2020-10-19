@@ -137,12 +137,12 @@ void lodge_drawable_render_indexed_instanced(const lodge_drawable_t drawable, si
 	GL_OK_OR_ASSERT("Failed to unbind drawable");
 }
 
-void lodge_drawable_render_indexed(const lodge_drawable_t drawable, size_t index_count)
+void lodge_drawable_render_indexed(const lodge_drawable_t drawable, size_t index_count, size_t offset)
 {
 	glBindVertexArray(lodge_drawable_to_gl(drawable));
 	GL_OK_OR_ASSERT("Failed to bind drawable");
 
-	glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, (const void*)offset);
 	GL_OK_OR_ASSERT("Failed to render drawable");
 	
 	glBindVertexArray(0);
