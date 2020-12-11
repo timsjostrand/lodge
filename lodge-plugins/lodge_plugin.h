@@ -7,22 +7,22 @@
 
 struct lodge_plugins;
 
-typedef struct lodge_ret		(*lodge_plugin_init_func_t)(void *plugin, struct lodge_plugins *plugins);
-typedef void					(*lodge_plugin_update_func_t)(void *plugin, float delta_time);
-typedef void					(*lodge_plugin_render_func_t)(void *plugin);
-typedef void					(*lodge_plugin_free_func_t)(void *plugin);
+typedef struct lodge_ret				(*lodge_plugin_new_inplace_func_t)(void *plugin, struct lodge_plugins *plugins);
+typedef void							(*lodge_plugin_update_func_t)(void *plugin, float delta_time);
+typedef void							(*lodge_plugin_render_func_t)(void *plugin);
+typedef void							(*lodge_plugin_free_inplace_func_t)(void *plugin);
 
 struct lodge_plugin
 {
-	uint32_t					version;
-	size_t						size;
-	strview_t					name;
-	lodge_plugin_init_func_t	init;
-	lodge_plugin_update_func_t	update;
-	lodge_plugin_render_func_t	render; // TODO(TS): remove
-	lodge_plugin_free_func_t	free;
+	uint32_t							version;
+	size_t								size;
+	strview_t							name;
+	lodge_plugin_new_inplace_func_t		new_inplace;
+	lodge_plugin_free_inplace_func_t	free_inplace;
+	lodge_plugin_update_func_t			update;
+	lodge_plugin_render_func_t			render; // TODO(TS): remove
 };
 
-typedef struct lodge_plugin		(*lodge_plugin_func_t)();
+typedef struct lodge_plugin				(*lodge_plugin_func_t)();
 
 #endif

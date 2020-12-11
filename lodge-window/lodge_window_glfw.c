@@ -114,7 +114,7 @@ static void glfw_resize_callback(GLFWwindow *window, int width, int height)
 	}
 }
 
-static struct lodge_ret lodge_windows_initialize(struct lodge_windows *windows, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_windows_new_inplace(struct lodge_windows *windows, struct lodge_plugins *plugins)
 {
 	windows->library = strview_static("glfw");
 
@@ -130,7 +130,7 @@ static struct lodge_ret lodge_windows_initialize(struct lodge_windows *windows, 
 	}
 }
 
-static void lodge_windows_shutdown(struct lodge_windows *windows)
+static void lodge_windows_free_inplace(struct lodge_windows *windows)
 {
 	glfwTerminate();
 }
@@ -155,8 +155,8 @@ struct lodge_plugin lodge_plugin_windows()
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_windows),
 		.name = strview_static("windows"),
-		.init = &lodge_windows_initialize,
-		.free = &lodge_windows_shutdown,
+		.new_inplace = &lodge_windows_new_inplace,
+		.free_inplace = &lodge_windows_free_inplace,
 		.update = &lodge_windows_update,
 		.render = &lodge_windows_render,
 	};

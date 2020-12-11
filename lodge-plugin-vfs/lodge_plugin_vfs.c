@@ -14,8 +14,8 @@ struct lodge_plugin lodge_plugin_vfs()
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_vfs_sizeof(),
 		.name = strview_static("vfs"),
-		.init = &lodge_plugin_vfs_new_inplace,
-		.free = &lodge_vfs_free_inplace,
+		.new_inplace = &lodge_plugin_vfs_new_inplace,
+		.free_inplace = &lodge_vfs_free_inplace,
 		.update = &lodge_vfs_update,
 		.render = NULL,
 	};

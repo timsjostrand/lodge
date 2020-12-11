@@ -72,8 +72,8 @@ struct lodge_plugin lodge_plugin_textures()
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("textures"),
-		.init = &lodge_plugin_textures_new_inplace,
-		.free = &lodge_plugin_texture_free_inplace,
+		.new_inplace = &lodge_plugin_textures_new_inplace,
+		.free_inplace = &lodge_plugin_texture_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};

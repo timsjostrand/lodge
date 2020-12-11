@@ -55,7 +55,7 @@ static int lodge_res_files_free_inplace(struct lodge_res *res, strview_t name, l
 	return true;
 }
 
-static struct lodge_ret lodge_plugin_files_init(struct lodge_res *files, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_files_new_inplace(struct lodge_res *files, struct lodge_plugins *plugins)
 {
 	struct lodge_vfs *vfs = lodge_plugins_depend(plugins, files, strview_static("vfs"));
 	if(!vfs) {
@@ -75,7 +75,7 @@ static struct lodge_ret lodge_plugin_files_init(struct lodge_res *files, struct 
 	return lodge_success();
 }
 
-static void lodge_plugin_files_free(struct lodge_res *res)
+static void lodge_plugin_files_free_inplace(struct lodge_res *res)
 {
 	lodge_res_free_inplace(res);
 }
@@ -86,8 +86,8 @@ struct lodge_plugin lodge_plugin_files()
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("files"),
-		.init = &lodge_plugin_files_init,
-		.free = &lodge_plugin_files_free,
+		.new_inplace = &lodge_plugin_files_new_inplace,
+		.free_inplace = &lodge_plugin_files_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};

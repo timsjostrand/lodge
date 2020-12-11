@@ -42,7 +42,7 @@ static void lodge_assets_image_free_inplace(struct lodge_res *res, strview_t nam
 	lodge_image_free(image);
 }
 
-static struct lodge_ret lodge_plugin_image_init(struct lodge_res *images, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_image_new_inplace(struct lodge_res *images, struct lodge_plugins *plugins)
 {
 	struct lodge_res *files = lodge_plugins_depend(plugins, images, strview_static("files"));
 	if(!files) {
@@ -62,7 +62,7 @@ static struct lodge_ret lodge_plugin_image_init(struct lodge_res *images, struct
 	return lodge_success();
 }
 
-static void lodge_plugin_image_free(struct lodge_res *images)
+static void lodge_plugin_image_free_inplace(struct lodge_res *images)
 {
 	lodge_res_free_inplace(images);
 }
@@ -73,8 +73,8 @@ struct lodge_plugin lodge_plugin_images()
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("images"),
-		.init = &lodge_plugin_image_init,
-		.free = &lodge_plugin_image_free,
+		.new_inplace = &lodge_plugin_image_new_inplace,
+		.free_inplace = &lodge_plugin_image_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};

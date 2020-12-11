@@ -116,8 +116,8 @@ void lodge_plugins_free(struct lodge_plugins *plugins)
 
 		debugf("Plugins", "Freeing plugin `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(plugin->name));
 
-		if(plugin->free) {
-			plugin->free(plugin_data);
+		if(plugin->free_inplace) {
+			plugin->free_inplace(plugin_data);
 		}
 	}
 
@@ -220,9 +220,9 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 
 		memset(cur, 0, plugin->size);
 
-		if(plugin->init) {
+		if(plugin->new_inplace) {
 			debugf("Plugins", "Initializing `%s`...\n", plugin->name.s);
-			struct lodge_ret init_ret = plugin->init(cur, plugins);
+			struct lodge_ret init_ret = plugin->new_inplace(cur, plugins);
 			if(!init_ret.success) {
 				errorf("Plugins", "Error when initializing plugin `%s`: %s\n", plugin->name.s, init_ret.message.s);
 				return init_ret;

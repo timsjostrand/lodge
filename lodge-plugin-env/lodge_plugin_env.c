@@ -8,8 +8,8 @@ struct lodge_plugin	lodge_plugin_env()
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct env),
 		.name = strview_static("env"),
-		.init = NULL,
-		.free = NULL,
+		.new_inplace = NULL,
+		.free_inplace = NULL,
 		.update = NULL,
 		.render = NULL,
 	};
