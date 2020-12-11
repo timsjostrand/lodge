@@ -6,6 +6,7 @@ add_library(lodge-build-flags INTERFACE)
 target_compile_features(lodge-build-flags
     INTERFACE
         c_variadic_macros
+        c_std_11
 )
 
 #
