@@ -78,7 +78,7 @@ static void lodge_variant_set_type_heap(struct lodge_variant *dst, lodge_type_t 
 }
 
 #define lodge_variant_set_impl(C_TYPE, UNION_FIELD, ENUM_TYPE) \
-	void lodge_variant_set_ ## UNION_FIELD ## (struct lodge_variant *dst, C_TYPE value) \
+	void lodge_variant_set_ ## UNION_FIELD(struct lodge_variant *dst, C_TYPE value) \
 	{ \
 		lodge_variant_reset(dst); \
 		dst->type = ENUM_TYPE; \

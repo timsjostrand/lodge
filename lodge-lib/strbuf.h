@@ -31,8 +31,8 @@ typedef struct strbuf
 } strbuf_t;
 
 strbuf_t	strbuf_make(char *s, size_t size);
-#define		strbuf_wrap(buffer) strbuf_make((buffer), sizeof((buffer)))
-#define		strbuf_wrap_and(arr, func, ...) func(strbuf_wrap(arr), __VA_ARGS__)
+#define		strbuf_wrap(buffer) strbuf_make(buffer, sizeof(buffer))
+#define		strbuf_wrap_and(arr, func, ...) func(strbuf_wrap(arr), ##__VA_ARGS__)
 size_t		strbuf_length(const strbuf_t str);
 size_t		strbuf_size(const strbuf_t str);
 int			strbuf_equals(const strbuf_t lhs, const strview_t rhs);

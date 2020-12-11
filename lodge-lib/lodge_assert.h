@@ -9,7 +9,7 @@
 	_ASSERTE( expr )
 
 #define ASSERT_MESSAGE(expr, message) \
-	_ASSERT_EXPR( expr, L#message )
+	_ASSERT_EXPR( expr, L##message )
 
 #else
 
