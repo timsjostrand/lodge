@@ -85,13 +85,3 @@ struct lodge_plugin lodge_plugin_fbx()
 		.render = NULL,
 	};
 }
-
-#if 0
-game_init()
-{
-	struct lodge_res *fbx_res = lodge_plugins_depend(plugins, game, strview_static("fbx"));
-
-	struct lodge_mesh *my_mesh = lodge_res_get(fbx_res, strview_static("my_mesh.fbx"));
-	struct lodge_mesh *my_rock = lodge_res_get(fbx_res, strview_static("Big_Rock.fbx"));
-}
-#endif
