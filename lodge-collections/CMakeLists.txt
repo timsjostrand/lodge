@@ -8,11 +8,13 @@ target_sources(lodge-collections
         "${CMAKE_CURRENT_LIST_DIR}/array.c"
         "${CMAKE_CURRENT_LIST_DIR}/list.c"
         "${CMAKE_CURRENT_LIST_DIR}/rqueue.c"
+        "${CMAKE_CURRENT_LIST_DIR}/sparse_set.c"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/alist.h"
         "${CMAKE_CURRENT_LIST_DIR}/array.h"
         "${CMAKE_CURRENT_LIST_DIR}/list.h"
         "${CMAKE_CURRENT_LIST_DIR}/rqueue.h"
+        "${CMAKE_CURRENT_LIST_DIR}/sparse_set.h"
 )
 
 target_include_directories(lodge-collections
