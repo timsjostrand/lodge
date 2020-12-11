@@ -8,6 +8,7 @@
 #include "lodge_drawable.h"
 #include "lodge_buffer_object.h"
 #include "lodge_texture.h"
+#include "lodge_sampler.h"
 
 struct line_vertex
 {

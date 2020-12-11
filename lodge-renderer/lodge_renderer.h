@@ -4,7 +4,6 @@
 #include "strview.h"
 
 #include "lodge_plugin.h"
-#include "lodge_sampler.h"
 
 struct lodge_renderer;
 struct drawable;
@@ -14,6 +13,9 @@ typedef struct lodge_texture* lodge_texture_t;
 
 struct lodge_shader;
 typedef struct lodge_shader* lodge_shader_t;
+
+struct lodge_sampler;
+typedef struct lodge_sampler* lodge_sampler_t;
 
 enum lodge_renderer_primitive
 {

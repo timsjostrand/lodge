@@ -34,7 +34,7 @@ typedef struct lodge_framebuffer* lodge_framebuffer_t;
 		GLenum err = GL_NO_ERROR; \
 		while((err = glGetError()) != GL_NO_ERROR) { \
 			errorf("OpenGL", "Error 0x%04x in %s:%s:%d: %s\n", err, __FILE__, __FUNCTION__, __LINE__, (message)); \
-			ASSERT_FAIL((message)); \
+			ASSERT_FAIL(message); \
 		} \
 	}
 
