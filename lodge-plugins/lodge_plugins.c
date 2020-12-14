@@ -17,6 +17,7 @@
 #include "lodge_plugin_images.h"
 #include "lodge_plugin_textures.h"
 #include "lodge_plugin_shaders.h"
+#include "lodge_plugin_scene_renderer.h"
 
 #define LODGE_PLUGINS_MAX				128
 #define LODGE_PLUGIN_DEPENDENCIES_MAX	32
@@ -175,6 +176,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, lodge_plugin_images());
 	lodge_plugins_append(plugins, lodge_plugin_textures());
 	lodge_plugins_append(plugins, lodge_plugin_shaders());
+	lodge_plugins_append(plugins, lodge_scene_renderer_plugin());
 	lodge_plugins_append(plugins, game_plugin());
 
 	for(int i = 0; i < plugins->count; i++) {
