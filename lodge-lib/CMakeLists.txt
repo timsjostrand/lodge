@@ -16,6 +16,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/blob_cur.c"
         "${CMAKE_CURRENT_LIST_DIR}/blob.c"
         "${CMAKE_CURRENT_LIST_DIR}/color.c"
+        "${CMAKE_CURRENT_LIST_DIR}/gruvbox.c"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_callbacks.c"
         "${CMAKE_CURRENT_LIST_DIR}/membuf.c"
         "${CMAKE_CURRENT_LIST_DIR}/frustum.c"
@@ -38,6 +39,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/blob.h"
         "${CMAKE_CURRENT_LIST_DIR}/geometry.h"
         "${CMAKE_CURRENT_LIST_DIR}/color.h"
+        "${CMAKE_CURRENT_LIST_DIR}/gruvbox.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_callbacks.h" # FIXME(TS): separate lib?
         "${CMAKE_CURRENT_LIST_DIR}/membuf.h"
         "${CMAKE_CURRENT_LIST_DIR}/frustum.h"
