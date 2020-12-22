@@ -32,6 +32,7 @@
 #define LODGE_ARRAYSIZE(a) ( sizeof(a) / sizeof(a[0]) )
 
 #define LODGE_BIT(n) 1 << (n-1)
+#define LODGE_IS_FLAG_SET(FIELD, FLAG) ((FIELD & FLAG) == FLAG)
 
 #define sizeof_member(type, member) sizeof(((type *)0)->member)
 
