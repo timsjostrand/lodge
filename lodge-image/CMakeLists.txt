@@ -5,6 +5,8 @@ add_library(lodge-image STATIC "")
 target_sources(lodge-image
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_image.c"
+		"${CMAKE_CURRENT_LIST_DIR}/raw_image.c"
+		"${CMAKE_CURRENT_LIST_DIR}/raw_image.h"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_image.h"
 )
@@ -20,4 +22,5 @@ target_link_libraries(lodge-image
 	PUBLIC
 		lodge-lib
 		lodge-stb
+		lodge-serialize-json
 )
