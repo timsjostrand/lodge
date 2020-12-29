@@ -1,0 +1,72 @@
+#ifndef FOLIAGE_H
+#define FOLIAGE_H
+
+#include "math4.h"
+
+#include <stdbool.h>
+
+#define FOLIAGE_LODS_MAX 5
+
+struct lodge_texture;
+typedef struct lodge_texture* lodge_texture_t;
+
+struct lodge_sampler;
+typedef struct lodge_sampler* lodge_sampler_t;
+
+struct lodge_shader;
+typedef struct lodge_shader* lodge_shader_t;
+
+struct lodge_pipeline;
+typedef struct lodge_pipeline* lodge_pipeline_t;
+
+struct lodge_drawable;
+typedef struct lodge_drawable* lodge_drawable_t;
+
+struct lodge_buffer_object;
+typedef struct lodge_buffer_object* lodge_buffer_object_t;
+
+struct lodge_static_mesh;
+
+struct terrain;
+
+struct foliage_data
+{
+	vec4							*ptr;
+	size_t							count;
+};
+
+struct foliage_lod
+{
+	struct foliage_data				data;
+	bool							gpu_dirty;
+	lodge_drawable_t				drawable;
+	lodge_buffer_object_t			buffer_object;
+	const struct lodge_static_mesh	*mesh;
+};
+
+struct foliage
+{
+	lodge_pipeline_t				pipeline;
+	int32_t							instances_count;
+	lodge_sampler_t					sampler;
+
+	struct foliage_data				data;
+
+	struct foliage_lod				lods[FOLIAGE_LODS_MAX];
+	size_t							lods_count;
+};
+
+struct foliage_instance_params
+{
+	vec3							pos;
+	float							scale;
+};
+
+typedef struct foliage_instance_params (*foliage_place_callback_t)(uint32_t instance_id, const void *userdata);
+
+void								foliage_new_inplace(struct foliage *foliage, const struct lodge_static_mesh *lod_meshes[], size_t lods_count, uint32_t instances, foliage_place_callback_t place_func, const void *place_func_userdata);
+void								foliage_free_inplace(struct foliage *foliage);
+void								foliage_update(struct foliage *foliage, float dt, struct terrain *terrain, struct frustum_planes *frustum, const vec3 camera_pos, float z_min, float z_max, struct lodge_debug_draw *debug_draw);
+void								foliage_render(struct foliage *foliage, lodge_shader_t shader, lodge_texture_t tex, struct terrain *terrain, vec3 camera_pos, struct mvp *mvp);
+
+#endif

@@ -1,0 +1,216 @@
+#include "foliage.h"
+
+#include "membuf.h"
+#include "color.h"
+#include "frustum.h"
+
+#include "lodge_sampler.h"
+#include "lodge_image.h"
+#include "lodge_pipeline.h"
+#include "lodge_drawable.h"
+#include "lodge_buffer_object.h"
+#include "lodge_static_mesh.h"
+#include "lodge_image.h"
+#include "lodge_debug_draw.h"
+
+/*
+ * TODO(TS):
+ *	- Multiple mesh types (trees, grass, flowers)
+ *	- Wind shader
+ */
+void foliage_new_inplace(struct foliage *foliage, const struct lodge_static_mesh *lod_meshes[], size_t lods_count, uint32_t instances, foliage_place_callback_t place_func, const void *place_func_userdata)
+{
+	ASSERT(foliage);
+	ASSERT(place_func);
+	ASSERT(lods_count < FOLIAGE_LODS_MAX);
+
+	struct lodge_pipeline_desc pipeline_desc = lodge_pipeline_desc_make();
+	pipeline_desc.rasterizer.cull_mode = LODGE_RASTERIZER_CULL_MODE_NONE; // NOTE(TS): fbx import -- wrong triangle winding?
+	//pipeline_desc.rasterizer.fill_mode = LODGE_RASTERIZER_FILL_MODE_LINE;
+	foliage->pipeline = lodge_pipeline_make(pipeline_desc);
+
+	foliage->instances_count = instances;
+
+	foliage->sampler = lodge_sampler_make((struct lodge_sampler_desc) {
+		.min_filter = MIN_FILTER_LINEAR_MIPMAP_LINEAR,
+		.mag_filter = MAG_FILTER_LINEAR,
+		.wrap_x = WRAP_REPEAT,
+		.wrap_y = WRAP_REPEAT,
+		.wrap_z = WRAP_REPEAT,
+	});
+
+	foliage->lods_count = lods_count;
+
+	// Pre-allocate lod buffers
+	{
+		for(size_t lod_index = 0; lod_index < lods_count; lod_index++) {
+			struct foliage_lod *lod = &foliage->lods[lod_index];
+
+			lod->data.count = 0;
+			lod->data.ptr = (vec4*)malloc(sizeof(vec4) * instances);
+
+			lod->mesh = lod_meshes[lod_index];
+
+			lod->buffer_object = lodge_buffer_object_make_dynamic(instances * sizeof(vec4));
+			if(!lod->buffer_object) {
+				goto fail;
+			}
+
+			struct lodge_drawable_desc drawble_desc = lodge_drawable_desc_make_from_static_mesh(lod->mesh);
+
+			drawble_desc.attribs[drawble_desc.attribs_count++] = (struct lodge_drawable_attrib) {
+				.name = strview_static("instances"),
+				.buffer_object = lod->buffer_object,
+				.float_count = 4,
+				.offset = 0,
+				.stride = sizeof(vec4),
+				.instanced = 1
+			};
+
+			lod->drawable = lodge_drawable_make(drawble_desc);
+		}
+	}
+
+	// Instance buffer
+	{
+		foliage->data.count = 0;
+		foliage->data.ptr = (vec4*)malloc(sizeof(vec4) * instances);
+		if(!foliage->data.ptr) {
+			goto fail;
+		}
+
+		membuf_t data_membuf = membuf_make((char*)foliage->data.ptr, sizeof(vec4) * instances, sizeof(vec4));
+
+		for(uint32_t i=0; i < instances; i++) {
+			struct foliage_instance_params params = place_func(i, place_func_userdata);
+			membuf_append(data_membuf, &foliage->data.count, &(vec4){ params.pos.x, params.pos.y, params.pos.z, params.scale }, sizeof(vec4));
+		}
+	}
+
+	return;
+
+fail:
+	ASSERT_FAIL("Failed to create foliage");
+	//foliage_reset(&foliage);
+	return;
+}
+
+void foliage_free_inplace(struct foliage *foliage)
+{
+	free(foliage->data.ptr);
+
+	for(size_t i = 0; i < foliage->lods_count; i++) {
+		free(foliage->lods[i].data.ptr);
+	}
+
+	// TODO(TS): reset GPU resources
+}
+
+static uint32_t foliage_calc_lod_index(float d_01, size_t lods_count)
+{
+	const float lod_switch[FOLIAGE_LODS_MAX] = {
+		0.0f,
+		0.1f,
+		0.5f,
+		0.6f,
+		0.7f,
+	};
+
+	for(int i = lods_count-1; i >= 0; i--) {
+		if(d_01 >= lod_switch[i]) {
+			return i;
+		}
+	}
+
+	return lods_count-1;
+}
+
+void foliage_update(struct foliage *foliage, float dt, struct terrain *terrain, struct frustum_planes *frustum, const vec3 camera_pos, float z_min, float z_max, struct lodge_debug_draw *debug_draw)
+{
+	//
+	// TODO(TS):
+	// - Cull instances based on frustum
+	// - Select LODs based on (distance?) (size in?) frustum
+	// - Should static mesh auto calc a static aabb?
+	// - Update buffer objects
+	//
+	// - Should this be a more generic concept? Probably not...
+	//
+
+	membuf_t lod_membufs[FOLIAGE_LODS_MAX] = {
+		membuf_make((char*)foliage->lods[0].data.ptr, sizeof(vec4) * foliage->instances_count, sizeof(vec4)),
+		membuf_make((char*)foliage->lods[1].data.ptr, sizeof(vec4) * foliage->instances_count, sizeof(vec4)),
+		membuf_make((char*)foliage->lods[2].data.ptr, sizeof(vec4) * foliage->instances_count, sizeof(vec4)),
+		membuf_make((char*)foliage->lods[3].data.ptr, sizeof(vec4) * foliage->instances_count, sizeof(vec4)),
+		membuf_make((char*)foliage->lods[4].data.ptr, sizeof(vec4) * foliage->instances_count, sizeof(vec4)),
+	};
+
+	const float d_max = (z_max - z_min);
+
+	for(size_t i = 0; i < foliage->lods_count; i++) {
+		foliage->lods[i].data.count = 0;
+		foliage->lods[i].gpu_dirty = true;
+	}
+
+	for(size_t i = 0, count = foliage->instances_count; i < count; i++) {
+		const vec4* instance_data = &foliage->data.ptr[i];
+
+		const vec3 offset = vec3_make(terrain->scale->x * 0.5f, terrain->scale->y * 0.5f, 0.0f);
+
+		const vec3 center = vec3_sub(vec3_add(*terrain->pos, vec3_mult(vec3_make(instance_data->x, instance_data->y, instance_data->z), *terrain->scale)), offset);
+		struct sphere sphere = {
+			.pos = center,
+			.r = instance_data->w * 30.0f // TODO(TS): calculate proper bounding sphere
+		};
+
+		if(frustum_planes_vs_sphere(frustum, &sphere)) {
+		//{
+			const float d = vec3_distance(center, vec3_negate(camera_pos)); // TODO(TS): sphere_distance
+			const float d_01 = clamp(d, 0.0f, d_max) / d_max; // TODO(TS): non-linear lod selection
+
+			//const uint32_t lod_index = (uint32_t)(lod_01 * (foliage->lods_count - 1));
+			const uint32_t lod_index = foliage_calc_lod_index(d_01, foliage->lods_count);
+			struct foliage_lod *lod = &foliage->lods[lod_index];
+
+			if(foliage->lods_count > 2 && lod_index == 2 && lod->data.count < 100) {
+				lodge_debug_draw_sphere(debug_draw, sphere, vec4_make(rgb_of(COLOR_CYAN), 0.5f), 0.0f);
+			}
+
+			membuf_append(lod_membufs[lod_index], &foliage->lods[lod_index].data.count, instance_data, sizeof(vec4));
+		}
+	}
+}
+
+void foliage_render(struct foliage *foliage, lodge_shader_t shader, lodge_texture_t tex, struct terrain *terrain, vec3 camera_pos, struct mvp *mvp)
+{
+	lodge_renderer_annotate_begin(strview_static("foliage"));
+
+	lodge_pipeline_push(foliage->pipeline);
+
+	lodge_renderer_bind_shader(shader);
+	lodge_renderer_set_constant_mvp(shader, mvp);
+	lodge_renderer_set_constant_vec3(shader, strview_static("terrain_scale"), *terrain->scale);
+	lodge_renderer_set_constant_vec3(shader, strview_static("camera_pos"), camera_pos);
+	lodge_renderer_set_constant_float(shader, strview_static("time"), (float)lodge_get_time());
+
+	// FIXME(TS): material should not be hardcoded, use texture unit instead
+	lodge_renderer_bind_texture_unit_2d(0, tex, foliage->sampler);
+	lodge_renderer_bind_texture_unit_2d(1, terrain->heightmap, terrain->heightfield_sampler);
+
+	for(size_t i = 0; i < foliage->lods_count; i++) {
+		struct foliage_lod *lod = &foliage->lods[i];
+
+		if(lod->data.count > 0) {
+			if(lod->gpu_dirty) {
+				lodge_buffer_object_set(lod->buffer_object, 0, lod->data.ptr, lod->data.count * sizeof(vec4));
+				lod->gpu_dirty = false;
+			}
+
+			lodge_drawable_render_indexed_instanced(lod->drawable, lod->mesh->indices_count, lod->data.count);
+		}
+	}
+
+	lodge_pipeline_pop();
+
+	lodge_renderer_annotate_end();
+}

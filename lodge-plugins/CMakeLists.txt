@@ -28,6 +28,7 @@ target_link_libraries(lodge-plugins
 		lodge-plugin-shaders				# FIXME(TS): not statically defined
 		lodge-plugin-scene-renderer			# FIXME(TS): not statically defined
 		lodge-plugin-debug-draw				# FIXME(TS): not statically defined
+		lodge-plugin-terrain				# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
 		lodge-window						# FIXME(TS): separate plugin module
