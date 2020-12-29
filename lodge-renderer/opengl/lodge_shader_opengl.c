@@ -338,12 +338,17 @@ bool lodge_shader_link(lodge_shader_t shader)
 
 void lodge_renderer_bind_shader(lodge_shader_t shader)
 {
-	glUseProgram(shader->program);
+	ASSERT(shader);
+	glUseProgram(shader ? shader->program : 0);
 	GL_OK_OR_ASSERT("Failed to bind shader");
 }
 
 void lodge_renderer_set_constant_float(lodge_shader_t shader, strview_t name, float f)
 {
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
 	const GLint id = glGetUniformLocation(shader->program, name.s);
 	if(id == -1) {
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
@@ -358,6 +363,10 @@ void lodge_renderer_set_constant_float(lodge_shader_t shader, strview_t name, fl
 
 void lodge_renderer_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v)
 {
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
 	const GLint id = glGetUniformLocation(shader->program, name.s);
 	if(id == -1) {
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
@@ -372,6 +381,10 @@ void lodge_renderer_set_constant_vec2(lodge_shader_t shader, strview_t name, vec
 
 void lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name, vec3 v)
 {
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
 	const GLint id = glGetUniformLocation(shader->program, name.s);
 	if(id == -1) {
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
@@ -386,6 +399,10 @@ void lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name, vec
 
 void lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v)
 {
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
 	const GLint id = glGetUniformLocation(shader->program, name.s);
 	if(id == -1) {
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
@@ -400,6 +417,10 @@ void lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec
 
 void lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat)
 {
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
 	const GLint id = glGetUniformLocation(shader->program, name.s);
 	if(id == -1) {
 		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
@@ -412,11 +433,15 @@ void lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat
 	}
 }
 
-void lodge_renderer_set_constant_mvp(lodge_shader_t s, const struct mvp *mvp)
+void lodge_renderer_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp)
 {
-	lodge_renderer_set_constant_mat4(s, strview_static("model"), mvp->model);
-	lodge_renderer_set_constant_mat4(s, strview_static("view"), mvp->view);
-	lodge_renderer_set_constant_mat4(s, strview_static("projection"), mvp->projection);
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
+	lodge_renderer_set_constant_mat4(shader, strview_static("model"), mvp->model);
+	lodge_renderer_set_constant_mat4(shader, strview_static("view"), mvp->view);
+	lodge_renderer_set_constant_mat4(shader, strview_static("projection"), mvp->projection);
 }
 
 void lodge_renderer_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object)
@@ -439,5 +464,9 @@ void lodge_renderer_bind_constant_buffer_range(lodge_shader_t shader, uint32_t b
 
 int lodge_shader_get_constant_index(lodge_shader_t shader, strview_t constant_name)
 {
+	ASSERT(shader);
+	if(!shader) {
+		return 0;
+	}
 	return glGetAttribLocation(shader->program, constant_name.s);
 }
