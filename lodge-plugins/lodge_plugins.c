@@ -11,6 +11,7 @@
 #include "game.h"
 #include "lodge_vfs.h"
 #include "lodge_plugin_vfs.h"
+#include "lodge_plugin_types.h"
 #include "lodge_plugin_env.h"
 #include "lodge_plugin_files.h"
 #include "lodge_plugin_fbx.h"
@@ -171,6 +172,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	// HACK(TS)
 	plugins->mount_dir = mount_dir;
 
+	lodge_plugins_append(plugins, lodge_plugin_types());
 	lodge_plugins_append(plugins, lodge_plugin_vfs());
 	lodge_plugins_append(plugins, lodge_plugin_windows());
 	lodge_plugins_append(plugins, lodge_plugin_env());
