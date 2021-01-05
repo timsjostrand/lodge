@@ -2,6 +2,7 @@
 #define _MEMBUF_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 
 /**
@@ -28,6 +29,8 @@ struct membuf_swapret
 	size_t		index_b;
 };
 
+typedef int				(*membuf_cmp_func_t)(const void *lhs, const void *rhs);
+
 membuf_t				membuf_make(char *ptr, size_t size, size_t type_size);
 #define					membuf_wrap(buffer) membuf_make((char*)(buffer), sizeof((buffer)), sizeof(buffer[0]))
 #define					membuf_wrap_and(arr, func, ...) func(membuf_wrap(arr), __VA_ARGS__)
@@ -41,10 +44,12 @@ void*					membuf_set(membuf_t buf, size_t index, const void *src, size_t src_siz
 
 bool					membuf_equals(const membuf_t lhs, const membuf_t rhs);
 //size_t				membuf_insert(membuf_t buf, size_t index, const membuf_t sub);
-//size_t				membuf_delete(membuf_t buf, size_t *current_count, size_t index, size_t count);
+size_t					membuf_delete(membuf_t buf, size_t *current_count, size_t index, size_t count);
 struct membuf_swapret	membuf_delete_swap_tail(membuf_t buf, size_t *current_count, size_t index);
 void					membuf_swap(membuf_t buf, size_t index_a, size_t index_b);
 void*					membuf_append(membuf_t dst, size_t *current_count, const void *src, size_t src_size);
+void*					membuf_append_no_init(membuf_t dst, size_t *current_count);
 void					membuf_fill(membuf_t dst, const void *src, size_t src_size);
+int64_t					membuf_find(membuf_t dst, const size_t current_count, const void *needle, size_t needle_size);
 
 #endif
