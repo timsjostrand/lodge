@@ -20,7 +20,7 @@ target_link_libraries(lodge-asset-pyxel
     PRIVATE
         lodge-build-flags
         lodge-image
-        lodge-renderer
+        lodge-gfx
         lodge-sprite
         lodge-asset-atlas
         lodge-vfs-reload # FIXME(TS)
