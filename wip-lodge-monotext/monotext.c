@@ -5,7 +5,7 @@
 #include "str.h"
 #include "log.h"
 #include "lodge_opengl.h"
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "lodge_image.h"
 #include "lodge_shader.h"
 
@@ -300,7 +300,7 @@ void monotext_render(struct monotext *text, lodge_shader_t s, lodge_sampler_t at
 		return;
 	}
 
-	lodge_renderer_bind_shader(s);
+	lodge_gfx_bind_shader(s);
 
 	struct mvp mvp = {
 		.model = mat4_identity(),
@@ -309,9 +309,9 @@ void monotext_render(struct monotext *text, lodge_shader_t s, lodge_sampler_t at
 	};
 
 	/* Upload matrices and color. */
-	lodge_renderer_set_constant_mvp(s, &mvp);
-	lodge_renderer_set_constant_vec4(s, strview_static("color"), text->color);
-	lodge_renderer_bind_texture_unit_2d(0, text->font->atlas_texture, atlas_sampler);
+	lodge_shader_set_constant_mvp(s, &mvp);
+	lodge_shader_set_constant_vec4(s, strview_static("color"), text->color);
+	lodge_gfx_bind_texture_unit_2d(0, text->font->atlas_texture, atlas_sampler);
 
 	/* Bind vertex array. */
 	glBindVertexArray(text->vao);

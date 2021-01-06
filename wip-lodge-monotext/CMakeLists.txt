@@ -19,5 +19,5 @@ target_link_libraries(lodge-monotext
 		lodge-build-flags
 	PUBLIC
 		lodge-lib
-		lodge-renderer
+		lodge-gfx
 )
