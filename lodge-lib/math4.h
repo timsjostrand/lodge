@@ -125,6 +125,7 @@ mat4	mat4_inverse(const mat4 matrix, int* is_invertible);
 
 
 vec2	vec2_make(const float x, const float y);
+vec2	vec2_zero();
 vec2	vec2_add(const vec2 lhs, const vec2 rhs);
 vec2	vec2_sub(const vec2 lhs, const vec2 rhs);
 vec2	vec2_mult(const vec2 lhs, const vec2 rhs);

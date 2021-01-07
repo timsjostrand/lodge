@@ -538,6 +538,11 @@ vec2 vec2_make(const float x, const float y)
 	return (vec2) { x, y };
 }
 
+vec2 vec2_zero()
+{
+	return (vec2) { 0.0f, 0.0f };
+}
+
 vec2 vec2_lerp(const vec2 min, const vec2 max, float t)
 {
 	return (vec2) {
