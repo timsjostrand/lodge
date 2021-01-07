@@ -11,7 +11,7 @@
 #include "spritebatch.h"
 #include "color.h"
 #include "lodge_opengl.h"
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "lodge_shader.h"
 
 #define STRIDE 5

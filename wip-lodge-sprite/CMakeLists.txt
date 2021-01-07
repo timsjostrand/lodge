@@ -26,6 +26,6 @@ target_link_libraries(lodge-sprite
     PRIVATE
         lodge-build-flags
     PUBLIC
-        lodge-renderer
+        lodge-gfx
         lodge-asset-atlas
 )
