@@ -584,7 +584,7 @@ vec2 vec2_add(const vec2 lhs, const vec2 rhs)
 {
 	return (vec2) {
 		lhs.v[0] + rhs.v[0],
-		lhs.v[0] + rhs.v[0]
+		lhs.v[1] + rhs.v[1]
 	};
 }
 
@@ -592,7 +592,7 @@ vec2 vec2_sub(const vec2 lhs, const vec2 rhs)
 {
 	return (vec2) {
 		lhs.v[0] - rhs.v[0],
-		lhs.v[0] - rhs.v[0]
+		lhs.v[1] - rhs.v[1]
 	};
 }
 
@@ -600,7 +600,7 @@ vec2 vec2_mult(const vec2 lhs, const vec2 rhs)
 {
 	return (vec2) {
 		lhs.v[0] * rhs.v[0],
-		lhs.v[0] * rhs.v[0]
+		lhs.v[1] * rhs.v[1]
 	};
 }
 
