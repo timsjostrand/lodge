@@ -532,6 +532,16 @@ mat4 mat4_inverse(const mat4 matrix, int* is_invertable)
 	return m;
 }
 
+vec3 mat4_view_forward(const mat4 *view)
+{
+	return (vec3) { view->m02, view->m12, view->m22 };
+}
+
+vec3 mat4_view_strafe(const mat4 *view)
+{
+	return (vec3) { view->m00, view->m10, view->m20 };
+}
+
 
 vec2 vec2_make(const float x, const float y)
 {
