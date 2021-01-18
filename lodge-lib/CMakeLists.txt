@@ -20,6 +20,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge_callbacks.c"
         "${CMAKE_CURRENT_LIST_DIR}/membuf.c"
         "${CMAKE_CURRENT_LIST_DIR}/frustum.c"
+        "${CMAKE_CURRENT_LIST_DIR}/coordinate_systems.c"
 
         "${CMAKE_CURRENT_LIST_DIR}/lib/murmur3/murmur3.h"
         "${CMAKE_CURRENT_LIST_DIR}/lib/murmur3/murmur3.c"
@@ -43,6 +44,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge_callbacks.h" # FIXME(TS): separate lib?
         "${CMAKE_CURRENT_LIST_DIR}/membuf.h"
         "${CMAKE_CURRENT_LIST_DIR}/frustum.h"
+        "${CMAKE_CURRENT_LIST_DIR}/coordinate_systems.h"
 )
 
 check_function_exists(strnlen HAVE_STRNLEN)
