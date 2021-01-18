@@ -7,6 +7,12 @@
 
 #define LODGE_DRAWABLE_ATTRIBS_MAX	32
 
+//
+// A drawable is something that can be passed to one of the draw calls, and
+// describes vertices and associated data.
+//
+// In OpenGL this is analogous to Vertex Array Objects (VAOs).
+//
 struct lodge_drawable;
 typedef struct lodge_drawable* lodge_drawable_t;
 
@@ -35,9 +41,17 @@ struct lodge_drawable_desc			lodge_drawable_desc_make_from_static_mesh(const str
 lodge_drawable_t					lodge_drawable_make(struct lodge_drawable_desc desc);
 lodge_drawable_t					lodge_drawable_make_from_static_mesh(const struct lodge_static_mesh *static_mesh);
 void								lodge_drawable_reset(lodge_drawable_t drawable); 
+
+//
+// FIXME(TS): remove these, once a drawable has been created it is immutable (reuse the desc to create variants)
+//
 void								lodge_drawable_set_index_buffer(lodge_drawable_t drawable, lodge_buffer_object_t index_buffer);
 void								lodge_drawable_set_buffer_object(lodge_drawable_t drawable, uint32_t index, struct lodge_drawable_attrib attrib);
 
+//
+// FIXME(TS): Rename `lodge_draw_{lines,triangles,indexed}` to promote the fact
+// that these are indeed "draw calls".
+//
 void								lodge_drawable_render_lines(const lodge_drawable_t drawable, size_t offset, size_t count);
 void								lodge_drawable_render_triangles(const lodge_drawable_t drawable, size_t offset, size_t count);
 void								lodge_drawable_render_indexed_instanced(const lodge_drawable_t drawable, size_t index_count, size_t instances);

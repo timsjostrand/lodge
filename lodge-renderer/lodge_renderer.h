@@ -17,6 +17,9 @@ typedef struct lodge_shader* lodge_shader_t;
 struct lodge_sampler;
 typedef struct lodge_sampler* lodge_sampler_t;
 
+struct lodge_buffer_object;
+typedef struct lodge_buffer_object* lodge_buffer_object_t;
+
 enum lodge_renderer_primitive
 {
 	LODGE_RENDERER_PRIMITIVE_POINTS,
@@ -61,6 +64,9 @@ void					lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name,
 void					lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v);
 void					lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat);
 void					lodge_renderer_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp);
+
+void					lodge_renderer_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object);
+void					lodge_renderer_bind_constant_buffer_range(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object, size_t offset, size_t size);
 
 void					lodge_renderer_set_viewport(int32_t x, int32_t y, size_t width, size_t height);
 void					lodge_renderer_set_scissor(int32_t x, int32_t y, size_t width, size_t height);

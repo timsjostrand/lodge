@@ -419,6 +419,24 @@ void lodge_renderer_set_constant_mvp(lodge_shader_t s, const struct mvp *mvp)
 	lodge_renderer_set_constant_mat4(s, strview_static("projection"), mvp->projection);
 }
 
+void lodge_renderer_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object)
+{
+	lodge_renderer_bind_shader(shader);
+	glBindBufferBase(GL_UNIFORM_BUFFER, binding, lodge_buffer_object_to_gl(buffer_object));
+	GL_OK_OR_ASSERT("lodge_renderer_bind_constant_buffer");
+}
+
+void lodge_renderer_bind_constant_buffer_range(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object, size_t offset, size_t size)
+{
+#if 0
+	GLint aligment;
+	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &aligment);
+#endif
+	lodge_renderer_bind_shader(shader);
+	glBindBufferRange(GL_UNIFORM_BUFFER, binding, lodge_buffer_object_to_gl(buffer_object), offset, size);
+	GL_OK_OR_ASSERT("lodge_renderer_bind_constant_buffer_range");
+}
+
 int lodge_shader_get_constant_index(lodge_shader_t shader, strview_t constant_name)
 {
 	return glGetAttribLocation(shader->program, constant_name.s);
