@@ -8,7 +8,6 @@ target_sources(lodge-window
 		"${CMAKE_CURRENT_LIST_DIR}/util_graphics.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_window.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_keys.h"
 		"${CMAKE_CURRENT_LIST_DIR}/util_graphics.h"
 )
 

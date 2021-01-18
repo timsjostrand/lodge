@@ -63,9 +63,10 @@ void						lodge_window_set_vsync_enabled(lodge_window_t window, int vsync);
 int							lodge_window_is_open(lodge_window_t window);
 int							lodge_window_is_focused(lodge_window_t window);
 
+struct lodge_input*			lodge_window_get_input(lodge_window_t);
+
+// FIXME(TS): use lodge_input instead
 int							lodge_window_key_down(lodge_window_t window, int key);
-int							lodge_window_key_pressed(lodge_window_t window, int key);
-int							lodge_window_key_released(lodge_window_t window, int key);
 
 strview_t					lodge_window_get_clipboard(lodge_window_t window);
 void						lodge_window_set_clipboard(lodge_window_t window, strview_t str);
