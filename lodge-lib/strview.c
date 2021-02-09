@@ -4,6 +4,7 @@
 #include "lodge_assert.h"
 
 #include <string.h>
+#include <inttypes.h>
 
 strview_t strview_make(const char *s, size_t length)
 {
@@ -70,4 +71,56 @@ strview_t strview_substring_from_end(strview_t str, size_t offset)
 {
 	ASSERT(offset < str.length);
 	return strview_make(str.s + str.length - offset, offset);
+}
+
+static inline bool strview_to_lu(const strview_t str, unsigned long *out)
+{
+	char *end_ptr = NULL;
+	unsigned long tmp = strtoul(str.s, &end_ptr, 10);
+	if(errno == EINVAL || errno == ERANGE) {
+		return false;
+	}
+	if(end_ptr > str.s + str.length) {
+		return false;
+	}
+	*out = tmp;
+	return true;
+}
+
+static inline bool strview_to_umax(const strview_t str, uintmax_t max_value, uintmax_t *out)
+{
+	char *end_ptr = NULL;
+	errno = 0;
+	unsigned long long tmp = strtoull(str.s, &end_ptr, 10);
+	if(errno == EINVAL || errno == ERANGE) {
+		return false;
+	}
+	if(end_ptr > str.s + str.length) {
+		return false;
+	}
+	if(tmp > max_value) {
+		return false;
+	}
+	*out = tmp;
+	return true;
+}
+
+bool strview_to_u32(const strview_t str, uint32_t *out)
+{
+	uintmax_t tmp;
+	if(strview_to_umax(str, UINT32_MAX, &tmp)) {
+		*out = (uint32_t)tmp;
+		return true;
+	}
+	return false;
+}
+
+bool strview_to_u64(const strview_t str, uint64_t *out)
+{
+	uintmax_t tmp;
+	if(strview_to_umax(str, UINT64_MAX, &tmp)) {
+		*out = (uint64_t)tmp;
+		return true;
+	}
+	return false;
 }

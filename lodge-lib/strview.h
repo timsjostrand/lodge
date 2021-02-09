@@ -30,6 +30,9 @@ size_t		strview_length(const strview_t str);
 
 bool		strview_begins_with(const strview_t str, const strview_t begins_with);
 
+bool		strview_to_u32(const strview_t str, uint32_t *out);
+bool		strview_to_u64(const strview_t str, uint64_t *out);
+
 #if 0
 #define		strview_static(s) strview_make((s), sizeof((s))-1)
 #else
