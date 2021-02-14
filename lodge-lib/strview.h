@@ -33,6 +33,13 @@ bool		strview_begins_with(const strview_t str, const strview_t begins_with);
 bool		strview_to_u32(const strview_t str, uint32_t *out);
 bool		strview_to_u64(const strview_t str, uint64_t *out);
 
+uint32_t	strview_calc_hash(const strview_t str);
+
+inline bool	strview_is_null_terminated(const strview_t str)
+{
+	return str.s[str.length] == '\0';
+}
+
 #if 0
 #define		strview_static(s) strview_make((s), sizeof((s))-1)
 #else
@@ -43,5 +50,7 @@ bool		strview_to_u64(const strview_t str, uint64_t *out);
 
 #define		STRVIEW_PRINTF_FMT "%.*s"
 #define		STRVIEW_PRINTF_ARG(STRVIEW) (int)STRVIEW.length, STRVIEW.s
+
+#define		ASSERT_NULL_TERMINATED(strview) ASSERT(strview_is_null_terminated(strview))
 
 #endif

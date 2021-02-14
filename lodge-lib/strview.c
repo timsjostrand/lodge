@@ -2,6 +2,7 @@
 
 #include "str.h"
 #include "lodge_assert.h"
+#include "lodge_hash.h"
 
 #include <string.h>
 #include <inttypes.h>
@@ -123,4 +124,9 @@ bool strview_to_u64(const strview_t str, uint64_t *out)
 		return true;
 	}
 	return false;
+}
+
+uint32_t strview_calc_hash(const strview_t str)
+{
+	return lodge_hash_murmur3_32(str.s, str.length);
 }
