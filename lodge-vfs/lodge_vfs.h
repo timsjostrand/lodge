@@ -19,6 +19,19 @@
 
 struct lodge_vfs;
 
+struct lodge_vfs_entry
+{
+	bool					dir;
+	char					name[LODGE_VFS_FILENAME_MAX];
+};
+
+struct lodge_vfs_iterate_dynbuf
+{
+	struct lodge_vfs_entry	*elements;
+	size_t					count;
+	size_t					capacity;
+};
+
 typedef void			(*lodge_vfs_func_t)(struct lodge_vfs *vfs, strview_t virtual_path, void *userdata);
 
 void					lodge_vfs_new_inplace(struct lodge_vfs *vfs);
@@ -36,5 +49,7 @@ void*					lodge_vfs_read_file(struct lodge_vfs *vfs, strview_t virtual_path, siz
 char*					lodge_vfs_read_text_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t *out_num_bytes);
 
 bool					lodge_vfs_resolve_disk_path(struct lodge_vfs *vfs, strview_t virtual_path, strbuf_t disk_path_out);
+
+bool					lodge_vfs_iterate(struct lodge_vfs *vfs, strview_t path, strview_t mask, struct lodge_vfs_iterate_dynbuf *out);
 
 #endif

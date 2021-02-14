@@ -7,6 +7,7 @@
 
 #include "strbuf.h"
 #include "membuf.h"
+#include "dynbuf.h"
 #include "lodge_platform.h"
 #include "lodge_filewatch.h"
 
@@ -27,6 +28,7 @@ struct lodge_vfs_func
 struct lodge_vfs_file_funcs
 {
 	char							virtual_path[LODGE_VFS_FILENAME_MAX];
+	uint32_t						virtual_path_hash;
 	struct lodge_vfs_func*			funcs;
 };
 
@@ -43,12 +45,20 @@ struct lodge_vfs
 
 static struct lodge_vfs_file_funcs* lodge_vfs_get_func_entry(struct lodge_vfs *vfs, strview_t virtual_path)
 {
+	uint32_t virtual_path_hash = strview_calc_hash(virtual_path);
+
 	for (size_t i = 0; i < vfs->funcs_count; i++) {
 		struct lodge_vfs_file_funcs *func_entry = &vfs->funcs[i];
 
+#if 0
 		if (strview_equals(virtual_path, strview_wrap(func_entry->virtual_path))) {
 			return func_entry;
 		}
+#else
+		if(func_entry->virtual_path_hash == virtual_path_hash) {
+			return func_entry;
+		}
+#endif
 	}
 	return NULL;
 }
@@ -133,11 +143,10 @@ void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t virtual_path, 
 	};
 
 	if(!func_entry) {
-		struct lodge_vfs_file_funcs new_entry;
-		new_entry.funcs = NULL;
-		strbuf_set(strbuf_wrap(new_entry.virtual_path), virtual_path);
-
-		func_entry = membuf_append(membuf_wrap(vfs->funcs), &vfs->funcs_count, &new_entry, sizeof(new_entry));
+		func_entry = membuf_append_no_init(membuf_wrap(vfs->funcs), &vfs->funcs_count);
+		func_entry->funcs = NULL;
+		strbuf_set(strbuf_wrap(func_entry->virtual_path), virtual_path);
+		func_entry->virtual_path_hash = strview_calc_hash(virtual_path);
 	}
 
 	ASSERT(func_entry);
@@ -280,4 +289,54 @@ bool lodge_vfs_resolve_disk_path(struct lodge_vfs *vfs, strview_t virtual_path, 
 	}
 
 	return false;
+}
+
+bool lodge_vfs_iterate(struct lodge_vfs *vfs, strview_t path, strview_t mask, struct lodge_vfs_iterate_dynbuf *out)
+{
+	ASSERT_OR(vfs) {
+		return false;
+	}
+	ASSERT_NULL_TERMINATED(path);
+	ASSERT_NULL_TERMINATED(mask);
+
+	struct lodge_vfs_iterate_dynbuf ret = { 0 };
+
+	for(size_t i = 0, count = vfs->mounts_count; i < count; i++) {
+		struct lodge_vfs_mount *mount = &vfs->mounts[i];
+		const size_t mount_path_length = strbuf_length(strbuf_wrap(mount->path));
+
+		if(strview_begins_with(strbuf_to_strview(strbuf_wrap(mount->point)), path)) {
+			// Files
+			{
+				char **mount_files = stb_readdir_recursive(mount->path, (char*)mask.s);
+				size_t mount_files_count = stb_arr_len(mount_files);
+				for(size_t i = 0; i < mount_files_count; i++) {
+					const char *mount_file = mount_files[i];
+
+					struct lodge_vfs_entry *entry = dynbuf_append_no_init(dynbuf_wrap(out));
+					entry->dir = false;
+					strbuf_setf(strbuf_wrap(entry->name), "%s%s", mount->point, mount_file + mount_path_length + 1);
+				}
+				stb_arr_free(mount_files);
+			}
+
+#if 0
+			// Dirs
+			{
+				char **mount_dirs = stb_readdir_subdirs(mount->path);
+				size_t mount_dirs_count = stb_arr_len(mount_dirs);
+				for(size_t i = 0; i < mount_dirs_count; i++) {
+					const char *mount_dir = mount_dirs[i];
+
+					struct lodge_vfs_entry *entry = dynbuf_append_no_init(dynbuf_wrap(out));
+					entry->dir = true;
+					strbuf_setf(strbuf_wrap(entry->name), "%s%s", mount->point, mount_dir + mount_path_length + 1);
+				}
+				stb_arr_free(mount_dirs);
+			}
+#endif
+		}
+	}
+
+	return true;
 }
