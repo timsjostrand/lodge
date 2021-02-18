@@ -25,3 +25,6 @@
 [submodule "lodge-gui/lib/nuklear"]
 	path = lodge-gui/lib/nuklear
 	url = https://github.com/Immediate-Mode-UI/Nuklear.git
+[submodule "lodge-lib/lib/perlin-noise"]
+	path = lodge-lib/lib/perlin-noise
+	url = https://github.com/stegu/perlin-noise.git

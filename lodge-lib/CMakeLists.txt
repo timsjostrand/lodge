@@ -13,6 +13,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge_properties.c"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_input.c"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_quadtree.c"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_noise.c"
         "${CMAKE_CURRENT_LIST_DIR}/txt.c"
         "${CMAKE_CURRENT_LIST_DIR}/strview.c"
         "${CMAKE_CURRENT_LIST_DIR}/strbuf.c"
@@ -30,6 +31,9 @@ target_sources(lodge-lib
 
         "${CMAKE_CURRENT_LIST_DIR}/lib/murmur3/murmur3.h"
         "${CMAKE_CURRENT_LIST_DIR}/lib/murmur3/murmur3.c"
+
+        "${CMAKE_CURRENT_LIST_DIR}/lib/perlin-noise/src/simplexnoise1234.h"
+        "${CMAKE_CURRENT_LIST_DIR}/lib/perlin-noise/src/simplexnoise1234.c"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}/lodge.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_time.h"
@@ -43,6 +47,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge_input.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_keys.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_quadtree.h"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_noise.h"
         "${CMAKE_CURRENT_LIST_DIR}/log.h"
         "${CMAKE_CURRENT_LIST_DIR}/txt.h"
         "${CMAKE_CURRENT_LIST_DIR}/strview.h"
@@ -100,6 +105,8 @@ endif()
 
 
 target_include_directories(lodge-lib
+	PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/lib/perlin-noise/src"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
 )
