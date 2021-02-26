@@ -49,6 +49,7 @@ struct membuf_swapret	membuf_delete_swap_tail(membuf_t buf, size_t *current_coun
 void					membuf_swap(membuf_t buf, size_t index_a, size_t index_b);
 void*					membuf_append(membuf_t dst, size_t *current_count, const void *src, size_t src_size);
 void*					membuf_append_no_init(membuf_t dst, size_t *current_count);
+void*					membuf_append_range(membuf_t dst, size_t *current_count, const void *src, size_t src_type_size, size_t src_count);
 void					membuf_fill(membuf_t dst, const void *src, size_t src_size);
 int64_t					membuf_find(membuf_t dst, const size_t current_count, const void *needle, size_t needle_size);
 

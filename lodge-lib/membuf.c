@@ -166,6 +166,24 @@ void* membuf_append(membuf_t dst, size_t *current_count, const void *src, size_t
 	return membuf_set(dst, (*current_count)++, src, src_size);
 }
 
+void* membuf_append_range(membuf_t dst, size_t *current_count, const void *src, size_t src_type_size, size_t src_count)
+{
+	if(!src) {
+		return NULL;
+	}
+	ASSERT_OR(dst.type_size == src_type_size) {
+		return NULL;
+	}
+	const size_t max_count = membuf_max_count(dst);
+	ASSERT_OR((*current_count + src_count) < max_count) {
+		return NULL;
+	}
+	void *tail = membuf_get(dst, *current_count);
+	memcpy(tail, src, src_count * src_type_size);
+	*current_count += src_count;
+	return tail;
+}
+
 void membuf_fill(membuf_t dst, const void *src, size_t src_size)
 {
 	ASSERT(dst.type_size == src_size);
