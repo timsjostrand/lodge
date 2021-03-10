@@ -9,6 +9,7 @@ struct lodge_asset_file
 	strview_t	name;
 	char		*data;
 	size_t		size;
+	bool		vfs_callback;
 };
 
 struct lodge_plugin_desc lodge_plugin_files();

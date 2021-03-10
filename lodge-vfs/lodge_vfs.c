@@ -137,20 +137,38 @@ void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t virtual_path, 
 {
 	struct lodge_vfs_file_funcs *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
 
-	struct lodge_vfs_func cbck = {
-		.fn = fn,
-		.userdata = userdata,
-	};
-
 	if(!func_entry) {
 		func_entry = membuf_append_no_init(membuf_wrap(vfs->funcs), &vfs->funcs_count);
 		func_entry->funcs = NULL;
 		strbuf_set(strbuf_wrap(func_entry->virtual_path), virtual_path);
 		func_entry->virtual_path_hash = strview_calc_hash(virtual_path);
 	}
-
 	ASSERT(func_entry);
+
+	struct lodge_vfs_func cbck = {
+		.fn = fn,
+		.userdata = userdata,
+	};
 	stb_arr_push(func_entry->funcs, cbck);
+}
+
+bool lodge_vfs_remove_callback(struct lodge_vfs *vfs, strview_t virtual_path, lodge_vfs_func_t fn, void *userdata)
+{
+	struct lodge_vfs_file_funcs *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
+	if(!func_entry) {
+		return false;
+	}
+
+	for(size_t i = 0, funcs_count = stb_arr_len(func_entry->funcs); i < funcs_count; i++) {
+		struct lodge_vfs_func *func = &func_entry->funcs[i];
+
+		if(func->fn == fn && func->userdata == userdata) {
+			stb_arr_delete(func_entry->funcs, i);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 bool lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t filename)

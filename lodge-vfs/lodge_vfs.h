@@ -42,6 +42,7 @@ void					lodge_vfs_update(struct lodge_vfs *vfs, float delta_time);
 
 void					lodge_vfs_mount(struct lodge_vfs *vfs, strview_t mount_point, strview_t disk_path);
 void					lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t virtual_path, lodge_vfs_func_t fn, void *userdata);
+bool					lodge_vfs_remove_callback(struct lodge_vfs *vfs, strview_t virtual_path, lodge_vfs_func_t fn, void *userdata);
 void					lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, lodge_vfs_func_t fn, void* userdata);
 bool					lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t virtual_path);
 
