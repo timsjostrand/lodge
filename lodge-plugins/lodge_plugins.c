@@ -17,6 +17,7 @@
 #include "lodge_plugin_fbx.h"
 #include "lodge_plugin_images.h"
 #include "lodge_plugin_textures.h"
+#include "lodge_plugin_shader_sources.h"
 #include "lodge_plugin_shaders.h"
 #include "lodge_plugin_scene_renderer.h"
 #include "lodge_plugin_debug_draw.h"
@@ -181,6 +182,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, lodge_plugin_fbx());
 	lodge_plugins_append(plugins, lodge_plugin_images());
 	lodge_plugins_append(plugins, lodge_plugin_textures());
+	lodge_plugins_append(plugins, lodge_plugin_shader_sources());
 	lodge_plugins_append(plugins, lodge_plugin_shaders());
 	lodge_plugins_append(plugins, lodge_scene_renderer_plugin());
 	lodge_plugins_append(plugins, lodge_plugin_debug_draw());

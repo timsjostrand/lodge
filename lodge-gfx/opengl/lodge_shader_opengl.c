@@ -8,7 +8,6 @@
 
 #include "math4.h"
 #include "str.h"
-#include "txt.h"
 #include "strview.h"
 #include "blob.h"
 #include "array.h"
@@ -23,8 +22,7 @@ struct lodge_shader_stage
 {
 	char								name[SHADER_FILENAME_MAX];
 	GLuint								shader;
-	array_t								includes;
-	txt_t								source;
+	strview_t							source;
 };
 
 struct lodge_shader
@@ -35,8 +33,6 @@ struct lodge_shader
 	struct lodge_shader_stage			vertex_stage;
 	struct lodge_shader_stage			fragment_stage;
 	struct lodge_shader_stage			compute_stage;
-
-	struct lodge_shader_source_factory	source_factory;
 };
 
 static bool lodge_shader_program_log(GLuint program, const char* name)
@@ -110,110 +106,11 @@ static bool lodge_shader_log(GLuint shader, const char *name, const char* label)
 	return true;
 }
 
-static bool lodge_shader_include(const lodge_shader_t shader, txt_t *txt, size_t start, array_t includes, strview_t include_file)
-{
-	strview_t include_data = { 0 };
-	if(!shader->source_factory.get_func || !shader->source_factory.get_func(shader->source_factory.userdata, strview_wrap(shader->name), include_file, &include_data)) {
-		shader_error("Failed to find include file: " STRVIEW_PRINTF_FMT "\n", STRVIEW_PRINTF_ARG(include_file));
-		return false;
-	}
-
-	if(strview_empty(include_data)) {
-		// NOTE(TS): maybe this is a warning and still succeeds? (to keep track of dependencies)
-		shader_error("Include file was empty: " STRVIEW_PRINTF_FMT "\n", STRVIEW_PRINTF_ARG(include_file));
-		return false;
-	}
-
-	*txt = txt_insert(*txt, start, include_data);
-	*txt = txt_insert(*txt, start + strview_length(include_data), strview_static("\n"));
-
-	array_append(includes, include_file.s); // NOTE(TS): possibly leaking because of non-null terminated
-	
-	return true;
-}
-
-static bool lodge_shader_stage_resolve_includes(lodge_shader_t shader, struct lodge_shader_stage *stage, strview_t source)
-{
-	//
-	// TODO(TS): release dependencies
-	//
-	array_clear(stage->includes);
-
-	stage->source = txt_set(stage->source, source);
-
-	static const int INCLUDE_LENGTH = 9;
-	int retry = 1;
-
-	const strview_t global_include_file = strview_static("global.fxh");
-
-	if(!lodge_shader_include(shader, &stage->source, 0, stage->includes, global_include_file)) {
-		shader_debug("Could not include global include file: `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(global_include_file));
-	}
-
-	while(retry) {
-		retry = 0;
-
-		size_t count = txt_length(stage->source); 
-		foreach_line(stage->source, count) {
-			if(len == 0) {
-				continue;
-			}
-
-			size_t post_whitespace = start;
-			while(isspace(stage->source[post_whitespace]) && post_whitespace < count) {
-				post_whitespace++;
-			}
-
-			const strview_t include_str = strview_static("#include ");
-			if(str_begins_with(&stage->source[post_whitespace], INCLUDE_LENGTH, include_str.s, include_str.length)) {
-				txt_t include_file = txt_new(strview_make(&stage->source[start + INCLUDE_LENGTH], len - INCLUDE_LENGTH));
-
-				// Trim whitespace
-				txt_trim(include_file);
-
-				// Strip quotes
-				if(txt_begins_with(include_file, strview_static("\""))) {
-					txt_delete(include_file, 0, 1);
-				}
-				if(txt_ends_with(include_file, strview_static("\""))) {
-					txt_delete_from_tail(include_file, 1);
-				}
-
-				int include_index = array_find_string(stage->includes, include_file, txt_length(include_file));
-				if(include_index == -1) {
-					shader_debug("Including file: `%s`\n", include_file);
-
-					// Remove `#include` line
-					txt_delete(stage->source, start, len);
-
-					if(lodge_shader_include(shader, &stage->source, start, stage->includes, txt_to_strview(include_file))) {
-						retry = 1;
-					} else {
-						shader_error("Could not include file: `%s`\n", include_file);
-						txt_free(include_file);
-						return false;
-					}
-				} else {
-					shader_debug("Skipping already included file: `%s`\n", include_file);
-					txt_delete(stage->source, start, len);
-				}
-
-				txt_free(include_file);
-
-				if(retry) {
-					shader_debug("Retry include pass\n");
-					break;
-				}
-			}
-		}
-	};
-
-	return true;
-}
-
+// FIXME(TS): remove this helper
 static bool lodge_shader_stage_set_source(lodge_shader_t shader, struct lodge_shader_stage *stage, strview_t source)
 {
-	return lodge_shader_stage_resolve_includes(shader, stage, source);
+	stage->source = source;
+	return true;
 }
 
 static bool lodge_shader_stage_compile(struct lodge_shader_stage *stage, GLenum stage_type)
@@ -222,8 +119,8 @@ static bool lodge_shader_stage_compile(struct lodge_shader_stage *stage, GLenum 
 
 	/* Compile fragment shader. */
 	stage->shader = glCreateShader(stage_type);
-	const GLint source_length[1] = { (GLint)txt_length(stage->source) }; 
-	glShaderSource(stage->shader, 1, &stage->source, source_length);
+	const GLint source_length[1] = { stage->source.length }; 
+	glShaderSource(stage->shader, 1, &stage->source.s, source_length);
 	glCompileShader(stage->shader);
 	if(!lodge_shader_log(stage->shader, stage->name, "shader stage compile")) {
 		return false;
@@ -236,18 +133,7 @@ static void lodge_shader_stage_new_inplace(struct lodge_shader_stage *stage)
 {
 	stage->name[0] = '\0';
 	stage->shader = 0;
-	stage->includes = array_new(SHADER_FILENAME_MAX, SHADER_INCLUDES_MAX);
-	stage->source = txt_new(strview_static(""));
-}
-
-static void lodge_shader_stage_release_includes(struct lodge_shader_stage *stage, struct lodge_shader_source_factory source_factory, strview_t shader_name)
-{
-	array_foreach(stage->includes, const char, include) {
-		printf("release include: %s\n", include);
-
-		strview_t include_stringview = strview_make_from_str(include, SHADER_FILENAME_MAX);
-		source_factory.release_func(source_factory.userdata, shader_name, include_stringview);
-	}
+	stage->source = strview_static("");
 }
 
 static void lodge_shader_stage_free_inplace(struct lodge_shader_stage *stage)
@@ -255,16 +141,11 @@ static void lodge_shader_stage_free_inplace(struct lodge_shader_stage *stage)
 	if(glIsShader(stage->shader) == GL_TRUE) {
 		glDeleteShader(stage->shader);
 	}
-	txt_free(stage->source);
-	// TODO(TS): release dependencies
-	array_free(stage->includes);
 }
 
-void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name, struct lodge_shader_source_factory source_factory)
+void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name)
 {
 	memset(shader, 0, sizeof(struct lodge_shader));
-
-	shader->source_factory = source_factory;
 
 	strbuf_wrap_and(shader->name, strbuf_set, name);
 
@@ -275,10 +156,6 @@ void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name, struct lodg
 
 void lodge_shader_free_inplace(lodge_shader_t shader)
 {
-	// NOTE(TS): shader asset does `lodge_res_clear_dependency` instead. Good?
-	//lodge_shader_stage_release_includes(&shader->vertex_stage, shader->source_factory, strview_wrap(shader->name));
-	//lodge_shader_stage_release_includes(&shader->fragment_stage, shader->source_factory, strview_wrap(shader->name));
-
 	if(glIsProgram(shader->program) == GL_TRUE) {
 		glDeleteProgram(shader->program);
 	}
