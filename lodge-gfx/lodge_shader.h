@@ -26,6 +26,7 @@ bool	lodge_shader_link(lodge_shader_t shader);
 int		lodge_shader_get_constant_index(lodge_shader_t shader, strview_t constant_name);
 
 void	lodge_shader_set_constant_float(lodge_shader_t shader, strview_t name, float f);
+void	lodge_shader_set_constant_bool(lodge_shader_t shader, strview_t name, bool value);
 void	lodge_shader_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v);
 void	lodge_shader_set_constant_vec3(lodge_shader_t shader, strview_t name, vec3 v);
 void	lodge_shader_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v);

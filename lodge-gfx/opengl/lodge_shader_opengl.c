@@ -259,6 +259,24 @@ void lodge_shader_set_constant_float(lodge_shader_t shader, strview_t name, floa
 	}
 }
 
+void lodge_shader_set_constant_bool(lodge_shader_t shader, strview_t name, bool value)
+{
+	ASSERT(shader);
+	if(!shader) {
+		return;
+	}
+	const GLint id = glGetUniformLocation(shader->program, name.s);
+	if(id == -1) {
+		//errorf("OpenGL", "uniform " STRVIEW_PRINTF_FMT " not found\n", STRVIEW_PRINTF_ARG(name));
+		return;
+	}
+	glProgramUniform1i(shader->program, id, (GLint)value);
+	GLint err = glGetError();
+	if(err != GL_NO_ERROR) {
+		errorf("OpenGL", "lodge_shader_set_constant_bool(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+	}
+}
+
 void lodge_shader_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v)
 {
 	ASSERT(shader);
