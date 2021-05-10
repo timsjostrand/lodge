@@ -72,6 +72,7 @@ txt_t txt_new(const strview_t str)
 
 void txt_free(txt_t handle)
 {
+	if(!handle) { return; } 
 	struct txt *txt = txt_from_handle(handle);
 	free(txt);
 }
