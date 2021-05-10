@@ -54,6 +54,7 @@ void								lodge_drawable_set_buffer_object(lodge_drawable_t drawable, uint32_t
 //
 void								lodge_drawable_render_lines(const lodge_drawable_t drawable, size_t offset, size_t count);
 void								lodge_drawable_render_triangles(const lodge_drawable_t drawable, size_t offset, size_t count);
+void								lodge_drawable_render_triangles_instanced(const lodge_drawable_t drawable, size_t offset, size_t count, size_t instances);
 void								lodge_drawable_render_indexed_instanced(const lodge_drawable_t drawable, size_t index_count, size_t instances);
 void								lodge_drawable_render_indexed(const lodge_drawable_t drawable, size_t index_count, size_t offset);
 

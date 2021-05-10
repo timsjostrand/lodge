@@ -120,6 +120,18 @@ void lodge_drawable_render_triangles(const lodge_drawable_t drawable, size_t off
 	
 	glDrawArrays(GL_TRIANGLES, (GLint)offset, count);
 	GL_OK_OR_ASSERT("Failed to render triangles");
+
+	glBindVertexArray(0);
+	GL_OK_OR_ASSERT("Failed to unbind drawable");
+}
+
+void lodge_drawable_render_triangles_instanced(const lodge_drawable_t drawable, size_t offset, size_t count, size_t instances)
+{
+	glBindVertexArray(lodge_drawable_to_gl(drawable));
+	GL_OK_OR_ASSERT("Failed to bind drawable");
+
+	glDrawArraysInstanced(GL_TRIANGLES, (GLint)offset, count, instances);
+	GL_OK_OR_ASSERT("Failed to render drawable");
 	
 	glBindVertexArray(0);
 	GL_OK_OR_ASSERT("Failed to unbind drawable");
