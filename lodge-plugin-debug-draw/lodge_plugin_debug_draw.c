@@ -22,6 +22,12 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_DEBUG_SPHERE = NULL;
 
+struct lodge_debug_sphere
+{
+	struct sphere			sphere;
+	vec4					color;
+};
+
 struct lodge_debug_draw_system
 {
 	lodge_shader_t			shaders[3];
@@ -37,11 +43,14 @@ struct lodge_plugin_debug_draw
 	lodge_component_type_t	sphere_component_type;
 };
 
-static void lodge_debug_sphere_component_new_inplace(struct sphere *component)
+static void lodge_debug_sphere_component_new_inplace(struct lodge_debug_sphere *component)
 {
-	*component = (struct sphere) {
-		.pos = vec3_zero(),
-		.r = 10.0f,
+	*component = (struct lodge_debug_sphere) {
+		.sphere = {
+			.pos = vec3_zero(),
+			.r = 10.0f,
+		},
+		.color = GRUVBOX_BRIGHT_ORANGE,
 	};
 }
 
@@ -67,6 +76,7 @@ static void lodge_debug_draw_system_update(struct lodge_debug_draw_system *syste
 	lodge_debug_draw_update(system->debug_draw, dt);
 
 	if(system->draw_spheres) {
+#if 0
 		lodge_scene_entities_foreach(scene, entity) {
 			struct sphere *debug_sphere = lodge_scene_get_entity_component(scene, entity, LODGE_COMPONENT_TYPE_DEBUG_SPHERE);
 			if(!debug_sphere) {
@@ -82,10 +92,17 @@ static void lodge_debug_draw_system_update(struct lodge_debug_draw_system *syste
 
 			lodge_debug_draw_sphere(system->debug_draw, tmp, GRUVBOX_BRIGHT_ORANGE, 0.0f);
 		}
+#else
+		lodge_scene_components_foreach(scene, struct lodge_debug_sphere*, debug_sphere, LODGE_COMPONENT_TYPE_DEBUG_SPHERE) {
+			lodge_entity_t entity = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_DEBUG_SPHERE, debug_sphere);
+			ASSERT_OR(entity) { continue; }
 
-#if 0
-		lodge_scene_components_foreach(scene, struct sphere*, it, LODGE_COMPONENT_TYPE_DEBUG_SPHERE) {
-			lodge_debug_draw_sphere(system->debug_draw, *it, GRUVBOX_BRIGHT_ORANGE, 0.0f);
+			const vec3 entity_pos = lodge_get_position(scene, entity);
+
+			lodge_debug_draw_sphere(system->debug_draw, (struct sphere) {
+				.pos = vec3_add(entity_pos, debug_sphere->sphere.pos),
+				.r = debug_sphere->sphere.r
+			}, debug_sphere->color, 0.0f);
 		}
 #endif
 	}
@@ -127,7 +144,7 @@ static void lodge_debug_draw_system_new_inplace(struct lodge_debug_draw_system *
 	lodge_debug_draw_new_inplace(system->debug_draw);
 
 	system->draw_spheres = true;
-	system->draw_view_gizmo = true;
+	system->draw_view_gizmo = false;
 
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_FORWARD_TRANSPARENT, &lodge_debug_draw_system_render, system);
 }
@@ -142,21 +159,34 @@ static lodge_component_type_t lodge_debug_sphere_component_type_register()
 			.description = strview_static("Draws a debug sphere."),
 			.new_inplace = lodge_debug_sphere_component_new_inplace,
 			.free_inplace = NULL,
-			.size = sizeof(struct sphere),
+			.size = sizeof(struct lodge_debug_sphere),
 			.properties = {
-				.count = 2,
+				.count = 3,
 				.elements = {
 					{
 						.name = strview_static("pos"),
 						.type = LODGE_TYPE_VEC3,
-						.offset = offsetof(struct sphere, pos),
+						.offset = offsetof(struct lodge_debug_sphere, sphere) + offsetof(struct sphere, pos),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
 						.on_modified = NULL,
 					},
 					{
 						.name = strview_static("r"),
 						.type = LODGE_TYPE_F32,
-						.offset = offsetof(struct sphere, r),
+						.offset = offsetof(struct lodge_debug_sphere, sphere) + offsetof(struct sphere, r),
+						.flags = LODGE_PROPERTY_FLAG_NONE,
+						.on_modified = NULL,
+					},
+					{
+						.name = strview_static("color"),
+						.type = LODGE_TYPE_VEC4,
+						.hints = {
+							.enable = true,
+							.vec4 = {
+								.color = true,
+							},
+						},
+						.offset = offsetof(struct lodge_debug_sphere, color),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
 						.on_modified = NULL,
 					},
