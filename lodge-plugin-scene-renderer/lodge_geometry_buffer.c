@@ -12,16 +12,12 @@ struct lodge_geometry_buffer lodge_geometry_buffer_make(uint32_t width, uint32_t
 		.height = height,
 		.mipmaps_count = 1,
 		.texture_format = LODGE_TEXTURE_FORMAT_RGBA16F,
-		.pixel_format = LODGE_PIXEL_FORMAT_RGBA,
-		.pixel_type = LODGE_PIXEL_TYPE_FLOAT,
 	});
 	gbuffer.normals = lodge_texture_2d_make((struct lodge_texture_2d_desc) {
 		.width = width,
 		.height = height,
 		.mipmaps_count = 1,
 		.texture_format = LODGE_TEXTURE_FORMAT_RGBA16F,
-		.pixel_format = LODGE_PIXEL_FORMAT_RGBA,
-		.pixel_type = LODGE_PIXEL_TYPE_FLOAT,
 	});
 	gbuffer.depth = lodge_texture_2d_make_depth(width, height);
 

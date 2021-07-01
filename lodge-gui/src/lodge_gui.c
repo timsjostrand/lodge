@@ -183,15 +183,19 @@ int lodge_gui_create_texture(lodge_gui_t gui, const void* image, int width, int 
 		return -1;
 	}
 
-	lodge_texture_t texture = lodge_texture_2d_make((struct lodge_texture_2d_desc) {
-		.width = width,
-		.height = height,
-		.mipmaps_count = 1,
-		.texture_format = LODGE_TEXTURE_FORMAT_RGBA8,
-		.pixel_format = LODGE_PIXEL_FORMAT_RGBA,
-		.pixel_type = LODGE_PIXEL_TYPE_UINT8,
-		.data = image,
-	});
+	lodge_texture_t texture = lodge_texture_2d_make_from_data(
+		&(struct lodge_texture_2d_desc) {
+			.width = width,
+			.height = height,
+			.mipmaps_count = 1,
+			.texture_format = LODGE_TEXTURE_FORMAT_RGBA8,
+		},
+		&(struct lodge_texture_data_desc) {
+			.pixel_format = LODGE_PIXEL_FORMAT_RGBA,
+			.pixel_type = LODGE_PIXEL_TYPE_UINT8,
+			.data = image,
+		}
+	);
 
 	dev->textures[tex_index] = texture;
 

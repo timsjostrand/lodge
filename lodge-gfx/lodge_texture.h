@@ -20,6 +20,7 @@ enum lodge_texture_format
 	LODGE_TEXTURE_FORMAT_R16,
 	LODGE_TEXTURE_FORMAT_RGB8,
 	LODGE_TEXTURE_FORMAT_RGB16,
+	LODGE_TEXTURE_FORMAT_RGB16F,
 	LODGE_TEXTURE_FORMAT_RGBA8,
 	LODGE_TEXTURE_FORMAT_RGBA16,
 	LODGE_TEXTURE_FORMAT_RGBA16F,
@@ -51,10 +52,12 @@ struct lodge_texture_2d_desc
 {
 	uint32_t					width;
 	uint32_t					height;
-
 	uint32_t					mipmaps_count; // if 0 = calc default
-
 	enum lodge_texture_format	texture_format;
+};
+
+struct lodge_texture_data_desc
+{
 	enum lodge_pixel_format		pixel_format;
 	enum lodge_pixel_data_type	pixel_type;
 
@@ -81,14 +84,20 @@ struct lodge_texture_cubemap_desc
 	const struct lodge_image	*right;
 };
 
+//
+// TODO(TS): move/remove lodge_image related API from lodge_texture: work only on texture_XX_desc and texture_data_desc
+//
 struct lodge_texture_2d_desc	lodge_texture_2d_desc_make_from_image(const struct lodge_image *image);
+lodge_texture_t					lodge_texture_2d_make_from_image(const struct lodge_image *image);
 
 lodge_texture_t					lodge_texture_2d_make(struct lodge_texture_2d_desc desc);
-lodge_texture_t					lodge_texture_2d_make_from_image(const struct lodge_image *image);
+lodge_texture_t					lodge_texture_2d_make_from_data(struct lodge_texture_2d_desc *desc, struct lodge_texture_data_desc *data_desc);
 lodge_texture_t					lodge_texture_2d_make_rgba(uint32_t width, uint32_t height);
 lodge_texture_t					lodge_texture_2d_make_depth(uint32_t width, uint32_t height);
 
 lodge_texture_t					lodge_texture_2d_array_make_depth(uint32_t width, uint32_t height, uint32_t depth);
+
+bool							lodge_texture_2d_set_data(lodge_texture_t texture, struct lodge_texture_2d_desc *texture_desc, struct lodge_texture_data_desc *data_desc, bool generate_mipmaps);
 
 lodge_texture_t					lodge_texture_3d_make(struct lodge_texture_3d_desc desc);
 
