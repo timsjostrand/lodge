@@ -1,6 +1,6 @@
 project(lodge C)
 
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.12)
 
 include(${ENGINE_PATH}/cmake/lodge-build-flags.cmake)
 

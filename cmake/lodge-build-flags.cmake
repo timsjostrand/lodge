@@ -5,8 +5,8 @@ add_library(lodge-build-flags INTERFACE)
 
 target_compile_features(lodge-build-flags
     INTERFACE
-        c_variadic_macros
         c_std_11
+        c_variadic_macros
 )
 
 #
@@ -50,6 +50,7 @@ if(MSVC)
             #"/we4244"                       # 'function': conversion from 'int' to 'const float', possible loss of data
             "/we4013"                       # 'symbol' undefined; assuming extern returning int
             "/we4133"                       # 'initializing|function': incompatible types - from '<type> *' to '<other_type> *'
+            "/we4101"                       # 'identifier' : unreferenced local variable
     )
 endif()
 
