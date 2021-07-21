@@ -1395,7 +1395,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 	return LODGE_SYSTEM_TYPE_SCENE_RENDER;
 }
 
-struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_renderer_plugin *plugin, struct lodge_plugins *plugins)
+struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_renderer_plugin *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview_static("shaders"));
 	ASSERT(plugin->shaders);

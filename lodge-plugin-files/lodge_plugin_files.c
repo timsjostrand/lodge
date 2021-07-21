@@ -59,7 +59,7 @@ static int lodge_assets_files_free_inplace(struct lodge_assets *files, strview_t
 	return true;
 }
 
-static struct lodge_ret lodge_plugin_files_new_inplace(struct lodge_assets *files, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_files_new_inplace(struct lodge_assets *files, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	struct lodge_vfs *vfs = lodge_plugins_depend(plugins, files, strview_static("vfs"));
 	if(!vfs) {

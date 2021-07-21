@@ -2,7 +2,7 @@
 
 #include "lodge_type.h"
 
-struct lodge_ret lodge_plugin_types_new_inplace(void *plugin, struct lodge_plugins *plugins)
+struct lodge_ret lodge_plugin_types_new_inplace(void *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	lodge_types_default_register();
 	return lodge_success();

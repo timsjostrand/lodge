@@ -235,7 +235,7 @@ lodge_component_type_t lodge_plugin_debug_draw_get_sphere_component_type(struct 
 	return plugin ? plugin->sphere_component_type : NULL;
 }
 
-struct lodge_ret lodge_debug_draw_plugin_new_inplace(struct lodge_plugin_debug_draw *plugin, struct lodge_plugins *plugins)
+struct lodge_ret lodge_debug_draw_plugin_new_inplace(struct lodge_plugin_debug_draw *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview_static("shaders"));
 	ASSERT(plugin->shaders);

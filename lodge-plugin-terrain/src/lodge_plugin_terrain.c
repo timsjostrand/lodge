@@ -8,7 +8,7 @@
 #include "lodge_component_type.h"
 #include "lodge_system_type.h"
 
-struct lodge_ret lodge_plugin_terrain_new_inplace(struct lodge_plugin_terrain *plugin, struct lodge_plugins *plugins)
+struct lodge_ret lodge_plugin_terrain_new_inplace(struct lodge_plugin_terrain *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview_static("shaders"));
 	ASSERT(plugin->shaders);

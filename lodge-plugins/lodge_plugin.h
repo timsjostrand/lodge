@@ -6,8 +6,9 @@
 #define LODGE_PLUGIN_VERSION 1
 
 struct lodge_plugins;
+struct lodge_argv;
 
-typedef struct lodge_ret				(*lodge_plugin_new_inplace_func_t)(void *plugin, struct lodge_plugins *plugins);
+typedef struct lodge_ret				(*lodge_plugin_new_inplace_func_t)(void *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args);
 typedef void							(*lodge_plugin_update_func_t)(void *plugin, float delta_time);
 typedef void							(*lodge_plugin_render_func_t)(void *plugin);
 typedef void							(*lodge_plugin_free_inplace_func_t)(void *plugin);

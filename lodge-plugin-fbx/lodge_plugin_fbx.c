@@ -48,7 +48,7 @@ static void lodge_res_fbx_free_inplace(struct lodge_assets *assets, strview_t na
 	fbx_asset_reset(fbx_asset);
 }
 
-static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets *fbx_assets, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets *fbx_assets, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	struct lodge_assets *files = lodge_plugins_depend(plugins, fbx_assets, strview_static("files"));
 	if(!files) {

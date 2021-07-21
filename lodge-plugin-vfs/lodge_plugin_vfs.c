@@ -1,10 +1,15 @@
 #include "lodge_plugin_vfs.h"
 
 #include "lodge_vfs.h"
+#include "core_argv.h"
 
-struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodge_plugins *plugins)
+struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	lodge_vfs_new_inplace(vfs);
+
+	strview_t mount_dir = lodge_argv_get_str(args, strview_static("mount"), strview_static("assets/"));
+	lodge_vfs_mount(vfs, strview_static("/"), mount_dir);
+
 	return lodge_success();
 }
 

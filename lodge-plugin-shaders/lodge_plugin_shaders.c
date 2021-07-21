@@ -83,7 +83,7 @@ static void lodge_shader_asset_free_inplace(struct lodge_assets *shaders, strvie
 	lodge_shader_free_inplace(shader);
 }
 
-static struct lodge_ret lodge_plugin_shaders_new_inplace(struct lodge_assets *shaders, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_shaders_new_inplace(struct lodge_assets *shaders, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	struct lodge_assets *shader_sources = lodge_plugins_depend(plugins, shaders, strview_static("shader_sources"));
 	if(!shader_sources) {

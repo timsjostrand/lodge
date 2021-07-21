@@ -3,6 +3,7 @@
 #include "renderdoc_app.h"
 
 #include "lodge_platform.h"
+#include "core_argv.h"
 
 struct lodge_plugin_renderdoc
 {
@@ -18,9 +19,9 @@ void lodge_plugin_renderdoc_free_inplace(struct lodge_plugin_renderdoc *plugin, 
 	}
 }
 
-struct lodge_ret lodge_plugin_renderdoc_new_inplace(struct lodge_plugin_renderdoc *plugin, struct lodge_plugins *plugins)
+struct lodge_ret lodge_plugin_renderdoc_new_inplace(struct lodge_plugin_renderdoc *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	strview_t renderdoc_lib_path = strview_static("C:/Program Files/RenderDoc/renderdoc.dll");
+	strview_t renderdoc_lib_path = lodge_argv_get_str(args, strview_static("renderdoc_path"), strview_static("C:/Program Files/RenderDoc/renderdoc.dll"));
 
 	void *lib = lodge_lib_load(renderdoc_lib_path.s);
 	ASSERT_OR(lib) {

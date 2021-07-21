@@ -116,7 +116,7 @@ static void lodge_assets_image_free_inplace(struct lodge_assets *assets, strview
 	lodge_image_free(image);
 }
 
-static struct lodge_ret lodge_plugin_image_new_inplace(struct lodge_assets *images, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_image_new_inplace(struct lodge_assets *images, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	struct lodge_assets *files = lodge_plugins_depend(plugins, images, strview_static("files"));
 	if(!files) {

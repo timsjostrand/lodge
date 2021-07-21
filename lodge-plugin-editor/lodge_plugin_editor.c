@@ -8,7 +8,7 @@ struct lodge_plugin_editor
 	struct lodge_editor_types types;
 };
 
-struct lodge_ret lodge_plugin_editor_new_inplace(struct lodge_plugin_editor *plugin, struct lodge_plugins *plugins)
+struct lodge_ret lodge_plugin_editor_new_inplace(struct lodge_plugin_editor *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	plugin->types.selection_system_type = lodge_editor_selection_system_type_register(plugin);
 

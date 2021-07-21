@@ -41,7 +41,7 @@ static void lodge_assets_texture_free_inplace(struct lodge_assets *assets, strvi
 	lodge_texture_reset(*texture);
 }
 
-static struct lodge_ret lodge_plugin_textures_new_inplace(struct lodge_assets *textures, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_textures_new_inplace(struct lodge_assets *textures, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	struct lodge_assets *images = lodge_plugins_depend(plugins, textures, strview_static("images"));
 	if(!images) {

@@ -328,19 +328,10 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 
 		if(plugin->new_inplace) {
 			debugf("Plugins", "Initializing `%s`...\n", plugin->name.s);
-			struct lodge_ret init_ret = plugin->new_inplace(cur, plugins);
+			struct lodge_ret init_ret = plugin->new_inplace(cur, plugins, plugins->args);
 			if(!init_ret.success) {
 				errorf("Plugins", "Error when initializing plugin `%s`: %s\n", plugin->name.s, init_ret.message.s);
 				return init_ret;
-			}
-
-			//
-			// HACK(TS): should pass ->args into each plugin init to allow plugins to read argv
-			//
-			if(strview_equals(plugin->name, strview_static("vfs")))
-			{
-				strview_t mount_dir = lodge_argv_get_str(plugins->args, strview_static("mount"), strview_static("assets/"));
-				lodge_vfs_mount((struct lodge_vfs*)cur, strview_static("/"), mount_dir);
 			}
 		}
 

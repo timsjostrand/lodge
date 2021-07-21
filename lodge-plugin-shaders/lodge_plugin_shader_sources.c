@@ -209,7 +209,7 @@ static void lodge_shader_source_free_inplace(struct lodge_assets *sources, strvi
 	txt_free(source->resolved);
 }
 
-static struct lodge_ret lodge_plugin_shader_sources_new_inplace(struct lodge_assets *sources, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_shader_sources_new_inplace(struct lodge_assets *sources, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	struct lodge_assets *files = lodge_plugins_depend(plugins, sources, strview_static("files"));
 	if(!files) {
