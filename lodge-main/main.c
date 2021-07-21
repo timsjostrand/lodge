@@ -6,12 +6,12 @@
 int main(int argc, char **argv)
 {
 	/* Parse command line arguments. */
-	struct core_argv args = { 0 };
-	core_argv_parse(&args, argc, argv);
+	struct lodge_argv args = { 0 };
+	lodge_argv_new_inplace(&args, argc, argv);
 
 	/* Find plugins */
 	struct lodge_plugins *plugins = lodge_plugins_new();
-	struct lodge_ret find_ret = lodge_plugins_find(plugins, strview_wrap(args.mount));
+	struct lodge_ret find_ret = lodge_plugins_find(plugins, &args);
 	if(!find_ret.success) {
 		errorf("Main", "Failed to find plugins: %s", find_ret.message.s);
 		return 1;

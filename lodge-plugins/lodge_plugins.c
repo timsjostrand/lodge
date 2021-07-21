@@ -2,6 +2,8 @@
 
 #include "lodge.h"
 #include "log.h"
+#include "membuf.h"
+#include "core_argv.h"
 
 #include <string.h>
 
@@ -36,24 +38,23 @@ struct lodge_plugin_meta
 
 struct lodge_plugins
 {
-	int									running;
+	bool								running;
 	struct lodge_plugin_desc			list[LODGE_PLUGINS_MAX];
 	struct lodge_plugin_meta			meta[LODGE_PLUGINS_MAX];
 	size_t								offsets[LODGE_PLUGINS_MAX];
-	int									count;
+	uint32_t							count;
 	char								*data;
 	size_t								data_size;
 	float								delta_time_factor;
 	struct lodge_plugins_frame_times	frame_times;
 
-	// HACK(TS)
-	strview_t							mount_dir;
+	const struct lodge_argv				*args;
 };
 
 static struct lodge_plugin_desc* lodge_plugins_find_plugin_by_data(struct lodge_plugins *plugins, lodge_plugin_data_t data)
 {
 	char *cur = plugins->data;
-	for(int i = 0; i < plugins->count; i++) {
+	for(uint32_t i = 0; i < plugins->count; i++) {
 		struct lodge_plugin_desc *plugin = &plugins->list[i];
 		if(data == cur) {
 			return plugin;
@@ -74,6 +75,33 @@ static void lodge_plugins_add_dependency(struct lodge_plugins *plugins, size_t p
 	}
 
 	meta->deps[meta->deps_count++] = dependee;
+}
+
+static bool lodge_plugins_remove_dependency(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin_desc *dependee)
+{
+	struct lodge_plugin_meta *meta = &plugins->meta[plugin_index];
+
+	for(size_t i = 0, count = meta->deps_count; i < count; i++) {
+		if(meta->deps[i] == dependee) {
+			membuf_delete_swap_tail(membuf_wrap(meta->deps), &meta->deps_count, i);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool lodge_plugins_is_dependency_impl(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin_desc *dependee)
+{
+	struct lodge_plugin_meta *meta = &plugins->meta[plugin_index];
+
+	for(size_t i = 0, count = meta->deps_count; i < count; i++) {
+		if(meta->deps[i] == dependee) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 static void lodge_plugins_register_frame(struct lodge_plugins_frame_times *f, float delta_time)
@@ -115,7 +143,7 @@ struct lodge_plugins* lodge_plugins_new()
 
 void lodge_plugins_free(struct lodge_plugins *plugins)
 {
-	for(int i = plugins->count - 1; i >= 0; i--) {
+	for(uint32_t i = plugins->count - 1; i >= 0; i--) {
 		struct lodge_plugin_desc *plugin = &plugins->list[i];
 
 		const size_t offset = plugins->offsets[i];
@@ -132,9 +160,38 @@ void lodge_plugins_free(struct lodge_plugins *plugins)
 	free(plugins);
 }
 
-int lodge_plugins_count(struct lodge_plugins *plugins)
+uint32_t lodge_plugins_get_count(const struct lodge_plugins *plugins)
 {
 	return plugins->count;
+}
+
+struct lodge_plugin_find_ret
+{
+	bool		success;
+	void		*data;
+	uint32_t	index;
+};
+
+struct lodge_plugin_find_ret lodge_plugins_find_by_name(struct lodge_plugins *plugins, strview_t name)
+{
+	char *cur = plugins->data;
+	for(uint32_t i = 0; i < plugins->count; i++) {
+		struct lodge_plugin_desc *plugin = &plugins->list[i];
+		if(strview_equals(plugin->name, name)) {
+			return (struct lodge_plugin_find_ret) {
+				.success = true,
+				.data = cur,
+				.index = i,
+			};
+		}
+		cur += plugin->size;
+	}
+
+	return (struct lodge_plugin_find_ret) {
+		.success = false,
+		.data = NULL,
+		.index = 0,
+	};
 }
 
 lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name)
@@ -147,14 +204,10 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 		return NULL;
 	}
 
-	char *cur = plugins->data;
-	for(int i = 0; i < plugins->count; i++) {
-		struct lodge_plugin_desc *plugin = &plugins->list[i];
-		if(strview_equals(plugin->name, name)) {
-			lodge_plugins_add_dependency(plugins, i, dependee_plugin);
-			return cur;
-		}
-		cur += plugin->size;
+	struct lodge_plugin_find_ret find_ret = lodge_plugins_find_by_name(plugins, name);
+	if(find_ret.success) {
+		lodge_plugins_add_dependency(plugins, find_ret.index, dependee_plugin);
+		return find_ret.data;
 	}
 
 	// TODO(TS): remove `dependee` from all plugins when unloaded
@@ -162,17 +215,54 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 	return NULL;
 }
 
+bool lodge_plugins_undepend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name)
+{
+	ASSERT_OR(plugins && plugins->data) {
+		return false;
+	}
+
+	struct lodge_plugin_desc *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
+	ASSERT_OR(dependee_plugin) {
+		return false;
+	}
+
+	struct lodge_plugin_find_ret find_ret = lodge_plugins_find_by_name(plugins, name);
+	if(find_ret.success) {
+		if(lodge_plugins_remove_dependency(plugins, find_ret.index, dependee_plugin)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+bool lodge_plugins_is_dependency(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name)
+{
+	struct lodge_plugin_desc *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
+	if(!dependee_plugin) {
+		return false;
+	}
+
+	struct lodge_plugin_find_ret find_ret = lodge_plugins_find_by_name(plugins, name);
+	if(find_ret.success) {
+		if(lodge_plugins_is_dependency_impl(plugins, find_ret.index, dependee_plugin)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void lodge_plugins_append(struct lodge_plugins *plugins, struct lodge_plugin_desc plugin)
 {
 	plugins->list[plugins->count++] = plugin;
 }
 
-struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mount_dir)
+struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	// TODO(TS): find plugins either by looking for dynamic libraries in filesystem or static list
 
-	// HACK(TS)
-	plugins->mount_dir = mount_dir;
+	plugins->args = args;
 
 	lodge_plugins_append(plugins, lodge_plugin_types());
 	lodge_plugins_append(plugins, lodge_plugin_vfs());
@@ -191,7 +281,7 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 	lodge_plugins_append(plugins, lodge_plugin_editor());
 	lodge_plugins_append(plugins, game_plugin());
 
-	for(int i = 0; i < plugins->count; i++) {
+	for(uint32_t i = 0; i < plugins->count; i++) {
 		debugf("Plugins", "Found plugin: `" STRVIEW_PRINTF_FMT "` (%.1f kB)\n",
 			STRVIEW_PRINTF_ARG(plugins->list[i].name),
 			plugins->list[i].size / 1024.0f
@@ -203,11 +293,11 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, strview_t mou
 
 struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 {
-	const int count = plugins->count;
+	const uint32_t count = plugins->count;
 	
 	/* Preallocate plugins data */
 	plugins->data_size = 0;
-	for(int i = 0; i < count; i++) {
+	for(uint32_t i = 0; i < count; i++) {
 		struct lodge_plugin_desc *plugin = &plugins->list[i];
 		plugins->data_size += plugin->size;
 	}
@@ -242,10 +332,13 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 				return init_ret;
 			}
 
-			// HACK(TS): Need nice way to mount default dir
+			//
+			// HACK(TS): should pass ->args into each plugin init to allow plugins to read argv
+			//
 			if(strview_equals(plugin->name, strview_static("vfs")))
 			{
-				lodge_vfs_mount((struct lodge_vfs*)cur, strview_static("/"), plugins->mount_dir);
+				strview_t mount_dir = lodge_argv_get_str(plugins->args, strview_static("mount"), strview_static("assets/"));
+				lodge_vfs_mount((struct lodge_vfs*)cur, strview_static("/"), mount_dir);
 			}
 		}
 
@@ -261,7 +354,7 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 
 void lodge_plugins_run(struct lodge_plugins *plugins)
 {
-	plugins->running = 1;
+	plugins->running = true;
 
 	/* Main loop */
 	while(plugins->running)
@@ -307,7 +400,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 	}
 }
 
-void lodge_plugins_set_running(struct lodge_plugins *plugins, int running)
+void lodge_plugins_set_running(struct lodge_plugins *plugins, bool running)
 {
 	plugins->running = running;
 }
@@ -320,4 +413,14 @@ void lodge_plugins_set_delta_time_factor(struct lodge_plugins *plugins, float de
 struct lodge_plugins_frame_times lodge_plugins_get_frame_times(struct lodge_plugins *plugins)
 {
 	return plugins->frame_times;
+}
+
+const struct lodge_plugin_desc* lodge_plugins_get_desc(const struct lodge_plugins *plugins, size_t index)
+{
+	return (index >= 0 && index < plugins->count) ? &plugins->list[index] : NULL;
+}
+
+uint32_t lodge_plugins_get_dependencies_count(const struct lodge_plugins *plugins, size_t index)
+{
+	return (index >= 0 && index < plugins->count) ? plugins->meta[index].deps_count : 0;
 }
