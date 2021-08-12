@@ -41,6 +41,22 @@
 #define LODGE_ALLOCA _alloca
 #endif
 
+//
+// LODGE_DEPRECATED marks a function as deprecated using compiler hints where available.
+// 
+// Usage:
+// 
+//     LODGE_DEPRECATED void foo(int a);
+//
+#if defined(__GNUC__) || defined(__clang__)
+#define LODGE_DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define LODGE_DEPRECATED __declspec(deprecated)
+#else
+#pragma message("LODGE_DEPRECATED not implemented for this compiler")
+#define LODGE_DEPRECATED
+#endif
+
 double	lodge_get_time();
 
 void*	lodge_lib_load(const char *filenae);
