@@ -36,7 +36,6 @@ if(MSVC)
     target_compile_options(lodge-build-flags
         INTERFACE
             "/W3"                           # More warnings.
-            "/wd4996"                       # 'x': This function or variable may be unsafe. Consider using 'x_s' instead.
             "/we4020"                       # 'function': too many actual parameters
             "/we4022"                       # 'function' : pointer mismatch for actual parameter 'number'
             "/we4098"                       # 'function': 'void' function returning a value
