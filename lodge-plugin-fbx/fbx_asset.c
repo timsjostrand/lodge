@@ -706,7 +706,7 @@ static void fbx_mesh_new_inplace(struct fbx_mesh *mesh, struct fbx_doc *doc)
 	//
 	// TODO(TS): detect when vertices need to be split -- always splitting is wasteful.
 	//
-	const bool split_vertices = true; //(doc->geometry.normals.ref_type == FBX_REF_TYPE_DIRECT);
+	const bool split_vertices = false; //(doc->geometry.normals.ref_type == FBX_REF_TYPE_DIRECT);
 
 	// Convert signed FBX indices to unsigned indices
 	{
