@@ -2,6 +2,7 @@
 #define _LODGE_FRAMEBUFFER_H
 
 #include "math4.h"
+#include "lodge_rect.h"
 
 #include <stdint.h>
 
@@ -22,14 +23,6 @@ struct lodge_framebuffer_desc
 	lodge_texture_t		stencil;
 };
 
-struct lodge_rect2i
-{
-	int32_t				x0;
-	int32_t				y0;
-	int32_t				x1;
-	int32_t				y1;
-};
-
 lodge_framebuffer_t		lodge_framebuffer_make(struct lodge_framebuffer_desc desc);
 void					lodge_framebuffer_reset(lodge_framebuffer_t framebuffer);
 
@@ -47,6 +40,6 @@ void					lodge_framebuffer_clear_depth_stencil(lodge_framebuffer_t framebuffer, 
 
 void					lodge_framebuffer_set_depth_layer(lodge_framebuffer_t framebuffer, lodge_texture_t texture, uint32_t layer);
 
-void					lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_rect2i dst_rect, struct lodge_rect2i src_rect); 
+void					lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_recti dst_rect, struct lodge_recti src_rect); 
 
 #endif // _FRAMEBUFFER_H

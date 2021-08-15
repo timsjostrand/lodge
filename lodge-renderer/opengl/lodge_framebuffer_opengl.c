@@ -152,7 +152,7 @@ void lodge_framebuffer_set_depth_layer(lodge_framebuffer_t framebuffer, lodge_te
 	GL_OK_OR_ASSERT("Failed to set framebuffer depth layer");
 }
 
-void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_rect2i dst_rect, struct lodge_rect2i src_rect)
+void lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_recti dst_rect, struct lodge_recti src_rect)
 {
 	glBlitNamedFramebuffer(
 		lodge_framebuffer_to_gl(src),
