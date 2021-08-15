@@ -1,10 +1,10 @@
-#ifndef _LODGE_RES_FILES_H
-#define _LODGE_RES_FILES_H
+#ifndef _LODGE_PLUGIN_FILES_H
+#define _LODGE_PLUGIN_FILES_H
 
 #include "strview.h"
 #include "lodge_plugin.h"
 
-struct lodge_res_file
+struct lodge_asset_file
 {
 	strview_t	name;
 	char		*data;

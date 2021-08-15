@@ -15,7 +15,7 @@ target_include_directories(lodge-plugin-textures
 target_link_libraries(lodge-plugin-textures
 	PRIVATE
 		lodge-build-flags
-		lodge-res
+		lodge-assets
 		lodge-image
 		lodge-gfx
 		lodge-plugin-images # TODO(TS): PUBLIC instead?

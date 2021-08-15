@@ -15,7 +15,7 @@ target_include_directories(lodge-plugin-files
 target_link_libraries(lodge-plugin-files
 	PRIVATE
 		lodge-build-flags
-		lodge-res
+		lodge-assets
 	PUBLIC
 		lodge-plugins
 		lodge-vfs

@@ -2,22 +2,22 @@
 
 #include "lodge_plugins.h"
 #include "lodge_plugin_files.h"
-#include "lodge_res.h"
+#include "lodge_assets.h"
 
 #include "fbx.h"
 #include "fbx_asset.h"
 
 #define USERDATA_FILES 0
 
-static bool lodge_res_fbx_new_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, void *fbx_asset_ptr, size_t size)
+static bool lodge_res_fbx_new_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, void *fbx_asset_ptr, size_t size)
 {
 	struct fbx_asset *fbx_asset = (struct fbx_asset *)fbx_asset_ptr;
 
-	struct lodge_res *files = lodge_res_get_userdata(res, USERDATA_FILES);
+	struct lodge_assets *files = lodge_assets_get_userdata(assets, USERDATA_FILES);
 	ASSERT(files);
 
-	const struct lodge_res_file *file = lodge_res_get_depend(files, name, (struct lodge_res_handle) {
-		.resources = res,
+	const struct lodge_asset_file *file = lodge_assets_get_depend(files, name, (struct lodge_asset_handle) {
+		.assets = assets,
 		.id = id,
 	});
 	if(!file) {
@@ -36,26 +36,26 @@ static bool lodge_res_fbx_new_inplace(struct lodge_res *res, strview_t name, lod
 	return true;
 }
 
-static void lodge_res_fbx_free_inplace(struct lodge_res *res, strview_t name, lodge_res_id_t id, struct fbx_asset *fbx_asset)
+static void lodge_res_fbx_free_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, struct fbx_asset *fbx_asset)
 {
-	struct lodge_res *files = lodge_res_get_userdata(res, USERDATA_FILES);
+	struct lodge_assets *files = lodge_assets_get_userdata(assets, USERDATA_FILES);
 	ASSERT(files);
 
-	lodge_res_release_depend(files, name, (struct lodge_res_handle) {
-		.resources = res,
+	lodge_assets_release_depend(files, name, (struct lodge_asset_handle) {
+		.assets = assets,
 		.id = id,
 	});
 	fbx_asset_reset(fbx_asset);
 }
 
-static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_res *fbx_res, struct lodge_plugins *plugins)
+static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets *fbx_assets, struct lodge_plugins *plugins)
 {
-	struct lodge_res *files = lodge_plugins_depend(plugins, fbx_res, strview_static("files"));
+	struct lodge_assets *files = lodge_plugins_depend(plugins, fbx_assets, strview_static("files"));
 	if(!files) {
 		return lodge_error("FBX failed to find file res");
 	}
 
-	lodge_res_new_inplace(fbx_res, (struct lodge_res_desc) {
+	lodge_assets_new_inplace(fbx_assets, (struct lodge_assets_desc) {
 		.name = strview_static("fbx"),
 		.size = sizeof(struct fbx_asset),
 		.new_inplace = &lodge_res_fbx_new_inplace,
@@ -63,21 +63,21 @@ static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_res *fbx_res, 
 		.free_inplace = &lodge_res_fbx_free_inplace
 	} );
 
-	lodge_res_set_userdata(fbx_res, USERDATA_FILES, files);
+	lodge_assets_set_userdata(fbx_assets, USERDATA_FILES, files);
 
 	return lodge_success();
 }
 
-static void lodge_plugin_fbx_free_inplace(struct lodge_res *fbx_res)
+static void lodge_plugin_fbx_free_inplace(struct lodge_assets *fbx_res)
 {
-	lodge_res_free_inplace(fbx_res);
+	lodge_assets_free_inplace(fbx_res);
 }
 
 struct lodge_plugin_desc lodge_plugin_fbx()
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_res_sizeof(),
+		.size = lodge_assets_sizeof(),
 		.name = strview_static("fbx"),
 		.new_inplace = &lodge_plugin_fbx_new_inplace,
 		.free_inplace = &lodge_plugin_fbx_free_inplace,

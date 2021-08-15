@@ -36,5 +36,4 @@ target_link_libraries(lodge-plugins
 		lodge-lib
 		lodge-window						# FIXME(TS): separate plugin module
 		lodge-gfx							# FIXME(TS): separate plugin module
-		lodge-res							# FIXME(TS): for lodge_res_files_plugin()
 )

@@ -20,7 +20,7 @@ target_link_libraries(lodge-plugin-fbx
 		${GLEW_LIBRARY}
 		lodge-collections
 		lodge-stb
-		lodge-res
+		lodge-assets
 	PUBLIC
 		lodge-plugins
 		lodge-plugin-files
