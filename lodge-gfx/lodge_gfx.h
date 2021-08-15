@@ -17,9 +17,6 @@ typedef struct lodge_shader* lodge_shader_t;
 struct lodge_sampler;
 typedef struct lodge_sampler* lodge_sampler_t;
 
-struct lodge_buffer_object;
-typedef struct lodge_buffer_object* lodge_buffer_object_t;
-
 enum lodge_gfx_primitive
 {
 	LODGE_GFX_PRIMITIVE_POINTS,
@@ -57,16 +54,6 @@ void					lodge_gfx_bind_texture_unit_cube_map(int slot, const lodge_texture_t te
 void					lodge_gfx_bind_texture_cube_map(int slot, const lodge_texture_t texture);
 
 void					lodge_gfx_bind_texture_unit_2d_array(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
-
-void					lodge_shader_set_constant_float(lodge_shader_t shader, strview_t name, float f);
-void					lodge_shader_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v);
-void					lodge_shader_set_constant_vec3(lodge_shader_t shader, strview_t name, vec3 v);
-void					lodge_shader_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v);
-void					lodge_shader_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat);
-void					lodge_shader_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp);
-
-void					lodge_shader_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object);
-void					lodge_shader_bind_constant_buffer_range(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object, size_t offset, size_t size);
 
 void					lodge_gfx_set_viewport(int32_t x, int32_t y, size_t width, size_t height);
 void					lodge_gfx_set_scissor(int32_t x, int32_t y, size_t width, size_t height);
