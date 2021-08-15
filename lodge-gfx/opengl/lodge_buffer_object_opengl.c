@@ -55,6 +55,10 @@ void lodge_buffer_object_reset(lodge_buffer_object_t buffer_object)
 
 void lodge_buffer_object_set(lodge_buffer_object_t buffer_object, size_t offset, const void *data, size_t data_size)
 {
+	ASSERT_OR(buffer_object && data) {
+		goto fail;
+	}
+
 	void* mapped_range = glMapNamedBufferRange(lodge_buffer_object_to_gl(buffer_object), offset, data_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 	GL_OK_OR_GOTO(fail);
 

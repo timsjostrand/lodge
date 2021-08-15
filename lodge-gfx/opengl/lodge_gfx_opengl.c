@@ -159,9 +159,10 @@ static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
 struct lodge_gfx* lodge_gfx_new()
 {
 	struct lodge_gfx *gfx = (struct lodge_gfx *) calloc(1, sizeof(struct lodge_gfx));
-
+	ASSERT_OR(gfx) {
+		return NULL;
+	}
 	gfx->library = strview_static("OpenGL");
-
 	return gfx;
 }
 
@@ -264,6 +265,34 @@ void lodge_gfx_bind_texture_unit_2d_array(int slot, const lodge_texture_t textur
 {
 	lodge_gfx_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D_ARRAY);
 }
+
+#if 0
+void lodge_gfx_set_bindings(struct lodge_gfx_bindings *bindings)
+{
+	ASSERT_OR(bindings) { return; }
+
+	lodge_gfx_bind_shader(bindings->shader);
+
+	for(size_t i = 0, count = bindings->textures.count; i < count; i++) {
+		struct lodge_gfx_texture_unit *texture_unit = &bindings->textures.elements[i];
+
+		switch(texture_unit->target) {
+		case LODGE_TEXTURE_TARGET_2D:
+			lodge_gfx_bind_texture_unit_2d(i, texture_unit->sampler, texture_unit->texture);
+			break;
+		case LODGE_TEXTURE_TARGET_2D_ARRAY:
+			lodge_gfx_bind_texture_unit_2d_array(i, texture_unit->sampler, texture_unit->texture);
+			break;
+		case LODGE_TEXTURE_TARGET_CUBE_MAP:
+			lodge_gfx_bind_texture_unit_cube_map(i, texture_unit->sampler, texture_unit->texture);
+			break;
+		default:
+			ASSERT_NOT_IMPLEMENTED();
+			break;
+		}
+	}
+}
+#endif
 
 void lodge_gfx_unbind_texture_unit(int slot)
 {
