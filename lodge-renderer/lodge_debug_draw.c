@@ -319,7 +319,7 @@ void lodge_debug_draw_textures_new_inplace(struct lodge_debug_draw_textures *tex
 #endif
 
 	textures->buffer_object = lodge_buffer_object_make_static(vertex_data, sizeof(vertex_data));
-	textures->sampler = lodge_sampler_make_properties((struct lodge_sampler_properties) {
+	textures->sampler = lodge_sampler_make((struct lodge_sampler_desc) {
 		.min_filter = MAG_FILTER_LINEAR,
 		.mag_filter = MAG_FILTER_LINEAR,
 		.wrap_x = WRAP_CLAMP_TO_EDGE,

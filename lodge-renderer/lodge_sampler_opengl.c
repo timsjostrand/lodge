@@ -56,19 +56,52 @@ static GLenum lodge_sampler_wrap_to_gl(enum lodge_sampler_wrap wrap)
 	return GL_REPEAT;
 }
 
-
-lodge_sampler_t lodge_sampler_make()
+static void lodge_sampler_set_min_filter(lodge_sampler_t sampler, enum lodge_sampler_min_filter min_filter)
 {
-	GLuint name;
-	glGenSamplers(1, &name);
-	GL_OK_OR_RETURN(NULL);
-	return lodge_sampler_from_gl(name);
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_MIN_FILTER, lodge_sampler_min_filter_to_gl(min_filter));
+	GL_OK_OR_ASSERT("Failed lodge_sampler_set_min_filter");
 }
 
-lodge_sampler_t lodge_sampler_make_properties(struct lodge_sampler_properties properties)
+static void lodge_sampler_set_mag_filter(lodge_sampler_t sampler, enum lodge_sampler_mag_filter mag_filter)
 {
-	lodge_sampler_t sampler = lodge_sampler_make();
-	lodge_sampler_set_properties(sampler, properties);
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_MAG_FILTER, lodge_sampler_mag_filter_to_gl(mag_filter));
+	GL_OK_OR_ASSERT("Failed lodge_sampler_set_mag_filter");
+}
+
+static void lodge_sampler_set_wrap_x(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
+{
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_S, lodge_sampler_wrap_to_gl(wrap));
+	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_x");
+}
+
+static void lodge_sampler_set_wrap_y(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
+{
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_T, lodge_sampler_wrap_to_gl(wrap));
+	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_y");
+}
+
+static void lodge_sampler_set_wrap_z(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
+{
+	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_R, lodge_sampler_wrap_to_gl(wrap));
+	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_z");
+}
+
+static void lodge_sampler_set_desc(lodge_sampler_t sampler, struct lodge_sampler_desc properties)
+{
+	lodge_sampler_set_min_filter(sampler, properties.min_filter);
+	lodge_sampler_set_mag_filter(sampler, properties.mag_filter);
+	lodge_sampler_set_wrap_x(sampler, properties.wrap_x);
+	lodge_sampler_set_wrap_y(sampler, properties.wrap_y);
+	lodge_sampler_set_wrap_z(sampler, properties.wrap_z);
+}
+
+lodge_sampler_t lodge_sampler_make(struct lodge_sampler_desc desc)
+{
+	GLuint name;
+	glCreateSamplers(1, &name);
+	GL_OK_OR_RETURN(NULL);
+	lodge_sampler_t sampler = lodge_sampler_from_gl(name);
+	lodge_sampler_set_desc(sampler, desc);
 	return sampler;
 }
 
@@ -80,43 +113,4 @@ void lodge_sampler_reset(lodge_sampler_t *sampler)
 	glDeleteSamplers(1, &name);
 	GL_OK_OR_ASSERT("Failed to delete sampler");
 	*sampler = NULL;
-}
-
-void lodge_sampler_set_min_filter(lodge_sampler_t sampler, enum lodge_sampler_min_filter min_filter)
-{
-	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_MIN_FILTER, lodge_sampler_min_filter_to_gl(min_filter));
-	GL_OK_OR_ASSERT("Failed lodge_sampler_set_min_filter");
-}
-
-void lodge_sampler_set_mag_filter(lodge_sampler_t sampler, enum lodge_sampler_mag_filter mag_filter)
-{
-	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_MAG_FILTER, lodge_sampler_mag_filter_to_gl(mag_filter));
-	GL_OK_OR_ASSERT("Failed lodge_sampler_set_mag_filter");
-}
-
-void lodge_sampler_set_wrap_x(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
-{
-	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_S, lodge_sampler_wrap_to_gl(wrap));
-	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_x");
-}
-
-void lodge_sampler_set_wrap_y(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
-{
-	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_T, lodge_sampler_wrap_to_gl(wrap));
-	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_y");
-}
-
-void lodge_sampler_set_wrap_z(lodge_sampler_t sampler, enum lodge_sampler_wrap wrap)
-{
-	glSamplerParameteri(lodge_sampler_to_gl(sampler), GL_TEXTURE_WRAP_R, lodge_sampler_wrap_to_gl(wrap));
-	GL_OK_OR_ASSERT("Failed lodge_sampler_set_wrap_z");
-}
-
-void lodge_sampler_set_properties(lodge_sampler_t sampler, struct lodge_sampler_properties properties)
-{
-	lodge_sampler_set_min_filter(sampler, properties.min_filter);
-	lodge_sampler_set_mag_filter(sampler, properties.mag_filter);
-	lodge_sampler_set_wrap_x(sampler, properties.wrap_x);
-	lodge_sampler_set_wrap_y(sampler, properties.wrap_y);
-	lodge_sampler_set_wrap_z(sampler, properties.wrap_z);
 }
