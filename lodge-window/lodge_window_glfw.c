@@ -149,9 +149,9 @@ static void lodge_windows_render(struct lodge_windows *windows)
 	}
 }
 
-struct lodge_plugin lodge_plugin_windows()
+struct lodge_plugin_desc lodge_plugin_windows()
 {
-	struct lodge_plugin plugin = {
+	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_windows),
 		.name = strview_static("windows"),
@@ -160,7 +160,6 @@ struct lodge_plugin lodge_plugin_windows()
 		.update = &lodge_windows_update,
 		.render = &lodge_windows_render,
 	};
-	return plugin;
 }
 
 GLFWwindow* glfw_window_create(const char *title, int window_width, int window_height, int window_mode, GLFWwindow* window_old)

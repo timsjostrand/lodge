@@ -24,50 +24,50 @@ typedef void(*lodge_window_resize_callback_t)(lodge_window_t window, int width, 
 
 struct lodge_windows
 {
-	strview_t		library;
-	lodge_window_t	windows[LODGE_WINDOWS_MAX];
-	int				windows_count;
+	strview_t				library;
+	lodge_window_t			windows[LODGE_WINDOWS_MAX];
+	int						windows_count;
 };
 
 struct lodge_renderer;
 
-struct lodge_plugin	lodge_plugin_windows();
+struct lodge_plugin_desc	lodge_plugin_windows();
 
-lodge_window_t		lodge_window_new(struct lodge_windows *windows, const char *title, int window_width, int window_height, int window_mode);
-void				lodge_window_free(lodge_window_t window);
-void				lodge_window_update(lodge_window_t window);
-void				lodge_window_render(lodge_window_t window);
+lodge_window_t				lodge_window_new(struct lodge_windows *windows, const char *title, int window_width, int window_height, int window_mode);
+void						lodge_window_free(lodge_window_t window);
+void						lodge_window_update(lodge_window_t window);
+void						lodge_window_render(lodge_window_t window);
 
-void				lodge_window_set_mode(lodge_window_t window, int window_mode);
-int					lodge_window_get_mode(lodge_window_t window);
-void				lodge_window_toggle_fullscreen(lodge_window_t window);
+void						lodge_window_set_mode(lodge_window_t window, int window_mode);
+int							lodge_window_get_mode(lodge_window_t window);
+void						lodge_window_toggle_fullscreen(lodge_window_t window);
 
-struct lodge_ret	lodge_window_set_renderer(lodge_window_t window, struct lodge_renderer *renderer);
-void				lodge_window_set_cursor_mode(lodge_window_t window, int value);
-void				lodge_window_set_should_close(lodge_window_t window, int value);
+struct lodge_ret			lodge_window_set_renderer(lodge_window_t window, struct lodge_renderer *renderer);
+void						lodge_window_set_cursor_mode(lodge_window_t window, int value);
+void						lodge_window_set_should_close(lodge_window_t window, int value);
 
-void				lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback, void *userdata);
-void				lodge_window_set_scroll_callback(lodge_window_t window, lodge_window_scroll_callback_t callback, void *userdata);
-void				lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback, void *userdata);
-void				lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback, void *userdata);
-void				lodge_window_set_resize_callback(lodge_window_t window, lodge_window_resize_callback_t callback, void *userdata);
+void						lodge_window_set_mousebutton_callback(lodge_window_t window, lodge_window_mousebutton_callback_t callback, void *userdata);
+void						lodge_window_set_scroll_callback(lodge_window_t window, lodge_window_scroll_callback_t callback, void *userdata);
+void						lodge_window_set_input_callback(lodge_window_t window, lodge_window_input_callback_t callback, void *userdata);
+void						lodge_window_set_input_char_callback(lodge_window_t window, lodge_window_input_char_callback_t callback, void *userdata);
+void						lodge_window_set_resize_callback(lodge_window_t window, lodge_window_resize_callback_t callback, void *userdata);
 
-void				lodge_window_get_size(lodge_window_t window, int *width, int *height);
-void				lodge_window_get_cursor(lodge_window_t window, float *x, float *y);
-int					lodge_window_get_mouse_button(lodge_window_t window, int mouse_button);
+void						lodge_window_get_size(lodge_window_t window, int *width, int *height);
+void						lodge_window_get_cursor(lodge_window_t window, float *x, float *y);
+int							lodge_window_get_mouse_button(lodge_window_t window, int mouse_button);
 
-double				lodge_window_get_time();
-void				lodge_window_get_screen_size(int* width, int* height);
-void				lodge_window_set_vsync_enabled(lodge_window_t window, int vsync);
+double						lodge_window_get_time();
+void						lodge_window_get_screen_size(int* width, int* height);
+void						lodge_window_set_vsync_enabled(lodge_window_t window, int vsync);
 
-int					lodge_window_is_open(lodge_window_t window);
-int					lodge_window_is_focused(lodge_window_t window);
+int							lodge_window_is_open(lodge_window_t window);
+int							lodge_window_is_focused(lodge_window_t window);
 
-int					lodge_window_key_down(lodge_window_t window, int key);
-int					lodge_window_key_pressed(lodge_window_t window, int key);
-int					lodge_window_key_released(lodge_window_t window, int key);
+int							lodge_window_key_down(lodge_window_t window, int key);
+int							lodge_window_key_pressed(lodge_window_t window, int key);
+int							lodge_window_key_released(lodge_window_t window, int key);
 
-strview_t			lodge_window_get_clipboard(lodge_window_t window);
-void				lodge_window_set_clipboard(lodge_window_t window, strview_t str);
+strview_t					lodge_window_get_clipboard(lodge_window_t window);
+void						lodge_window_set_clipboard(lodge_window_t window, strview_t str);
 
 #endif

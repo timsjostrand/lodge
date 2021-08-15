@@ -73,9 +73,9 @@ static void lodge_plugin_fbx_free_inplace(struct lodge_res *fbx_res)
 	lodge_res_free_inplace(fbx_res);
 }
 
-struct lodge_plugin lodge_plugin_fbx()
+struct lodge_plugin_desc lodge_plugin_fbx()
 {
-	return (struct lodge_plugin) {
+	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("fbx"),

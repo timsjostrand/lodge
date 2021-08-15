@@ -23,14 +23,14 @@
 
 struct lodge_plugin_meta
 {
-	struct lodge_plugin					*deps[LODGE_PLUGIN_DEPENDENCIES_MAX];
+	struct lodge_plugin_desc			*deps[LODGE_PLUGIN_DEPENDENCIES_MAX];
 	size_t								deps_count;
 };
 
 struct lodge_plugins
 {
 	int									running;
-	struct lodge_plugin					list[LODGE_PLUGINS_MAX];
+	struct lodge_plugin_desc			list[LODGE_PLUGINS_MAX];
 	struct lodge_plugin_meta			meta[LODGE_PLUGINS_MAX];
 	size_t								offsets[LODGE_PLUGINS_MAX];
 	int									count;
@@ -43,11 +43,11 @@ struct lodge_plugins
 	strview_t							mount_dir;
 };
 
-static struct lodge_plugin* lodge_plugins_find_plugin_by_data(struct lodge_plugins *plugins, lodge_plugin_data_t data)
+static struct lodge_plugin_desc* lodge_plugins_find_plugin_by_data(struct lodge_plugins *plugins, lodge_plugin_data_t data)
 {
 	char *cur = plugins->data;
 	for(int i = 0; i < plugins->count; i++) {
-		struct lodge_plugin *plugin = &plugins->list[i];
+		struct lodge_plugin_desc *plugin = &plugins->list[i];
 		if(data == cur) {
 			return plugin;
 		}
@@ -56,7 +56,7 @@ static struct lodge_plugin* lodge_plugins_find_plugin_by_data(struct lodge_plugi
 	return NULL;
 }
 
-static void lodge_plugins_add_dependency(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin *dependee)
+static void lodge_plugins_add_dependency(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin_desc *dependee)
 {
 	struct lodge_plugin_meta *meta = &plugins->meta[plugin_index];
 
@@ -109,7 +109,7 @@ struct lodge_plugins* lodge_plugins_new()
 void lodge_plugins_free(struct lodge_plugins *plugins)
 {
 	for(int i = plugins->count - 1; i >= 0; i--) {
-		struct lodge_plugin *plugin = &plugins->list[i];
+		struct lodge_plugin_desc *plugin = &plugins->list[i];
 
 		const size_t offset = plugins->offsets[i];
 		char *plugin_data = &plugins->data[offset];
@@ -134,7 +134,7 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 {
 	ASSERT(plugins->data);
 
-	struct lodge_plugin *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
+	struct lodge_plugin_desc *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
 	if(!dependee_plugin) {
 		ASSERT_FAIL("Failed to find dependee");
 		return NULL;
@@ -142,7 +142,7 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 
 	char *cur = plugins->data;
 	for(int i = 0; i < plugins->count; i++) {
-		struct lodge_plugin *plugin = &plugins->list[i];
+		struct lodge_plugin_desc *plugin = &plugins->list[i];
 		if(strview_equals(plugin->name, name)) {
 			lodge_plugins_add_dependency(plugins, i, dependee_plugin);
 			return cur;
@@ -155,7 +155,7 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 	return NULL;
 }
 
-void lodge_plugins_append(struct lodge_plugins *plugins, struct lodge_plugin plugin)
+void lodge_plugins_append(struct lodge_plugins *plugins, struct lodge_plugin_desc plugin)
 {
 	plugins->list[plugins->count++] = plugin;
 }
@@ -194,7 +194,7 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 	/* Preallocate plugins data */
 	plugins->data_size = 0;
 	for(int i = 0; i < count; i++) {
-		struct lodge_plugin *plugin = &plugins->list[i];
+		struct lodge_plugin_desc *plugin = &plugins->list[i];
 		plugins->data_size += plugin->size;
 	}
 
@@ -211,7 +211,7 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 	char *cur = plugins->data;
 
 	for(int i = 0; i < count; i++) {
-		struct lodge_plugin *plugin = &plugins->list[i];
+		struct lodge_plugin_desc *plugin = &plugins->list[i];
 
 		if(plugin->version != LODGE_PLUGIN_VERSION) {
 			errorf("Plugins", "Incorrect plugin version: %d (expected: %d)\n", plugin->version, LODGE_PLUGIN_VERSION);
@@ -268,7 +268,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		{
 			char *cur = plugins->data;
 			for(int i = 0; i < count; i++) {
-				struct lodge_plugin *plugin = &plugins->list[i];
+				struct lodge_plugin_desc *plugin = &plugins->list[i];
 				if(plugin->update) {
 					plugin->update(cur, delta_time);
 				}
@@ -280,7 +280,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		{
 			char *cur = plugins->data;
 			for(int i = 0; i < count; i++) {
-				struct lodge_plugin *plugin = &plugins->list[i];
+				struct lodge_plugin_desc *plugin = &plugins->list[i];
 				if(plugin->render) {
 					plugin->render(cur);
 				}

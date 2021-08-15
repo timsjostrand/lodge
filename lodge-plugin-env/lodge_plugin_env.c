@@ -2,9 +2,9 @@
 
 #include "env.h"
 
-struct lodge_plugin	lodge_plugin_env()
+struct lodge_plugin_desc lodge_plugin_env()
 {
-	return (struct lodge_plugin) {
+	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct env),
 		.name = strview_static("env"),

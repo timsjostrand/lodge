@@ -152,9 +152,9 @@ static void lodge_plugin_shaders_free_inplace(struct lodge_res *shaders)
 	lodge_res_free_inplace(shaders);
 }
 
-struct lodge_plugin lodge_plugin_shaders()
+struct lodge_plugin_desc lodge_plugin_shaders()
 {
-	return (struct lodge_plugin) {
+	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("shaders"),

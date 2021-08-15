@@ -67,9 +67,9 @@ static void lodge_plugin_image_free_inplace(struct lodge_res *images)
 	lodge_res_free_inplace(images);
 }
 
-struct lodge_plugin lodge_plugin_images()
+struct lodge_plugin_desc lodge_plugin_images()
 {
-	return (struct lodge_plugin) {
+	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("images"),

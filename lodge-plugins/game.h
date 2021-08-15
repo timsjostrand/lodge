@@ -8,7 +8,7 @@ extern "C"
 {
 #endif
 
-SHARED_SYMBOL struct lodge_plugin game_plugin();
+SHARED_SYMBOL struct lodge_plugin_desc game_plugin();
 
 #ifdef __cplusplus
 }

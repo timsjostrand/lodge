@@ -66,9 +66,9 @@ static void lodge_plugin_texture_free_inplace(struct lodge_res *textures)
 	lodge_res_free_inplace(textures);
 }
 
-struct lodge_plugin lodge_plugin_textures()
+struct lodge_plugin_desc lodge_plugin_textures()
 {
-	return (struct lodge_plugin) {
+	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_res_sizeof(),
 		.name = strview_static("textures"),
