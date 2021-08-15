@@ -65,7 +65,7 @@ static void lodge_vfs_filewatch_event(strview_t path, enum lodge_filewatch_reaso
 {
 	struct lodge_vfs_file_funcs *file_funcs = lodge_vfs_get_func_entry(vfs, path);
 	if(!file_funcs) {
-		ASSERT_FAIL("No callbacks for this file");
+		//ASSERT_FAIL("No callbacks for this file");
 		return;
 	}
 
@@ -225,6 +225,25 @@ void* lodge_vfs_read_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t*
 	}
 
 	return NULL;
+}
+
+char* lodge_vfs_read_text_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t *out_num_bytes)
+{
+	char *data = lodge_vfs_read_file(vfs, virtual_path, out_num_bytes);
+	if(!data) {
+		return NULL;
+	}
+
+	if(data[*out_num_bytes - 1] != '\0') {
+		*out_num_bytes += 1;
+		char *new_data = realloc(data, *out_num_bytes);
+		if(new_data) {
+			new_data[*out_num_bytes - 1] = '\0';
+			return new_data;
+		}
+	}
+
+	return data;
 }
 
 bool lodge_vfs_resolve_disk_path(struct lodge_vfs *vfs, strview_t virtual_path, strbuf_t disk_path_out)

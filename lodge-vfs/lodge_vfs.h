@@ -33,6 +33,7 @@ void					lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, lodge_vfs_func_t fn, v
 bool					lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t virtual_path);
 
 void*					lodge_vfs_read_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t *out_num_bytes);
+char*					lodge_vfs_read_text_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t *out_num_bytes);
 
 bool					lodge_vfs_resolve_disk_path(struct lodge_vfs *vfs, strview_t virtual_path, strbuf_t disk_path_out);
 
