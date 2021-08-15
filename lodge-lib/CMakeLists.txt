@@ -34,6 +34,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/lodge_hash.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_type.h"
         "${CMAKE_CURRENT_LIST_DIR}/lodge_variant.h"
+        "${CMAKE_CURRENT_LIST_DIR}/lodge_rect.h"
         "${CMAKE_CURRENT_LIST_DIR}/log.h"
         "${CMAKE_CURRENT_LIST_DIR}/txt.h"
         "${CMAKE_CURRENT_LIST_DIR}/strview.h"
