@@ -7,6 +7,7 @@
 #include "lodge_assert.h"
 #include "lodge_platform.h"
 #include "lodge_variant.h"
+#include "lodge_properties.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -20,7 +21,7 @@ struct lodge_type
 };
 
 struct lodge_type			lodge_types[1024];
-size_t						lodge_types_count = 12;
+size_t						lodge_types_count = 13;
 size_t						lodge_types_func_index = 1;
 
 lodge_type_t				LODGE_TYPE_NONE = NULL;
@@ -36,6 +37,7 @@ lodge_type_t				LODGE_TYPE_VEC3 = &lodge_types[8];
 lodge_type_t				LODGE_TYPE_VEC4 = &lodge_types[9];
 lodge_type_t				LODGE_TYPE_MAT4 = &lodge_types[10];
 lodge_type_t				LODGE_TYPE_ENUM_DESC = &lodge_types[11];
+lodge_type_t				LODGE_TYPE_PROPERTIES = &lodge_types[12];
 
 static void lodge_types_set(lodge_type_t type, strview_t name, size_t size)
 {
@@ -63,6 +65,7 @@ void lodge_types_default_register()
 	lodge_types_set_index(9,	strview_static("vec4"),			sizeof(vec4));
 	lodge_types_set_index(10,	strview_static("mat4"),			sizeof(mat4));
 	lodge_types_set_index(11,	strview_static("enum_desc"),	sizeof(struct lodge_enum_desc));
+	lodge_types_set_index(12,	strview_static("properties"),	sizeof(struct lodge_properties));
 }
 
 size_t lodge_types_make_func_index()
@@ -134,9 +137,32 @@ lodge_type_t lodge_type_register_enum(strview_t name, struct lodge_enum_desc des
 
 const struct lodge_enum_desc* lodge_type_get_enum_desc(lodge_type_t type)
 {
+	ASSERT(type);
 	ASSERT(LODGE_TYPE_ENUM_DESC);
 	if(type) {
 		return lodge_variant_get_type(&type->userdata, LODGE_TYPE_ENUM_DESC);
+	}
+	return NULL;
+}
+
+lodge_type_t lodge_type_register_property_object(strview_t name, size_t size, struct lodge_properties *properties)
+{
+	ASSERT(LODGE_TYPE_PROPERTIES);
+	lodge_type_t type = lodge_type_register(name, size);
+	ASSERT(type);
+	if(!type) {
+		return NULL;
+	}
+	lodge_variant_set_type(&type->userdata, LODGE_TYPE_PROPERTIES, properties);
+	return type;
+}
+
+struct lodge_properties* lodge_type_get_properties(lodge_type_t type)
+{
+	ASSERT(type);
+	ASSERT(LODGE_TYPE_PROPERTIES);
+	if(type) {
+		return (struct lodge_properties*)lodge_variant_get_type(&type->userdata, LODGE_TYPE_PROPERTIES);
 	}
 	return NULL;
 }

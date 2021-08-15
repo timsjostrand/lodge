@@ -18,10 +18,10 @@ extern lodge_type_t					LODGE_TYPE_VEC2;
 extern lodge_type_t					LODGE_TYPE_VEC3;
 #define								LODGE_TYPE_VEC3_COLOR LODGE_TYPE_VEC3
 extern lodge_type_t					LODGE_TYPE_VEC4;
-#define								LODGE_TYPE_VEC4_COLOR LODGE_TYPE_VEC4
 extern lodge_type_t					LODGE_TYPE_MAT4;
 
 extern lodge_type_t					LODGE_TYPE_ENUM_DESC;
+extern lodge_type_t					LODGE_TYPE_PROPERTIES;
 
 void								lodge_types_default_register();
 size_t								lodge_types_make_func_index();
@@ -53,5 +53,14 @@ struct lodge_enum_desc
 
 lodge_type_t						lodge_type_register_enum(strview_t name, struct lodge_enum_desc desc);
 const struct lodge_enum_desc*		lodge_type_get_enum_desc(lodge_type_t type);
+
+//
+// Property Object helpers
+//
+
+struct lodge_properties;
+
+lodge_type_t						lodge_type_register_property_object(strview_t name, size_t size, struct lodge_properties *properties);
+struct lodge_properties*			lodge_type_get_properties(lodge_type_t type);
 
 #endif
