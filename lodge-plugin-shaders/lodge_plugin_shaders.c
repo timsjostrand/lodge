@@ -107,6 +107,16 @@ static bool lodge_shader_asset_new_inplace(struct lodge_res *shaders, strview_t 
 		}
 	}
 
+	{
+		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".compute", STRVIEW_PRINTF_ARG(name));
+
+		//const struct lodge_asset_file *src = lodge_assets_get_depend(files, strbuf_to_strview(namebuf), handle);
+		const struct lodge_asset_file *src = lodge_assets_get(files, strbuf_to_strview(namebuf), handle);
+		if(src && !lodge_shader_set_compute_source(shader, strview_make(src->data, src->size))) {
+			return false;
+		}
+	}
+
 	if(!lodge_shader_link(shader)) {
 		return false;
 	}

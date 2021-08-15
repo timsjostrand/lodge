@@ -148,6 +148,8 @@ static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
 		return GL_TEXTURE_2D;
 	case LODGE_TEXTURE_TARGET_2D_ARRAY:
 		return GL_TEXTURE_2D_ARRAY;
+	case LODGE_TEXTURE_TARGET_3D:
+		return GL_TEXTURE_3D;
 	case LODGE_TEXTURE_TARGET_CUBE_MAP:
 		return GL_TEXTURE_CUBE_MAP;
 	default:
@@ -264,6 +266,11 @@ void lodge_gfx_bind_texture_unit_cube_map(int slot, const lodge_texture_t textur
 void lodge_gfx_bind_texture_unit_2d_array(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
 {
 	lodge_gfx_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D_ARRAY);
+}
+
+void lodge_gfx_bind_texture_unit_3d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+{
+	lodge_gfx_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_3D);
 }
 
 #if 0

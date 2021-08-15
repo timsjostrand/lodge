@@ -30,6 +30,7 @@ size_t	lodge_shader_sizeof();
 
 bool	lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_source);
 bool	lodge_shader_set_fragment_source(lodge_shader_t shader, strview_t fragment_source);
+bool	lodge_shader_set_compute_source(lodge_shader_t shader, strview_t compute_source);
 bool	lodge_shader_link(lodge_shader_t shader);
 
 int		lodge_shader_get_constant_index(lodge_shader_t shader, strview_t constant_name);
@@ -43,5 +44,7 @@ void	lodge_shader_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp)
 
 void	lodge_shader_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object);
 void	lodge_shader_bind_constant_buffer_range(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object, size_t offset, size_t size);
+
+void	lodge_shader_dispatch_compute(uint32_t groups_x, uint32_t groups_y, uint32_t groups_z);
 
 #endif

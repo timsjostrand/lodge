@@ -7,6 +7,7 @@ enum lodge_texture_target
 {
 	LODGE_TEXTURE_TARGET_2D,
 	LODGE_TEXTURE_TARGET_2D_ARRAY,
+	LODGE_TEXTURE_TARGET_3D,
 	LODGE_TEXTURE_TARGET_CUBE_MAP,
 };
 
@@ -60,6 +61,14 @@ struct lodge_texture_2d_desc
 	const void					*data;
 };
 
+struct lodge_texture_3d_desc
+{
+	uint32_t					width;
+	uint32_t					height;
+	uint32_t					depth;
+	enum lodge_texture_format	texture_format;
+};
+
 struct lodge_image;
 
 struct lodge_texture_cubemap_desc
@@ -81,8 +90,13 @@ lodge_texture_t					lodge_texture_2d_make_depth(uint32_t width, uint32_t height)
 
 lodge_texture_t					lodge_texture_2d_array_make_depth(uint32_t width, uint32_t height, uint32_t depth);
 
+lodge_texture_t					lodge_texture_3d_make(struct lodge_texture_3d_desc desc);
+
 lodge_texture_t					lodge_texture_cubemap_make(struct lodge_texture_cubemap_desc desc);
 
 void							lodge_texture_reset(lodge_texture_t texture);
+
+void							lodge_gfx_bind_texture_2d_output(int slot, const lodge_texture_t texture, enum lodge_texture_format texture_format);
+void							lodge_gfx_bind_texture_3d_output(int slot, const lodge_texture_t texture, enum lodge_texture_format texture_format);
 
 #endif

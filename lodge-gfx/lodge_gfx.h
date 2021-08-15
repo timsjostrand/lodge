@@ -88,6 +88,8 @@ void									lodge_gfx_bind_texture(int slot, const lodge_texture_t texture, enu
 void									lodge_gfx_bind_texture_unit_2d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
 void									lodge_gfx_bind_texture_2d(int slot, const lodge_texture_t texture);
 
+void									lodge_gfx_bind_texture_unit_3d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
+
 void									lodge_gfx_bind_texture_unit_cube_map(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler);
 void									lodge_gfx_bind_texture_cube_map(int slot, const lodge_texture_t texture);
 

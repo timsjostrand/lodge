@@ -34,6 +34,7 @@ struct lodge_shader
 
 	struct lodge_shader_stage			vertex_stage;
 	struct lodge_shader_stage			fragment_stage;
+	struct lodge_shader_stage			compute_stage;
 
 	struct lodge_shader_source_factory	source_factory;
 };
@@ -261,13 +262,15 @@ static void lodge_shader_stage_free_inplace(struct lodge_shader_stage *stage)
 
 void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name, struct lodge_shader_source_factory source_factory)
 {
-	*shader = (struct lodge_shader) { 0 };
+	memset(shader, 0, sizeof(struct lodge_shader));
+
 	shader->source_factory = source_factory;
 
 	strbuf_wrap_and(shader->name, strbuf_set, name);
 
 	lodge_shader_stage_new_inplace(&shader->vertex_stage);
 	lodge_shader_stage_new_inplace(&shader->fragment_stage);
+	lodge_shader_stage_new_inplace(&shader->compute_stage);
 }
 
 void lodge_shader_free_inplace(lodge_shader_t shader)
@@ -281,8 +284,9 @@ void lodge_shader_free_inplace(lodge_shader_t shader)
 	}
 	shader->program = 0;
 
-	lodge_shader_stage_free_inplace(&shader->vertex_stage);
+	lodge_shader_stage_free_inplace(&shader->compute_stage);
 	lodge_shader_stage_free_inplace(&shader->fragment_stage);
+	lodge_shader_stage_free_inplace(&shader->vertex_stage);
 }
 
 size_t lodge_shader_sizeof()
@@ -292,6 +296,7 @@ size_t lodge_shader_sizeof()
 
 bool lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_source)
 {
+	strbuf_setf(strbuf_wrap(shader->vertex_stage.name), "%s.vert", shader->name);
 	if(!lodge_shader_stage_set_source(shader, &shader->vertex_stage, vertex_source)) {
 		return false;
 	}
@@ -300,19 +305,32 @@ bool lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_sour
 
 bool lodge_shader_set_fragment_source(lodge_shader_t shader, strview_t fragment_source)
 {
+	strbuf_setf(strbuf_wrap(shader->fragment_stage.name), "%s.frag", shader->name);
 	if(!lodge_shader_stage_set_source(shader, &shader->fragment_stage, fragment_source)) {
 		return false;
 	}
 	return lodge_shader_stage_compile(&shader->fragment_stage, GL_FRAGMENT_SHADER);
 }
 
+bool lodge_shader_set_compute_source(lodge_shader_t shader, strview_t compute_source)
+{
+	strbuf_setf(strbuf_wrap(shader->compute_stage.name), "%s.compute", shader->name);
+	if(!lodge_shader_stage_set_source(shader, &shader->compute_stage, compute_source)) {
+		return false;
+	}
+	return lodge_shader_stage_compile(&shader->compute_stage, GL_COMPUTE_SHADER);
+}
+
 bool lodge_shader_link(lodge_shader_t shader)
 {
 	const bool has_fragment_shader = glIsShader(shader->fragment_stage.shader) == GL_TRUE;
 	const bool has_vertex_shader = glIsShader(shader->vertex_stage.shader) == GL_TRUE;
+	const bool has_compute_shader = glIsShader(shader->compute_stage.shader) == GL_TRUE;
 
-	if(!has_fragment_shader && !has_vertex_shader) {
-		shader_error("No fragment or vertex source\n");
+	if(!has_fragment_shader
+		&& !has_vertex_shader
+		&& !has_compute_shader) {
+		ASSERT_FAIL("Unable to link shader -- has no stages (fragment, vertex or compute)");
 		return false;
 	}
 
@@ -324,6 +342,9 @@ bool lodge_shader_link(lodge_shader_t shader)
 	}
 	if(has_vertex_shader) {
 		glAttachShader(shader->program, shader->vertex_stage.shader);
+	}
+	if(has_compute_shader) {
+		glAttachShader(shader->program, shader->compute_stage.shader);
 	}
 
 	glLinkProgram(shader->program);
@@ -338,7 +359,7 @@ bool lodge_shader_link(lodge_shader_t shader)
 
 void lodge_gfx_bind_shader(lodge_shader_t shader)
 {
-	ASSERT(shader);
+	ASSERT(shader && shader->program);
 	glUseProgram(shader ? shader->program : 0);
 	GL_OK_OR_ASSERT("Failed to bind shader");
 }
@@ -469,4 +490,10 @@ int lodge_shader_get_constant_index(lodge_shader_t shader, strview_t constant_na
 		return 0;
 	}
 	return glGetAttribLocation(shader->program, constant_name.s);
+}
+
+void lodge_shader_dispatch_compute(uint32_t groups_x, uint32_t groups_y, uint32_t groups_z)
+{
+	glDispatchCompute(groups_x, groups_y, groups_z);
+	GL_OK_OR_ASSERT("lodge_shader_dispatch_compute");
 }

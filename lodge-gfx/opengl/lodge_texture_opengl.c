@@ -300,6 +300,22 @@ lodge_texture_t lodge_texture_2d_array_make_depth(uint32_t width, uint32_t heigh
 	});
 }
 
+lodge_texture_t lodge_texture_3d_make(struct lodge_texture_3d_desc desc)
+{
+	GLuint texture = 0;
+	glCreateTextures(GL_TEXTURE_3D, 1, &texture);
+	GL_OK_OR_GOTO(fail);
+
+	glTextureStorage3D(texture, 1, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height, desc.depth);
+	GL_OK_OR_GOTO(fail);
+
+	return lodge_texture_from_gl(texture);
+
+fail:
+	ASSERT_FAIL("Failed to make 3d texture");
+	return NULL;
+}
+
 enum
 {
 	LODGE_CUBEMAP_X_POS,
@@ -363,4 +379,14 @@ vec4 lodge_framebuffer_read_pixel_rgba(uint32_t x, uint32_t y, uint32_t width, u
 	vec4 tmp = vec4_zero();
 	glReadPixels(x, y, 1, 1, lodge_pixel_format_to_gl(LODGE_PIXEL_FORMAT_RGBA), lodge_pixel_type_to_gl(LODGE_PIXEL_TYPE_FLOAT), &tmp);
 	return tmp;
+}
+
+void lodge_gfx_bind_texture_2d_output(int slot, const lodge_texture_t texture, enum lodge_texture_format texture_format)
+{
+	glBindImageTexture(0, lodge_texture_to_gl(texture), 0, GL_FALSE, 0, GL_WRITE_ONLY, lodge_texture_format_to_gl(texture_format));
+}
+
+void lodge_gfx_bind_texture_3d_output(int slot, const lodge_texture_t texture, enum lodge_texture_format texture_format)
+{
+	glBindImageTexture(0, lodge_texture_to_gl(texture), 0, GL_TRUE, 0, GL_WRITE_ONLY, lodge_texture_format_to_gl(texture_format));
 }
