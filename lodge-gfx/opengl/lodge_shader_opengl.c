@@ -336,14 +336,14 @@ bool lodge_shader_link(lodge_shader_t shader)
 	return true;
 }
 
-void lodge_renderer_bind_shader(lodge_shader_t shader)
+void lodge_gfx_bind_shader(lodge_shader_t shader)
 {
 	ASSERT(shader);
 	glUseProgram(shader ? shader->program : 0);
 	GL_OK_OR_ASSERT("Failed to bind shader");
 }
 
-void lodge_renderer_set_constant_float(lodge_shader_t shader, strview_t name, float f)
+void lodge_shader_set_constant_float(lodge_shader_t shader, strview_t name, float f)
 {
 	ASSERT(shader);
 	if(!shader) {
@@ -357,11 +357,11 @@ void lodge_renderer_set_constant_float(lodge_shader_t shader, strview_t name, fl
 	glProgramUniform1f(shader->program, id, f);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_float(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_shader_set_constant_float(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
-void lodge_renderer_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v)
+void lodge_shader_set_constant_vec2(lodge_shader_t shader, strview_t name, vec2 v)
 {
 	ASSERT(shader);
 	if(!shader) {
@@ -375,11 +375,11 @@ void lodge_renderer_set_constant_vec2(lodge_shader_t shader, strview_t name, vec
 	glProgramUniform2f(shader->program, id, v.x, v.y);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_vec2(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_shader_set_constant_vec2(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
-void lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name, vec3 v)
+void lodge_shader_set_constant_vec3(lodge_shader_t shader, strview_t name, vec3 v)
 {
 	ASSERT(shader);
 	if(!shader) {
@@ -393,11 +393,11 @@ void lodge_renderer_set_constant_vec3(lodge_shader_t shader, strview_t name, vec
 	glProgramUniform3f(shader->program, id, v.x, v.y, v.z);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_shader_set_constant_vec3(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
-void lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v)
+void lodge_shader_set_constant_vec4(lodge_shader_t shader, strview_t name, vec4 v)
 {
 	ASSERT(shader);
 	if(!shader) {
@@ -411,11 +411,11 @@ void lodge_renderer_set_constant_vec4(lodge_shader_t shader, strview_t name, vec
 	glProgramUniform4f(shader->program, id, v.x, v.y, v.z, v.w);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_shader_set_constant_vec4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
-void lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat)
+void lodge_shader_set_constant_mat4(lodge_shader_t shader, strview_t name, mat4 mat)
 {
 	ASSERT(shader);
 	if(!shader) {
@@ -429,37 +429,37 @@ void lodge_renderer_set_constant_mat4(lodge_shader_t shader, strview_t name, mat
 	glProgramUniformMatrix4fv(shader->program, id, 1, GL_FALSE, mat.m);
 	GLint err = glGetError();
 	if(err != GL_NO_ERROR) {
-		errorf("OpenGL", "lodge_renderer_set_constant_mat4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
+		errorf("OpenGL", "lodge_shader_set_constant_mat4(" STRVIEW_PRINTF_FMT ") failed: 0x%04x\n", STRVIEW_PRINTF_ARG(name), err);
 	}
 }
 
-void lodge_renderer_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp)
+void lodge_shader_set_constant_mvp(lodge_shader_t shader, const struct mvp *mvp)
 {
 	ASSERT(shader);
 	if(!shader) {
 		return;
 	}
-	lodge_renderer_set_constant_mat4(shader, strview_static("model"), mvp->model);
-	lodge_renderer_set_constant_mat4(shader, strview_static("view"), mvp->view);
-	lodge_renderer_set_constant_mat4(shader, strview_static("projection"), mvp->projection);
+	lodge_shader_set_constant_mat4(shader, strview_static("model"), mvp->model);
+	lodge_shader_set_constant_mat4(shader, strview_static("view"), mvp->view);
+	lodge_shader_set_constant_mat4(shader, strview_static("projection"), mvp->projection);
 }
 
-void lodge_renderer_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object)
+void lodge_shader_bind_constant_buffer(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object)
 {
-	lodge_renderer_bind_shader(shader);
+	lodge_gfx_bind_shader(shader);
 	glBindBufferBase(GL_UNIFORM_BUFFER, binding, lodge_buffer_object_to_gl(buffer_object));
-	GL_OK_OR_ASSERT("lodge_renderer_bind_constant_buffer");
+	GL_OK_OR_ASSERT("lodge_shader_bind_constant_buffer");
 }
 
-void lodge_renderer_bind_constant_buffer_range(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object, size_t offset, size_t size)
+void lodge_shader_bind_constant_buffer_range(lodge_shader_t shader, uint32_t binding, lodge_buffer_object_t buffer_object, size_t offset, size_t size)
 {
 #if 0
 	GLint aligment;
 	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &aligment);
 #endif
-	lodge_renderer_bind_shader(shader);
+	lodge_gfx_bind_shader(shader);
 	glBindBufferRange(GL_UNIFORM_BUFFER, binding, lodge_buffer_object_to_gl(buffer_object), offset, size);
-	GL_OK_OR_ASSERT("lodge_renderer_bind_constant_buffer_range");
+	GL_OK_OR_ASSERT("lodge_shader_bind_constant_buffer_range");
 }
 
 int lodge_shader_get_constant_index(lodge_shader_t shader, strview_t constant_name)

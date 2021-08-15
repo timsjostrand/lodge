@@ -26,5 +26,5 @@ target_link_libraries(lodge-plugin-fbx
 		lodge-plugin-files
 		lodge-fbx
 		lodge-lib
-		lodge-renderer
+		lodge-gfx
 )

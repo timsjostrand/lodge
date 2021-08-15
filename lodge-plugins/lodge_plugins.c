@@ -7,7 +7,7 @@
 
 // FIXME(TS): Just for `_plugin()` funcs
 #include "lodge_window.h"
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "game.h"
 #include "lodge_vfs.h"
 #include "lodge_plugin_vfs.h"

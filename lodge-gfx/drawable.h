@@ -8,12 +8,12 @@
 
 #include "math4.h"
 #include "geometry.h"
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "lodge_shader.h"
 
 struct drawable
 {
-	enum lodge_renderer_primitive	primitive;
+	enum lodge_gfx_primitive		primitive;
 	uint32_t						vertex_count;
 	uint32_t						vbo;
 	uint32_t						vao;
@@ -21,9 +21,9 @@ struct drawable
 
 struct vertex_buffer;
 
-struct drawable		drawable_make(enum lodge_renderer_primitive primitive, uint32_t vertex_count, uint32_t vbo, uint32_t vao);
+struct drawable		drawable_make(enum lodge_gfx_primitive primitive, uint32_t vertex_count, uint32_t vbo, uint32_t vao);
 #if 0
-struct drawable		drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_renderer_primitive mode);
+struct drawable		drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_gfx_primitive mode);
 #endif
 void				drawable_reset(struct drawable *d);
 
@@ -49,7 +49,7 @@ struct drawable		drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, i
 
 void				drawable_render(const struct drawable *d);
 #if 0
-void				drawable_render_detailed(enum lodge_renderer_primitive primitive, uint32_t vao, uint32_t vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp);
+void				drawable_render_detailed(enum lodge_gfx_primitive primitive, uint32_t vao, uint32_t vertex_count, GLuint *tex, vec4 color, struct shader *s, struct mvp mvp);
 void				drawable_render_simple(struct drawable *d, struct shader *s, GLuint *tex, vec4 color, mat4 transform);
 #endif
 

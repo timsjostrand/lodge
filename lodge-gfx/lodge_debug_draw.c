@@ -3,7 +3,7 @@
 #include "membuf.h"
 #include "frustum.h"
 
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "lodge_static_mesh.h"
 #include "lodge_drawable.h"
 #include "lodge_buffer_object.h"
@@ -461,8 +461,8 @@ void lodge_debug_draw_update(struct lodge_debug_draw *debug_draw, float dt)
 
 static void lodge_debug_draw_lines_render(struct lodge_debug_draw_lines *lines, lodge_shader_t shader, struct mvp mvp)
 {
-	lodge_renderer_bind_shader(shader);
-	lodge_renderer_set_constant_mvp(shader, &mvp);
+	lodge_gfx_bind_shader(shader);
+	lodge_shader_set_constant_mvp(shader, &mvp);
 
 	if(lines->gpu_dirty && lines->count > 0) {
 		lines->gpu_dirty = false;
@@ -483,8 +483,8 @@ static void lodge_debug_draw_spheres_render(struct lodge_debug_draw_spheres *sph
 		lodge_buffer_object_set(spheres->buffer_object_colors, 0, spheres->colors, sizeof(vec4) * spheres->count);
 	}
 
-	lodge_renderer_bind_shader(shader);
-	lodge_renderer_set_constant_mvp(shader, &mvp);
+	lodge_gfx_bind_shader(shader);
+	lodge_shader_set_constant_mvp(shader, &mvp);
 	lodge_drawable_render_indexed_instanced(spheres->drawable, spheres->index_count, spheres->count);
 }
 
@@ -494,7 +494,7 @@ static void lodge_debug_draw_textures_render(struct lodge_debug_draw_textures *t
 		return;
 	}
 
-	lodge_renderer_bind_shader(shader);
+	lodge_gfx_bind_shader(shader);
 
 	const uint32_t grid_size = (uint32_t)ceil(sqrt((double)textures->count));
 	const float grid_size_screen = 1.0f/(grid_size);
@@ -511,8 +511,8 @@ static void lodge_debug_draw_textures_render(struct lodge_debug_draw_textures *t
 			.view = mat4_identity(),
 			.projection = mat4_ortho(-0.5f, 0.5f, 0.5f, -0.5f, -1.0f, 1.0f)
 		};
-		lodge_renderer_set_constant_mvp(shader, &mvp);
-		lodge_renderer_bind_texture_unit_2d(0, textures->textures[i], textures->sampler);
+		lodge_shader_set_constant_mvp(shader, &mvp);
+		lodge_gfx_bind_texture_unit_2d(0, textures->textures[i], textures->sampler);
 		lodge_drawable_render_triangles(textures->drawable, 0, 6);
 	}
 }

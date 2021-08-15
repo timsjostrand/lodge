@@ -7,7 +7,7 @@
 #include "geometry.h"
 
 #include "lodge_platform.h"
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "lodge_shader.h"
 #include "lodge_buffer_object.h"
 #include "lodge_drawable.h"
@@ -841,11 +841,11 @@ void fbx_asset_reset(struct fbx_asset *asset)
 
 void fbx_asset_render(const struct fbx_asset *asset, lodge_shader_t shader, lodge_texture_t tex, struct mvp mvp)
 {
-	lodge_renderer_bind_shader(shader);
-	lodge_renderer_set_constant_mvp(shader, &mvp);
+	lodge_gfx_bind_shader(shader);
+	lodge_shader_set_constant_mvp(shader, &mvp);
 
 	// FIXME(TS): material should not be hardcoded, use texture unit instead
-	lodge_renderer_bind_texture_2d(0, tex);
+	lodge_gfx_bind_texture_2d(0, tex);
 
 	lodge_drawable_render_indexed(asset->drawable, asset->static_mesh.indices_count, 0);
 }

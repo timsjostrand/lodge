@@ -29,7 +29,7 @@ struct lodge_windows
 	int						windows_count;
 };
 
-struct lodge_renderer;
+struct lodge_gfx;
 
 struct lodge_plugin_desc	lodge_plugin_windows();
 
@@ -42,7 +42,7 @@ void						lodge_window_set_mode(lodge_window_t window, int window_mode);
 int							lodge_window_get_mode(lodge_window_t window);
 void						lodge_window_toggle_fullscreen(lodge_window_t window);
 
-struct lodge_ret			lodge_window_set_renderer(lodge_window_t window, struct lodge_renderer *renderer);
+struct lodge_ret			lodge_window_set_renderer(lodge_window_t window, struct lodge_gfx *gfx);
 void						lodge_window_set_cursor_mode(lodge_window_t window, int value);
 void						lodge_window_set_should_close(lodge_window_t window, int value);
 

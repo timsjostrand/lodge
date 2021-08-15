@@ -26,33 +26,33 @@
 /* Number of components in a quad. */
 #define VBO_QUAD_LEN					(VBO_QUAD_VERTEX_COUNT * VBO_VERTEX_LEN)
 
-static int32_t lodge_renderer_primitive_to_gl(enum lodge_renderer_primitive dm)
+static int32_t lodge_gfx_primitive_to_gl(enum lodge_gfx_primitive dm)
 {
 	switch(dm)
 	{
-	case LODGE_RENDERER_PRIMITIVE_POINTS:
+	case LODGE_GFX_PRIMITIVE_POINTS:
 		return GL_POINTS;
-	case LODGE_RENDERER_PRIMITIVE_LINE_STRIP:
+	case LODGE_GFX_PRIMITIVE_LINE_STRIP:
 		return GL_LINE_STRIP;
-	case LODGE_RENDERER_PRIMITIVE_LINE_LOOP:
+	case LODGE_GFX_PRIMITIVE_LINE_LOOP:
 		return GL_LINE_LOOP;
-	case LODGE_RENDERER_PRIMITIVE_LINES:
+	case LODGE_GFX_PRIMITIVE_LINES:
 		return GL_LINES;
-	case LODGE_RENDERER_PRIMITIVE_LINE_STRIP_ADJACENCY:
+	case LODGE_GFX_PRIMITIVE_LINE_STRIP_ADJACENCY:
 		return GL_LINE_STRIP_ADJACENCY;
-	case LODGE_RENDERER_PRIMITIVE_LINES_ADJACENCY:
+	case LODGE_GFX_PRIMITIVE_LINES_ADJACENCY:
 		return GL_LINES_ADJACENCY;
-	case LODGE_RENDERER_PRIMITIVE_TRIANGLE_STRIP:
+	case LODGE_GFX_PRIMITIVE_TRIANGLE_STRIP:
 		return GL_TRIANGLE_STRIP;
-	case LODGE_RENDERER_PRIMITIVE_TRIANGLE_FAN:
+	case LODGE_GFX_PRIMITIVE_TRIANGLE_FAN:
 		return GL_TRIANGLE_FAN;
-	case LODGE_RENDERER_PRIMITIVE_TRIANGLES:
+	case LODGE_GFX_PRIMITIVE_TRIANGLES:
 		return GL_TRIANGLES;
-	case LODGE_RENDERER_PRIMITIVE_TRIANGLE_STRIP_ADJACENCY:
+	case LODGE_GFX_PRIMITIVE_TRIANGLE_STRIP_ADJACENCY:
 		return GL_TRIANGLE_STRIP_ADJACENCY;
-	case LODGE_RENDERER_PRIMITIVE_TRIANGLES_ADJACENCY:
+	case LODGE_GFX_PRIMITIVE_TRIANGLES_ADJACENCY:
 		return GL_TRIANGLES_ADJACENCY;
-	case LODGE_RENDERER_PRIMITIVE_PATCHES:
+	case LODGE_GFX_PRIMITIVE_PATCHES:
 		return GL_PATCHES;
 	default:
 		ASSERT_FAIL("Invalid draw_mode");
@@ -251,7 +251,7 @@ static void drawable_get_vertices_rect_outline(GLfloat *dst, float x, float y, f
 	dst[4 * VBO_VERTEX_LEN + 4] = 0.0f;		// v
 }
 
-static struct drawable drawable_make_xyzuv(enum lodge_renderer_primitive primitive, const xyzuv_t *vertices, size_t vertex_count)
+static struct drawable drawable_make_xyzuv(enum lodge_gfx_primitive primitive, const xyzuv_t *vertices, size_t vertex_count)
 {
 	ASSERT(vertices);
 	ASSERT(vertex_count > 0);
@@ -298,7 +298,7 @@ static struct drawable drawable_make_xyzuv(enum lodge_renderer_primitive primiti
 	return drawable;
 }
 
-static struct drawable drawable_make_vertex(enum lodge_renderer_primitive primitive, const vertex_t *vertices, GLuint vertex_count)
+static struct drawable drawable_make_vertex(enum lodge_gfx_primitive primitive, const vertex_t *vertices, GLuint vertex_count)
 {
 	ASSERT(vertices);
 	ASSERT(vertex_count > 0);
@@ -361,7 +361,7 @@ static struct drawable drawable_make_vertex(enum lodge_renderer_primitive primit
 	return drawable;
 }
 
-struct drawable drawable_make(enum lodge_renderer_primitive primitive, GLuint vertex_count, GLuint vbo, GLuint vao)
+struct drawable drawable_make(enum lodge_gfx_primitive primitive, GLuint vertex_count, GLuint vbo, GLuint vao)
 {
 	return (struct drawable) {
 		.primitive = primitive,
@@ -372,7 +372,7 @@ struct drawable drawable_make(enum lodge_renderer_primitive primitive, GLuint ve
 }
 
 #if 0
-struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_renderer_primitive primitive)
+struct drawable drawable_make_from_buffer(struct vertex_buffer *vb, enum lodge_gfx_primitive primitive)
 {
 	struct drawable drawable = { 0 };
 
@@ -437,11 +437,11 @@ void drawable_reset(struct drawable *d)
 void drawable_render(const struct drawable *d)
 {
 	glBindVertexArray(d->vao);
-	glDrawArrays(lodge_renderer_primitive_to_gl(d->primitive), 0, d->vertex_count);
+	glDrawArrays(lodge_gfx_primitive_to_gl(d->primitive), 0, d->vertex_count);
 }
 
 #if 0
-void drawable_render_detailed(enum lodge_renderer_primitive primitive, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, lodge_shader_t s, struct mvp mvp)
+void drawable_render_detailed(enum lodge_gfx_primitive primitive, GLuint vao, GLuint vertex_count, GLuint *tex, vec4 color, lodge_shader_t s, struct mvp mvp)
 {
 	ASSERT(vertex_count > 0);
 	ASSERT(s->program != 0);
@@ -489,7 +489,7 @@ void drawable_render_detailed(enum lodge_renderer_primitive primitive, GLuint va
 		GL_OK_OR_ASSERT("Could not bind drawable texture");
 	}
 
-	glDrawArrays(lodge_renderer_primitive_to_gl(primitive), 0, vertex_count);
+	glDrawArrays(lodge_gfx_primitive_to_gl(primitive), 0, vertex_count);
 	GL_OK_OR_RETURN();
 
 	glBindVertexArray(0);
@@ -537,7 +537,7 @@ void drawable_new_rect_outlinef(struct drawable *dst, float x, float y, float w,
 
 void drawable_new_rect_solidf(struct drawable *dst, float x, float y, float w, float h)
 {
-	dst->primitive = LODGE_RENDERER_PRIMITIVE_TRIANGLES;
+	dst->primitive = LODGE_GFX_PRIMITIVE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6;
 	GLfloat *vertices = (GLfloat *) calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
@@ -687,7 +687,7 @@ struct drawable drawable_make_plane_subdivided(vec2 origin, vec2 size, int divis
 	}
 
 	/* Upload vertices to GPU. */
-	struct drawable drawable = drawable_make_xyzuv(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, vertex_count);
+	struct drawable drawable = drawable_make_xyzuv(LODGE_GFX_PRIMITIVE_TRIANGLES, vertices, vertex_count);
 
 	/* Cleanup. */
 	free(vertices);
@@ -716,7 +716,7 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 	}
 
 	/* Upload vertices to GPU. */
-	struct drawable drawable = drawable_make_vertex(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, vertex_count);
+	struct drawable drawable = drawable_make_vertex(LODGE_GFX_PRIMITIVE_TRIANGLES, vertices, vertex_count);
 
 	/* Cleanup. */
 	free(vertices);
@@ -727,7 +727,7 @@ struct drawable drawable_make_plane_subdivided_vertex(vec2 origin, vec2 size, in
 #if 0
 void drawable_new_rect_fullscreen(struct drawable *dst, lodge_shader_t s)
 {
-	dst->primitive = LODGE_RENDERER_PRIMITIVE_TRIANGLES;
+	dst->primitive = LODGE_GFX_PRIMITIVE_TRIANGLES;
 	/* Allocate memory for vertices. */
 	dst->vertex_count = 6;
 	GLfloat *vertices = (GLfloat *)calloc(dst->vertex_count * VBO_VERTEX_LEN, sizeof(GLfloat));
@@ -878,6 +878,6 @@ struct drawable drawable_make_unit_cube()
 		{  0.5f, -0.5f,  0.5f, 0.0f, 0.0f },
 	};
 
-	return drawable_make_xyzuv(LODGE_RENDERER_PRIMITIVE_TRIANGLES, vertices, LODGE_ARRAYSIZE(vertices));
+	return drawable_make_xyzuv(LODGE_GFX_PRIMITIVE_TRIANGLES, vertices, LODGE_ARRAYSIZE(vertices));
 }
 #endif

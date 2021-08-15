@@ -24,5 +24,5 @@ target_link_libraries(lodge-window
 	PUBLIC
 		lodge-lib
 		lodge-plugins		# FIXME(TS): should be separate module
-		lodge-renderer		# FIXME(TS): not sure about this dependency
+		lodge-gfx			# FIXME(TS): not sure about this dependency
 )

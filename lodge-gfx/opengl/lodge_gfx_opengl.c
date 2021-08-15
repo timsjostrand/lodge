@@ -1,4 +1,4 @@
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 
 #include "lodge_opengl.h"
 #include "lodge_texture.h"
@@ -12,7 +12,7 @@ struct unit_drawables
 	struct drawable			rect;
 };
 
-struct lodge_renderer
+struct lodge_gfx
 {
 	strview_t				library;
 	struct unit_drawables	unit_drawables;
@@ -95,13 +95,13 @@ static void GLAPIENTRY loc_opengl_debug_message_callback(GLenum source, GLenum t
 }
 
 #if 0
-static struct lodge_ret lodge_renderer_opengl_init(struct lodge_renderer *renderer)
+static struct lodge_ret lodge_gfx_opengl_init(struct lodge_gfx *gfx)
 {
-	renderer->library = strview_static("OpenGL");
+	gfx->library = strview_static("OpenGL");
 	return lodge_success();
 }
 
-static void lodge_renderer_opengl_free(struct lodge_renderer *renderer)
+static void lodge_gfx_opengl_free(struct lodge_gfx *gfx)
 {
 }
 #endif
@@ -156,22 +156,22 @@ static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
 	}
 };
 
-struct lodge_renderer* lodge_renderer_new()
+struct lodge_gfx* lodge_gfx_new()
 {
-	struct lodge_renderer *renderer = (struct lodge_renderer *) calloc(1, sizeof(struct lodge_renderer));
+	struct lodge_gfx *gfx = (struct lodge_gfx *) calloc(1, sizeof(struct lodge_gfx));
 
-	renderer->library = strview_static("OpenGL");
+	gfx->library = strview_static("OpenGL");
 
-	return renderer;
+	return gfx;
 }
 
-void lodge_renderer_free(struct lodge_renderer *renderer)
+void lodge_gfx_free(struct lodge_gfx *gfx)
 {
 	//ASSERT_NOT_IMPLEMENTED();
-	free(renderer);
+	free(gfx);
 }
 
-struct lodge_ret lodge_renderer_attach(struct lodge_renderer *renderer)
+struct lodge_ret lodge_gfx_attach(struct lodge_gfx *gfx)
 {
 	/* Init GLEW. */
 	glewExperimental = GL_TRUE;
@@ -192,7 +192,7 @@ struct lodge_ret lodge_renderer_attach(struct lodge_renderer *renderer)
 	glDebugMessageCallback((GLDEBUGPROC)&loc_opengl_debug_message_callback, 0);
 	GL_OK_OR_RETURN(lodge_error("Failed call glDebugMessageCallback`"));
 
-	struct lodge_ret unit_drawables_ret = unit_drawables_init(&renderer->unit_drawables);
+	struct lodge_ret unit_drawables_ret = unit_drawables_init(&gfx->unit_drawables);
 	if(!unit_drawables_ret.success) {
 		return unit_drawables_ret;
 	}
@@ -200,72 +200,72 @@ struct lodge_ret lodge_renderer_attach(struct lodge_renderer *renderer)
 	return lodge_success();
 }
 
-void lodge_renderer_detach(struct lodge_renderer *renderer)
+void lodge_gfx_detach(struct lodge_gfx *gfx)
 {
-	unit_drawables_reset(&renderer->unit_drawables);
+	unit_drawables_reset(&gfx->unit_drawables);
 }
 
-strview_t lodge_renderer_get_library(struct lodge_renderer *renderer)
+strview_t lodge_gfx_get_library(struct lodge_gfx *gfx)
 {
-	return renderer->library;
+	return gfx->library;
 }
 
-struct drawable* lodge_renderer_get_unit_rect(struct lodge_renderer *renderer)
+struct drawable* lodge_gfx_get_unit_rect(struct lodge_gfx *gfx)
 {
-	return &renderer->unit_drawables.rect;
+	return &gfx->unit_drawables.rect;
 }
 
-void lodge_renderer_bind_texture(int slot, const lodge_texture_t texture, enum lodge_texture_target target)
-{
-	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
-	glActiveTexture(slot_opengl);
-	glBindTexture(lodge_texture_target_to_gl(target), lodge_texture_to_gl(texture));
-	GL_OK_OR_ASSERT("Failed to bind texture");
-}
-
-void lodge_renderer_bind_sampler(int slot, const lodge_sampler_t sampler)
-{
-	glBindSampler(slot, lodge_sampler_to_gl(sampler));
-	GL_OK_OR_ASSERT("Failed to bind sampler");
-}
-
-void lodge_renderer_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler, enum lodge_texture_target target)
+void lodge_gfx_bind_texture(int slot, const lodge_texture_t texture, enum lodge_texture_target target)
 {
 	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
 	glBindTexture(lodge_texture_target_to_gl(target), lodge_texture_to_gl(texture));
 	GL_OK_OR_ASSERT("Failed to bind texture");
+}
+
+void lodge_gfx_bind_sampler(int slot, const lodge_sampler_t sampler)
+{
+	glBindSampler(slot, lodge_sampler_to_gl(sampler));
+	GL_OK_OR_ASSERT("Failed to bind sampler");
+}
+
+void lodge_gfx_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler, enum lodge_texture_target target)
+{
+	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
+	glActiveTexture(slot_opengl);
+	glBindTexture(lodge_texture_target_to_gl(target), lodge_texture_to_gl(texture));
+	GL_OK_OR_ASSERT("Failed to bind texture");
 
 	glBindSampler(slot, lodge_sampler_to_gl(sampler));
 	GL_OK_OR_ASSERT("Failed to bind sampler");
 }
 
-void lodge_renderer_bind_texture_2d(int slot, const lodge_texture_t texture)
+void lodge_gfx_bind_texture_2d(int slot, const lodge_texture_t texture)
 {
-	lodge_renderer_bind_texture(slot, texture, LODGE_TEXTURE_TARGET_2D);
+	lodge_gfx_bind_texture(slot, texture, LODGE_TEXTURE_TARGET_2D);
 }
 
-void lodge_renderer_bind_texture_unit_2d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+void lodge_gfx_bind_texture_unit_2d(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
 {
-	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D);
+	lodge_gfx_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D);
 }
 
-void lodge_renderer_bind_texture_cube_map(int slot, const lodge_texture_t texture)
+void lodge_gfx_bind_texture_cube_map(int slot, const lodge_texture_t texture)
 {
-	lodge_renderer_bind_texture(slot, texture, LODGE_TEXTURE_TARGET_CUBE_MAP);
+	lodge_gfx_bind_texture(slot, texture, LODGE_TEXTURE_TARGET_CUBE_MAP);
 }
 
-void lodge_renderer_bind_texture_unit_cube_map(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+void lodge_gfx_bind_texture_unit_cube_map(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
 {
-	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_CUBE_MAP);
+	lodge_gfx_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_CUBE_MAP);
 }
 
-void lodge_renderer_bind_texture_unit_2d_array(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
+void lodge_gfx_bind_texture_unit_2d_array(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler)
 {
-	lodge_renderer_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D_ARRAY);
+	lodge_gfx_bind_texture_unit(slot, texture, sampler, LODGE_TEXTURE_TARGET_2D_ARRAY);
 }
 
-void lodge_renderer_unbind_texture_unit(int slot)
+void lodge_gfx_unbind_texture_unit(int slot)
 {
 	const GLenum slot_opengl = (GLenum)((GLint)GL_TEXTURE0 + (GLint)slot);
 	glActiveTexture(slot_opengl);
@@ -274,22 +274,22 @@ void lodge_renderer_unbind_texture_unit(int slot)
 	GL_OK_OR_ASSERT("Failed to unbind texture unit");
 }
 
-void lodge_renderer_set_viewport(int32_t x, int32_t y, size_t width, size_t height)
+void lodge_gfx_set_viewport(int32_t x, int32_t y, size_t width, size_t height)
 {
 	glViewport(x, y, width, height);
 }
 
-void lodge_renderer_set_scissor(int32_t x, int32_t y, size_t width, size_t height)
+void lodge_gfx_set_scissor(int32_t x, int32_t y, size_t width, size_t height)
 {
 	glScissor(x, y, width, height);
 }
 
-void lodge_renderer_annotate_begin(strview_t message)
+void lodge_gfx_annotate_begin(strview_t message)
 {
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, message.length, message.s);
 }
 
-void lodge_renderer_annotate_end()
+void lodge_gfx_annotate_end()
 {
 	glPopDebugGroup();
 }

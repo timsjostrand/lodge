@@ -16,6 +16,6 @@ target_include_directories(lodge-plugin-shaders
 target_link_libraries(lodge-plugin-shaders
 	PRIVATE
 		lodge-plugins
-		lodge-renderer
+		lodge-gfx
 		lodge-plugin-files
 )

@@ -1,11 +1,11 @@
-# lodge-renderer
+# lodge-gfx
 
-add_library(lodge-renderer STATIC "")
+add_library(lodge-gfx STATIC "")
 
-target_sources(lodge-renderer
+target_sources(lodge-gfx
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_opengl.h"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_renderer_opengl.c"
+		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_gfx_opengl.c"
 		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_sampler_opengl.c"
 		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_texture_opengl.c"
 		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_framebuffer_opengl.c"
@@ -20,7 +20,7 @@ target_sources(lodge-renderer
 		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.c"
 		"${CMAKE_CURRENT_LIST_DIR}/vertex.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_renderer.h"
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_gfx.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_sampler.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_texture.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_framebuffer.h"
@@ -32,17 +32,17 @@ target_sources(lodge-renderer
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_debug_draw.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_static_mesh.h"
 		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.h"
-		"${CMAKE_CURRENT_LIST_DIR}/vertex.h" # FIXME(TS): vertex types should be more general than `lodge-renderer` but less general than `lodge-lib`
+		"${CMAKE_CURRENT_LIST_DIR}/vertex.h" # FIXME(TS): vertex types should be more general than `lodge-gfx` but less general than `lodge-lib`
 )
 
-target_include_directories(lodge-renderer
+target_include_directories(lodge-gfx
 	PRIVATE
 		"${CMAKE_CURRENT_SOURCE_DIR}/opengl/"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-target_link_libraries(lodge-renderer
+target_link_libraries(lodge-gfx
 	PRIVATE
 		lodge-build-flags
 	PUBLIC
@@ -50,6 +50,6 @@ target_link_libraries(lodge-renderer
 		lodge-lib
 		lodge-image
 		lodge-collections
-		lodge-plugins			# FIXME(TS): should be separate module `lodge-plugin-renderer`
+		lodge-plugins			# FIXME(TS): should be separate module `lodge-plugin-gfx`
 		#lodge-vfs				# FIXME(TS): only for shader.{h,c}
 )

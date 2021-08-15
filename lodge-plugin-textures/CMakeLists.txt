@@ -17,7 +17,7 @@ target_link_libraries(lodge-plugin-textures
 		lodge-build-flags
 		lodge-res
 		lodge-image
-		lodge-renderer
+		lodge-gfx
 		lodge-plugin-images # TODO(TS): PUBLIC instead?
 	PUBLIC
 		lodge-plugins

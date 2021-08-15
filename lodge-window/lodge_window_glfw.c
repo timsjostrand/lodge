@@ -4,7 +4,7 @@
 
 #include "lodge_window.h"
 #include "lodge_plugins.h"
-#include "lodge_renderer.h"
+#include "lodge_gfx.h"
 #include "lodge_keys.h"
 #include "lodge_input.h"
 #include "log.h"
@@ -263,11 +263,11 @@ void lodge_window_free(lodge_window_t window)
 	free(glfw_window);
 }
 
-struct lodge_ret lodge_window_set_renderer(lodge_window_t window, struct lodge_renderer *renderer)
+struct lodge_ret lodge_window_set_renderer(lodge_window_t window, struct lodge_gfx *gfx)
 {
 	struct glfw_window* glfw_window = cast_handle(window);
 	glfwMakeContextCurrent(glfw_window->window);
-	struct lodge_ret attach_ret = lodge_renderer_attach(renderer);
+	struct lodge_ret attach_ret = lodge_gfx_attach(gfx);
 	if(!attach_ret.success) {
 		ASSERT_FAIL("Failed to attach renderer");
 		errorf("Window", "Failed to attach renderer: %s\n", attach_ret.message.s);
