@@ -208,7 +208,7 @@ struct lodge_plugins* lodge_plugins_new()
 
 void lodge_plugins_free(struct lodge_plugins *plugins)
 {
-	for(uint32_t i = plugins->count - 1; i >= 0; i--) {
+	for(int64_t i = plugins->count - 1; i >= 0; i--) {
 		struct lodge_plugin_desc *plugin = &plugins->list[i];
 
 		const size_t offset = plugins->offsets[i];
