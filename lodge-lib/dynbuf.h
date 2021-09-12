@@ -25,8 +25,12 @@ typedef struct dynbuf
 //		struct my_elem foo = { 0 };
 //		dynbuf_append(dynbuf_wrap(&my_buf_global), &foo, sizeof(foo));
 //	
-#define			dynbuf_wrap(DYNBUF) (dynbuf_t) { .capacity = &DYNBUF->capacity, .count = &DYNBUF->count, .type_size = sizeof(*DYNBUF->elements), .ptr = (char **)&DYNBUF->elements }
-#define			dynbuf_wrap_stack(DYNBUF_STACK) dynbuf_wrap( (&DYNBUF_STACK) )
+#define			dynbuf_ptr(DYNBUF) (dynbuf_t) { .capacity = &DYNBUF->capacity, .count = &DYNBUF->count, .type_size = sizeof(*DYNBUF->elements), .ptr = (char **)&DYNBUF->elements }
+#define			dynbuf(DYNBUF) dynbuf_ptr( (&DYNBUF) )
+
+// Deprecated API:
+#define			dynbuf_wrap(DYNBUF) dynbuf_ptr(DYNBUF)
+#define			dynbuf_wrap_stack(DYNBUF_STACK) dynbuf(DYNBUF_STACK)
 
 void			dynbuf_new_inplace(dynbuf_t dynbuf, size_t default_capacity);
 void			dynbuf_free_inplace(dynbuf_t dynbuf);
