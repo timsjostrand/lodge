@@ -19,9 +19,11 @@ struct lodge_ret lodge_plugin_terrain_new_inplace(struct lodge_plugin_terrain *p
 	// FIXME(TS): support optional dependencies
 	plugin->plugin_debug_draw = lodge_plugins_depend(plugins, plugin, strview_static("debug_draw"));
 
-	plugin->system_type = lodge_terrain_system_type_register(plugin);
-	plugin->component_type = lodge_terrain_component_type_register();
-	plugin->foliage_component_type = lodge_foliage_component_type_register();
+	plugin->types = (struct lodge_terrain_types) {
+		.terrain_system_type = lodge_terrain_system_type_register(plugin),
+		.terrain_component_type = lodge_terrain_component_type_register(),
+		.foliage_component_type = lodge_foliage_component_type_register(),
+	};
 
 	return lodge_success();
 }
@@ -44,17 +46,7 @@ struct lodge_plugin_desc lodge_plugin_terrain()
 	};
 }
 
-lodge_system_type_t lodge_plugin_terrain_get_system_type(struct lodge_plugin_terrain *terrain)
+struct lodge_terrain_types lodge_plugin_terrain_get_types(struct lodge_plugin_terrain *terrain)
 {
-	return terrain ? terrain->system_type : NULL;
-}
-
-lodge_component_type_t lodge_plugin_terrain_get_component_type(struct lodge_plugin_terrain *terrain)
-{
-	return terrain ? terrain->component_type : NULL;
-}
-
-lodge_component_type_t lodge_plugin_terrain_get_foliage_component_type(struct lodge_plugin_terrain *terrain)
-{
-	return terrain ? terrain->foliage_component_type : NULL;
+	return terrain ? terrain->types : (struct lodge_terrain_types) { 0 };
 }

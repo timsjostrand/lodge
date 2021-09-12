@@ -19,6 +19,6 @@ enum lodge_terrain_lod_level
 	LODGE_TERRAIN_LOD_LEVEL_MAX,
 };
 
-lodge_system_type_t lodge_terrain_system_type_register(struct lodge_plugin_terrain *plugin);
+lodge_system_type_t			lodge_terrain_system_type_register(struct lodge_plugin_terrain *plugin);
 
 #endif

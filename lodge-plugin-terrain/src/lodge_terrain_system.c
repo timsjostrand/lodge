@@ -195,17 +195,7 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 						model = mat4_scale(model, xyz_of(chunk->world_size));
 
 						lodge_shader_set_constant_vec2(system->terrain_shader, strview_static("chunk_offset"), vec2_make(x/(float)x_max, y/(float)y_max));
-
-#if 0
-						struct mvp mvp = {
-							.model = model,
-							.view = pass_params->camera.view,
-							.projection = pass_params->camera.projection
-						};
-						lodge_gfx_set_constant_mvp(system->shader, &mvp);
-#else
 						lodge_shader_set_constant_mat4(system->terrain_shader, strview_static("model"), model);
-#endif
 
 						int lod_level = (int)chunk->lod;
 						ASSERT(lod_level >= LODGE_TERRAIN_LOD_LEVEL_128 && lod_level < LODGE_TERRAIN_LOD_LEVEL_MAX);
@@ -221,17 +211,7 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 					mat4 model = mat4_translation(it->center.x, it->center.y, 0.0f);
 					model = mat4_scale(model, it->size.x, it->size.y, scale.z); // FIXME(TS): Z scaling
 
-#if 0
-					struct mvp mvp = {
-						.model = model,
-						.view = pass_params->camera.view,
-						.projection = pass_params->camera.projection
-					};
-					lodge_gfx_set_constant_mvp(system->shader, &mvp);
-#else
 					lodge_shader_set_constant_mat4(system->terrain_shader, strview_static("model"), model);
-#endif
-
 					lodge_shader_set_constant_float(system->terrain_shader, strview_static("chunk_level"), (float)it->lod);
 
 					ASSERT(it->lod >= 0 && it->lod < LODGE_TERRAIN_LOD_LEVEL_MAX);
