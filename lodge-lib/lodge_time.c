@@ -1,5 +1,7 @@
 #include "lodge_time.h"
 
+#include "lodge_assert.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -17,8 +19,9 @@ static uint64_t get_cycles()
 	return __rdtsc();
 }
 
-static uint64_t get_milliseconds()
+static double get_seconds()
 {
+#if 0
 	LARGE_INTEGER timestamp;
 	LARGE_INTEGER frequency;
 
@@ -26,6 +29,22 @@ static uint64_t get_milliseconds()
 	QueryPerformanceFrequency(&frequency);
 
 	return (uint64_t)(timestamp.QuadPart / (frequency.QuadPart / 1000));
+#else
+    uint64_t frequency;
+    if(QueryPerformanceFrequency((LARGE_INTEGER*) &frequency)) {
+		uint64_t value;
+        QueryPerformanceCounter((LARGE_INTEGER*) &value);
+        return value / (double)frequency;
+	} else {
+		ASSERT_NOT_IMPLEMENTED();
+		return 0;
+	}
+#endif
+}
+
+static double get_milliseconds()
+{
+	return get_seconds() * 1000.0f;
 }
 
 #else
@@ -39,7 +58,7 @@ static uint64_t get_cycles()
 	return ((uint64_t)hi << 32) | lo;
 }
 
-static uint64_t get_milliseconds()
+static double get_milliseconds()
 {
 	struct timeval time;
 	gettimeofday(&time, NULL);
@@ -48,8 +67,17 @@ static uint64_t get_milliseconds()
 
 #endif
 
+double lodge_get_time_ms()
+{
+	return (double)get_milliseconds();
+}
+
+double lodge_get_time_s()
+{
+	return get_milliseconds() / 1000.0;
+}
 
 double lodge_get_time()
 {
-	return get_milliseconds() / 1000.0f;
+	return lodge_get_time_s();
 }
