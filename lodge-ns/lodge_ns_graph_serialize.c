@@ -12,7 +12,7 @@
 
 #include "str.h"
 
-char* lodge_graph_write(lodge_graph_t graph, size_t *size_out)
+char* lodge_graph_to_text(lodge_graph_t graph, size_t *size_out)
 {
 	lodge_json_t root = lodge_json_new_object();
 	lodge_json_t root_version = lodge_json_object_set_number(root, strview_static("version"), 0);
@@ -79,7 +79,7 @@ fail:
 	return NULL;
 }
 
-lodge_graph_t lodge_graph_read(strview_t data, void *graph_context)
+lodge_graph_t lodge_graph_from_text(strview_t data, void *graph_context)
 {
 #if 0
 	lodge_json_t root = lodge_json_from_string(data);

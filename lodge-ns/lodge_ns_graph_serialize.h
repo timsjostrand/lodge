@@ -5,7 +5,7 @@
 
 #include "strview.h"
 
-char*			lodge_graph_write(lodge_graph_t graph, size_t *size_out);
-lodge_graph_t	lodge_graph_read(strview_t data, void *graph_context);
+char*			lodge_graph_to_text(lodge_graph_t graph, size_t *size_out);
+lodge_graph_t	lodge_graph_from_text(strview_t data, void *graph_context);
 
 #endif

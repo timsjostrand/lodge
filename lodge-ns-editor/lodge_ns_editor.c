@@ -122,9 +122,9 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
 		nk_layout_row_dynamic(ctx, 30, 1);
 		if(nk_button_label(ctx, "Save")) {
 			size_t text_size;
-			char* text = lodge_graph_write(graph, &text_size);
+			char* text = lodge_graph_to_text(graph, &text_size);
 
-			lodge_graph_t new_graph = lodge_graph_read(strview_make(text, text_size - 1), graph_context);
+			lodge_graph_t new_graph = lodge_graph_from_text(strview_make(text, text_size - 1), graph_context);
 			ASSERT(new_graph);
 
 			if(text) {

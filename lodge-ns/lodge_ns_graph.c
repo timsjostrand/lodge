@@ -8,6 +8,7 @@
 #include "lodge_assert.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 static int lodge_graph_node_id_compare(const void *lhs, const void *rhs)
 {
@@ -31,19 +32,40 @@ static bool lodge_graph_remove_main_index(lodge_graph_t graph, size_t index)
 	return deleted;
 }
 
+void lodge_graph_new_inplace(lodge_graph_t dst, void *context)
+{
+	ASSERT_OR(dst) { return; }
+	memset(dst, 0, sizeof(struct lodge_graph));
+	dst->context = context;
+}
+
+void lodge_graph_free_inplace(lodge_graph_t dst)
+{
+	ASSERT_OR(dst) { return; }
+	for(size_t i = 0; i < dst->nodes_count; i++) {
+		lodge_node_reset(&dst->nodes[i]);
+	}
+}
+
 lodge_graph_t lodge_graph_new(void *context)
 {
 	lodge_graph_t graph = (lodge_graph_t)calloc(1, sizeof(struct lodge_graph));
-	graph->context = context;
+	if(graph) {
+		graph->context = context;
+	}
 	return graph;
 }
 
+
 void lodge_graph_free(lodge_graph_t graph)
 {
-	for(size_t i = 0; i < graph->nodes_count; i++) {
-		lodge_node_reset(&graph->nodes[i]);
-	}
+	lodge_graph_free_inplace(graph);
 	free(graph);
+}
+
+size_t lodge_graph_sizeof()
+{
+	return sizeof(struct lodge_graph);
 }
 
 bool lodge_graph_unconfigure(lodge_graph_t graph)

@@ -4,6 +4,7 @@
 #include "lodge_ns.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
 //
 // TODO:
@@ -27,6 +28,10 @@
 //		- Not all node systems may want a Runtime. Text generators (such as a
 //		  shader editor), probably just has a Node Graph.
 //
+
+void			lodge_graph_new_inplace(lodge_graph_t graph, void *context);
+void			lodge_graph_free_inplace(lodge_graph_t graph);
+size_t			lodge_graph_sizeof();
 
 lodge_graph_t	lodge_graph_new(void *context);
 void			lodge_graph_free(lodge_graph_t graph);
