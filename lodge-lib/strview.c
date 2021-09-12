@@ -27,7 +27,7 @@ strview_t strview_null()
 {
 	return (strview_t) {
 		.length = 0,
-		.s = '\0'
+		.s = "\0"
 	};
 }
 
