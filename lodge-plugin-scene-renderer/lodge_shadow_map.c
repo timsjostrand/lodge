@@ -35,7 +35,7 @@ void lodge_shadow_map_new_inplace(struct lodge_shadow_map *shadow_map, uint32_t 
 #endif
 
 	shadow_map->depth_textures_array = lodge_texture_2d_array_make_depth(width, height, LODGE_SHADOW_CASCADE_SPLITS_COUNT);
-	shadow_map->framebuffer = lodge_framebuffer_make((struct lodge_framebuffer_desc) {
+	shadow_map->framebuffer = lodge_framebuffer_make(&(struct lodge_framebuffer_desc) {
 		.colors_count = 0,
 		.stencil = NULL,
 		.depth = shadow_map->depth_textures_array

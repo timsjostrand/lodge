@@ -21,7 +21,7 @@ struct lodge_geometry_buffer lodge_geometry_buffer_make(uint32_t width, uint32_t
 	});
 	gbuffer.depth = lodge_texture_2d_make_depth(width, height);
 
-	gbuffer.framebuffer = lodge_framebuffer_make((struct lodge_framebuffer_desc) {
+	gbuffer.framebuffer = lodge_framebuffer_make(&(struct lodge_framebuffer_desc) {
 		.colors_count = 2,
 		.colors = {
 			gbuffer.albedo,

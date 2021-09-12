@@ -93,6 +93,11 @@ struct lodge_scene_renderer_types
 
 	lodge_system_type_t				billboard_system;
 	lodge_component_type_t			billboard_component;
+
+	lodge_component_type_t			camera_component_type;
+	lodge_component_type_t			point_light_component_type;
+	lodge_component_type_t			directional_light_component_type;
+	lodge_component_type_t			static_mesh_component_type;
 };
 
 typedef void						(*lodge_scene_render_system_func_t)(lodge_scene_t scene, const struct lodge_scene_render_pass_params *pass_params, void *userdata);

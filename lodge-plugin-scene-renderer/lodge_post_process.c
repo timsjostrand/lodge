@@ -151,7 +151,7 @@ void lodge_post_process_resize(struct lodge_post_process *post_process, uint32_t
 
 	{
 		lodge_framebuffer_reset(post_process->framebuffer_result);
-		post_process->framebuffer_result = lodge_framebuffer_make((struct lodge_framebuffer_desc) {
+		post_process->framebuffer_result = lodge_framebuffer_make(&(struct lodge_framebuffer_desc) {
 			.colors_count = 1,
 			.colors = {
 				post_process->color_texture
@@ -163,7 +163,7 @@ void lodge_post_process_resize(struct lodge_post_process *post_process, uint32_t
 
 	{
 		lodge_framebuffer_reset(post_process->framebuffer);
-		post_process->framebuffer = lodge_framebuffer_make((struct lodge_framebuffer_desc) {
+		post_process->framebuffer = lodge_framebuffer_make(&(struct lodge_framebuffer_desc) {
 			.colors_count = 1,
 			.colors = {
 				post_process->color_texture
