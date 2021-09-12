@@ -40,11 +40,8 @@ inline bool	strview_is_null_terminated(const strview_t str)
 	return str.s ? (str.s[str.length] == '\0') : false;
 }
 
-#if 0
-#define		strview_static(s) strview_make((s), sizeof((s))-1)
-#else
-#define		strview_static(str) (struct strview) { .s = (str), .length = sizeof((str))-1 }
-#endif
+#define		strview(str) (struct strview) { .s = (str), .length = sizeof((str))-1 }
+#define		strview_static(str) strview(str)
 
 #define		strview_wrap(arr) strview_make(arr, strnlen(arr, LODGE_ARRAYSIZE(arr)))
 
