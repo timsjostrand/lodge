@@ -32,6 +32,7 @@ typedef struct strbuf
 
 strbuf_t	strbuf_make(char *s, size_t size);
 #define		strbuf_wrap(buffer) strbuf_make(buffer, sizeof(buffer))
+#define		strbuf(buffer) strbuf_wrap(buffer)
 #define		strbuf_wrap_and(arr, func, ...) func(strbuf_wrap(arr), ##__VA_ARGS__)
 size_t		strbuf_length(const strbuf_t str);
 size_t		strbuf_size(const strbuf_t str);
