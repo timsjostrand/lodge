@@ -280,7 +280,7 @@ int alist_index_of(struct alist *alist, alist_data_t *data, size_t *index)
 void alist_print_strings(struct alist *alist)
 {
 	foreach_alist(const char *, s, index, alist) {
-		printf("%lu=%s\n", index, s);
+		printf("%zu=%s\n", index, s);
 	}
 }
 
