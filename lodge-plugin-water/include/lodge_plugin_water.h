@@ -11,18 +11,25 @@ typedef struct lodge_component_type* lodge_component_type_t;
 
 struct lodge_assets;
 
-struct lodge_plugin_water
+struct lodge_water_types
 {
-	struct lodge_assets		*shaders;
-	struct lodge_assets		*textures;
-	struct lodge_assets		*images;
-	void					*scene_renderer;
-	lodge_system_type_t		system_type;
-	lodge_component_type_t	component_type;
+	lodge_system_type_t			water_system_type;
+	lodge_component_type_t		water_component_type;
 };
 
-struct lodge_plugin_desc	lodge_plugin_water();
-lodge_system_type_t			lodge_plugin_water_get_system_type(struct lodge_plugin_water *plugin);
-lodge_component_type_t		lodge_plugin_water_get_component_type(struct lodge_plugin_water *plugin);
+//
+// TODO(TS): private this struct
+//
+struct lodge_plugin_water
+{
+	struct lodge_assets			*shaders;
+	struct lodge_assets			*textures;
+	struct lodge_assets			*images;
+	void						*scene_renderer;
+	struct lodge_water_types	types;
+};
+
+struct lodge_plugin_desc		lodge_plugin_water();
+struct lodge_water_types		lodge_plugin_water_get_types(struct lodge_plugin_water *plugin);
 
 #endif

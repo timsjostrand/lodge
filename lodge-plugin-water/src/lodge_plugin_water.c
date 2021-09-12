@@ -21,8 +21,10 @@ struct lodge_ret lodge_plugin_water_new_inplace(struct lodge_plugin_water *plugi
 	plugin->scene_renderer = lodge_plugins_depend(plugins, plugin, strview_static("scene_renderer"));
 	ASSERT(plugin->scene_renderer);
 
-	plugin->system_type = lodge_water_system_type_register(plugin);
-	plugin->component_type = lodge_water_component_type_register();
+	plugin->types = (struct lodge_water_types) {
+		.water_system_type = lodge_water_system_type_register(plugin),
+		.water_component_type = lodge_water_component_type_register(),
+	};
 
 	return lodge_success();
 }
@@ -45,14 +47,7 @@ struct lodge_plugin_desc lodge_plugin_water()
 	};
 }
 
-lodge_system_type_t lodge_plugin_water_get_system_type(struct lodge_plugin_water *plugin)
+struct lodge_water_types lodge_plugin_water_get_types(struct lodge_plugin_water *plugin)
 {
-	ASSERT(plugin);
-	return plugin ? plugin->system_type : NULL;
-}
-
-lodge_component_type_t lodge_plugin_water_get_component_type(struct lodge_plugin_water *plugin)
-{
-	ASSERT(plugin);
-	return plugin ? plugin->component_type : NULL;
+	return plugin ? plugin->types : (struct lodge_water_types) { 0 };
 }
