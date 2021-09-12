@@ -37,7 +37,7 @@ uint32_t	strview_calc_hash(const strview_t str);
 
 inline bool	strview_is_null_terminated(const strview_t str)
 {
-	return str.s[str.length] == '\0';
+	return str.s ? (str.s[str.length] == '\0') : false;
 }
 
 #if 0
