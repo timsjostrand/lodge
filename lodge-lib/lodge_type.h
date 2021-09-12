@@ -63,4 +63,10 @@ struct lodge_properties;
 lodge_type_t						lodge_type_register_property_object(strview_t name, size_t size, struct lodge_properties *properties);
 struct lodge_properties*			lodge_type_get_properties(lodge_type_t type);
 
+//
+// Generic types with userdata (advanced)
+//
+lodge_type_t						lodge_type_register_with_userdata(strview_t name, size_t size, lodge_type_t userdata_type, void *userdata);
+void*								lodge_type_get_userdata(lodge_type_t type, lodge_type_t userdata_type);
+
 #endif

@@ -125,44 +125,39 @@ void lodge_type_set_func(lodge_type_t type, size_t func_index, void *func)
 
 lodge_type_t lodge_type_register_enum(strview_t name, struct lodge_enum_desc desc)
 {
-	ASSERT(LODGE_TYPE_ENUM_DESC);
-	lodge_type_t type = lodge_type_register(name, sizeof(enum dummy));
-	ASSERT(type);
-	if(!type) {
-		return NULL;
-	}
-	lodge_variant_set_type(&type->userdata, LODGE_TYPE_ENUM_DESC, &desc);
-	return type;
+	return lodge_type_register_with_userdata(name, sizeof(enum dummy), LODGE_TYPE_ENUM_DESC, &desc);
 }
 
 const struct lodge_enum_desc* lodge_type_get_enum_desc(lodge_type_t type)
 {
-	ASSERT(type);
-	ASSERT(LODGE_TYPE_ENUM_DESC);
-	if(type) {
-		return lodge_variant_get_type(&type->userdata, LODGE_TYPE_ENUM_DESC);
-	}
-	return NULL;
+	return lodge_type_get_userdata(type, LODGE_TYPE_ENUM_DESC);
 }
 
 lodge_type_t lodge_type_register_property_object(strview_t name, size_t size, struct lodge_properties *properties)
 {
-	ASSERT(LODGE_TYPE_PROPERTIES);
-	lodge_type_t type = lodge_type_register(name, size);
-	ASSERT(type);
-	if(!type) {
-		return NULL;
-	}
-	lodge_variant_set_type(&type->userdata, LODGE_TYPE_PROPERTIES, properties);
-	return type;
+	return lodge_type_register_with_userdata(name, size, LODGE_TYPE_PROPERTIES, properties);
 }
 
 struct lodge_properties* lodge_type_get_properties(lodge_type_t type)
 {
-	ASSERT(type);
-	ASSERT(LODGE_TYPE_PROPERTIES);
+	return lodge_type_get_userdata(type, LODGE_TYPE_PROPERTIES);
+}
+
+lodge_type_t lodge_type_register_with_userdata(strview_t name, size_t size, lodge_type_t userdata_type, void *userdata)
+{
+	ASSERT_OR(userdata_type && userdata) { return NULL; }
+	lodge_type_t type = lodge_type_register(name, size);
+	ASSERT_OR(type) { return NULL; }
+	lodge_variant_set_type(&type->userdata, userdata_type, userdata);
+	return type;
+}
+
+void* lodge_type_get_userdata(lodge_type_t type, lodge_type_t userdata_type)
+{
+	ASSERT_OR(type) { return NULL; }
+	ASSERT_OR(userdata_type) { return NULL; }
 	if(type) {
-		return (struct lodge_properties*)lodge_variant_get_type(&type->userdata, LODGE_TYPE_PROPERTIES);
+		return (void*)lodge_variant_get_type(&type->userdata, userdata_type);
 	}
 	return NULL;
 }
