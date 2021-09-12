@@ -226,6 +226,7 @@ bool lodge_shader_link(lodge_shader_t shader)
 
 	glLinkProgram(shader->program);
 	const bool link_ret = lodge_shader_program_log(shader->program, shader->name);
+	ASSERT(link_ret);
 
 	if(!link_ret) {
 		return false;

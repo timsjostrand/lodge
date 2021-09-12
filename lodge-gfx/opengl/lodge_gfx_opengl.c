@@ -140,24 +140,6 @@ static void unit_drawables_reset(struct unit_drawables *ud)
 	drawable_reset(&ud->rect);
 }
 
-static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
-{
-	switch(target)
-	{
-	case LODGE_TEXTURE_TARGET_2D:
-		return GL_TEXTURE_2D;
-	case LODGE_TEXTURE_TARGET_2D_ARRAY:
-		return GL_TEXTURE_2D_ARRAY;
-	case LODGE_TEXTURE_TARGET_3D:
-		return GL_TEXTURE_3D;
-	case LODGE_TEXTURE_TARGET_CUBE_MAP:
-		return GL_TEXTURE_CUBE_MAP;
-	default:
-		ASSERT("Unknown OpenGL texture target");
-		return GL_TEXTURE_2D;
-	}
-};
-
 struct lodge_gfx* lodge_gfx_new()
 {
 	struct lodge_gfx *gfx = (struct lodge_gfx *) calloc(1, sizeof(struct lodge_gfx));

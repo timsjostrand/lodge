@@ -169,7 +169,6 @@ lodge_texture_t lodge_texture_2d_make(struct lodge_texture_2d_desc desc)
 	glTextureStorage2D(texture, mipmaps_count, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height);
 	GL_OK_OR_GOTO(fail);
 
-
 	return lodge_texture_from_gl(texture);
 
 fail:
@@ -192,7 +191,7 @@ lodge_texture_t lodge_texture_2d_make_from_data(struct lodge_texture_2d_desc *de
 
 bool lodge_texture_2d_set_data(lodge_texture_t texture, struct lodge_texture_2d_desc *texture_desc, struct lodge_texture_data_desc *data_desc, bool generate_mipmaps)
 {
-	ASSERT_OR(texture && texture_desc && data_desc->data && data_desc->data) { return false; }
+	ASSERT_OR(texture && texture_desc && data_desc && data_desc->data) { return false; }
 
 	GLuint gl_texture = lodge_texture_to_gl(texture);
 
@@ -251,9 +250,7 @@ struct lodge_texture_2d_desc lodge_texture_2d_desc_make_from_image(const struct 
 	return (struct lodge_texture_2d_desc) {
 		.width = image->desc.height,
 		.height = image->desc.width,
-		
 		.mipmaps_count = 0,
-
 		.texture_format = lodge_texture_format_from_image(image),
 	};
 }
@@ -270,38 +267,16 @@ static bool lodge_texture_cubemap_load_side(GLuint texture, GLenum side, const s
 	return true;
 }
 
-struct lodge_texture_2d_array_desc
-{
-	uint32_t					width;
-	uint32_t					height;
-	uint32_t					depth;
-
-	uint32_t					mipmaps_count; // if 0 = calc default
-
-	enum lodge_texture_format	texture_format;
-	enum lodge_pixel_format		pixel_format;
-	enum lodge_pixel_data_type	pixel_type;
-
-	//const void				*data;
-};
-
-static lodge_texture_t lodge_texture_2d_array_make(struct lodge_texture_2d_array_desc desc)
+lodge_texture_t lodge_texture_2d_array_make(struct lodge_texture_2d_array_desc *desc)
 {
 	GLuint texture = 0;
 	glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &texture);
 	GL_OK_OR_GOTO(fail);
 
-	const uint32_t levels_count = desc.mipmaps_count != 0 ? desc.mipmaps_count : lodge_texture_calc_num_levels(desc.width, desc.height, 1);
+	const uint32_t levels_count = desc->mipmaps_count != 0 ? desc->mipmaps_count : lodge_texture_calc_num_levels(desc->width, desc->height, 1);
 
-	glTextureStorage3D(texture, desc.mipmaps_count, lodge_texture_format_to_gl(desc.texture_format), desc.width, desc.height, desc.depth);
+	glTextureStorage3D(texture, desc->mipmaps_count, lodge_texture_format_to_gl(desc->texture_format), desc->width, desc->height, desc->depth);
 	GL_OK_OR_GOTO(fail);
-
-#if 0
-	if(desc.data) {
-		glTextureSubImage3D(texture, 0, 0, 0, desc.width, desc.height, lodge_pixel_format_to_gl(desc.pixel_format), lodge_pixel_type_to_gl(desc.pixel_type), desc.data);
-		GL_OK_OR_GOTO(fail);
-	}
-#endif
 
 	return lodge_texture_from_gl(texture);
 
@@ -312,20 +287,12 @@ fail:
 
 lodge_texture_t lodge_texture_2d_array_make_depth(uint32_t width, uint32_t height, uint32_t depth)
 {
-	return lodge_texture_2d_array_make((struct lodge_texture_2d_array_desc) {
+	return lodge_texture_2d_array_make(&(struct lodge_texture_2d_array_desc) {
 		.width = width,
 		.height = height,
 		.depth = depth,
-
 		.mipmaps_count = 1,
-	
 		.texture_format = LODGE_TEXTURE_FORMAT_DEPTH32,
-		.pixel_format = LODGE_PIXEL_FORMAT_DEPTH,
-		.pixel_type = LODGE_PIXEL_TYPE_FLOAT,
-
-#if 0
-		.data = NULL
-#endif
 	});
 }
 
@@ -390,6 +357,26 @@ fail:
 	return NULL;
 }
 
+lodge_texture_t lodge_texture_view_make(lodge_texture_t src_texture, enum lodge_texture_target target, enum lodge_texture_format format, uint32_t levels_min, uint32_t levels_count, uint32_t layers_min, uint32_t layers_count)
+{
+	GLenum target_gl = lodge_texture_target_to_gl(target);
+	GLuint src_texture_gl = lodge_texture_to_gl(src_texture);
+	GLuint format_gl = lodge_texture_format_to_gl(format);
+
+	GLuint dst_texture_gl = 0;
+	glGenTextures(1, &dst_texture_gl);
+	GL_OK_OR_GOTO(fail);
+
+	glTextureView(dst_texture_gl, target_gl, src_texture_gl, format_gl, levels_min, levels_count, layers_min, layers_count);
+	GL_OK_OR_GOTO(fail);
+
+	return lodge_texture_from_gl(dst_texture_gl);
+
+fail:
+	glDeleteTextures(1, &dst_texture_gl);
+	return NULL;
+}
+
 void lodge_texture_reset(lodge_texture_t texture)
 {
 	if(!texture) {
@@ -410,9 +397,9 @@ vec4 lodge_framebuffer_read_pixel_rgba(uint32_t x, uint32_t y, uint32_t width, u
 	return tmp;
 }
 
-void lodge_gfx_bind_texture_2d_output(int slot, const lodge_texture_t texture, enum lodge_texture_format texture_format)
+void lodge_gfx_bind_texture_2d_output(int slot, const lodge_texture_t texture, uint32_t level, enum lodge_texture_format texture_format)
 {
-	glBindImageTexture(0, lodge_texture_to_gl(texture), 0, GL_FALSE, 0, GL_WRITE_ONLY, lodge_texture_format_to_gl(texture_format));
+	glBindImageTexture(0, lodge_texture_to_gl(texture), level, GL_FALSE, 0, GL_WRITE_ONLY, lodge_texture_format_to_gl(texture_format));
 }
 
 void lodge_gfx_bind_texture_3d_output(int slot, const lodge_texture_t texture, enum lodge_texture_format texture_format)
