@@ -18,12 +18,18 @@ typedef struct lodge_framebuffer* lodge_framebuffer_t;
 struct lodge_framebuffer_desc
 {
 	uint32_t			colors_count;
+	
 	lodge_texture_t		colors[16];
+	uint32_t			color_levels[16];
+	
 	lodge_texture_t		depth;
+	uint32_t			depth_level;
+	
 	lodge_texture_t		stencil;
+	uint32_t			stencil_level;
 };
 
-lodge_framebuffer_t		lodge_framebuffer_make(struct lodge_framebuffer_desc desc);
+lodge_framebuffer_t		lodge_framebuffer_make(struct lodge_framebuffer_desc *desc);
 void					lodge_framebuffer_reset(lodge_framebuffer_t framebuffer);
 
 lodge_framebuffer_t		lodge_framebuffer_default();
