@@ -22,12 +22,17 @@ if(CMAKE_COMPILER_IS_GNUCC)
             -Werror=return-type                     # Force correct return type.
 			-Wno-missing-braces						# Missing braces warning is bugged when nested type has { 0 }
     )
-endif()
-
-#
-# Clang build flags.
-#
-if(MSVC)
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    # DEBUG: Bounds checking.
+    #target_compile_options(lodge-build-flags
+    #    INTERFACE
+    #        -fsanitize=address
+    #)
+    #target_link_options(lodge-build-flags
+    #    INTERFACE
+    #        -fsanitize=address
+    #)
+elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     target_compile_definitions(lodge-build-flags
         INTERFACE
             "_CRT_SECURE_NO_WARNINGS"       # Disable "unsafe" functions that redirects to Microsoft-specific implementations.
@@ -50,20 +55,7 @@ if(MSVC)
             "/we4013"                       # 'symbol' undefined; assuming extern returning int
             "/we4133"                       # 'initializing|function': incompatible types - from '<type> *' to '<other_type> *'
             "/we4101"                       # 'identifier' : unreferenced local variable
+            "/we4477"                       # 'printf' : format string '%.*s' requires an argument of type 'int', but variadic argument 1 has type 'uintptr_t'
+            "/we4473"                       # not enough arguments passed for format string
     )
-endif()
-
-#
-# Clang build flags.
-#
-if("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
-    # DEBUG: Bounds checking.
-    #target_compile_options(lodge-build-flags
-    #    INTERFACE
-    #        -fsanitize=address
-    #)
-    #target_link_options(lodge-build-flags
-    #    INTERFACE
-    #        -fsanitize=address
-    #)
 endif()
