@@ -13,6 +13,7 @@ void*			sparse_set_get(sparse_set_t sparse_set, uint32_t index);
 uint32_t		sparse_set_get_index(sparse_set_t set, const void *data);
 void*			sparse_set_set(sparse_set_t sparse_set, uint32_t index, const void *src);
 void*			sparse_set_set_no_init(sparse_set_t set, uint32_t index);
+void*			sparse_set_set_init_zero(sparse_set_t set, uint32_t index);
 
 size_t			sparse_set_get_dense_count(sparse_set_t sparse_set);
 

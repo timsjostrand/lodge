@@ -130,6 +130,16 @@ void* sparse_set_set_no_init(sparse_set_t set, uint32_t index)
 	return &set->dense[dense_index * set->dense_element_size];
 }
 
+void* sparse_set_set_init_zero(sparse_set_t set, uint32_t index)
+{
+	void *dst = sparse_set_set_no_init(set, index);
+	if(!dst) {
+		return NULL;
+	}
+	memset(dst, 0, set->dense_element_size);
+	return dst;
+}
+
 size_t sparse_set_get_dense_count(sparse_set_t sparse_set)
 {
 	return sparse_set ? sparse_set->dense_count : 0;
@@ -137,7 +147,7 @@ size_t sparse_set_get_dense_count(sparse_set_t sparse_set)
 
 void* sparse_set_set(sparse_set_t set, uint32_t index, const void *src)
 {
-	void* dst = sparse_set_set_no_init(set, index);
+	void *dst = sparse_set_set_no_init(set, index);
 	if(!dst) {
 		return NULL;
 	}
