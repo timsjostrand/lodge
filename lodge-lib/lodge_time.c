@@ -21,25 +21,64 @@ static uint64_t get_cycles()
 
 static double get_seconds()
 {
-#if 0
 	LARGE_INTEGER timestamp;
 	LARGE_INTEGER frequency;
-
 	QueryPerformanceCounter(&timestamp);
 	QueryPerformanceFrequency(&frequency);
+	return (uint64_t)(timestamp.QuadPart / frequency.QuadPart);
+}
 
-	return (uint64_t)(timestamp.QuadPart / (frequency.QuadPart / 1000));
-#else
-    uint64_t frequency;
-    if(QueryPerformanceFrequency((LARGE_INTEGER*) &frequency)) {
-		uint64_t value;
-        QueryPerformanceCounter((LARGE_INTEGER*) &value);
-        return value / (double)frequency;
-	} else {
-		ASSERT_NOT_IMPLEMENTED();
-		return 0;
-	}
-#endif
+
+lodge_timestamp_t lodge_timestamp_get()
+{
+	_Static_assert(sizeof(((LARGE_INTEGER *)0)->QuadPart) == sizeof(lodge_timestamp_t), "lodge_timestamp_t is too small to fit platform timestamp");
+	LARGE_INTEGER timestamp;
+	QueryPerformanceCounter(&timestamp);
+	return timestamp.QuadPart;
+}
+
+double lodge_timestamp_elapsed_s(lodge_timestamp_t before)
+{
+	LARGE_INTEGER frequency;
+	LARGE_INTEGER timestamp;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&timestamp);
+
+	LARGE_INTEGER elapsed;
+	elapsed.QuadPart = timestamp.QuadPart - before;
+	elapsed.QuadPart /= frequency.QuadPart;
+
+	return elapsed.QuadPart;
+}
+
+double lodge_timestamp_elapsed_ms(lodge_timestamp_t before)
+{
+	LARGE_INTEGER frequency;
+	LARGE_INTEGER timestamp;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&timestamp);
+
+	LARGE_INTEGER elapsed;
+	elapsed.QuadPart = timestamp.QuadPart - before;
+	elapsed.QuadPart *= 1000;
+	elapsed.QuadPart /= frequency.QuadPart;
+
+	return elapsed.QuadPart;
+}
+
+double lodge_timestamp_elapsed_us(lodge_timestamp_t before)
+{
+	LARGE_INTEGER frequency;
+	LARGE_INTEGER timestamp;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&timestamp);
+
+	LARGE_INTEGER elapsed;
+	elapsed.QuadPart = timestamp.QuadPart - before;
+	elapsed.QuadPart *= 1000000;
+	elapsed.QuadPart /= frequency.QuadPart;
+
+	return elapsed.QuadPart;
 }
 
 static double get_milliseconds()
