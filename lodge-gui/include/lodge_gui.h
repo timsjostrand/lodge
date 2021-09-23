@@ -31,11 +31,6 @@ void				lodge_gui_char_callback(lodge_window_t win, unsigned int codepoint, int 
 void				lodge_gui_scroll_callback(lodge_window_t win, double xoff, double yoff, lodge_gui_t gui);
 void				lodge_gui_mouse_button_callback(lodge_window_t win, int button, int action, int mods, lodge_gui_t gui);
 
-lodge_texture_t		lodge_gui_get_texture_from_index(lodge_gui_t gui, int tex_index);
-
-int					lodge_gui_create_texture(lodge_gui_t gui, const void* image, int width, int height);
-void				lodge_gui_destroy_texture(lodge_gui_t gui, int tex_index);
-
 struct nk_context*	lodge_gui_to_ctx(lodge_gui_t gui);
 
 #define NK_INCLUDE_STANDARD_BOOL

@@ -33,9 +33,6 @@
 #ifndef NK_GLFW_DOUBLE_CLICK_HI
 #define NK_GLFW_DOUBLE_CLICK_HI 0.2
 #endif
-#ifndef NK_GLFW_MAX_TEXTURES
-#define NK_GLFW_MAX_TEXTURES 256
-#endif
 
 struct lodge_gui_vertex
 {
@@ -56,14 +53,12 @@ struct lodge_gui_device
 	lodge_drawable_t				drawable;
 	lodge_sampler_t					sampler;
 
-	int								font_tex_index;
+	lodge_texture_t					font_texture;
 	int								max_vertex_buffer;
 	int								max_element_buffer;
 
 	struct lodge_gui_vertex			*vert_buffer;
 	uint32_t						*elem_buffer;
-
-	lodge_texture_t					textures[NK_GLFW_MAX_TEXTURES];
 };
 
 struct lodge_gui
@@ -151,39 +146,13 @@ static void lodge_gui_device_create(lodge_gui_t gui)
 		.wrap_y = WRAP_CLAMP_TO_EDGE,
 		.wrap_z = WRAP_CLAMP_TO_EDGE,
 	});
-
-	memset(dev->textures, 0, sizeof(dev->textures));
 }
 
-static int lodge_gui_get_available_tex_index(lodge_gui_t gui)
-{
-	int i = 0;
-	struct lodge_gui_device *dev = &gui->dev;
-	for(i = 0; i < NK_GLFW_MAX_TEXTURES; i++) {
-		if(dev->textures[i] == 0)
-			return i;
-	}
-	ASSERT_FAIL("Max textures reached");
-	return -1;
-}
-
-lodge_texture_t lodge_gui_get_texture_from_index(lodge_gui_t gui, int tex_index)
-{
-	struct lodge_gui_device *dev = &gui->dev;
-	ASSERT(tex_index >= 0 && tex_index < NK_GLFW_MAX_TEXTURES);
-	return dev->textures[tex_index];
-}
-
-int lodge_gui_create_texture(lodge_gui_t gui, const void* image, int width, int height)
+static void lodge_gui_device_upload_atlas(lodge_gui_t gui, const void *image, int width, int height)
 {
 	struct lodge_gui_device *dev = &gui->dev;
 
-	int tex_index = lodge_gui_get_available_tex_index(gui);
-	if(tex_index < 0) {
-		return -1;
-	}
-
-	lodge_texture_t texture = lodge_texture_2d_make_from_data(
+	dev->font_texture = lodge_texture_2d_make_from_data(
 		&(struct lodge_texture_2d_desc) {
 			.width = width,
 			.height = height,
@@ -196,51 +165,13 @@ int lodge_gui_create_texture(lodge_gui_t gui, const void* image, int width, int 
 			.data = image,
 		}
 	);
-
-	dev->textures[tex_index] = texture;
-
-	return tex_index;
-}
-
-void lodge_gui_destroy_texture(lodge_gui_t gui, int tex_index)
-{
-	lodge_texture_t texture = lodge_gui_get_texture_from_index(gui, tex_index);
-	if(!texture) {
-		return;
-	}
-
-#if 0
-	{
-		GLuint64 handle = lodge_gui_get_tex_ogl_handle(tex_index);
-		glMakeTextureHandleNonResidentARB(handle);
-		glDeleteTextures(1, &id);
-		dev->tex_ids[tex_index] = 0;
-		dev->tex_handles[tex_index] = 0;
-	}
-#endif
-
-	lodge_texture_reset(texture);
-
-	struct lodge_gui_device *dev = &gui->dev;
-	dev->textures[tex_index] = 0;
-}
-
-static void lodge_gui_device_upload_atlas(lodge_gui_t gui, const void *image, int width, int height)
-{
-	struct lodge_gui_device *dev = &gui->dev;
-	dev->font_tex_index = lodge_gui_create_texture(gui, image, width, height);
 }
 
 static void lodge_gui_device_destroy(lodge_gui_t gui)
 {
 	struct lodge_gui_device *dev = &gui->dev;
 
-	lodge_gui_destroy_texture(gui, dev->font_tex_index);
-
-	for(int i = 0; i < NK_GLFW_MAX_TEXTURES; i++) {
-		lodge_gui_destroy_texture(gui, i);
-	}
-
+	lodge_texture_reset(dev->font_texture);
 	lodge_buffer_object_reset(dev->vertex_buffer);
 	lodge_buffer_object_reset(dev->index_buffer);
 	lodge_drawable_reset(dev->drawable);
@@ -304,8 +235,8 @@ void lodge_gui_render(lodge_gui_t gui, lodge_shader_t shader)
 				nk_buffer_init_fixed(&ebuf, dev->elem_buffer, (size_t)dev->max_element_buffer);
 				nk_convert(&gui->ctx, &dev->cmds, &vbuf, &ebuf, &config);
 
-				lodge_buffer_object_set(dev->vertex_buffer, 0, dev->vert_buffer, dev->max_vertex_buffer);
-				lodge_buffer_object_set(dev->index_buffer, 0, dev->elem_buffer, dev->max_element_buffer);
+				lodge_buffer_object_set(dev->vertex_buffer, 0, dev->vert_buffer, vbuf.allocated);
+				lodge_buffer_object_set(dev->index_buffer, 0, dev->elem_buffer, ebuf.allocated);
 			}
 		}
 
@@ -317,15 +248,7 @@ void lodge_gui_render(lodge_gui_t gui, lodge_shader_t shader)
 				continue;
 			}
 
-			const int tex_index = cmd->texture.id;
-			//GLuint64 tex_handle = lodge_gui_get_tex_ogl_handle(tex_index);
-			//
-			/* tex handle must be made resident in each context that uses it */
-			//if(!glIsTextureHandleResidentARB(tex_handle))
-			//	glMakeTextureHandleResidentARB(tex_handle);
-			//
-			//glUniformHandleui64ARB(dev->uniform_tex, tex_handle);
-			lodge_texture_t tex = lodge_gui_get_texture_from_index(gui, tex_index);
+			lodge_texture_t tex = cmd->texture.ptr;
 			lodge_gfx_bind_texture_unit_2d(0, tex, dev->sampler);
 
 			lodge_gfx_set_scissor(
@@ -443,6 +366,9 @@ static lodge_gui_set_style(lodge_gui_t gui)
 	gui->ctx.style.window.header.active.data.color = highlight_0;
 }
 
+//
+// TODO(TS): should actually take an Input abstraction, since that is the only part of the window we are interested in.
+//
 void lodge_gui_new_inplace(lodge_gui_t gui, lodge_window_t win, int max_vertex_buffer, int max_element_buffer)
 {
 	gui->win = win;
@@ -509,7 +435,7 @@ void lodge_gui_font_stash_end(lodge_gui_t gui)
 	const void *image; int w, h;
 	image = nk_font_atlas_bake(&gui->atlas, &w, &h, NK_FONT_ATLAS_RGBA32);
 	lodge_gui_device_upload_atlas(gui, image, w, h);
-	nk_font_atlas_end(&gui->atlas, nk_handle_id((int)gui->dev.font_tex_index), &gui->dev.null);
+	nk_font_atlas_end(&gui->atlas, nk_handle_ptr(gui->dev.font_texture), &gui->dev.null);
 	if(gui->atlas.default_font) {
 		nk_style_set_font(&gui->ctx, &gui->atlas.default_font->handle);
 	}
