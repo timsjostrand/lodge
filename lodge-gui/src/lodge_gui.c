@@ -28,10 +28,10 @@
 #define NK_GLFW_TEXT_MAX 256
 #endif
 #ifndef NK_GLFW_DOUBLE_CLICK_LO
-#define NK_GLFW_DOUBLE_CLICK_LO 0.02
+#define NK_GLFW_DOUBLE_CLICK_LO 2
 #endif
 #ifndef NK_GLFW_DOUBLE_CLICK_HI
-#define NK_GLFW_DOUBLE_CLICK_HI 0.2
+#define NK_GLFW_DOUBLE_CLICK_HI 500
 #endif
 
 struct lodge_gui_vertex
@@ -75,9 +75,10 @@ struct lodge_gui
 	unsigned int					text[NK_GLFW_TEXT_MAX];
 	int								text_len;
 	struct nk_vec2					scroll;
-	double							last_button_click;
+	lodge_timestamp_t				last_button_click;
 	int								is_double_click_down;
 	struct nk_vec2					double_click_pos;
+	struct nk_vec2					last_click_pos;
 };
 
 typedef struct lodge_gui* lodge_gui_t;
@@ -293,16 +294,22 @@ void lodge_gui_mouse_button_callback(lodge_window_t window, int button, int acti
 	float x, y;
 	lodge_window_get_cursor(window, &x, &y);
 
+	const float double_click_pos_tolerance = 5.0f;
+
 	if(action == LODGE_PRESS) {
-		double dt = lodge_get_time() - gui->last_button_click;
-		if(dt > NK_GLFW_DOUBLE_CLICK_LO && dt < NK_GLFW_DOUBLE_CLICK_HI) {
-			gui->is_double_click_down = nk_true;
-			gui->double_click_pos = nk_vec2((float)x, (float)y);
+		const double click_delta_time = lodge_timestamp_elapsed_ms(gui->last_button_click);
+		if(click_delta_time >= NK_GLFW_DOUBLE_CLICK_LO && click_delta_time <= NK_GLFW_DOUBLE_CLICK_HI) {
+			if(abs(gui->last_click_pos.x - x) < double_click_pos_tolerance && abs(gui->last_click_pos.y - y) < double_click_pos_tolerance) {
+				gui->is_double_click_down = nk_true;
+				gui->double_click_pos = nk_vec2(x, y);
+			}
 		}
-		gui->last_button_click = lodge_get_time();
+		gui->last_button_click = lodge_timestamp_get();
 	} else {
 		gui->is_double_click_down = nk_false;
 	}
+
+	gui->last_click_pos = nk_vec2(x, y);
 }
 
 static void lodge_gui_clipboard_paste(nk_handle usr, struct nk_text_edit *edit)
