@@ -149,8 +149,7 @@ struct membuf_swapret membuf_delete_swap_tail(membuf_t buf, size_t *current_coun
 void* membuf_append_no_init(membuf_t dst, size_t *current_count)
 {
 	const size_t max_count = membuf_max_count(dst);
-	ASSERT(*current_count < max_count);
-	if(*current_count >= max_count) {
+	ASSERT_OR(*current_count < max_count) {
 		return NULL;
 	}
 	return membuf_get(dst, (*current_count)++);
@@ -159,8 +158,7 @@ void* membuf_append_no_init(membuf_t dst, size_t *current_count)
 void* membuf_append(membuf_t dst, size_t *current_count, const void *src, size_t src_size)
 {
 	const size_t max_count = membuf_max_count(dst);
-	ASSERT(*current_count < max_count);
-	if(*current_count >= max_count) {
+	ASSERT_OR(*current_count < max_count) {
 		return NULL;
 	}
 	return membuf_set(dst, (*current_count)++, src, src_size);
