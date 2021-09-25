@@ -127,6 +127,7 @@ struct lodge_hdr
 	lodge_texture_t						bloom_downsample_texture_levels[16];
 	lodge_texture_t						bloom_upsample_texture;
 	lodge_texture_t						bloom_upsample_texture_levels[16];
+	uint32_t							desired_bloom_samples_count;
 	uint32_t							bloom_samples_count;
 
 	bool								bloom_enable;
@@ -369,6 +370,26 @@ static struct vec2i lodge_calc_texture_level_size(struct vec2i size, uint32_t le
 	};
 }
 
+static uint32_t lodge_calc_texture_levels_max(struct vec2i size)
+{
+	if(size.x <= 0 || size.y <= 0) {
+		return 0;
+	}
+
+	for(int level = 0; level < 100; level++) {
+		const float d = pow(2, level);
+		struct vec2i level_size = {
+			.x = floor(size.x / d),
+			.y = floor(size.y / d),
+		};
+		if(level_size.x <= 0 || level_size.y <= 0) {
+			return level - 1;
+		}
+	}
+
+	return 0;
+}
+
 struct render_size
 {
 	uint32_t width;
@@ -393,6 +414,8 @@ static struct render_size lodge_scene_render_system_get_render_size(struct lodge
 
 static void lodge_scene_render_system_hdr_resize(struct lodge_hdr *hdr, uint32_t width, uint32_t height)
 {
+	const uint32_t bloom_levels_max = lodge_calc_texture_levels_max((struct vec2i){ width, height });
+	hdr->bloom_samples_count = min(hdr->desired_bloom_samples_count, bloom_levels_max);
 	lodge_texture_reset(hdr->bloom_downsample_texture);
 	hdr->bloom_downsample_texture = lodge_texture_2d_make((struct lodge_texture_2d_desc) {
 		.width = width,
@@ -428,6 +451,7 @@ static void lodge_hdr_new_inplace(struct lodge_hdr *hdr, struct lodge_assets *sh
 {
 	hdr->bloom_enable = true;
 	hdr->bloom_samples_count = 7;
+	hdr->desired_bloom_samples_count = 7;
 	hdr->bloom_downsample_texture = NULL;
 	hdr->bloom_upsample_texture = NULL;
 	hdr->hdr_resolve_texture = NULL;
@@ -773,7 +797,7 @@ static void lodge_scene_render_system_update(struct lodge_scene_render_system *s
 	lodge_static_meshes_update(&system->static_meshes, type, scene, dt);
 
 	//
-	// Directional lights 
+	// Directional and point lights 
 	//
 	system->lights.count = 0;
 	lodge_scene_components_foreach(scene, struct lodge_directional_light_component*, directional_light, LODGE_COMPONENT_TYPE_DIRECTIONAL_LIGHT) {
@@ -1443,13 +1467,13 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 					{
 						.name = strview_static("bloom_samples_count"),
 						.type = LODGE_TYPE_U32,
-						.offset = offsetof(struct lodge_scene_render_system, hdr) + offsetof(struct lodge_hdr, bloom_samples_count),
+						.offset = offsetof(struct lodge_scene_render_system, hdr) + offsetof(struct lodge_hdr, desired_bloom_samples_count),
 						.on_modified = on_modified_bloom_levels,
 						.hints = {
 							.enable = true,
 							.u32 = {
 								.min = 0,
-								.max = 16,
+								.max = LODGE_ARRAYSIZE(((struct lodge_hdr*)0)->bloom_downsample_texture_levels),
 								.step = 1,
 							}
 						}
