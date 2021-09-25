@@ -431,10 +431,12 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		{
 			char *cur = plugins->data;
 			for(int i = 0; i < count; i++) {
+				struct lodge_plugin_desc *plugin = &plugins->list[i];
 				if(!plugins->initialized[i]) {
+					// TODO(TS): should use ->offset[i] instead
+	 				cur += plugin->size;
 					continue;
 				}
-				struct lodge_plugin_desc *plugin = &plugins->list[i];
 				if(plugin->update) {
 					plugin->update(cur, delta_time);
 				}
@@ -446,10 +448,11 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		{
 			char *cur = plugins->data;
 			for(int i = 0; i < count; i++) {
+				struct lodge_plugin_desc *plugin = &plugins->list[i];
 				if(!plugins->initialized[i]) {
+					cur += plugin->size; // TODO(TS): use ->offsets
 					continue;
 				}
-				struct lodge_plugin_desc *plugin = &plugins->list[i];
 				if(plugin->render) {
 					plugin->render(cur);
 				}
