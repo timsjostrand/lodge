@@ -29,14 +29,9 @@ static void lodge_static_mesh_component_free_inplace(struct lodge_static_mesh_co
 #if 0
 	// TODO(TS): these should live in resource managers instead
 	if(component->asset) {
-		lodge_res_release( component->asset );
+		lodge_assets2_release( component->asset );
 	}
 #endif
-}
-
-static void on_modified_static_mesh_ref(struct lodge_property *property, const struct lodge_static_mesh_component *component)
-{
-	((struct lodge_static_mesh_component*)component)->asset = NULL;
 }
 
 static void on_modified_shader_ref(struct lodge_property *property, const struct lodge_static_mesh_component *component)
@@ -84,7 +79,7 @@ static lodge_json_t lodge_static_mesh_ref_to_json(const struct lodge_static_mesh
 	return lodge_json_new_string(strview_wrap(src->name));
 }
 
-lodge_component_type_t lodge_static_mesh_component_type_register()
+lodge_component_type_t lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type)
 {
 	ASSERT(!LODGE_TYPE_STATIC_MESH_REF);
 	ASSERT(!LODGE_COMPONENT_TYPE_STATIC_MESH);
@@ -108,10 +103,9 @@ lodge_component_type_t lodge_static_mesh_component_type_register()
 				.elements = {
 					{
 						.name = strview_static("static_mesh"),
-						.type = LODGE_TYPE_STATIC_MESH_REF,
-						.offset = offsetof(struct lodge_static_mesh_component, fbx_ref),
+						.type = static_mesh_asset_type,
+						.offset = offsetof(struct lodge_static_mesh_component, fbx_asset),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_static_mesh_ref,
 					},
 					{
 						.name = strview_static("shader"),

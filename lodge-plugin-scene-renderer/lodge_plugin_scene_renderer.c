@@ -10,6 +10,7 @@
 #include "lodge_scene.h"
 #include "lodge_system_type.h"
 #include "lodge_assets.h"
+#include "lodge_assets2.h"
 #include "lodge_window.h"
 
 #include "lodge_static_mesh_component.h"
@@ -34,6 +35,8 @@
 #include "lodge_debug_draw.h"
 #include "lodge_shader.h"
 
+#include "lodge_plugin_fbx.h"
+
 #include "lodge_editor_selection_system.h"
 
 #include <stdio.h>
@@ -41,8 +44,7 @@
 
 struct lodge_scene_renderer_plugin
 {
-	struct lodge_editor					*editor;
-	struct lodge_assets					*fbxes;
+	struct lodge_assets2				*fbx_assets;
 	struct lodge_assets					*shaders;
 	struct lodge_assets					*textures;
 
@@ -90,6 +92,7 @@ struct lodge_static_meshes
 	size_t								count;
 	struct lodge_static_mesh_component	*components[1024];
 	struct lodge_transform_uniform		transforms[1024];
+	const struct fbx_asset				*meshes[1024];
 	lodge_entity_t						ids[1024];
 	float								selected[1024];
 
@@ -328,7 +331,7 @@ static void lodge_static_mesh_render(lodge_scene_t scene, const struct lodge_sce
 
 		lodge_gfx_bind_texture_2d(0, component->texture);
 
-		lodge_drawable_render_indexed(component->asset->drawable, component->asset->static_mesh.indices_count, 0);
+		lodge_drawable_render_indexed(system->meshes[i]->drawable, system->meshes[i]->static_mesh.indices_count, 0);
 	}
 
 	lodge_gfx_annotate_end();
@@ -706,9 +709,9 @@ static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge
 			// TODO: static_mesh->drawable
 
 			// Load FBX?
-			if(!static_mesh->asset && !strview_empty(strview_wrap(static_mesh->fbx_ref.name))) {
-				const struct fbx_asset *fbx_asset = lodge_assets_get(plugin->fbxes, strview_wrap(static_mesh->fbx_ref.name));
-				static_mesh->asset = fbx_asset;
+			const struct fbx_asset *fbx_asset = NULL;
+			if(static_mesh->fbx_asset) {
+				fbx_asset = lodge_assets2_get(plugin->fbx_assets, static_mesh->fbx_asset);
 			}
 
 			// Load shader?
@@ -731,7 +734,7 @@ static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge
 			//
 			// TODO(TS): cull meshes here
 			//
-			if(static_mesh->asset
+			if(fbx_asset
 				&& static_mesh->shader
 				&& static_mesh->texture) {
 				lodge_entity_t entity = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_STATIC_MESH, static_mesh);
@@ -741,6 +744,7 @@ static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge
 					// TODO(TS): insert sorted, based on the {static_mesh,material,shader} used.
 					//
 					membuf_append(membuf_wrap(system->components), &system->count, &static_mesh, sizeof(static_mesh));
+					system->meshes[system->count - 1] = fbx_asset;
 					system->transforms[system->count - 1].model = lodge_get_transform(scene, entity);
 					system->ids[system->count - 1] = entity;
 					system->selected[system->count - 1] = lodge_scene_is_entity_selected(scene, entity) ? 1.0f : 0.0f;
@@ -1221,21 +1225,6 @@ static void lodge_scene_render_system_render(struct lodge_scene_render_system *s
 		lodge_gfx_annotate_end();
 	}
 
-	//
-	// UI and non-scene stuff
-	//
-#if 0
-	{
-		lodge_gfx_annotate_begin(strview_static("gui"));
-
-		if(game->editor) {
-			lodge_gui_render(game->editor_gui, game->shaders.lodge_gui);
-		}
-
-		lodge_gfx_annotate_end();
-	}
-#endif
-
 	// Flip off-screen to screen
 	{
 		struct lodge_recti src_rect = {
@@ -1483,15 +1472,6 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 
 struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_renderer_plugin *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	//
-	// FIXME(TS): depend on the editor plugin for now, to make sure gui_property_widget_factory_init() has been called
-	// 
-	plugin->editor = lodge_plugins_depend(plugins, plugin, strview_static("editor"));
-	ASSERT(plugin->editor);
-	if(!plugin->editor) {
-		return lodge_error("Failed to load `editor` plugin");
-	}
-
 	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview_static("shaders"));
 	ASSERT(plugin->shaders);
 	if(!plugin->shaders) {
@@ -1504,9 +1484,9 @@ struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_rend
 		return lodge_error("Failed to load `textures` plugin");
 	}
 
-	plugin->fbxes = lodge_plugins_depend(plugins, plugin, strview_static("fbx"));
-	ASSERT(plugin->fbxes);
-	if(!plugin->fbxes) {
+	plugin->fbx_assets = lodge_plugins_depend(plugins, plugin, strview_static("fbx"));
+	ASSERT(plugin->fbx_assets);
+	if(!plugin->fbx_assets) {
 		return lodge_error("Failed to load `fbx` plugin");
 	}
 
@@ -1516,13 +1496,15 @@ struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_rend
 		return lodge_error("Failed to register scene renderer system type");
 	}
 
+	struct fbx_types fbx_types = lodge_plugin_fbx_get_types(plugin->fbx_assets);
+
 	plugin->billboard_component_type = lodge_billboard_component_type_register();
 	plugin->billboard_system_type = lodge_billboard_system_type_register(plugin);
 
 	plugin->camera_component_type = lodge_camera_component_type_register();
 	plugin->point_light_component_type = lodge_point_light_component_type_register();
 	plugin->directional_light_component_type = lodge_directional_light_component_type_register();
-	plugin->static_mesh_component_type = lodge_static_mesh_component_type_register();
+	plugin->static_mesh_component_type = lodge_static_mesh_component_type_register(fbx_types.fbx_asset_type);
 
 	return lodge_success();
 }

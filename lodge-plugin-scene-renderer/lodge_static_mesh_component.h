@@ -10,6 +10,9 @@
 struct lodge_type_t;
 typedef struct lodge_type* lodge_type_t;
 
+struct lodge_asset;
+typedef struct lodge_asset* lodge_asset_t;
+
 // TODO(TS): separate header for _ref
 struct lodge_static_mesh_ref
 {
@@ -34,18 +37,17 @@ struct fbx_asset;
 
 struct lodge_static_mesh_component
 {
-	const struct fbx_asset			*asset;
 	lodge_shader_t					shader;
 	lodge_shader_t					shader_entity_id;
 	lodge_texture_t					texture;
 
-	struct lodge_static_mesh_ref	fbx_ref;
+	lodge_asset_t					fbx_asset;
 	struct lodge_static_mesh_ref	shader_ref;
 	struct lodge_static_mesh_ref	texture_ref;
 };
 
 extern lodge_component_type_t	LODGE_COMPONENT_TYPE_STATIC_MESH;
 
-lodge_component_type_t			lodge_static_mesh_component_type_register();
+lodge_component_type_t			lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type);
 
 #endif
