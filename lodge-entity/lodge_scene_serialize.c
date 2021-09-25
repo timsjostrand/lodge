@@ -213,6 +213,17 @@ static void* lodge_scene_get_or_add_system_data(lodge_scene_t scene, lodge_syste
 
 lodge_scene_t lodge_scene_from_text(strview_t text)
 {
+	struct lodge_scene *scene = calloc(1, lodge_scene_sizeof());
+	if(lodge_scene_from_text_inplace(scene, text)) {
+		return scene;
+	} else {
+		free(scene);
+		return NULL;
+	}
+}
+
+bool lodge_scene_from_text_inplace(struct lodge_scene *scene, strview_t text)
+{
 	lodge_json_t root = lodge_json_from_string(text);
 	ASSERT_OR(root) {
 		goto fail;
@@ -239,7 +250,6 @@ lodge_scene_t lodge_scene_from_text(strview_t text)
 		goto fail;
 	}
 
-	lodge_scene_t scene = calloc(1, lodge_scene_sizeof());
 	lodge_scene_new_inplace(scene);
 
 	//
@@ -278,12 +288,12 @@ lodge_scene_t lodge_scene_from_text(strview_t text)
 			
 			strview_t entity_object_name;
 			ASSERT_OR(lodge_json_object_get_name(entity_object, &entity_object_name)) {
-				return NULL;
+				return false;
 			}
 
 			uint64_t entity_id = 0;
 			ASSERT_OR(strview_to_u64(entity_object_name, &entity_id)) {
-				return NULL;
+				return false;
 			}
 			
 			lodge_entity_t entity = lodge_scene_entity_from_json(scene, entity_id, lodge_json_object_get_child_index(entity_object, 0));
@@ -293,10 +303,10 @@ lodge_scene_t lodge_scene_from_text(strview_t text)
 
 	ASSERT_NOT_IMPLEMENTED();
 	
-	return scene;
+	return true;
 
 fail:
 	lodge_scene_free_inplace(scene);
 	lodge_json_free(root);
-	return NULL;
+	return false;
 }

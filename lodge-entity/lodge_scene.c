@@ -297,6 +297,10 @@ lodge_entity_t lodge_scene_get_component_entity(lodge_scene_t scene, lodge_compo
 	return lodge_entity_desc_to_entity(entity_desc);
 }
 
+//
+// TODO(TS): scene should own a cache (or sole owner?) of the entity tree structure,
+// so editors et al can easily iterate.
+//
 void lodge_scene_set_entity_parent(lodge_scene_t scene, lodge_entity_t entity, lodge_entity_t parent)
 {
 	struct lodge_entity_desc *entity_desc = lodge_entity_desc_from_entity(scene, entity);
