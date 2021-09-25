@@ -832,6 +832,17 @@ static void lodge_scene_render_system_update(struct lodge_scene_render_system *s
 	//
 	// Shadow map (update after: directional lights, camera)
 	//
+	if(!system->active_camera) {
+		lodge_scene_components_foreach(scene, struct lodge_camera_component*, camera, LODGE_COMPONENT_TYPE_CAMERA) {
+			if(camera->use_default) {
+				lodge_entity_t owner = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_CAMERA, camera);
+				if(owner) {
+					lodge_scene_set_active_camera(scene, owner);
+				}
+			}
+		}
+	}
+
 	if(system->active_camera) {
 		lodge_scene_render_system_update_shadow_map(system, scene, dt);
 	}
