@@ -7,10 +7,11 @@
 
 #include <string.h>
 
+#include "lodge_time.h"
+
 // FIXME(TS): Just for `_plugin()` funcs
-#include "lodge_window.h"
-#include "lodge_gfx.h"
 #include "game.h"
+#include "lodge_window.h"
 #include "lodge_vfs.h"
 #include "lodge_plugin_vfs.h"
 #include "lodge_plugin_types.h"
@@ -50,6 +51,7 @@ struct lodge_plugins
 	size_t								data_size;
 	float								delta_time_factor;
 	struct lodge_plugins_frame_times	frame_times;
+	struct lodge_plugins_frame_times	last_frame_times;
 
 	const struct lodge_argv				*args;
 };
@@ -170,25 +172,20 @@ static bool lodge_plugins_is_dependency_impl(struct lodge_plugins *plugins, size
 	return false;
 }
 
-static void lodge_plugins_register_frame(struct lodge_plugins_frame_times *f, float delta_time)
+static void lodge_plugins_register_frame(struct lodge_plugins *plugins, float delta_time)
 {
+	struct lodge_plugins_frame_times *f = &plugins->frame_times;
+
 	f->frames++;
 	f->frame_time_min = min(delta_time, f->frame_time_min);
 	f->frame_time_max = max(delta_time, f->frame_time_max);
 	f->frame_time_sum += delta_time;
 	
-	if (lodge_window_get_time() - f->last_frame_report >= 1000.0) {
-		f->last_frame_report = lodge_window_get_time();
+	if(lodge_timestamp_elapsed_ms(f->last_frame_report) >= 1000.0) {
+		f->last_frame_report = lodge_timestamp_get();
 		f->frame_time_avg = f->frame_time_sum / (float) f->frames;
 
-#if 1
-		// TODO(TS): reimplement frame time callback
-		//if(f->callback != NULL) {
-		//    f->callback(f);
-		//}
-#else
-		debugf("Plugins", "FPS: %.0f\n", f->frame_time_avg);
-#endif
+		plugins->last_frame_times = *f;
 
 		f->frame_time_max = -FLT_MAX;
 		f->frame_time_min = FLT_MAX;
@@ -417,14 +414,14 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 	/* Main loop */
 	while(plugins->running) {
 		const int count = plugins->count;
-		const double before = lodge_window_get_time(); // FIXME(TS): shoud use lodge_get_time
+		lodge_timestamp_t before = lodge_timestamp_get();
 
 		struct lodge_plugins_frame_times *frame_times = &plugins->frame_times;
 
 		/* Delta-time. */
 		float delta_time = 0;
 		if(frame_times->last_frame != 0) {
-			delta_time = (float)((before - frame_times->last_frame) * plugins->delta_time_factor);
+			delta_time = lodge_timestamp_elapsed_ms(frame_times->last_frame) * plugins->delta_time_factor;
 		}
 		frame_times->last_frame = before;
 
@@ -459,7 +456,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 		}
 
 		/* Register that a frame has been completed. */
-		lodge_plugins_register_frame(frame_times, (float)(lodge_window_get_time() - before)); // FIXME(TS): should use lodge_get_time
+		lodge_plugins_register_frame(plugins, lodge_timestamp_elapsed_ms(before));
 	}
 }
 
@@ -475,7 +472,7 @@ void lodge_plugins_set_delta_time_factor(struct lodge_plugins *plugins, float de
 
 struct lodge_plugins_frame_times lodge_plugins_get_frame_times(struct lodge_plugins *plugins)
 {
-	return plugins->frame_times;
+	return plugins->last_frame_times;
 }
 
 const struct lodge_plugin_desc* lodge_plugins_get_desc(const struct lodge_plugins *plugins, size_t index)

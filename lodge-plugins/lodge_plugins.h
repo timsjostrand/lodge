@@ -3,6 +3,8 @@
 
 #include "str.h"
 
+#include "lodge_time.h"
+
 #include <stdbool.h>
 
 struct lodge_argv;
@@ -13,13 +15,13 @@ typedef void* lodge_plugin_data_t;
 
 struct lodge_plugins_frame_times
 {
-	int			frames;						/* Number of frames drawn since last_frame_report. */
-	double		last_frame_report;			/* When frames were last summed up. */
-	double		last_frame;					/* When the last frame was drawn. */
-	float		frame_time_min;
-	float		frame_time_max;
-	float		frame_time_sum;
-	float		frame_time_avg;
+	int								frames;						/* Number of frames drawn since last_frame_report. */
+	lodge_timestamp_t				last_frame_report;			/* When frames were last summed up. */
+	lodge_timestamp_t				last_frame;					/* When the last frame was drawn. */
+	float							frame_time_min;
+	float							frame_time_max;
+	float							frame_time_sum;
+	float							frame_time_avg;
 };
 
 struct lodge_plugins*				lodge_plugins_new();
