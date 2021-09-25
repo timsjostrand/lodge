@@ -19,9 +19,13 @@ typedef struct lodge_scene* lodge_scene_t;
 struct lodge_window;
 typedef struct lodge_window* lodge_window_t;
 
+struct lodge_framebuffer;
+typedef struct lodge_framebuffer* lodge_framebuffer_t;
+
 struct lodge_system_render_params
 {
 	struct lodge_recti						window_rect;
+	lodge_framebuffer_t						framebuffer;
 };
 
 typedef void								(*lodge_system_new_inplace_func_t)(void *system, lodge_scene_t scene);
@@ -76,5 +80,8 @@ struct lodge_properties*					lodge_system_type_get_properties(lodge_system_type_
 void*										lodge_system_type_get_plugin(lodge_system_type_t system_type);
 
 lodge_system_type_t							lodge_system_type_find(strview_t name);
+
+lodge_system_type_t							lodge_system_type_it_begin();
+lodge_system_type_t							lodge_system_type_it_next(lodge_system_type_t it);
 
 #endif

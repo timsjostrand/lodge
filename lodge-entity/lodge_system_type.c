@@ -5,9 +5,14 @@
 struct lodge_system_type_desc system_descs[256];
 size_t system_descs_count = 0;
 
-static struct lodge_system_type_desc* lodge_system_type_desc_from_handle(lodge_system_type_t system)
+static lodge_system_type_t lodge_system_type_from_desc(struct lodge_system_type_desc *desc)
 {
-	return (struct lodge_system_type_desc *) system;
+	return (lodge_system_type_t) desc;
+}
+
+static struct lodge_system_type_desc* lodge_system_type_to_desc(lodge_system_type_t system_type)
+{
+	return (struct lodge_system_type_desc *) system_type;
 }
 
 lodge_system_type_t lodge_system_type_register(struct lodge_system_type_desc desc)
@@ -38,7 +43,7 @@ lodge_system_type_t lodge_system_type_register(struct lodge_system_type_desc des
 
 void lodge_system_type_new_inplace(lodge_system_type_t system_type, void *dst, lodge_scene_t scene)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->new_inplace) {
 		system_desc->new_inplace(dst, scene);
@@ -47,7 +52,7 @@ void lodge_system_type_new_inplace(lodge_system_type_t system_type, void *dst, l
 
 void lodge_system_type_free_inplace(lodge_system_type_t system_type, void *dst, lodge_scene_t scene)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->free_inplace) {
 		system_desc->free_inplace(dst, scene);
@@ -56,14 +61,14 @@ void lodge_system_type_free_inplace(lodge_system_type_t system_type, void *dst, 
 
 size_t lodge_system_type_sizeof(lodge_system_type_t system_type)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	return system_desc ? system_desc->size : 0;
 }
 
 void lodge_system_type_update(lodge_system_type_t system_type, void *system, lodge_scene_t scene, float dt)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->update) {
 		system_desc->update(system, system_type, scene, dt);
@@ -72,7 +77,7 @@ void lodge_system_type_update(lodge_system_type_t system_type, void *system, lod
 
 void lodge_system_type_render(lodge_system_type_t system_type, void *system, lodge_scene_t scene, struct lodge_system_render_params *render_params)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->render) {
 		system_desc->render(system, scene, render_params);
@@ -81,21 +86,21 @@ void lodge_system_type_render(lodge_system_type_t system_type, void *system, lod
 
 strview_t lodge_system_type_get_name(lodge_system_type_t system_type)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	return system_desc ? system_desc->name : strview_static("");
 }
 
 struct lodge_properties* lodge_system_type_get_properties(lodge_system_type_t system_type)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	return system_desc ? &system_desc->properties : NULL;
 }
 
 void* lodge_system_type_get_plugin(lodge_system_type_t system_type)
 {
-	struct lodge_system_type_desc *system_desc = lodge_system_type_desc_from_handle(system_type);
+	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	return system_desc ? system_desc->plugin : NULL;
 }
@@ -104,10 +109,19 @@ lodge_system_type_t lodge_system_type_find(strview_t name)
 {
 	for(size_t i = 0; i < system_descs_count; i++) {
 		if(strview_equals(system_descs[i].name, name)) {
-			return (lodge_system_type_t)&system_descs[i];
+			return lodge_system_type_from_desc(&system_descs[i]);
 		}
 	}
 	return NULL;
 }
 
+lodge_system_type_t lodge_system_type_it_begin()
+{
+	return lodge_system_type_from_desc(&system_descs[0]);
+}
 
+lodge_system_type_t lodge_system_type_it_next(lodge_system_type_t it)
+{
+	lodge_system_type_t end = lodge_system_type_from_desc(&system_descs[system_descs_count - 1]);
+	return (it < end) ? lodge_system_type_from_desc(lodge_system_type_to_desc(it) + 1) : NULL;
+}
