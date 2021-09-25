@@ -460,6 +460,10 @@ strview_t lodge_window_get_clipboard(lodge_window_t window)
 	struct glfw_window* glfw_window = cast_handle(window);
 
 	const char *str = glfwGetClipboardString(glfw_window->window);
+	if(!str) {
+		return strview_null();
+	}
+
 	const size_t str_len = strlen(str);
 	return strview_make(str, str_len);
 }

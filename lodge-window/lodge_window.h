@@ -16,11 +16,11 @@
 struct lodge_window;
 typedef struct lodge_window* lodge_window_t;
 
-typedef void(*lodge_window_mousebutton_callback_t)(lodge_window_t window, int button, int action, int mods, void *userdata);
-typedef void(*lodge_window_scroll_callback_t)(lodge_window_t window, double x, double y, void *userdata);
-typedef void(*lodge_window_input_callback_t)(lodge_window_t window, int key, int scancode, int action, int mods, void *userdata);
-typedef void(*lodge_window_input_char_callback_t)(lodge_window_t window, unsigned int key, int mods, void *userdata);
-typedef void(*lodge_window_resize_callback_t)(lodge_window_t window, int width, int height, void *userdata);
+typedef void				(*lodge_window_mousebutton_callback_t)(lodge_window_t window, int button, int action, int mods, void *userdata);
+typedef void				(*lodge_window_scroll_callback_t)(lodge_window_t window, double x, double y, void *userdata);
+typedef void				(*lodge_window_input_callback_t)(lodge_window_t window, int key, int scancode, int action, int mods, void *userdata);
+typedef void				(*lodge_window_input_char_callback_t)(lodge_window_t window, unsigned int key, int mods, void *userdata);
+typedef void				(*lodge_window_resize_callback_t)(lodge_window_t window, int width, int height, void *userdata);
 
 struct lodge_windows
 {
