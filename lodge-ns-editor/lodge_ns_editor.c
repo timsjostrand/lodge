@@ -107,264 +107,253 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
 	lodge_graph_t graph = editor->graph;
 	void* graph_context = lodge_graph_get_context(graph);
 
-	char node_gui_id[2 + sizeof(lodge_graph_t) + 1] = { 0 };
-	node_gui_id[0] = 'g';
-	node_gui_id[1] = '_';
-	memcpy(node_gui_id+2, (const char*)&graph, sizeof(lodge_graph_t));
+    struct nk_command_buffer *canvas = nk_window_get_canvas(ctx);
+    struct nk_rect total_space = nk_window_get_content_region(ctx);
+	const size_t nodes_count = lodge_graph_get_node_count(graph);
 
-	if(nk_begin_titled(ctx,
-		node_gui_id, "Graph", nk_rect(32, 32, 1024, 768),
-		NK_WINDOW_TITLE|NK_WINDOW_BORDER|NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE)) {
-        struct nk_command_buffer *canvas = nk_window_get_canvas(ctx);
-        struct nk_rect total_space = nk_window_get_content_region(ctx);
-		const size_t nodes_count = lodge_graph_get_node_count(graph);
+	nk_layout_row_dynamic(ctx, 30, 1);
+	if(nk_button_label(ctx, "Save")) {
+		size_t text_size;
+		char* text = lodge_graph_to_text(graph, &text_size);
 
-		nk_layout_row_dynamic(ctx, 30, 1);
-		if(nk_button_label(ctx, "Save")) {
-			size_t text_size;
-			char* text = lodge_graph_to_text(graph, &text_size);
+		lodge_graph_t new_graph = lodge_graph_from_text(strview_make(text, text_size - 1), graph_context);
+		ASSERT(new_graph);
 
-			lodge_graph_t new_graph = lodge_graph_from_text(strview_make(text, text_size - 1), graph_context);
-			ASSERT(new_graph);
+		if(text) {
+			free(text);
+		}
+	}
 
-			if(text) {
-				free(text);
-			}
+	nk_layout_space_begin(ctx, NK_STATIC, total_space.h, nodes_count);
+
+	//
+	// Node windows
+	//
+	for(size_t node_idx = 0; node_idx < nodes_count; node_idx++) {
+		lodge_node_t node = lodge_graph_get_node_from_index(graph, node_idx);
+		lodge_node_id_t node_id = lodge_graph_get_node_id(graph, node);
+
+		const strview_t node_type_name = lodge_node_type_get_name(node->type);
+		const lodge_pin_idx_t pin_count_max = max(node->inputs.count, node->outputs.count);
+
+		struct nk_rect *node_bounds = &editor->node_bounds[node_id];
+		struct lodge_ns_editor_pins *node_pins = &editor->node_pins[node_id];
+
+		if(node_bounds->x < 0.0f) {
+			node_bounds->x = 8 + node_idx * 8;
+		}
+		if(node_bounds->y < 0.0f) {
+			node_bounds->y = 8 + node_idx * 8;
+		}
+		if(node_bounds->w < 0.0f) {
+			node_bounds->w = 200;
+		}
+		if(node_bounds->h < 0.0f) {
+			node_bounds->h = 30 * (1 + pin_count_max) + 30;
 		}
 
-		nk_layout_space_begin(ctx, NK_STATIC, total_space.h, nodes_count);
+		nk_layout_space_push(ctx, *node_bounds);
+
+		struct nk_panel *node_panel;
+
+		char node_gui_id[2 + sizeof(size_t) + 1] = { 0 };
+		node_gui_id[0] = 'n';
+		node_gui_id[1] = '_';
+		memcpy(node_gui_id+2, (const char*)&node_id, sizeof(size_t));
 
 		//
-		// Node windows
+		// Node window
 		//
-		for(size_t node_idx = 0; node_idx < nodes_count; node_idx++) {
-			lodge_node_t node = lodge_graph_get_node_from_index(graph, node_idx);
-			lodge_node_id_t node_id = lodge_graph_get_node_id(graph, node);
+		if(nk_group_begin_titled(ctx, node_gui_id, node_type_name.s,
+			NK_WINDOW_MOVABLE|NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_CLOSABLE)) {
+			node_panel = nk_window_get_panel(ctx);
 
-			const strview_t node_type_name = lodge_node_type_get_name(node->type);
-			const lodge_pin_idx_t pin_count_max = max(node->inputs.count, node->outputs.count);
+			for(lodge_pin_idx_t pin_idx = 0; pin_idx < pin_count_max; pin_idx++) {
+				nk_layout_row_dynamic(ctx, 30, 2);
 
-			struct nk_rect *node_bounds = &editor->node_bounds[node_id];
-			struct lodge_ns_editor_pins *node_pins = &editor->node_pins[node_id];
+				//
+				// Inputs
+				//
+				if(pin_idx == 0 && node->inputs.count == 0 && lodge_variant_is_set(&node->config)) {
+					node_editor_make_widget_func_t make_widget_func = node_editor_find_make_widget_func(node->config.type);
 
-			if(node_bounds->x < 0.0f) {
-				node_bounds->x = 8 + node_idx * 8;
-			}
-			if(node_bounds->y < 0.0f) {
-				node_bounds->y = 8 + node_idx * 8;
-			}
-			if(node_bounds->w < 0.0f) {
-				node_bounds->w = 200;
-			}
-			if(node_bounds->h < 0.0f) {
-				node_bounds->h = 30 * (1 + pin_count_max) + 30;
-			}
-
-			nk_layout_space_push(ctx, *node_bounds);
-
-			struct nk_panel *node_panel;
-
-			char node_gui_id[2 + sizeof(size_t) + 1] = { 0 };
-			node_gui_id[0] = 'n';
-			node_gui_id[1] = '_';
-			memcpy(node_gui_id+2, (const char*)&node_id, sizeof(size_t));
-
-			//
-			// Node window
-			//
-			if(nk_group_begin_titled(ctx, node_gui_id, node_type_name.s,
-				NK_WINDOW_MOVABLE|NK_WINDOW_NO_SCROLLBAR|NK_WINDOW_BORDER|NK_WINDOW_TITLE|NK_WINDOW_CLOSABLE)) {
-				node_panel = nk_window_get_panel(ctx);
-
-				for(lodge_pin_idx_t pin_idx = 0; pin_idx < pin_count_max; pin_idx++) {
-					nk_layout_row_dynamic(ctx, 30, 2);
-
-					//
-					// Inputs
-					//
-					if(pin_idx == 0 && node->inputs.count == 0 && lodge_variant_is_set(&node->config)) {
-						node_editor_make_widget_func_t make_widget_func = node_editor_find_make_widget_func(node->config.type);
-
-						if(make_widget_func) {
-							make_widget_func(ctx, graph, &node->config);
-						} else {
-							nk_spacing(ctx, 1);
-						}
+					if(make_widget_func) {
+						make_widget_func(ctx, graph, &node->config);
 					} else {
-						if(pin_idx < node->inputs.count) {
-							struct lodge_input_pin *pin = &node->inputs.pins[pin_idx];
-
-							struct nk_rect button_bounds = nk_widget_bounds(ctx);
-							node_pins->inputs[pin_idx] = (struct lodge_ns_editor_pin) {
-								.pos.x = button_bounds.x,
-								.pos.y = button_bounds.y + button_bounds.h / 2.0f,
-								.type = pin->config.type
-							};
-
-							struct nk_style_button style_not_connected = ctx->style.button;
-							style_not_connected.border_color = nk_rgba(255,0,0,255);
-
-							const bool is_connected = lodge_node_input_is_connected(node, pin_idx);
-							struct nk_style_button *style = is_connected ? &ctx->style.button : &style_not_connected;
-
-							if(nk_button_text_styled(ctx, style, pin->config.name.s, pin->config.name.length)) {
-								if(editor->editing_link.node) {
-									if(lodge_node_can_connect(editor->editing_link.node, editor->editing_link.pin_index, node, pin_idx)) {
-										lodge_graph_unconfigure(graph);
-
-										lodge_node_connect(
-											editor->editing_link.node, editor->editing_link.pin_index,
-											node, pin_idx
-										);
-
-										lodge_graph_configure(graph);
-									}
-
-									editor->editing_link.node = NULL;
-								};
-							} else if(nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, button_bounds, nk_true)) {
-								lodge_graph_unconfigure(graph);
-								{
-									lodge_node_input_disconnect(node, pin_idx);
-								}
-								lodge_graph_configure(graph);
-							}
-						} else {
-							nk_spacing(ctx, 1);
-						}
+						nk_spacing(ctx, 1);
 					}
-
-					//
-					// Outputs
-					//
-					if(pin_idx < node->outputs.count) {
-						struct lodge_output_pin *pin = &node->outputs.pins[pin_idx];
+				} else {
+					if(pin_idx < node->inputs.count) {
+						struct lodge_input_pin *pin = &node->inputs.pins[pin_idx];
 
 						struct nk_rect button_bounds = nk_widget_bounds(ctx);
-						editor->node_pins[node_id].outputs[pin_idx] = (struct lodge_ns_editor_pin) {
-							.pos.x = button_bounds.x + button_bounds.w,
+						node_pins->inputs[pin_idx] = (struct lodge_ns_editor_pin) {
+							.pos.x = button_bounds.x,
 							.pos.y = button_bounds.y + button_bounds.h / 2.0f,
 							.type = pin->config.type
 						};
-						
-						struct nk_style_button style_reconnecting = ctx->style.button;
-						style_reconnecting.border_color = nk_rgba(0,255,0,255);
 
-						const bool is_reconnecting = editor->editing_link.node == node;
-						struct nk_style_button *style = !is_reconnecting ? &ctx->style.button : &style_reconnecting;
+						struct nk_style_button style_not_connected = ctx->style.button;
+						style_not_connected.border_color = nk_rgba(255,0,0,255);
+
+						const bool is_connected = lodge_node_input_is_connected(node, pin_idx);
+						struct nk_style_button *style = is_connected ? &ctx->style.button : &style_not_connected;
 
 						if(nk_button_text_styled(ctx, style, pin->config.name.s, pin->config.name.length)) {
-							editor->editing_link = (struct lodge_pin_connection) {
-								.node = node,
-								.pin_index = pin_idx,
+							if(editor->editing_link.node) {
+								if(lodge_node_can_connect(editor->editing_link.node, editor->editing_link.pin_index, node, pin_idx)) {
+									lodge_graph_unconfigure(graph);
+
+									lodge_node_connect(
+										editor->editing_link.node, editor->editing_link.pin_index,
+										node, pin_idx
+									);
+
+									lodge_graph_configure(graph);
+								}
+
+								editor->editing_link.node = NULL;
 							};
+						} else if(nk_input_is_mouse_click_down_in_rect(&ctx->input, NK_BUTTON_RIGHT, button_bounds, nk_true)) {
+							lodge_graph_unconfigure(graph);
+							{
+								lodge_node_input_disconnect(node, pin_idx);
+							}
+							lodge_graph_configure(graph);
 						}
 					} else {
 						nk_spacing(ctx, 1);
 					}
 				}
 
-				nk_group_end(ctx);
+				//
+				// Outputs
+				//
+				if(pin_idx < node->outputs.count) {
+					struct lodge_output_pin *pin = &node->outputs.pins[pin_idx];
 
-				//if(nk_window_is_active(ctx, node_gui_id)) {
-					*node_bounds = nk_layout_space_rect_to_local(ctx, node_panel->bounds);
-				//}
-			} else {
-				lodge_graph_unconfigure(graph);
-				lodge_graph_remove_node(graph, node_id);
-				lodge_graph_configure(graph);
-				break; // stop iterating nodes
-			}
-		}
+					struct nk_rect button_bounds = nk_widget_bounds(ctx);
+					editor->node_pins[node_id].outputs[pin_idx] = (struct lodge_ns_editor_pin) {
+						.pos.x = button_bounds.x + button_bounds.w,
+						.pos.y = button_bounds.y + button_bounds.h / 2.0f,
+						.type = pin->config.type
+					};
+						
+					struct nk_style_button style_reconnecting = ctx->style.button;
+					style_reconnecting.border_color = nk_rgba(0,255,0,255);
 
-		const struct nk_vec2 mouse_pos_editor_space = nk_layout_space_to_local(ctx, ctx->input.mouse.pos);
-		nk_layout_space_end(ctx);
+					const bool is_reconnecting = editor->editing_link.node == node;
+					struct nk_style_button *style = !is_reconnecting ? &ctx->style.button : &style_reconnecting;
 
-		//
-		// Context menu
-		//
-		if(nk_contextual_begin(ctx, 0, nk_vec2(240, 320), nk_window_get_bounds(ctx))) {
-			nk_layout_row_dynamic(ctx, 25, 1);
-
-			nk_edit_string(ctx, NK_EDIT_SIMPLE, &editor->add_node_filter[0], &editor->add_node_filter_len, LODGE_ARRAYSIZE(editor->add_node_filter), NULL);
-
-			strview_t add_node_filter = strview_make(editor->add_node_filter, editor->add_node_filter_len);
-
-			for(size_t node_type_idx = 0, count = lodge_node_type_get_count(); node_type_idx < count; node_type_idx++) {
-				lodge_node_type_t node_type = lodge_node_type_get_index(node_type_idx);
-				strview_t node_type_name = lodge_node_type_get_name(node_type);
-
-				if(editor->add_node_filter_len == 0 || strview_begins_with(node_type_name, add_node_filter)) {
-					if(nk_contextual_item_text(ctx, node_type_name.s, node_type_name.length, NK_TEXT_ALIGN_LEFT)) {
-						lodge_graph_unconfigure(graph);
-						{
-							lodge_node_t node = lodge_graph_add_node(graph, node_type);
-							lodge_node_id_t node_id = lodge_graph_get_node_id(graph, node);
-
-							editor->node_bounds[node_id] = (struct nk_rect) {
-								.x = mouse_pos_editor_space.x,
-								.y = mouse_pos_editor_space.y,
-								.w = -1,
-								.h = -1,
-							};
-
-							if(node->outputs.count == 0) {
-								lodge_graph_add_main(graph, node);
-							}
-						}
-						lodge_graph_configure(graph);
+					if(nk_button_text_styled(ctx, style, pin->config.name.s, pin->config.name.length)) {
+						editor->editing_link = (struct lodge_pin_connection) {
+							.node = node,
+							.pin_index = pin_idx,
+						};
 					}
+				} else {
+					nk_spacing(ctx, 1);
 				}
 			}
 
-			nk_contextual_end(ctx);
+			nk_group_end(ctx);
+
+			//if(nk_window_is_active(ctx, node_gui_id)) {
+				*node_bounds = nk_layout_space_rect_to_local(ctx, node_panel->bounds);
+			//}
+		} else {
+			lodge_graph_unconfigure(graph);
+			lodge_graph_remove_node(graph, node_id);
+			lodge_graph_configure(graph);
+			break; // stop iterating nodes
 		}
+	}
 
-		//
-		// Connection lines
-		//
-		for(size_t node_idx = 0; node_idx < nodes_count; node_idx++) {
-			lodge_node_t node = lodge_graph_get_node_from_index(graph, node_idx);
-			lodge_node_id_t node_id = lodge_graph_get_node_id(graph, node);
+	const struct nk_vec2 mouse_pos_editor_space = nk_layout_space_to_local(ctx, ctx->input.mouse.pos);
+	nk_layout_space_end(ctx);
 
-			// Input pin circles
-			for(lodge_pin_idx_t pin_idx = 0, pins_count = node->inputs.count; pin_idx < pins_count; pin_idx++) {
-				struct lodge_ns_editor_pin *editor_pin = &editor->node_pins[node_id].inputs[pin_idx];
-				struct nk_rect pin_rect = nk_rect(editor_pin->pos.x - 4.0f, editor_pin->pos.y - 4.0f, 8.0f, 8.0f);
-				nk_fill_circle(canvas, pin_rect, node_editor_pin_type_to_color(editor_pin->type));
-			}
+	//
+	// Context menu
+	//
+	if(nk_contextual_begin(ctx, 0, nk_vec2(240, 320), nk_window_get_bounds(ctx))) {
+		nk_layout_row_dynamic(ctx, 25, 1);
 
-			// Output pin circles
-			for(lodge_pin_idx_t pin_idx = 0, pins_count = node->outputs.count; pin_idx < pins_count; pin_idx++) {
-				struct lodge_ns_editor_pin *editor_pin = &editor->node_pins[node_id].outputs[pin_idx];
-				struct nk_rect pin_rect = nk_rect(editor_pin->pos.x - 4.0f, editor_pin->pos.y - 4.0f, 8.0f, 8.0f);
-				nk_fill_circle(canvas, pin_rect, node_editor_pin_type_to_color(editor_pin->type));
-			}
+		nk_edit_string(ctx, NK_EDIT_SIMPLE, &editor->add_node_filter[0], &editor->add_node_filter_len, LODGE_ARRAYSIZE(editor->add_node_filter), NULL);
 
-			// Lines
-			for(lodge_pin_idx_t pin_idx = 0, pins_count = node->inputs.count; pin_idx < pins_count; pin_idx++) {
-				struct lodge_pin_connection *link = &node->inputs.pins[pin_idx].connection;
+		strview_t add_node_filter = strview_make(editor->add_node_filter, editor->add_node_filter_len);
 
-				if(!link->node) {
-					continue;
+		for(size_t node_type_idx = 0, count = lodge_node_type_get_count(); node_type_idx < count; node_type_idx++) {
+			lodge_node_type_t node_type = lodge_node_type_get_index(node_type_idx);
+			strview_t node_type_name = lodge_node_type_get_name(node_type);
+
+			if(editor->add_node_filter_len == 0 || strview_begins_with(node_type_name, add_node_filter)) {
+				if(nk_contextual_item_text(ctx, node_type_name.s, node_type_name.length, NK_TEXT_ALIGN_LEFT)) {
+					lodge_graph_unconfigure(graph);
+					{
+						lodge_node_t node = lodge_graph_add_node(graph, node_type);
+						lodge_node_id_t node_id = lodge_graph_get_node_id(graph, node);
+
+						editor->node_bounds[node_id] = (struct nk_rect) {
+							.x = mouse_pos_editor_space.x,
+							.y = mouse_pos_editor_space.y,
+							.w = -1,
+							.h = -1,
+						};
+
+						if(node->outputs.count == 0) {
+							lodge_graph_add_main(graph, node);
+						}
+					}
+					lodge_graph_configure(graph);
 				}
-
-				const lodge_node_id_t linked_node_id = lodge_graph_get_node_id(graph, link->node);
-				struct lodge_ns_editor_pin *editor_in_pin = &editor->node_pins[node_id].inputs[pin_idx];
-				struct lodge_ns_editor_pin *editor_out_pin = &editor->node_pins[linked_node_id].outputs[link->pin_index];
-
-				nk_stroke_curve(canvas,
-					editor_in_pin->pos.x, editor_in_pin->pos.y,
-					editor_in_pin->pos.x - 50.0f, editor_in_pin->pos.y,
-					editor_out_pin->pos.x + 50.0f, editor_out_pin->pos.y,
-					editor_out_pin->pos.x, editor_out_pin->pos.y,
-					2.0f,
-					node_editor_pin_type_to_color(editor_in_pin->type)
-				);
 			}
 		}
 
-		nk_end(ctx);
+		nk_contextual_end(ctx);
+	}
+
+	//
+	// Connection lines
+	//
+	for(size_t node_idx = 0; node_idx < nodes_count; node_idx++) {
+		lodge_node_t node = lodge_graph_get_node_from_index(graph, node_idx);
+		lodge_node_id_t node_id = lodge_graph_get_node_id(graph, node);
+
+		// Input pin circles
+		for(lodge_pin_idx_t pin_idx = 0, pins_count = node->inputs.count; pin_idx < pins_count; pin_idx++) {
+			struct lodge_ns_editor_pin *editor_pin = &editor->node_pins[node_id].inputs[pin_idx];
+			struct nk_rect pin_rect = nk_rect(editor_pin->pos.x - 4.0f, editor_pin->pos.y - 4.0f, 8.0f, 8.0f);
+			nk_fill_circle(canvas, pin_rect, node_editor_pin_type_to_color(editor_pin->type));
+		}
+
+		// Output pin circles
+		for(lodge_pin_idx_t pin_idx = 0, pins_count = node->outputs.count; pin_idx < pins_count; pin_idx++) {
+			struct lodge_ns_editor_pin *editor_pin = &editor->node_pins[node_id].outputs[pin_idx];
+			struct nk_rect pin_rect = nk_rect(editor_pin->pos.x - 4.0f, editor_pin->pos.y - 4.0f, 8.0f, 8.0f);
+			nk_fill_circle(canvas, pin_rect, node_editor_pin_type_to_color(editor_pin->type));
+		}
+
+		// Lines
+		for(lodge_pin_idx_t pin_idx = 0, pins_count = node->inputs.count; pin_idx < pins_count; pin_idx++) {
+			struct lodge_pin_connection *link = &node->inputs.pins[pin_idx].connection;
+
+			if(!link->node) {
+				continue;
+			}
+
+			const lodge_node_id_t linked_node_id = lodge_graph_get_node_id(graph, link->node);
+			struct lodge_ns_editor_pin *editor_in_pin = &editor->node_pins[node_id].inputs[pin_idx];
+			struct lodge_ns_editor_pin *editor_out_pin = &editor->node_pins[linked_node_id].outputs[link->pin_index];
+
+			nk_stroke_curve(canvas,
+				editor_in_pin->pos.x, editor_in_pin->pos.y,
+				editor_in_pin->pos.x - 50.0f, editor_in_pin->pos.y,
+				editor_out_pin->pos.x + 50.0f, editor_out_pin->pos.y,
+				editor_out_pin->pos.x, editor_out_pin->pos.y,
+				2.0f,
+				node_editor_pin_type_to_color(editor_in_pin->type)
+			);
+		}
 	}
 }
 
