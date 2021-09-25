@@ -419,11 +419,6 @@ int lodge_window_is_focused(lodge_window_t window)
 	return glfwGetWindowAttrib(glfw_window->window, GLFW_FOCUSED);
 }
 
-double lodge_window_get_time()
-{
-	return glfwGetTime() * 1000.0;
-}
-
 void lodge_window_get_screen_size(int* width, int* height)
 {
 	GLFWmonitor* monitor = glfwGetPrimaryMonitor();
