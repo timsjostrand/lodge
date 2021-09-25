@@ -154,3 +154,21 @@ bool lodge_argv_get_bool(const struct lodge_argv *argv, strview_t key, bool defa
 		return default_value;
 	}
 }
+
+uint32_t lodge_argv_get_u32(const struct lodge_argv *argv, strview_t key, uint32_t default_value)
+{
+	const struct lodge_arg *arg = lodge_argv_get_arg_by_name(argv, key);
+	if(arg && arg->type == LODGE_ARG_TYPE_KEY_VALUE) {
+		strview_to_u32(arg->value, &default_value);
+	} 
+	return default_value;
+}
+
+uint64_t lodge_argv_get_u64(const struct lodge_argv *argv, strview_t key, uint64_t default_value)
+{
+	const struct lodge_arg *arg = lodge_argv_get_arg_by_name(argv, key);
+	if(arg && arg->type == LODGE_ARG_TYPE_KEY_VALUE) {
+		strview_to_u64(arg->value, &default_value);
+	} 
+	return default_value;
+}

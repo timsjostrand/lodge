@@ -38,5 +38,7 @@ const struct lodge_arg*	lodge_argv_get_arg_by_name(const struct lodge_argv *dst,
 
 strview_t				lodge_argv_get_str(const struct lodge_argv *argv, strview_t key, strview_t default_value);
 bool					lodge_argv_get_bool(const struct lodge_argv *argv, strview_t key, bool default_value);
+uint32_t				lodge_argv_get_u32(const struct lodge_argv *argv, strview_t key, uint32_t default_value);
+uint64_t				lodge_argv_get_u64(const struct lodge_argv *argv, strview_t key, uint64_t default_value);
 
 #endif
