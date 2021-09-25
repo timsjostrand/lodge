@@ -5,10 +5,8 @@ add_library(lodge-window STATIC "")
 target_sources(lodge-window
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_window_glfw.c"
-		"${CMAKE_CURRENT_LIST_DIR}/util_graphics.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_window.h"
-		"${CMAKE_CURRENT_LIST_DIR}/util_graphics.h"
 )
 
 target_include_directories(lodge-window
