@@ -15,6 +15,7 @@ void lodge_camera_component_new_inplace(struct lodge_camera_component *component
 	component->perspective.z_far = 10000.0f;
 	component->perspective.width = 1920;
 	component->perspective.height = 1080;
+	component->use_default = false;
 }
 
 struct lodge_camera_params lodge_camera_params_make(lodge_scene_t scene, lodge_entity_t camera)
@@ -102,7 +103,7 @@ lodge_component_type_t lodge_camera_component_type_register()
 			.free_inplace = NULL,
 			.size = sizeof(struct lodge_camera_component),
 			.properties = {
-				.count = 1,
+				.count = 2,
 				.elements = {
 					{
 						.name = strview_static("perspective"),
@@ -110,6 +111,11 @@ lodge_component_type_t lodge_camera_component_type_register()
 						.offset = offsetof(struct lodge_camera_component, perspective),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
 						.on_modified = NULL,
+					},
+					{
+							.name = strview_static("use_default"),
+							.type = LODGE_TYPE_BOOL,
+							.offset = offsetof(struct lodge_camera_component, use_default),
 					},
 				}
 			}

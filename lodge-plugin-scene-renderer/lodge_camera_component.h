@@ -29,6 +29,7 @@ struct lodge_camera_component
 	enum lodge_projection		projection;
 	struct lodge_perspective	perspective;
 	//struct lodge_ortho		ortho;
+	bool						use_default;
 };
 
 extern lodge_type_t				LODGE_TYPE_PERSPECTIVE;
