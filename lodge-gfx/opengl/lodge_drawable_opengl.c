@@ -68,6 +68,7 @@ lodge_drawable_t lodge_drawable_make_from_static_mesh(const struct lodge_static_
 
 void lodge_drawable_reset(lodge_drawable_t drawable)
 {
+	if(!drawable) { return; }
 	glDeleteVertexArrays(1, &(GLuint){ lodge_drawable_to_gl(drawable) });
 	GL_OK_OR_ASSERT("Failed to reset drawable");
 }
