@@ -63,7 +63,7 @@ static bool make_property_widget_u32(struct nk_context *ctx, struct lodge_proper
 		}
 
 		int new_value = *value;
-		nk_property_int(ctx, "#u32", 0, &new_value, INT32_MAX, 1, 1); // FIXME(TS): nk doesnt support UINT32_MAX
+		nk_property_int(ctx, "#u32", min, &new_value, max, step, step);
 		if(new_value != *value) {
 			lodge_property_set(property, object, &new_value);
 			return true;
@@ -84,10 +84,12 @@ static bool make_property_widget_vec3(struct nk_context *ctx, struct lodge_prope
 	if(nk_group_begin(ctx, "vec3", NK_WINDOW_NO_SCROLLBAR)) {
 		nk_layout_row_dynamic(ctx, 0, 3);
 
+		vec3 new_value;
+
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
-		const float new_x = nk_propertyf(ctx, "#x", -FLT_MAX, value->x, FLT_MAX, 0.1f, 0.01f);
+		new_value.x = nk_propertyf(ctx, "#x", -FLT_MAX, value->x, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
@@ -95,7 +97,7 @@ static bool make_property_widget_vec3(struct nk_context *ctx, struct lodge_prope
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
-		const float new_y = nk_propertyf(ctx, "#y", -FLT_MAX, value->y, FLT_MAX, 0.1f, 0.01f);
+		new_value.y = nk_propertyf(ctx, "#y", -FLT_MAX, value->y, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
@@ -103,13 +105,24 @@ static bool make_property_widget_vec3(struct nk_context *ctx, struct lodge_prope
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_BLUE));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_BLUE));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_BLUE));
-		const float new_z = nk_propertyf(ctx, "#z", -FLT_MAX, value->z, FLT_MAX, 0.1f, 0.01f);
+		new_value.z = nk_propertyf(ctx, "#z", -FLT_MAX, value->z, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 
-		if(new_x != value->x || new_y != value->y || new_z != value->z) {
-			lodge_property_set(property, object, &(vec3) { new_x, new_y, new_z });
+		const bool modified_comp[3] = {
+			new_value.x != value->x,
+			new_value.y != value->y,
+			new_value.z != value->z,
+		};
+		if(modified_comp[0] || modified_comp[1] || modified_comp[2]) {
+			const bool shift_down = ctx->input.keyboard.keys[NK_KEY_SHIFT].clicked;
+			if(shift_down) {
+				for(int i=0; i<3; i++) {
+					new_value.v[i] = modified_comp[0] ? new_value.v[0] : (modified_comp[1] ? new_value.v[1] : (modified_comp[2] ? new_value.v[2] : 0.0));
+				}
+			}
+			lodge_property_set(property, object, &new_value);
 			modified = true;
 		}
 
@@ -147,10 +160,12 @@ static void make_property_widget_vec4_components(struct nk_context *ctx, struct 
 	if(nk_group_begin(ctx, "vec4", NK_WINDOW_NO_SCROLLBAR)) {
 		nk_layout_row_dynamic(ctx, 0, 4);
 
+		vec4 new_value;
+
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
-		const float new_x = nk_propertyf(ctx, "#x", -FLT_MAX, value->x, FLT_MAX, 0.1f, 0.01f);
+		new_value.x = nk_propertyf(ctx, "#x", -FLT_MAX, value->x, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
@@ -158,7 +173,7 @@ static void make_property_widget_vec4_components(struct nk_context *ctx, struct 
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
-		const float new_y = nk_propertyf(ctx, "#y", -FLT_MAX, value->y, FLT_MAX, 0.1f, 0.01f);
+		new_value.y = nk_propertyf(ctx, "#y", -FLT_MAX, value->y, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
@@ -166,7 +181,7 @@ static void make_property_widget_vec4_components(struct nk_context *ctx, struct 
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_BLUE));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_BLUE));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_BLUE));
-		const float new_z = nk_propertyf(ctx, "#z", -FLT_MAX, value->z, FLT_MAX, 0.1f, 0.01f);
+		new_value.z = nk_propertyf(ctx, "#z", -FLT_MAX, value->z, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
@@ -174,13 +189,24 @@ static void make_property_widget_vec4_components(struct nk_context *ctx, struct 
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_ORANGE));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_ORANGE));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_ORANGE));
-		const float new_w = nk_propertyf(ctx, "#w", -FLT_MAX, value->w, FLT_MAX, 0.1f, 0.01f);
+		new_value.w = nk_propertyf(ctx, "#w", -FLT_MAX, value->w, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 
-		if(new_x != value->x || new_y != value->y || new_z != value->z || new_w != value->w) {
-			lodge_property_set(property, object, &(vec4) { new_x, new_y, new_z, new_w });
+		const bool modified_comp[4] = {
+			new_value.x != value->x,
+			new_value.y != value->y,
+			new_value.z != value->z,
+			new_value.w != value->w,
+		};
+		if(modified_comp[0] || modified_comp[1] || modified_comp[2] || modified_comp[3]) {
+			const bool shift_down = ctx->input.keyboard.keys[NK_KEY_SHIFT].clicked;
+			if(shift_down) {
+				for(int i=0; i<4; i++) {
+					new_value.v[i] = modified_comp[0] ? new_value.v[0] : (modified_comp[1] ? new_value.v[1] : (modified_comp[2] ? new_value.v[2] : (modified_comp[3] ? new_value.v[3] : 0.0)));
+				}
+			}
 			*modified = true;
 		}
 
@@ -197,13 +223,6 @@ static bool make_property_widget_vec4(struct nk_context *ctx, struct lodge_prope
 	nk_style_push_vec2(ctx, &ctx->style.window.group_padding, (struct nk_vec2){ 0, 0 });
 
 	const bool is_color = property->hints.enable && property->hints.vec4.color;
-
-	//if(property->hints.enable) {
- 	//	if(nk_checkbox_label(ctx, "Color", &property->hints.vec4.color)) {
-	//		ASSERT_FAIL("Hello");
-	//	}
-	//}
-
 	if(is_color) {
 		make_property_widget_vec4_color(ctx, property, object, *value, &modified);
 	} else {
@@ -225,10 +244,12 @@ static bool make_property_widget_vec2(struct nk_context *ctx, struct lodge_prope
 	if(nk_group_begin(ctx, "vec2", NK_WINDOW_NO_SCROLLBAR)) {
 		nk_layout_row_dynamic(ctx, 0, 2);
 
+		vec2 new_value;
+
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_RED));
-		const float new_x = nk_propertyf(ctx, "#x", -FLT_MAX, value->x, FLT_MAX, 0.1f, 0.01f);
+		new_value.x = nk_propertyf(ctx, "#x", -FLT_MAX, value->x, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
@@ -236,13 +257,23 @@ static bool make_property_widget_vec2(struct nk_context *ctx, struct lodge_prope
 		nk_style_push_color(ctx, &ctx->style.property.label_normal, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
 		nk_style_push_color(ctx, &ctx->style.property.label_hover, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
 		nk_style_push_color(ctx, &ctx->style.property.label_active, nk_color_from_vec4(GRUVBOX_BRIGHT_GREEN));
-		const float new_y = nk_propertyf(ctx, "#y", -FLT_MAX, value->y, FLT_MAX, 0.1f, 0.01f);
+		new_value.y = nk_propertyf(ctx, "#y", -FLT_MAX, value->y, FLT_MAX, 0.1f, 0.01f);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 		nk_style_pop_color(ctx);
 
-		if(new_x != value->x || new_y != value->y) {
-			lodge_property_set(property, object, &(vec3) { new_x, new_y });
+		const bool modified_comp[2] = {
+			new_value.x != value->x,
+			new_value.y != value->y,
+		};
+		if(modified_comp[0] || modified_comp[1]) {
+			const bool shift_down = ctx->input.keyboard.keys[NK_KEY_SHIFT].clicked;
+			if(shift_down) {
+				for(int i=0; i<2; i++) {
+					new_value.v[i] = modified_comp[0] ? new_value.v[0] : (modified_comp[1] ? new_value.v[1] : 0.0f);
+				}
+			}
+			lodge_property_set(property, object, &new_value);
 			modified = true;
 		}
 
@@ -336,13 +367,17 @@ static bool make_property_widget_asset_ref(struct nk_context *ctx, struct lodge_
 		name = lodge_assets2_get_name(assets, *value);
 	}
 
+	bool modified = false;
+
 	if(nk_combo_begin_text(ctx, name.s, name.length, nk_vec2(nk_widget_width(ctx), 200))) {
 		nk_layout_row_dynamic(ctx, 25, 1);
 
-		for(lodge_asset_t it = lodge_assets2_it_begin(assets); it; it = lodge_assets2_it_next(assets, it)) {
-			strview_t name = lodge_assets2_get_name(assets, it);
-			if(nk_combo_item_text(ctx, name.s, name.length, NK_TEXT_LEFT)) {
-				lodge_property_set(property, object, &it);
+		if(*value) {
+			lodge_type_asset_edit_func_t edit_func = lodge_type_asset_get_edit_func(property->type);
+			if(edit_func) {
+				if(nk_combo_item_label(ctx, "Edit...", NK_TEXT_LEFT)) {
+					edit_func(assets, *value);
+				}
 			}
 		}
 
@@ -350,12 +385,26 @@ static bool make_property_widget_asset_ref(struct nk_context *ctx, struct lodge_
 			lodge_asset_t asset = lodge_assets2_make_default(assets);
 			ASSERT(asset);
 			lodge_property_set(property, object, &asset);
+			modified = true;
+		}
+
+		if(nk_combo_item_label(ctx, "Clear...", NK_TEXT_LEFT)) {
+			lodge_property_set(property, object, &(lodge_asset_t){ NULL });
+			modified = true;
+		}
+
+		for(lodge_asset_t it = lodge_assets2_it_begin(assets); it; it = lodge_assets2_it_next(assets, it)) {
+			strview_t name = lodge_assets2_get_name(assets, it);
+			if(nk_combo_item_text(ctx, name.s, name.length, NK_TEXT_LEFT)) {
+				lodge_property_set(property, object, &it);
+				modified = true;
+			}
 		}
 
 		nk_combo_end(ctx);
 	}
 
-	return false;
+	return modified;
 }
 
 lodge_make_property_widget_func_t lodge_type_get_make_property_widget_func(lodge_type_t type)
