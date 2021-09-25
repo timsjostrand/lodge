@@ -131,6 +131,7 @@ vec2	vec2_zero();
 vec2	vec2_add(const vec2 lhs, const vec2 rhs);
 vec2	vec2_sub(const vec2 lhs, const vec2 rhs);
 vec2	vec2_mult(const vec2 lhs, const vec2 rhs);
+vec2	vec2_div(const vec2 lhs, const vec2 rhs);
 vec2	vec2_norm(const vec2 v);
 vec2	vec2_lerp(const vec2 min, const vec2 max, float t);
 float	vec2_length(const vec2 v);

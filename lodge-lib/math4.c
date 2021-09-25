@@ -614,6 +614,14 @@ vec2 vec2_mult(const vec2 lhs, const vec2 rhs)
 	};
 }
 
+vec2 vec2_div(const vec2 lhs, const vec2 rhs)
+{
+	return (vec2) {
+		lhs.v[0] / rhs.v[0],
+		lhs.v[1] / rhs.v[1]
+	};
+}
+
 
 vec3 vec3_make(const float x, const float y, const float z)
 {
