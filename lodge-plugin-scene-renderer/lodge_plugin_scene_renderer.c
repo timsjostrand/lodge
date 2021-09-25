@@ -1274,10 +1274,10 @@ static void lodge_scene_render_system_render(struct lodge_scene_render_system *s
 			.x1 = (int32_t)system->window_width,
 			.y1 = (int32_t)system->window_height
 		};
-		lodge_framebuffer_bind(lodge_framebuffer_default());
+		lodge_framebuffer_bind(render_params->framebuffer);
 		lodge_gfx_set_viewport(0, 0, system->window_width, system->window_height);
 		lodge_gfx_set_scissor(0, 0, system->window_width, system->window_height);
-		lodge_framebuffer_copy(lodge_framebuffer_default(), system->framebuffer_offscreen, dst_rect, src_rect);
+		lodge_framebuffer_copy(render_params->framebuffer, system->framebuffer_offscreen, dst_rect, src_rect);
 		lodge_framebuffer_unbind();
 	}
 
