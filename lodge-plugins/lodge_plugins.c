@@ -396,11 +396,13 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 		cur += plugin->size;
 	}
 
-	for(int i = 0; i < count; i++) {
-		struct lodge_ret init_ret = lodge_plugin_try_initialize(plugins, i);
-		if(!init_ret.success) {
-			return init_ret;
-		}
+	struct lodge_plugin_find_ret find_default_ret = lodge_plugins_find_by_name(plugins, lodge_argv_get_str(plugins->args, strview("plugin"), strview("editor")));
+	if(!find_default_ret.success) {
+		return lodge_error("Failed to find default plugin");
+	}
+	struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, find_default_ret.index);
+	if(!init_default_ret.success) {
+		return init_default_ret;
 	}
 
 	/* TODO(TS): register reload callbacks (call init and free in correct order) */
