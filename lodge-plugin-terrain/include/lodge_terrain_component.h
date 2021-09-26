@@ -12,12 +12,18 @@
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
 
+struct lodge_asset;
+typedef struct lodge_asset* lodge_asset_t;
+
+struct lodge_type;
+typedef struct lodge_type* lodge_type_t;
+
 struct lodge_static_material
 {
-	lodge_texture_t					albedo;
-	lodge_texture_t					normal;
-	lodge_texture_t					displacement;
-	lodge_texture_t					metalness;
+	lodge_asset_t					albedo;
+	lodge_asset_t					normal;
+	lodge_asset_t					displacement;
+	lodge_asset_t					metalness;
 };
 
 struct lodge_terrain_chunk
@@ -35,7 +41,7 @@ struct lodge_terrain_component
 	uint32_t						chunks_y;
 	vec3							chunk_size;
 
-	lodge_texture_t					heightmap;
+	lodge_asset_t					heightmap;
 	struct lodge_static_material	material;
 
 	struct lodge_terrain_chunk		*chunks;
@@ -45,7 +51,7 @@ struct lodge_terrain_component
 
 extern lodge_component_type_t		LODGE_COMPONENT_TYPE_TERRAIN;
 
-lodge_component_type_t				lodge_terrain_component_type_register();
+lodge_component_type_t				lodge_terrain_component_type_register(lodge_type_t texture_asset_type);
 
 inline struct lodge_terrain_chunk*	lodge_terrain_component_get_chunk(struct lodge_terrain_component *terrain, uint32_t x, uint32_t y)
 {

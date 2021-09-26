@@ -40,7 +40,7 @@ void lodge_terrain_component_free_inplace(struct lodge_terrain_component *terrai
 	free(terrain->chunks);
 }
 
-lodge_component_type_t lodge_terrain_component_type_register()
+lodge_component_type_t lodge_terrain_component_type_register(lodge_type_t texture_asset_type)
 {
 	ASSERT(!LODGE_COMPONENT_TYPE_TERRAIN);
 
@@ -52,7 +52,7 @@ lodge_component_type_t lodge_terrain_component_type_register()
 			.free_inplace = lodge_terrain_component_free_inplace,
 			.size = sizeof(struct lodge_terrain_component),
 			.properties = {
-				.count = 2,
+				.count = 3,
 				.elements = {
 					{
 						.name = strview_static("chunks_x"),
@@ -67,6 +67,11 @@ lodge_component_type_t lodge_terrain_component_type_register()
 						.offset = offsetof(struct lodge_terrain_component, chunks_y),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
 						.on_modified = NULL,
+					},
+					{
+						.name = strview_static("heightmap"),
+						.type = texture_asset_type,
+						.offset = offsetof(struct lodge_terrain_component, heightmap),
 					},
 				}
 			}

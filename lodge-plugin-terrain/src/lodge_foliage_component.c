@@ -21,7 +21,7 @@ struct lodge_foliage_instances
 struct lodge_foliage_lod
 {
 	struct lodge_foliage_instances	instances;
-	const struct lodge_static_mesh	*static_mesh;
+	lodge_asset_t					static_mesh;
 	lodge_buffer_object_t			buffer_object;
 	lodge_drawable_t				drawable;
 };
@@ -50,8 +50,9 @@ static void lodge_foliage_lod_free_inplace(struct lodge_foliage_lod *lod)
 	dynbuf_free_inplace(dynbuf_wrap_stack(lod->instances));
 }
 
-static void lodge_foliage_lod_set_static_mesh(struct lodge_foliage_lod *lod, const struct lodge_static_mesh *static_mesh)
+static void lodge_foliage_lod_set_static_mesh(struct lodge_foliage_lod *lod, lodge_asset_t static_mesh)
 {
+#if 0
 	lod->static_mesh = static_mesh;
 
 	if(lod->static_mesh && lod->buffer_object) {
@@ -72,6 +73,7 @@ static void lodge_foliage_lod_set_static_mesh(struct lodge_foliage_lod *lod, con
 
 		lod->drawable = lodge_drawable_make(drawble_desc);
 	}
+#endif
 }
 
 static void lodge_foliage_lod_set_instances_max(struct lodge_foliage_lod *lod, uint32_t instances_max)
@@ -212,6 +214,7 @@ lodge_component_type_t lodge_foliage_component_type_register()
 
 void lodge_foliage_system_render(struct lodge_foliage_component *foliage, const struct lodge_scene_render_pass_params *pass_params, lodge_shader_t shader, lodge_sampler_t heightfield_sampler, struct lodge_terrain_component *terrain, lodge_entity_t owner, vec3 terrain_scale)
 {
+#if 0
 	ASSERT_OR(shader) {
 		return;
 	}
@@ -258,13 +261,16 @@ void lodge_foliage_system_render(struct lodge_foliage_component *foliage, const 
 		}
 	}
 	lodge_gfx_annotate_end();
+#endif
 }
 
 void lodge_foliage_set_lods_desc(struct lodge_foliage_component *foliage, struct lodge_foliage_lods_desc *lods_desc)
 {
+#if 0
 	foliage->lods_count = lods_desc->count;
 
 	for(uint32_t i = 0; i < lods_desc->count; i++) {
 		lodge_foliage_lod_set_static_mesh(&foliage->lods[i], lods_desc->elements[i]);
 	}
+#endif
 }

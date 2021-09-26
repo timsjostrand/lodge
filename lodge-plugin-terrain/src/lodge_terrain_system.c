@@ -4,7 +4,7 @@
 #include "lodge_system_type.h"
 #include "lodge_drawable.h"
 #include "lodge_gfx.h"
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
 #include "lodge_sampler.h"
 #include "lodge_debug_draw.h"
 #include "lodge_buffer_object.h"
@@ -19,11 +19,29 @@
 
 #include "drawable.h" // FIXME(TS): port to lodge_drawable
 
+#include "dynbuf.h"
 #include "geometry.h"
 #include "frustum.h"
 #include "gruvbox.h"
 
 #include <stdbool.h>
+
+struct terrain_render_data
+{
+	vec3							scale;
+	lodge_texture_t					heightmap;
+	lodge_texture_t					albedo;
+	lodge_texture_t					normal;
+	lodge_texture_t					displacement;
+	lodge_texture_t					metalness;
+};
+
+struct terrain_render_datas
+{
+	size_t							count;
+	size_t							capacity;
+	struct terrain_render_data		*elements;
+};
 
 struct lodge_terrain_system
 {
@@ -43,6 +61,8 @@ struct lodge_terrain_system
 	lodge_shader_t					foliage_shader;
 	lodge_sampler_t					material_sampler;
 	lodge_sampler_t					heightfield_sampler;
+
+	struct terrain_render_datas		render_datas;
 
 	struct lodge_debug_draw			*debug_draw;
 };
@@ -167,17 +187,18 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 		//
 		lodge_shader_bind_constant_buffer(system->terrain_shader, 0, pass_params->camera_buffer);
 
+		int i = 0;
 		lodge_scene_components_foreach(scene, struct lodge_terrain_component*, component, LODGE_COMPONENT_TYPE_TERRAIN) {
+			struct terrain_render_data *render_data = &system->render_datas.elements[i++];
+
 			lodge_entity_t owner = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_TERRAIN, component);
 
-			const vec3 scale = lodge_get_scale(scene, owner);
-
-			lodge_shader_set_constant_vec3(system->terrain_shader, strview_static("terrain_scale"), scale);
-			lodge_gfx_bind_texture_unit_2d(0, component->heightmap, system->heightfield_sampler);
-			lodge_gfx_bind_texture_unit_2d(1, component->material.albedo, system->material_sampler);
-			lodge_gfx_bind_texture_unit_2d(2, component->material.displacement, system->material_sampler);
-			lodge_gfx_bind_texture_unit_2d(3, component->material.normal, system->material_sampler);
-			lodge_gfx_bind_texture_unit_2d(4, component->material.metalness, system->material_sampler);
+			lodge_shader_set_constant_vec3(system->terrain_shader, strview_static("terrain_scale"), render_data->scale);
+			lodge_gfx_bind_texture_unit_2d(0, render_data->heightmap, system->heightfield_sampler);
+			lodge_gfx_bind_texture_unit_2d(1, render_data->albedo, system->material_sampler);
+			lodge_gfx_bind_texture_unit_2d(2, render_data->displacement, system->material_sampler);
+			lodge_gfx_bind_texture_unit_2d(3, render_data->normal, system->material_sampler);
+			lodge_gfx_bind_texture_unit_2d(4, render_data->metalness, system->material_sampler);
 
 			lodge_shader_set_constant_vec2(system->terrain_shader, strview_static("chunk_size"), vec2_make(xy_of(component->chunk_size)));
 
@@ -209,7 +230,7 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 					*end = lodge_tesselated_plane_chunks_end(component->plane); it < end; it++) {
 					
 					mat4 model = mat4_translation(it->center.x, it->center.y, 0.0f);
-					model = mat4_scale(model, it->size.x, it->size.y, scale.z); // FIXME(TS): Z scaling
+					model = mat4_scale(model, it->size.x, it->size.y, render_data->scale.z); // FIXME(TS): Z scaling
 
 					lodge_shader_set_constant_mat4(system->terrain_shader, strview_static("model"), model);
 					lodge_shader_set_constant_float(system->terrain_shader, strview_static("chunk_level"), (float)it->lod);
@@ -222,7 +243,7 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 
 			struct lodge_foliage_component *foliage = lodge_scene_get_entity_component(scene, owner, LODGE_COMPONENT_TYPE_FOLIAGE);
 			if(foliage) {
-				lodge_foliage_system_render(foliage, pass_params, system->foliage_shader, system->heightfield_sampler, component, owner, scale);
+				lodge_foliage_system_render(foliage, pass_params, system->foliage_shader, system->heightfield_sampler, component, owner, render_data->scale);
 			}
 		}
 
@@ -238,6 +259,8 @@ static void lodge_terrain_system_new_inplace(struct lodge_terrain_system *system
 	system->lod_level_min = LODGE_TERRAIN_LOD_LEVEL_1;
 	system->lod_level_max = LODGE_TERRAIN_LOD_LEVEL_128;
 	system->lod_switch_threshold = 1.5f;
+
+	dynbuf_new_inplace(dynbuf(system->render_datas), 8);
 
 	const int lod_level_to_subdivisions[LODGE_TERRAIN_LOD_LEVEL_MAX] = {
 		[LODGE_TERRAIN_LOD_LEVEL_128] =	128,
@@ -296,11 +319,13 @@ static void lodge_terrain_system_update(struct lodge_terrain_system *system, lod
 	ASSERT(plugin);
 
 	if(!system->terrain_shader) {
-		system->terrain_shader = (const lodge_shader_t)lodge_assets_get(plugin->shaders, strview_static("terrain"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->shaders, strview("terrain"));
+		system->terrain_shader = lodge_assets2_get(plugin->shaders, asset);
 	}
 
 	if(!system->foliage_shader) {
-		system->foliage_shader = (const lodge_shader_t)lodge_assets_get(plugin->shaders, strview_static("foliage_rocks"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->shaders, strview("foliage_rocks"));
+		system->foliage_shader = lodge_assets2_get(plugin->shaders, asset);
 	}
 
 	//
@@ -312,6 +337,32 @@ static void lodge_terrain_system_update(struct lodge_terrain_system *system, lod
 		system->debug_draw = debug_draw_system ? lodge_debug_draw_system_get_batcher(debug_draw_system) : NULL;
 	} else {
 		system->debug_draw = NULL;
+	}
+
+	struct lodge_assets2 *textures = plugin->textures;
+	ASSERT_OR(textures) {
+		return;
+	}
+
+	dynbuf_clear(dynbuf(system->render_datas));
+	lodge_scene_components_foreach(scene, struct lodge_terrain_component*, component, LODGE_COMPONENT_TYPE_TERRAIN) {
+		lodge_entity_t owner = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_TERRAIN, component);
+
+		const vec3 scale = lodge_get_scale(scene, owner);
+
+		lodge_texture_t *heightmap = lodge_assets2_get(textures, component->heightmap);
+		lodge_texture_t *albedo = lodge_assets2_get(textures, component->material.albedo);
+		lodge_texture_t *displacement = lodge_assets2_get(textures, component->material.displacement);
+		lodge_texture_t *normal = lodge_assets2_get(textures, component->material.normal);
+		lodge_texture_t *metalness = lodge_assets2_get(textures, component->material.metalness);
+
+		struct terrain_render_data *render_data = dynbuf_append_no_init(dynbuf(system->render_datas));
+		render_data->scale = scale;
+		render_data->heightmap = *heightmap;
+		render_data->albedo = *albedo;
+		render_data->displacement = *displacement;
+		render_data->normal = *normal;
+		render_data->metalness = *metalness;
 	}
 }
 

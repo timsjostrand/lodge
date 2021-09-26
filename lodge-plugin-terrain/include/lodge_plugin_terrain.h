@@ -4,7 +4,7 @@
 #include "lodge_plugin.h"
 
 struct lodge_plugin_debug_draw;
-struct lodge_assets;
+struct lodge_assets2;
 
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
@@ -24,7 +24,8 @@ struct lodge_terrain_types
 //
 struct lodge_plugin_terrain
 {
-	struct lodge_assets				*shaders;
+	struct lodge_assets2			*shaders;
+	struct lodge_assets2			*textures;
 	void							*plugin_scene_renderer;
 	struct lodge_plugin_debug_draw	*plugin_debug_draw;
 
