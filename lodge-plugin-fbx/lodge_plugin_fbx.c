@@ -2,24 +2,34 @@
 
 #include "lodge_plugins.h"
 #include "lodge_plugin_files.h"
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
+#include "lodge_type_asset.h"
 
 #include "fbx.h"
 #include "fbx_asset.h"
 
-#define USERDATA_FILES 0
+enum lodge_assets_fbx_userdata
+{
+	USERDATA_FILES,
+	USERDATA_ASSET_TYPE,
+};
 
-static bool lodge_res_fbx_new_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, void *fbx_asset_ptr, size_t size)
+static bool lodge_asset_fbx_new_inplace(struct lodge_assets2 *fbx_assets, strview_t name, lodge_asset_t asset, void *fbx_asset_ptr)
 {
 	struct fbx_asset *fbx_asset = (struct fbx_asset *)fbx_asset_ptr;
 
-	struct lodge_assets *files = lodge_assets_get_userdata(assets, USERDATA_FILES);
+	struct lodge_assets2 *files = lodge_assets2_get_userdata(fbx_assets, USERDATA_FILES);
 	ASSERT(files);
 
-	const struct lodge_asset_file *file = lodge_assets_get_depend(files, name, (struct lodge_asset_handle) {
-		.assets = assets,
-		.id = id,
-	});
+	lodge_asset_t file_asset = lodge_assets2_register(files, name);
+	if(!file_asset) {
+		return false;
+	}
+
+	lodge_assets2_add_listener(files, file_asset, fbx_assets, asset);
+
+	const struct lodge_asset_file *file = lodge_assets2_get(files, file_asset);
+
 	if(!file) {
 		return false;
 	}
@@ -36,52 +46,61 @@ static bool lodge_res_fbx_new_inplace(struct lodge_assets *assets, strview_t nam
 	return true;
 }
 
-static void lodge_res_fbx_free_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, struct fbx_asset *fbx_asset)
+static void lodge_asset_fbx_free_inplace(struct lodge_assets2 *fbx_assets, strview_t name, lodge_asset_t asset, struct fbx_asset *fbx_asset)
 {
-	struct lodge_assets *files = lodge_assets_get_userdata(assets, USERDATA_FILES);
+	struct lodge_assets2 *files = lodge_assets2_get_userdata(fbx_assets, USERDATA_FILES);
 	ASSERT(files);
 
-	lodge_assets_release_depend(files, name, (struct lodge_asset_handle) {
-		.assets = assets,
-		.id = id,
-	});
+	lodge_assets2_remove_listener_by_name(files, name, fbx_assets, asset);
+
 	fbx_asset_reset(fbx_asset);
 }
 
-static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets *fbx_assets, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets2 *fbx_assets, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	struct lodge_assets *files = lodge_plugins_depend(plugins, fbx_assets, strview_static("files"));
+	struct lodge_assets2 *files = lodge_plugins_depend(plugins, fbx_assets, strview("files"));
 	if(!files) {
-		return lodge_error("FBX failed to find file res");
+		return lodge_error("FBX failed to find `files` plugin");
 	}
 
-	lodge_assets_new_inplace(fbx_assets, (struct lodge_assets_desc) {
-		.name = strview_static("fbx"),
+	lodge_assets2_new_inplace(fbx_assets, &(struct lodge_assets2_desc) {
+		.name = strview("fbx"),
 		.size = sizeof(struct fbx_asset),
-		.new_inplace = &lodge_res_fbx_new_inplace,
+		.new_inplace = &lodge_asset_fbx_new_inplace,
 		.reload_inplace = NULL,
-		.free_inplace = &lodge_res_fbx_free_inplace
-	} );
+		.free_inplace = &lodge_asset_fbx_free_inplace
+	});
 
-	lodge_assets_set_userdata(fbx_assets, USERDATA_FILES, files);
+	lodge_type_t fbx_asset_type = lodge_type_register_asset(strview("fbx"), fbx_assets);
+	ASSERT(fbx_asset_type);
+
+	lodge_assets2_set_userdata(fbx_assets, USERDATA_FILES, files);
+	lodge_assets2_set_userdata(fbx_assets, USERDATA_ASSET_TYPE, fbx_asset_type);
 
 	return lodge_success();
 }
 
-static void lodge_plugin_fbx_free_inplace(struct lodge_assets *fbx_res)
+static void lodge_plugin_fbx_free_inplace(struct lodge_assets2 *fbx_assets)
 {
-	lodge_assets_free_inplace(fbx_res);
+	lodge_assets2_free_inplace(fbx_assets);
 }
 
 struct lodge_plugin_desc lodge_plugin_fbx()
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_assets_sizeof(),
-		.name = strview_static("fbx"),
+		.size = lodge_assets2_sizeof(),
+		.name = strview("fbx"),
 		.new_inplace = &lodge_plugin_fbx_new_inplace,
 		.free_inplace = &lodge_plugin_fbx_free_inplace,
 		.update = NULL,
 		.render = NULL,
+	};
+}
+
+struct fbx_types lodge_plugin_fbx_get_types(struct lodge_assets2 *fbx_assets)
+{
+	return (struct fbx_types) {
+		.fbx_asset_type = lodge_assets2_get_userdata(fbx_assets, USERDATA_ASSET_TYPE),
 	};
 }
