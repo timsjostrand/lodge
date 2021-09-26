@@ -3,7 +3,7 @@
 #include "renderdoc_app.h"
 
 #include "lodge_platform.h"
-#include "core_argv.h"
+#include "lodge_argv.h"
 
 struct lodge_plugin_renderdoc
 {

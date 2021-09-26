@@ -1,7 +1,7 @@
 #include "lodge.h"
 #include "lodge_plugin.h"
 #include "lodge_plugins.h"
-#include "core_argv.h"
+#include "lodge_argv.h"
 
 int main(int argc, char **argv)
 {

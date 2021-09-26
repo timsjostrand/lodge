@@ -3,11 +3,11 @@ add_library(lodge-plugins STATIC "")
 target_sources(lodge-plugins
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugins.c"
-		"${CMAKE_CURRENT_LIST_DIR}/core_argv.c" 		# FIXME(TS): deprecate
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_argv.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugins.h"
-		"${CMAKE_CURRENT_LIST_DIR}/core_argv.h"			# FIXME(TS): deprecate
+		"${CMAKE_CURRENT_LIST_DIR}/lodge_argv.h"
 		"${CMAKE_CURRENT_LIST_DIR}/game.h"				# FIXME(TS): hack
 )
 

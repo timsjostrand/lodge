@@ -5,7 +5,7 @@
 #include "lodge_plugins.h"
 #include "lodge_gfx.h"
 #include "lodge_gui.h"
-#include "core_argv.h" // FIXME(TS): rename
+#include "lodge_argv.h"
 #include "lodge_gui_property_widget_factory.h"
 #include "lodge_window.h"
 #include "lodge_editor_controller.h"

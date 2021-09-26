@@ -1,7 +1,7 @@
 #include "lodge_plugin_vfs.h"
 
 #include "lodge_vfs.h"
-#include "core_argv.h"
+#include "lodge_argv.h"
 
 struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
