@@ -22,9 +22,9 @@ struct lodge_water_types
 //
 struct lodge_plugin_water
 {
-	struct lodge_assets			*shaders;
-	struct lodge_assets			*textures;
-	struct lodge_assets			*images;
+	struct lodge_assets2		*shaders;
+	struct lodge_assets2		*textures;
+	struct lodge_assets2		*images;
 	void						*scene_renderer;
 	struct lodge_water_types	types;
 };

@@ -4,7 +4,7 @@
 #include "lodge_system_type.h"
 #include "lodge_drawable.h"
 #include "lodge_gfx.h"
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
 #include "lodge_sampler.h"
 
 #include "lodge_water_component.h"
@@ -169,37 +169,51 @@ static void lodge_water_system_update(struct lodge_water_system *system, lodge_s
 	// FIXME(TS): hardcoded file paths
 
 	if(!system->shader) {
-		system->shader = (const lodge_shader_t)lodge_assets_get(plugin->shaders, strview_static("water"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->shaders, strview_static("water"));
+		system->shader = lodge_assets2_get(plugin->shaders, asset);
 	}
 
 	if(!system->texture_cubemap) {
+		lodge_asset_t assets[] = {
+			lodge_assets2_register(plugin->images, strview("skybox/skybox_back.bmp")),
+			lodge_assets2_register(plugin->images, strview("skybox/skybox_front.bmp")),
+			lodge_assets2_register(plugin->images, strview("skybox/skybox_top.bmp")),
+			lodge_assets2_register(plugin->images, strview("skybox/skybox_bottom.bmp")),
+			lodge_assets2_register(plugin->images, strview("skybox/skybox_left.bmp")),
+			lodge_assets2_register(plugin->images, strview("skybox/skybox_right.bmp")),
+		};
+
 		system->texture_cubemap = lodge_texture_cubemap_make((struct lodge_texture_cubemap_desc) {
-			.back = lodge_assets_get(plugin->images, strview_static("skybox/skybox_back.bmp")),
-			.front = lodge_assets_get(plugin->images, strview_static("skybox/skybox_front.bmp")),
-			.top = lodge_assets_get(plugin->images, strview_static("skybox/skybox_top.bmp")),
-			.bottom = lodge_assets_get(plugin->images, strview_static("skybox/skybox_bottom.bmp")),
-			.left = lodge_assets_get(plugin->images, strview_static("skybox/skybox_left.bmp")),
-			.right = lodge_assets_get(plugin->images, strview_static("skybox/skybox_right.bmp")),
+			.back = lodge_assets2_get(plugin->images, assets[0]),
+			.front = lodge_assets2_get(plugin->images, assets[1]),
+			.top = lodge_assets2_get(plugin->images, assets[2]),
+			.bottom = lodge_assets2_get(plugin->images, assets[3]),
+			.left = lodge_assets2_get(plugin->images, assets[4]),
+			.right = lodge_assets2_get(plugin->images, assets[5]),
 		});
 	}
 
 	if(!system->texture_heightmap) {
-		system->texture_heightmap = *(const lodge_texture_t*)lodge_assets_get(plugin->textures, strview_static("heightmap.raw"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->textures, strview("heightmap.raw"));
+		system->texture_heightmap = *(lodge_texture_t*)lodge_assets2_get(plugin->textures, asset);
 		ASSERT(system->texture_heightmap);
 	}
 
 	if(!system->texture_water_foam) {
-		system->texture_water_foam = *(const lodge_texture_t*)lodge_assets_get(plugin->textures, strview_static("water_foam.png"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->textures, strview("water_foam.png"));
+		system->texture_water_foam = *(lodge_texture_t*)lodge_assets2_get(plugin->textures, asset);
 		ASSERT(system->texture_water_foam);
 	}
 
 	if(!system->texture_water_normals[0]) {
-		system->texture_water_normals[0] = *(const lodge_texture_t*)lodge_assets_get(plugin->textures, strview_static("water_normals1.png"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->textures, strview("water_normals1.png"));
+		system->texture_water_normals[0] = *(lodge_texture_t*)lodge_assets2_get(plugin->textures, asset);
 		ASSERT(system->texture_water_normals[0]);
 	}
 
 	if(!system->texture_water_normals[1]) {
-		system->texture_water_normals[1] = *(const lodge_texture_t*)lodge_assets_get(plugin->textures, strview_static("water_normals2.png"));
+		lodge_asset_t asset = lodge_assets2_register(plugin->textures, strview("water_normals2.png"));
+		system->texture_water_normals[1] = *(lodge_texture_t*)lodge_assets2_get(plugin->textures, asset);
 		ASSERT(system->texture_water_normals[1]);
 	}
 }
