@@ -9,7 +9,7 @@
 #include "lodge_debug_draw.h"
 #include "lodge_shader.h"
 #include "lodge_plugins.h"
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
 
 #include "lodge_plugin_scene_renderer.h"
 
@@ -38,7 +38,7 @@ struct lodge_debug_draw_system
 
 struct lodge_plugin_debug_draw
 {
-	struct lodge_assets		*shaders;
+	struct lodge_assets2	*shaders;
 	lodge_system_type_t		system_type;
 	lodge_component_type_t	sphere_component_type;
 };
@@ -63,13 +63,16 @@ static void lodge_debug_draw_system_update(struct lodge_debug_draw_system *syste
 		struct lodge_plugin_debug_draw *plugin = lodge_system_type_get_plugin(type);
 
 		if(!system->shaders[0]) {
-			system->shaders[0] = (const lodge_shader_t)lodge_assets_get(plugin->shaders, strview_static("debug_draw"));
+			lodge_asset_t debug_draw_shader_asset = lodge_assets2_register(plugin->shaders, strview("debug_draw"));
+			system->shaders[0] = lodge_assets2_get(plugin->shaders, debug_draw_shader_asset);
 		}
 		if(!system->shaders[1]) {
-			system->shaders[1] = (const lodge_shader_t)lodge_assets_get(plugin->shaders, strview_static("debug_draw_sphere"));
+			lodge_asset_t debug_draw_sphere_shader_asset = lodge_assets2_register(plugin->shaders, strview("debug_draw_sphere"));
+			system->shaders[1] = lodge_assets2_get(plugin->shaders, debug_draw_sphere_shader_asset);
 		}
 		if(!system->shaders[2]) {
-			system->shaders[2] = (const lodge_shader_t)lodge_assets_get(plugin->shaders, strview_static("debug_draw_texture"));
+			lodge_asset_t debug_draw_texture_shader_asset = lodge_assets2_register(plugin->shaders, strview("debug_draw_texture"));
+			system->shaders[2] = lodge_assets2_get(plugin->shaders, debug_draw_texture_shader_asset);
 		}
 	}
 
