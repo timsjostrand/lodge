@@ -5,13 +5,16 @@
 #include "strbuf.h"
 #include "dynbuf.h"
 
-#include "lodge_assets.h"
 #include "lodge_plugin_files.h"
 #include "lodge_plugins.h"
+#include "lodge_assets2.h"
 
-#include <ctype.h>
+//#include <ctype.h>
 
-#define USERDATA_FILES 0
+enum shader_sources_userdata
+{
+	USERDATA_FILES,
+};
 
 struct lodge_shader_source_include
 {
@@ -32,9 +35,16 @@ struct lodge_shader_source
 	txt_t								resolved;
 };
 
-static bool lodge_shader_source_include(struct lodge_shader_source *source, struct lodge_asset_handle source_handle, size_t start, struct lodge_assets *files, strview_t include_file)
+static bool lodge_shader_source_include(struct lodge_assets2 *sources, lodge_asset_t source_asset, struct lodge_shader_source *source, size_t start, struct lodge_assets2 *files, strview_t include_file)
 {
-	const struct lodge_asset_file *file = lodge_assets_get_depend(files, include_file, source_handle);
+	lodge_asset_t file_asset = lodge_assets2_register(files, include_file);
+	ASSERT_OR(file_asset) {
+		return false;
+	}
+
+	lodge_assets2_add_listener(files, file_asset, sources, source_asset);
+
+	const struct lodge_asset_file *file = lodge_assets2_get(files, file_asset);
 	ASSERT_OR(file) {
 		return false;
 	}
@@ -69,7 +79,7 @@ static int lodge_shader_source_includes_find(struct lodge_shader_source *source,
 	return -1;
 }
 
-static bool lodge_shader_source_resolve_includes(struct lodge_shader_source *source, strview_t source_name, struct lodge_asset_handle source_handle, struct lodge_assets *files)
+static bool lodge_shader_source_resolve_includes(struct lodge_assets2 *sources, lodge_asset_t source_asset, struct lodge_shader_source *source, strview_t source_name, struct lodge_assets2 *files)
 {
 	dynbuf_clear(dynbuf_wrap_stack(source->includes));
 
@@ -77,7 +87,7 @@ static bool lodge_shader_source_resolve_includes(struct lodge_shader_source *sou
 	int retry = 1;
 
 	const strview_t global_include_file = strview_static("global.fxh");
-	if(!lodge_shader_source_include(source, source_handle, 0, files, global_include_file)) {
+	if(!lodge_shader_source_include(sources, source_asset, source, 0, files, global_include_file)) {
 		//shader_debug("Could not include global include file: `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(global_include_file));
 		ASSERT_FAIL("Could not include global include file");
 	}
@@ -118,7 +128,7 @@ static bool lodge_shader_source_resolve_includes(struct lodge_shader_source *sou
 					// Remove `#include` line
 					txt_delete(source->resolved, start, len);
 
-					if(lodge_shader_source_include(source, source_handle, start, files, txt_to_strview(include_file))) {
+					if(lodge_shader_source_include(sources, source_asset, source, start, files, txt_to_strview(include_file))) {
 						retry = 1;
 					} else {
 						//shader_error("Could not include file: `%s`\n", include_file);
@@ -141,6 +151,7 @@ static bool lodge_shader_source_resolve_includes(struct lodge_shader_source *sou
 		}
 	};
 
+#if 0
 	{
 		char tmp[256];
 		strbuf_setf(strbuf_wrap(tmp), "C:/Code/c/lodge-3d/assets-cache/" STRVIEW_PRINTF_FMT, STRVIEW_PRINTF_ARG(source_name));
@@ -150,24 +161,26 @@ static bool lodge_shader_source_resolve_includes(struct lodge_shader_source *sou
 			fclose(tmp_file);
 		}
 	}
+#endif
 
 	return true;
 }
 
-static bool lodge_shader_source_new_inplace(struct lodge_assets *sources, strview_t name, lodge_asset_id_t id, struct lodge_shader_source *source, size_t data_size)
+static bool lodge_shader_source_new_inplace(struct lodge_assets2 *sources, strview_t name, lodge_asset_t asset, struct lodge_shader_source *source)
 {
-	ASSERT_OR(sizeof(struct lodge_shader_source) == data_size) {
-		return false;
-	}
-
-	struct lodge_assets *files = lodge_assets_get_userdata(sources, USERDATA_FILES);
+	struct lodge_assets2 *files = lodge_assets2_get_userdata(sources, USERDATA_FILES);
 	ASSERT_OR(files) {
 		return false;
 	}
 
-	struct lodge_asset_handle source_handle = { .assets = sources, .id = id };
+	lodge_asset_t file_asset = lodge_assets2_register(files, name);
+	if(!file_asset) {
+		return false;
+	}
 
-	const struct lodge_asset_file *file = lodge_assets_get_depend(files, name, source_handle);
+	lodge_assets2_add_listener(files, file_asset, sources, asset);
+
+	const struct lodge_asset_file *file = lodge_assets2_get(files, file_asset);
 	if(!file) {
 		return false;
 	}
@@ -176,7 +189,7 @@ static bool lodge_shader_source_new_inplace(struct lodge_assets *sources, strvie
 	dynbuf_new_inplace(dynbuf_wrap_stack(source->includes), 8);
 	source->resolved = txt_new(strview_make(file->data, file->size));
 
-	bool resolved_includes = lodge_shader_source_resolve_includes(source, name, source_handle, files);
+	bool resolved_includes = lodge_shader_source_resolve_includes(sources, asset, source, name, files);
 	ASSERT_OR(resolved_includes) {
 		return false;
 	}
@@ -184,39 +197,45 @@ static bool lodge_shader_source_new_inplace(struct lodge_assets *sources, strvie
 	return true;
 }
 
-static void lodge_shader_source_free_inplace(struct lodge_assets *sources, strview_t name, lodge_asset_id_t id, struct lodge_shader_source *source)
+static void lodge_shader_source_free_inplace(struct lodge_assets2 *sources, strview_t name, lodge_asset_t asset, struct lodge_shader_source *source)
 {
-	struct lodge_assets *files = lodge_assets_get_userdata(sources, USERDATA_FILES);
+	struct lodge_assets2 *files = lodge_assets2_get_userdata(sources, USERDATA_FILES);
 	ASSERT(files);
-
-	struct lodge_asset_handle source_handle = { .assets = sources, .id = id };
 
 	//
 	// Release main source file
 	//
 	if(source->file_loaded) {
-		lodge_assets_release_depend(files, name, source_handle);
+		lodge_assets2_remove_listener_by_name(files, name, sources, asset);
 	}
 
 	//
 	// Release included files
 	//
 	for(size_t i = 0; i < source->includes.count; i++) {
-		lodge_assets_release_depend(files, strbuf_to_strview(strbuf_wrap(source->includes.elements[i].name)), source_handle);
+		lodge_assets2_remove_listener_by_name(files, strbuf_to_strview(strbuf_wrap(source->includes.elements[i].name)), sources, asset);
 	}
 
 	dynbuf_free_inplace(dynbuf_wrap_stack(source->includes));
 	txt_free(source->resolved);
 }
 
-static struct lodge_ret lodge_plugin_shader_sources_new_inplace(struct lodge_assets *sources, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static bool filte_filter_shader_sources(strview_t filename)
 {
-	struct lodge_assets *files = lodge_plugins_depend(plugins, sources, strview_static("files"));
+	return strview_ends_with(filename, strview(".fxh"))
+		|| strview_ends_with(filename, strview(".frag"))
+		|| strview_ends_with(filename, strview(".vert"))
+		|| strview_ends_with(filename, strview(".compute"));
+}
+
+static struct lodge_ret lodge_shader_sources_new_inplace(struct lodge_assets2 *sources, struct lodge_plugins *plugins, const struct lodge_argv *args)
+{
+	struct lodge_assets2 *files = lodge_plugins_depend(plugins, sources, strview_static("files"));
 	if(!files) {
 		return lodge_error("Failed to find plugin `files`");
 	}
 
-	lodge_assets_new_inplace(sources, (struct lodge_assets_desc) {
+	lodge_assets2_new_inplace(sources, &(struct lodge_assets2_desc) {
 		.name = strview_static("shader_sources"),
 		.size = sizeof(struct lodge_shader_source),
 		.new_inplace = &lodge_shader_source_new_inplace,
@@ -224,24 +243,29 @@ static struct lodge_ret lodge_plugin_shader_sources_new_inplace(struct lodge_ass
 		.free_inplace = &lodge_shader_source_free_inplace
 	});
 
-	lodge_assets_set_userdata(sources, USERDATA_FILES, files);
+	lodge_assets2_set_userdata(sources, USERDATA_FILES, files);
+
+	//
+	// FIXME(TS): need to discover assets from VFS/Files asset manager...
+	//
+	lodge_plugin_files_add_file_discovery(files, sources, filte_filter_shader_sources);
 
 	return lodge_success();
 }
 
-static void lodge_plugin_shader_sources_free_inplace(struct lodge_assets *sources)
+static void lodge_shader_sources_free_inplace(struct lodge_assets2 *sources)
 {
-	lodge_assets_free_inplace(sources);
+	lodge_assets2_free_inplace(sources);
 }
 
 struct lodge_plugin_desc lodge_plugin_shader_sources()
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_assets_sizeof(),
+		.size = lodge_assets2_sizeof(),
 		.name = strview_static("shader_sources"),
-		.new_inplace = &lodge_plugin_shader_sources_new_inplace,
-		.free_inplace = &lodge_plugin_shader_sources_free_inplace,
+		.new_inplace = &lodge_shader_sources_new_inplace,
+		.free_inplace = &lodge_shader_sources_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};

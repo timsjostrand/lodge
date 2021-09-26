@@ -19,7 +19,7 @@ target_link_libraries(lodge-plugin-shaders
 	PRIVATE
 		lodge-plugins
 		lodge-gfx
-		lodge-plugin-files
     PUBLIC
         lodge-assets
+		lodge-plugin-files
 )

@@ -5,18 +5,21 @@
 #include "strbuf.h"
 #include "array.h"
 
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
 #include "lodge_shader.h"
 #include "lodge_plugin_shader_sources.h"
 #include "lodge_plugins.h"
+#include "lodge_type_asset.h"
 
-#define USERDATA_SHADER_SOURCES 0
-
-static bool lodge_shader_asset_new_inplace(struct lodge_assets *shaders, strview_t name, lodge_asset_id_t id, lodge_shader_t shader, size_t data_size)
+enum lodge_shaders_userdata
 {
-	ASSERT(lodge_shader_sizeof() == data_size);
+	USERDATA_SHADER_SOURCES,
+	USERDATA_ASSET_TYPE,
+};
 
-	struct lodge_assets *shader_sources = lodge_assets_get_userdata(shaders, USERDATA_SHADER_SOURCES);
+static bool lodge_shader_asset_new_inplace(struct lodge_assets2 *shaders, strview_t name, lodge_asset_t asset, lodge_shader_t shader)
+{
+	struct lodge_assets2 *shader_sources = lodge_assets2_get_userdata(shaders, USERDATA_SHADER_SOURCES);
 	ASSERT_OR(shader_sources) {
 		return false;
 	}
@@ -32,34 +35,42 @@ static bool lodge_shader_asset_new_inplace(struct lodge_assets *shaders, strview
 		namebuf = strbuf_wrap(tmp);
 	}
 
-	const struct lodge_asset_handle handle = {
-		.assets = shaders,
-		.id = id,
-	};
-
 	{
 		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".frag", STRVIEW_PRINTF_ARG(name));
-		const struct lodge_shader_source *src = lodge_assets_get_depend(shader_sources, strbuf_to_strview(namebuf), handle);
-		if(src && !lodge_shader_set_fragment_source(shader, lodge_shader_source_get_source(src))) {
-			return false;
+		lodge_asset_t source_asset = lodge_assets2_find_by_name(shader_sources, strbuf_to_strview(namebuf));
+
+		if(source_asset) {
+			const struct lodge_shader_source *src = lodge_assets2_get(shader_sources, source_asset);
+			if(src && !lodge_shader_set_fragment_source(shader, lodge_shader_source_get_source(src))) {
+				return false;
+			}
+			lodge_assets2_add_listener(shader_sources, source_asset, shaders, asset);
 		}
 	}
 
 	{
 		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".vert", STRVIEW_PRINTF_ARG(name));
-		const struct lodge_shader_source *src = lodge_assets_get_depend(shader_sources, strbuf_to_strview(namebuf), handle);
-		if(src && !lodge_shader_set_vertex_source(shader, lodge_shader_source_get_source(src))) {
-			return false;
+		lodge_asset_t source_asset = lodge_assets2_find_by_name(shader_sources, strbuf_to_strview(namebuf));
+
+		if(source_asset) {
+			const struct lodge_shader_source *src = lodge_assets2_get(shader_sources, source_asset);
+			if(src && !lodge_shader_set_vertex_source(shader, lodge_shader_source_get_source(src))) {
+				return false;
+			}
+			lodge_assets2_add_listener(shader_sources, source_asset, shaders, asset);
 		}
 	}
 
 	{
 		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".compute", STRVIEW_PRINTF_ARG(name));
+		lodge_asset_t source_asset = lodge_assets2_find_by_name(shader_sources, strbuf_to_strview(namebuf));
 
-		//const struct lodge_asset_file *src = lodge_assets_get_depend(files, strbuf_to_strview(namebuf), handle);
-		const struct lodge_shader_source *src = lodge_assets_get_depend(shader_sources, strbuf_to_strview(namebuf), handle);
-		if(src && !lodge_shader_set_compute_source(shader, lodge_shader_source_get_source(src))) {
-			return false;
+		if(source_asset) {
+			const struct lodge_shader_source *src = lodge_assets2_get(shader_sources, source_asset);
+			if(src && !lodge_shader_set_compute_source(shader, lodge_shader_source_get_source(src))) {
+				return false;
+			}
+			lodge_assets2_add_listener(shader_sources, source_asset, shaders, asset);
 		}
 	}
 
@@ -70,27 +81,41 @@ static bool lodge_shader_asset_new_inplace(struct lodge_assets *shaders, strview
 	return true;
 }
 
-static void lodge_shader_asset_free_inplace(struct lodge_assets *shaders, strview_t name, lodge_asset_id_t id, lodge_shader_t shader)
+static void lodge_shader_asset_free_inplace(struct lodge_assets2 *shaders, strview_t name, lodge_asset_t asset, lodge_shader_t shader)
 {
-	struct lodge_assets *shader_sources = lodge_assets_get_userdata(shaders, USERDATA_SHADER_SOURCES);
+	struct lodge_assets2 *shader_sources = lodge_assets2_get_userdata(shaders, USERDATA_SHADER_SOURCES);
 	ASSERT(shader_sources);
 
-	lodge_assets_clear_dependency(shader_sources, (struct lodge_asset_handle) {
-		.assets = shaders,
-		.id = id,
-	});
+	strbuf_t namebuf;
+	{
+		char tmp[SHADER_FILENAME_MAX];
+		namebuf = strbuf_wrap(tmp);
+	}
+
+	{
+		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".vert", STRVIEW_PRINTF_ARG(name));
+		lodge_assets2_remove_listener_by_name(shader_sources, strbuf_to_strview(namebuf), shaders, asset);
+	}
+	{
+		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".frag", STRVIEW_PRINTF_ARG(name));
+		lodge_assets2_remove_listener_by_name(shader_sources, strbuf_to_strview(namebuf), shaders, asset);
+	}
+	{
+		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".compute", STRVIEW_PRINTF_ARG(name));
+		lodge_assets2_remove_listener_by_name(shader_sources, strbuf_to_strview(namebuf), shaders, asset);
+	}
 
 	lodge_shader_free_inplace(shader);
 }
 
-static struct lodge_ret lodge_plugin_shaders_new_inplace(struct lodge_assets *shaders, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_shaders_new_inplace(struct lodge_assets2 *shaders, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	struct lodge_assets *shader_sources = lodge_plugins_depend(plugins, shaders, strview_static("shader_sources"));
+	struct lodge_assets2 *shader_sources = lodge_plugins_depend(plugins, shaders, strview_static("shader_sources"));
 	if(!shader_sources) {
 		return lodge_error("Failed to find plugin `shader_sources`");
 	}
 
-	lodge_assets_new_inplace(shaders, (struct lodge_assets_desc) {
+	lodge_assets2_new_inplace(shaders, &(struct lodge_assets2_desc) {
 		.name = strview_static("shaders"),
 		.size = lodge_shader_sizeof(),
 		.new_inplace = &lodge_shader_asset_new_inplace,
@@ -98,25 +123,33 @@ static struct lodge_ret lodge_plugin_shaders_new_inplace(struct lodge_assets *sh
 		.free_inplace = &lodge_shader_asset_free_inplace
 	});
 
-	lodge_assets_set_userdata(shaders, USERDATA_SHADER_SOURCES, shader_sources);
+	lodge_assets2_set_userdata(shaders, USERDATA_SHADER_SOURCES, shader_sources);
+	lodge_assets2_set_userdata(shaders, USERDATA_ASSET_TYPE, lodge_type_register_asset(strview("shader"), shaders));
 
 	return lodge_success();
 }
 
-static void lodge_plugin_shaders_free_inplace(struct lodge_assets *shaders)
+static void lodge_shaders_free_inplace(struct lodge_assets2 *shaders)
 {
-	lodge_assets_free_inplace(shaders);
+	lodge_assets2_free_inplace(shaders);
 }
 
 struct lodge_plugin_desc lodge_plugin_shaders()
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_assets_sizeof(),
+		.size = lodge_assets2_sizeof(),
 		.name = strview_static("shaders"),
-		.new_inplace = &lodge_plugin_shaders_new_inplace,
-		.free_inplace = &lodge_plugin_shaders_free_inplace,
+		.new_inplace = &lodge_shaders_new_inplace,
+		.free_inplace = &lodge_shaders_free_inplace,
 		.update = NULL,
 		.render = NULL,
+	};
+}
+
+struct shader_types lodge_plugin_shaders_get_types(struct lodge_assets2 *shaders)
+{
+	return (struct shader_types) {
+		.shader_asset_type = shaders ? lodge_assets2_get_userdata(shaders, USERDATA_ASSET_TYPE) : NULL,
 	};
 }
