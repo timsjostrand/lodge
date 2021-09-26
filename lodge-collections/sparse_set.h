@@ -17,6 +17,8 @@ void*			sparse_set_set_init_zero(sparse_set_t set, uint32_t index);
 
 size_t			sparse_set_get_dense_count(sparse_set_t sparse_set);
 
+void			sparse_set_remove(sparse_set_t set, uint32_t index);
+
 //
 // Example:
 //

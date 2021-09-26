@@ -1,6 +1,7 @@
 #include "sparse_set.h"
 
 #include "lodge_platform.h"
+#include "membuf.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -8,7 +9,14 @@
 struct sparse_set
 {
 	char		*dense;
+
+	//
+	// Maps `dense_index` => `index`, as in:
+	// 
+	//     reverse_dense[dense_index] => index
+	//
 	uint32_t	*reverse_dense;
+
 	size_t		dense_element_size;
 	size_t		dense_count_capacity;
 	size_t		dense_count;
@@ -157,9 +165,65 @@ void* sparse_set_set(sparse_set_t set, uint32_t index, const void *src)
 	return dst;
 }
 
+//
+// Returns a pointer to the sparse_page where the dense_index is located for this entry index.
+// 
+// NOTE: The underlying integer is encoded as `dense_index + 1`, so that an underlying value of 0
+//       means no dense_index has been assigned.
+//
+uint32_t* sparse_set_index_to_sparse_page_ptr(sparse_set_t set, uint32_t index)
+{
+	const uint32_t sparse_index = index / set->sparse_indices_per_page;
+	const uint32_t page_index = index % set->sparse_indices_per_page;
+	uint32_t *sparse_page = set->sparse[sparse_index];
+	if(!sparse_page) {
+		return NULL;
+	}
+	return &sparse_page[page_index];
+}
+
 void sparse_set_remove(sparse_set_t set, uint32_t index)
 {
-	ASSERT_NOT_IMPLEMENTED();
+	uint32_t *sparse_page_ptr = sparse_set_index_to_sparse_page_ptr(set, index);
+	if(!sparse_page_ptr) {
+		return;
+	}
+
+	size_t dense_index = *sparse_page_ptr;
+	if(dense_index == 0) {
+		// There is no dense element set -- nothing to do!
+		return;
+	}
+	dense_index -= 1;
+
+	membuf_t buf = membuf_make(set->dense, set->dense_count_capacity * set->dense_element_size, set->dense_element_size);
+
+	size_t index_b = sparse_set_get_index(set, membuf_get(buf, set->dense_count - 1));
+
+	struct membuf_swapret dense_swap_indices = membuf_delete_swap_tail(buf, &set->dense_count, dense_index);
+
+	//
+	// Patch the reverse lookup table after swap.
+	//
+	if(dense_swap_indices.index_b != dense_swap_indices.index_a) {
+		if(set->reverse_dense) {
+			set->reverse_dense[dense_swap_indices.index_b] = UINT32_MAX;
+			set->reverse_dense[dense_swap_indices.index_a] = index_b;
+		}
+	}
+
+	//
+	// Update the location of the swapped element.
+	//
+	uint32_t *b_sparse_page_ptr = sparse_set_index_to_sparse_page_ptr(set, index_b);
+	if(b_sparse_page_ptr) {
+		*b_sparse_page_ptr = dense_index + 1;
+	}
+
+	//
+	// Mark this sparse index as not existing in the dense array anymore.
+	//
+	*sparse_page_ptr = 0;
 }
 
 void* sparse_set_it_begin(sparse_set_t set)
