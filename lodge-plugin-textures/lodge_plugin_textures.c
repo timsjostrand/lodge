@@ -2,24 +2,32 @@
 
 #include "lodge_plugins.h"
 #include "lodge_plugin_files.h"
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
 #include "lodge_texture.h"
+#include "lodge_type_asset.h"
 
-#define USERDATA_IMAGES 0
+enum textures_userdata
+{
+	USERDATA_IMAGES,
+	USERDATA_ASSET_TYPE
+};
 
+//
 // TODO(TS): implement reload_inplace() to reuse tex id
+//
 
-static bool lodge_assets_texture_new_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, void *lodge_texture_ptr, size_t size)
+static bool lodge_assets_texture_new_inplace(struct lodge_assets2 *textures, strview_t name, lodge_asset_t asset, void *lodge_texture_ptr)
 {
 	lodge_texture_t *texture = (lodge_texture_t *)lodge_texture_ptr;
 
-	struct lodge_assets *images = lodge_assets_get_userdata(assets, USERDATA_IMAGES);
-	ASSERT(images);
+	struct lodge_assets2 *images = lodge_assets2_get_userdata(textures, USERDATA_IMAGES);
+	ASSERT_OR(images) { return false; }
 
-	const struct lodge_image *image = lodge_assets_get_depend(images, name, (struct lodge_asset_handle) {
-		.assets = assets,
-		.id = id,
-	});
+	lodge_asset_t image_asset = lodge_assets2_register(images, name);
+	ASSERT_OR(image_asset) { return false; }
+
+	lodge_assets2_add_listener(images, image_asset, textures, asset);
+	const struct lodge_image *image = lodge_assets2_get(images, image_asset);
 	if(!image) {
 		return false;
 	}
@@ -29,52 +37,58 @@ static bool lodge_assets_texture_new_inplace(struct lodge_assets *assets, strvie
 	return true;
 }
 
-static void lodge_assets_texture_free_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, lodge_texture_t *texture)
+static void lodge_assets_texture_free_inplace(struct lodge_assets2 *textures, strview_t name, lodge_asset_t asset, lodge_texture_t *texture)
 {
-	struct lodge_assets *images = lodge_assets_get_userdata(assets, USERDATA_IMAGES);
-	ASSERT(images);
+	struct lodge_assets2 *images = lodge_assets2_get_userdata(textures, USERDATA_IMAGES);
+	ASSERT_OR(images) { return; }
 
-	lodge_assets_release_depend(images, name, (struct lodge_asset_handle) {
-		.assets = assets,
-		.id = id,
-	});
+	lodge_assets2_remove_listener_by_name(images, name, textures, asset);
+
 	lodge_texture_reset(*texture);
 }
 
-static struct lodge_ret lodge_plugin_textures_new_inplace(struct lodge_assets *textures, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_textures_new_inplace(struct lodge_assets2 *textures, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	struct lodge_assets *images = lodge_plugins_depend(plugins, textures, strview_static("images"));
+	struct lodge_assets2 *images = lodge_plugins_depend(plugins, textures, strview("images"));
 	if(!images) {
 		return lodge_error("Failed to find plugin `images`");
 	}
 
-	lodge_assets_new_inplace(textures, (struct lodge_assets_desc) {
-		.name = strview_static("textures"),
+	lodge_assets2_new_inplace(textures, &(struct lodge_assets2_desc) {
+		.name = strview("textures"),
 		.size = sizeof(lodge_texture_t),
 		.new_inplace = &lodge_assets_texture_new_inplace,
 		.reload_inplace = NULL,
 		.free_inplace = &lodge_assets_texture_free_inplace
 	} );
 
-	lodge_assets_set_userdata(textures, USERDATA_IMAGES, images);
+	lodge_assets2_set_userdata(textures, USERDATA_IMAGES, images);
+	lodge_assets2_set_userdata(textures, USERDATA_ASSET_TYPE, lodge_type_register_asset(strview("texture"), textures));
 
 	return lodge_success();
 }
 
-static void lodge_plugin_texture_free_inplace(struct lodge_assets *textures)
+static void lodge_textures_free_inplace(struct lodge_assets2 *textures)
 {
-	lodge_assets_free_inplace(textures);
+	lodge_assets2_free_inplace(textures);
 }
 
 struct lodge_plugin_desc lodge_plugin_textures()
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_assets_sizeof(),
-		.name = strview_static("textures"),
-		.new_inplace = &lodge_plugin_textures_new_inplace,
-		.free_inplace = &lodge_plugin_texture_free_inplace,
+		.size = lodge_assets2_sizeof(),
+		.name = strview("textures"),
+		.new_inplace = &lodge_textures_new_inplace,
+		.free_inplace = &lodge_textures_free_inplace,
 		.update = NULL,
 		.render = NULL,
+	};
+}
+
+struct texture_types lodge_plugin_textures_get_types(struct lodge_assets2 *textures)
+{
+	return (struct texture_types) {
+		.texture_asset_type = textures ? lodge_assets2_get_userdata(textures, USERDATA_ASSET_TYPE) : NULL,
 	};
 }
