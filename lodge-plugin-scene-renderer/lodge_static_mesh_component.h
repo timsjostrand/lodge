@@ -37,17 +37,14 @@ struct fbx_asset;
 
 struct lodge_static_mesh_component
 {
-	lodge_shader_t					shader;
-	lodge_shader_t					shader_entity_id;
-	lodge_texture_t					texture;
-
 	lodge_asset_t					fbx_asset;
-	struct lodge_static_mesh_ref	shader_ref;
-	struct lodge_static_mesh_ref	texture_ref;
+	lodge_asset_t					shader_asset;
+	lodge_asset_t					shader_entity_id_asset;
+	lodge_asset_t					texture_asset;
 };
 
 extern lodge_component_type_t	LODGE_COMPONENT_TYPE_STATIC_MESH;
 
-lodge_component_type_t			lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type);
+lodge_component_type_t			lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type, lodge_type_t shader_asset_type, lodge_type_t texture_asset_type);
 
 #endif

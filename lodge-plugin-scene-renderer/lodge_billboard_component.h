@@ -8,8 +8,11 @@
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
 
-struct lodge_texture;
-typedef struct lodge_texture* lodge_texture_t;
+struct lodge_asset;
+typedef struct lodge_asset* lodge_asset_t;
+
+struct lodge_type;
+typedef struct lodge_type* lodge_type_t;
 
 struct lodge_billboard_component
 {
@@ -31,9 +34,9 @@ struct lodge_billboard_component
 	//
 	// The texture to draw.
 	//
-	lodge_texture_t				texture;
+	lodge_asset_t				texture_asset;
 };
 
-lodge_component_type_t			lodge_billboard_component_type_register();
+lodge_component_type_t			lodge_billboard_component_type_register(lodge_type_t texture_asset_type);
 
 #endif

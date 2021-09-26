@@ -104,7 +104,8 @@ typedef void						(*lodge_scene_render_system_func_t)(lodge_scene_t scene, const
 
 struct lodge_plugin_desc			lodge_scene_renderer_plugin();
 struct lodge_scene_renderer_types	lodge_scene_renderer_plugin_get_types(struct lodge_scene_renderer_plugin *plugin);
-struct lodge_assets*				lodge_scene_renderer_plugin_get_shaders(struct lodge_scene_renderer_plugin *plugin);
+struct lodge_assets2*				lodge_scene_renderer_plugin_get_shaders(struct lodge_scene_renderer_plugin *plugin);
+struct lodge_assets2*				lodge_scene_renderer_plugin_get_textures(struct lodge_scene_renderer_plugin *plugin);
 
 void								lodge_scene_add_render_pass_func(lodge_scene_t scene, enum lodge_scene_render_system_pass pass, lodge_scene_render_system_func_t func, void *userdata);
 void								lodge_scene_remove_render_pass_func(lodge_scene_t scene, enum lodge_scene_render_system_pass pass, lodge_scene_render_system_func_t func, void *userdata);

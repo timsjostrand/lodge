@@ -7,16 +7,10 @@
 #include "lodge_component_type.h"
 #include "lodge_transform_component.h"
 #include "lodge_scene.h"
-#include "lodge_assets.h"
-
-#include "lodge_gui_property_widget_factory.h"
-
-#include "lodge_json.h"
-#include "lodge_serialize_json.h"
+#include "lodge_assets2.h"
 
 #include <stdio.h>
 
-lodge_type_t LODGE_TYPE_STATIC_MESH_REF = NULL;
 lodge_component_type_t LODGE_COMPONENT_TYPE_STATIC_MESH = NULL;
 
 static void lodge_static_mesh_component_new_inplace(struct lodge_static_mesh_component *component)
@@ -34,62 +28,9 @@ static void lodge_static_mesh_component_free_inplace(struct lodge_static_mesh_co
 #endif
 }
 
-static void on_modified_shader_ref(struct lodge_property *property, const struct lodge_static_mesh_component *component)
+lodge_component_type_t lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type, lodge_type_t shader_asset_type, lodge_type_t texture_asset_type)
 {
-	((struct lodge_static_mesh_component*)component)->shader = NULL;
-}
-
-static void on_modified_texture_ref(struct lodge_property *property, const struct lodge_static_mesh_component *component)
-{
-	((struct lodge_static_mesh_component*)component)->texture = NULL;
-}
-
-// FIXME(TS): separate header?
-#include "lodge_gui.h"
-#include <string.h>
-
-static bool make_property_widget_static_mesh_ref(struct nk_context *ctx, struct lodge_property *property, void *object)
-{
-	const struct lodge_static_mesh_ref *value = lodge_property_get(property, object);
-	ASSERT(value);
-
-	struct lodge_static_mesh_ref new_value = *value;
-	nk_edit_string_zero_terminated(ctx, NK_EDIT_FIELD, new_value.name, sizeof_member(struct lodge_static_mesh_ref, name), NULL);
-
-	if(!strview_equals(strview_wrap(new_value.name), strview_wrap(value->name))) {
-		lodge_property_set(property, object, &new_value);
-		return true;
-	}
-
-	return false;
-}
-
-static bool lodge_static_mesh_ref_from_json(const lodge_json_t node, struct lodge_static_mesh_ref *dst)
-{
-	strview_t tmp;
-	if(lodge_json_get_string(node, &tmp)) {
-		strbuf_set(strbuf_wrap(dst->name), tmp);
-		return true;
-	}
-	return false;
-}
-
-static lodge_json_t lodge_static_mesh_ref_to_json(const struct lodge_static_mesh_ref *src)
-{
-	return lodge_json_new_string(strview_wrap(src->name));
-}
-
-lodge_component_type_t lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type)
-{
-	ASSERT(!LODGE_TYPE_STATIC_MESH_REF);
 	ASSERT(!LODGE_COMPONENT_TYPE_STATIC_MESH);
-
-	if(!LODGE_TYPE_STATIC_MESH_REF) {
-		LODGE_TYPE_STATIC_MESH_REF = lodge_type_register(strview_static("static_mesh_ref"), sizeof(struct lodge_static_mesh_ref));
-	
-		lodge_type_set_make_property_widget_func(LODGE_TYPE_STATIC_MESH_REF, &make_property_widget_static_mesh_ref);
-		lodge_json_register_type_funcs(LODGE_TYPE_STATIC_MESH_REF, &lodge_static_mesh_ref_to_json, lodge_static_mesh_ref_from_json);
-	}
 
 	if(!LODGE_COMPONENT_TYPE_STATIC_MESH) {
 		LODGE_COMPONENT_TYPE_STATIC_MESH = lodge_component_type_register((struct lodge_component_desc) {
@@ -109,17 +50,15 @@ lodge_component_type_t lodge_static_mesh_component_type_register(lodge_type_t st
 					},
 					{
 						.name = strview_static("shader"),
-						.type = LODGE_TYPE_STATIC_MESH_REF,
-						.offset = offsetof(struct lodge_static_mesh_component, shader_ref),
+						.type = shader_asset_type,
+						.offset = offsetof(struct lodge_static_mesh_component, shader_asset),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_shader_ref,
 					},
 					{
 						.name = strview_static("material"),
-						.type = LODGE_TYPE_STATIC_MESH_REF,
-						.offset = offsetof(struct lodge_static_mesh_component, texture_ref),
+						.type = texture_asset_type,
+						.offset = offsetof(struct lodge_static_mesh_component, texture_asset),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_texture_ref,
 					},
 				}
 			}
