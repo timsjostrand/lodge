@@ -2,6 +2,7 @@
 #define _DYNBUF_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 typedef struct dynbuf
 {
@@ -40,5 +41,9 @@ void			dynbuf_clear(dynbuf_t dynbuf);
 void*			dynbuf_append(dynbuf_t dst, const void *src, size_t src_size);
 void*			dynbuf_append_no_init(dynbuf_t dst);
 void*			dynbuf_append_range(dynbuf_t dst, void *src, size_t src_type_size, size_t src_count);
+
+size_t			dynbuf_remove(dynbuf_t buf, size_t index, size_t count);
+
+int64_t			dynbuf_find(dynbuf_t buf, const void *needle, size_t needle_size);
 
 #endif

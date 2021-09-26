@@ -89,3 +89,13 @@ void* dynbuf_append_range(dynbuf_t dst, void *src, size_t src_type_size, size_t 
 	dynbuf_maybe_grow(dst, *dst.count + src_count);
 	return membuf_append_range(dynbuf_to_membuf(dst), dst.count, src, src_type_size, src_count);
 }
+
+int64_t dynbuf_find(dynbuf_t buf, const void *needle, size_t needle_size)
+{
+	return membuf_find(dynbuf_to_membuf(buf), *buf.count, needle, needle_size);
+}
+
+size_t dynbuf_remove(dynbuf_t buf, size_t index, size_t count)
+{
+	return membuf_delete(dynbuf_to_membuf(buf), buf.count, index, count);
+}
