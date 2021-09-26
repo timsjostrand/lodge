@@ -29,6 +29,7 @@ bool		strview_empty(const strview_t str);
 size_t		strview_length(const strview_t str);
 
 bool		strview_begins_with(const strview_t str, const strview_t begins_with);
+bool		strview_ends_with(const strview_t str, const strview_t ends_with);
 
 bool		strview_to_u32(const strview_t str, uint32_t *out);
 bool		strview_to_u64(const strview_t str, uint64_t *out);

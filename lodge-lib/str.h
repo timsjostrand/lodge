@@ -8,6 +8,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #ifndef HAVE_STRNLEN
 size_t		strnlen(const char *s, size_t maxlen);
@@ -35,6 +36,7 @@ int			str_equals_ignore_case(const char *a, size_t a_len, const char *b, size_t 
 int			str_set(char *dst, size_t dst_size, const strview_t src);
 int			str_empty(const char *s, size_t s_size);
 int			str_begins_with(const char *s, size_t s_len, const char *begins_with, size_t begins_with_len);
+bool		str_ends_with(const char *s, size_t s_len, const char *ends_with, size_t ends_with_len);
 void		str_to_lower(char *s, size_t s_len);
 void		str_to_upper(char *s, size_t s_len);
 

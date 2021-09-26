@@ -477,6 +477,14 @@ int str_begins_with(const char *s, size_t s_len, const char *begins_with, size_t
 	return strncmp(s, begins_with, begins_with_len) == 0;
 }
 
+bool str_ends_with(const char *s, size_t s_len, const char *ends_with, size_t ends_with_len)
+{
+	if(ends_with_len > s_len) {
+		return 0;
+	}
+	return strncmp(s + s_len - ends_with_len, ends_with, ends_with_len) == 0;
+}
+
 void str_to_lower(char *s, size_t s_len)
 {
 	for(size_t i=0; i<s_len; i++) {

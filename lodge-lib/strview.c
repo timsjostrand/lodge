@@ -55,6 +55,11 @@ bool strview_begins_with(const strview_t str, const strview_t begins_with)
 	return str_begins_with(str.s, str.length, begins_with.s, begins_with.length);
 }
 
+bool strview_ends_with(const strview_t str, const strview_t ends_with)
+{
+	return str_ends_with(str.s, str.length, ends_with.s, ends_with.length);
+}
+
 strview_t strview_substring(strview_t str, size_t offset, size_t count)
 {
 	ASSERT(offset < str.length);
