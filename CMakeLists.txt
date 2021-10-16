@@ -1,8 +1,9 @@
 project(lodge C)
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 
 include(${ENGINE_PATH}/cmake/lodge-build-flags.cmake)
+include(${ENGINE_PATH}/cmake/lodge-module.cmake)
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 set(CMAKE_MACOSX_RPATH 1)
