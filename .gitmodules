@@ -13,9 +13,6 @@
 [submodule "lib/cjson"]
 	path = lodge-serialize-json/lib/cjson
 	url = https://github.com/DaveGamble/cJSON.git
-[submodule "lib/zlib"]
-	path = lib/zlib
-	url = https://github.com/timsjostrand/zlib.git
 [submodule "lodge-lib/lib/murmur3"]
 	path = lodge-lib/lib/murmur3
 	url = https://github.com/timsjostrand/murmur3

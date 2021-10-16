@@ -27,17 +27,6 @@ if(ENABLE_SHARED)
     set(BUILD_SHARED_LIBS On)
 endif()
 
-# Library: zlib.
-set(SKIP_INSTALL_ALL ON)
-set(ZLIB_INCLUDE_DIR "${ENGINE_PATH}/lib/zlib" "${CMAKE_BINARY_DIR}/lib/zlib")
-if(ENABLE_SHARED)
-    set(ZLIB_LIBRARY zlib)
-else()
-    set(ZLIB_LIBRARY zlibstatic)
-endif()
-add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
-target_include_directories(${ZLIB_LIBRARY} PUBLIC "${ZLIB_INCLUDE_DIR}")
-
 #
 # Find lodge-* modules.
 #
