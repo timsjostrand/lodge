@@ -174,9 +174,6 @@ struct lodge_scene_render_system
 	lodge_texture_t						texture_offscreen;
 	lodge_framebuffer_t					framebuffer_offscreen;
 
-	lodge_texture_t						texture_entity_ids;
-	lodge_framebuffer_t					framebuffer_entity_ids;
-
 	struct lodge_geometry_buffer		geometry_buffer;
 	struct lodge_post_process			post_process;
 
@@ -216,11 +213,7 @@ static void lodge_scene_render_system_post_process_light(const struct lodge_scen
 	lodge_gfx_bind_texture_unit_2d(0, system->geometry_buffer.albedo, system->sampler_linear_clamp);
 	lodge_gfx_bind_texture_unit_2d(1, system->geometry_buffer.normals, system->sampler_linear_clamp);
 	lodge_gfx_bind_texture_unit_2d(2, system->geometry_buffer.depth, system->sampler_linear_clamp);
-	
-	//
-	// Entity IDs
-	//
-	lodge_gfx_bind_texture_unit_2d(3, system->texture_entity_ids, system->sampler_linear_clamp);
+	lodge_gfx_bind_texture_unit_2d(3, system->geometry_buffer.editor, system->sampler_linear_clamp);
 
 	//
 	// shadow map
@@ -254,8 +247,7 @@ static void lodge_static_mesh_render(lodge_scene_t scene, const struct lodge_sce
 	lodge_gfx_annotate_begin(strview("static_meshes"));
 
 	ASSERT_OR(pass_params->pass == LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED
-		|| pass_params->pass == LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW
-		|| pass_params->pass == LODGE_SCENE_RENDER_SYSTEM_PASS_ENTITY_ID) {
+		|| pass_params->pass == LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW) {
 		return;
 	}
 
@@ -267,11 +259,7 @@ static void lodge_static_mesh_render(lodge_scene_t scene, const struct lodge_sce
 		//
 		// TODO(TS): do asset lookup in _update pass
 		//
-		if(pass_params->pass == LODGE_SCENE_RENDER_SYSTEM_PASS_ENTITY_ID) {
-			shader = lodge_assets2_get(system->shaders, component->shader_entity_id_asset);
-		} else {
-			shader = lodge_assets2_get(system->shaders, component->shader_asset);
-		}
+		shader = lodge_assets2_get(system->shaders, component->shader_asset);
 
 		if(!shader) {
 			continue;
@@ -285,7 +273,7 @@ static void lodge_static_mesh_render(lodge_scene_t scene, const struct lodge_sce
 		lodge_shader_bind_constant_buffer(shader, 0, pass_params->camera_buffer);
 
 		lodge_shader_set_constant_float(shader, strview("entity_id"), (float)((uintptr_t)system->ids[i]));
-		lodge_shader_set_constant_float(shader, strview("selected"), (float)((uintptr_t)system->selected[i]));
+		lodge_shader_set_constant_float(shader, strview("entity_selected"), (float)((uintptr_t)system->selected[i]));
 
 #if 1
 		lodge_shader_bind_constant_buffer_range(shader,
@@ -329,7 +317,6 @@ static void lodge_static_meshes_new_inplace(struct lodge_static_meshes *static_m
 	// HACK(TS): static_meshes live here for now FIXME(TS)
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED, &lodge_static_mesh_render, static_meshes);
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW, &lodge_static_mesh_render, static_meshes);
-	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_ENTITY_ID, &lodge_static_mesh_render, static_meshes);
 }
 
 static void lodge_static_meshes_free_inplace(struct lodge_static_meshes *static_meshes)
@@ -474,28 +461,6 @@ static void lodge_scene_render_system_offscreen_resized(struct lodge_scene_rende
 	});
 }
 
-static void lodge_scene_render_system_entity_ids_resized(struct lodge_scene_render_system *system, uint32_t width, uint32_t height)
-{
-	lodge_texture_reset(system->texture_entity_ids);
-	system->texture_entity_ids = lodge_texture_2d_make((struct lodge_texture_2d_desc) {
-		.width = width,
-		.height = height,
-		.mipmaps_count = 1,
-		.texture_format = LODGE_TEXTURE_FORMAT_RGBA32F,
-	});
-
-	// FIXME(TS): leaking ->depth?
-	lodge_framebuffer_reset(system->framebuffer_entity_ids);
-	system->framebuffer_entity_ids = lodge_framebuffer_make(&(struct lodge_framebuffer_desc) {
-		.colors_count = 1,
-		.colors = {
-			system->texture_entity_ids
-		},
-		.depth = lodge_texture_2d_make_depth(width, height),
-		.stencil = NULL,
-	});
-}
-
 static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_system *system, lodge_scene_t scene)
 {
 	system->render_width = 1920;
@@ -549,13 +514,6 @@ static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_syst
 	system->texture_offscreen = NULL;
 	system->framebuffer_offscreen = NULL;
 	lodge_scene_render_system_offscreen_resized(system, render_size.width, render_size.height);
-
-	//
-	// Entity ID
-	//
-	system->texture_entity_ids = NULL;
-	system->framebuffer_entity_ids = NULL;
-	lodge_scene_render_system_entity_ids_resized(system, render_size.width, render_size.height);
 
 	//
 	// Geometry buffer
@@ -844,6 +802,8 @@ static void lodge_scene_render_system_render_deferred(struct lodge_scene_render_
 	lodge_gfx_set_scissor(0, 0, render_size.width, render_size.height);
 
 	lodge_framebuffer_clear_color(framebuffer, 0, vec4_make(0.33f, 0.33f, 0.33f, 1.0f));
+	lodge_framebuffer_clear_color(framebuffer, 1, vec4_zero());
+	lodge_framebuffer_clear_color(framebuffer, 2, vec4_zero());
 	lodge_framebuffer_clear_depth(framebuffer, LODGE_FRAMEBUFFER_DEPTH_DEFAULT);
 	lodge_framebuffer_clear_stencil(framebuffer, LODGE_FRAMEBUFFER_STENCIL_DEFAULT);
 
@@ -976,37 +936,12 @@ static void lodge_scene_render_system_copy_deferred_to_offscreen(struct lodge_sc
 	}
 }
 
-static void lodge_scene_render_system_render_entity_ids(struct lodge_scene_render_system *system, lodge_scene_t scene, struct lodge_scene_render_pass_params *pass_params)
-{
-	struct render_size render_size = lodge_scene_render_system_get_render_size(system);
-
-	lodge_framebuffer_t framebuffer = system->framebuffer_entity_ids;
-
-	lodge_framebuffer_bind(framebuffer);
-	lodge_gfx_set_viewport(0, 0, render_size.width, render_size.height);
-	lodge_gfx_set_scissor(0, 0, render_size.width, render_size.height);
-
-	lodge_framebuffer_clear_color(framebuffer, 0, vec4_make(0.0f, 0.0f, 0.0f, 0.0f));
-	lodge_framebuffer_clear_depth(framebuffer, LODGE_FRAMEBUFFER_DEPTH_DEFAULT);
-	//lodge_framebuffer_clear_stencil(framebuffer, LODGE_FRAMEBUFFER_STENCIL_DEFAULT);
-
-	lodge_buffer_object_set(system->camera_buffer, 0, &pass_params->camera, sizeof(struct lodge_camera_params));
-
-	struct lodge_render_system_pass *pass = &system->passes[LODGE_SCENE_RENDER_SYSTEM_PASS_ENTITY_ID];
-	for(size_t i = 0, count = pass->funcs_count; i < count; i++) {
-		pass->funcs[i](scene, pass_params, pass->func_userdatas[i]);
-	}
-
-	lodge_framebuffer_unbind();
-}
-
 static void on_modified_render_size(struct lodge_property *property, struct lodge_scene_render_system *system)
 {
 	struct render_size render_size = lodge_scene_render_system_get_render_size(system);
 
 	lodge_scene_render_system_hdr_resize(&system->hdr, render_size.width, render_size.height);
 	lodge_scene_render_system_offscreen_resized(system, render_size.width, render_size.height);
-	lodge_scene_render_system_entity_ids_resized(system, render_size.width, render_size.height);
 	lodge_geometry_buffer_remake(&system->geometry_buffer, render_size.width, render_size.height);
 	lodge_post_process_resize(&system->post_process, render_size.width, render_size.height, system->geometry_buffer.depth);
 }
@@ -1098,22 +1033,6 @@ static void lodge_scene_render_system_render(struct lodge_scene_render_system *s
 		lodge_gfx_bind_texture_unit_2d(1, system->geometry_buffer.depth, system->sampler_linear_clamp);
 		lodge_gfx_bind_texture_unit_2d(2, system->geometry_buffer.albedo, system->sampler_linear_clamp);
 		lodge_shader_dispatch_compute(32, 32, 1);
-		lodge_gfx_annotate_end();
-	}
-
-	//
-	// Entity IDs
-	//
-	{
-		lodge_gfx_annotate_begin(strview("entity_ids"));
-		struct lodge_scene_render_pass_params pass_params = {
-			.pass = LODGE_SCENE_RENDER_SYSTEM_PASS_ENTITY_ID,
-			.time = system->time,
-			.camera = camera_params,
-			.camera_buffer = system->camera_buffer,
-			.data = 0,
-		};
-		lodge_scene_render_system_render_entity_ids(system, scene, &pass_params);
 		lodge_gfx_annotate_end();
 	}
 
@@ -1647,9 +1566,12 @@ lodge_entity_t lodge_scene_get_entity_at_screen_pos(lodge_scene_t scene, vec2 sc
 	//
 	// TODO(TS): use PBO instead
 	//
-	lodge_framebuffer_bind(renderer->framebuffer_entity_ids);
+	lodge_framebuffer_bind(renderer->geometry_buffer.framebuffer);
 	
-	vec4 sample = lodge_framebuffer_read_pixel_rgba(screen_pos.x, screen_pos.y);
+	//
+	// Editor color attachment is #2
+	//
+	vec4 sample = lodge_framebuffer_read_pixel_rgba(2, screen_pos.x, screen_pos.y);
 	if(sample.a == 0.0f) {
 		return NULL;
 	}

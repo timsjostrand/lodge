@@ -78,7 +78,7 @@ static void lodge_billboard_system_render(lodge_scene_t scene, const struct lodg
 		for(size_t i = 0, count = system->render_datas.count; i < count; i++) {
 			struct billboard_render_data *render_data = &system->render_datas.elements[i];
 
-			lodge_gfx_bind_texture_unit_2d(2, render_data->texture, system->sampler);
+			lodge_gfx_bind_texture_unit_2d(0, render_data->texture, system->sampler);
 
 			lodge_shader_set_constant_vec3(system->shader, strview("billboard_pos"), render_data->pos);
 			lodge_shader_set_constant_vec2(system->shader, strview("billboard_size"), render_data->billboard_size);

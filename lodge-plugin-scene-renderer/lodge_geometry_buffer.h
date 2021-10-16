@@ -12,8 +12,21 @@ typedef struct lodge_texture* lodge_texture_t;
 struct lodge_geometry_buffer
 {
 	lodge_framebuffer_t			framebuffer;
+	
 	lodge_texture_t				albedo;
+
 	lodge_texture_t				normals;
+
+	//
+	// 16 bit RGBA
+	// 
+	// R = entity_id
+	// G = entity_selected
+	// B = none
+	// A = none
+	//
+	lodge_texture_t				editor;
+
 	lodge_texture_t				depth;
 };
 

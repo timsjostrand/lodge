@@ -109,13 +109,11 @@ lodge_component_type_t lodge_camera_component_type_register()
 						.name = strview_static("perspective"),
 						.type = LODGE_TYPE_PERSPECTIVE,
 						.offset = offsetof(struct lodge_camera_component, perspective),
-						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = NULL,
 					},
 					{
-							.name = strview_static("use_default"),
-							.type = LODGE_TYPE_BOOL,
-							.offset = offsetof(struct lodge_camera_component, use_default),
+						.name = strview_static("use_default"),
+						.type = LODGE_TYPE_BOOL,
+						.offset = offsetof(struct lodge_camera_component, use_default),
 					},
 				}
 			}

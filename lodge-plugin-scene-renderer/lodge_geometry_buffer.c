@@ -19,13 +19,20 @@ struct lodge_geometry_buffer lodge_geometry_buffer_make(uint32_t width, uint32_t
 		.mipmaps_count = 1,
 		.texture_format = LODGE_TEXTURE_FORMAT_RGBA16F,
 	});
+	gbuffer.editor = lodge_texture_2d_make((struct lodge_texture_2d_desc) {
+		.width = width,
+		.height = height,
+		.mipmaps_count = 1,
+		.texture_format = LODGE_TEXTURE_FORMAT_RGBA16F,
+	});
 	gbuffer.depth = lodge_texture_2d_make_depth(width, height);
 
 	gbuffer.framebuffer = lodge_framebuffer_make(&(struct lodge_framebuffer_desc) {
-		.colors_count = 2,
+		.colors_count = 3,
 		.colors = {
 			gbuffer.albedo,
 			gbuffer.normals,
+			gbuffer.editor,
 		},
 		.depth = gbuffer.depth,
 		.stencil = NULL
@@ -37,6 +44,7 @@ struct lodge_geometry_buffer lodge_geometry_buffer_make(uint32_t width, uint32_t
 void lodge_geometry_buffer_reset(struct lodge_geometry_buffer *gbuffer)
 {
 	lodge_texture_reset(gbuffer->depth);
+	lodge_texture_reset(gbuffer->editor);
 	lodge_texture_reset(gbuffer->albedo);
 	lodge_texture_reset(gbuffer->normals);
 	lodge_framebuffer_reset(gbuffer->framebuffer);
