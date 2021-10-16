@@ -62,8 +62,6 @@
 #define LODGE_DEPRECATED
 #endif
 
-double	lodge_get_time();
-
 void*	lodge_lib_load(const char *filenae);
 void*	lodge_lib_load_copy(const char *filename, size_t size, void *data);
 void*	lodge_lib_get_symbol(void *lib, const char *symbol_name);
