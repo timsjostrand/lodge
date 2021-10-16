@@ -65,6 +65,20 @@ static struct lodge_ret lodge_plugin_try_initialize(struct lodge_plugins *plugin
 
 	if(!*initialized) {
 		memset(plugin_data, 0, desc->size);
+
+		//
+		// Check if we need to mount the plugin directory from source tree.
+		//
+		for(size_t i=0, count=desc->static_mounts.count; i<count; i++) {
+			struct lodge_static_mount *mount = &desc->static_mounts.elements[i];
+		
+			struct lodge_vfs *vfs = lodge_plugins_depend(plugins, plugin_data, strview("vfs"));
+			ASSERT(vfs);
+			if(vfs) {
+				lodge_vfs_mount(vfs, mount->dst_point, mount->src_dir);
+			}
+		}
+
 		if(desc->new_inplace) {
 			debugf("Plugins", "Initializing `" STRVIEW_PRINTF_FMT "`...\n", STRVIEW_PRINTF_ARG(desc->name));
 			struct lodge_ret init_ret = desc->new_inplace(plugin_data, plugins, plugins->args);

@@ -13,6 +13,18 @@ typedef void							(*lodge_plugin_update_func_t)(void *plugin, float delta_time)
 typedef void							(*lodge_plugin_render_func_t)(void *plugin);
 typedef void							(*lodge_plugin_free_inplace_func_t)(void *plugin);
 
+struct lodge_static_mount
+{
+	strview_t							src_dir;
+	strview_t							dst_point;
+};
+
+struct lodge_static_mounts
+{
+	size_t								count;
+	struct lodge_static_mount			elements[8];
+};
+
 struct lodge_plugin_desc
 {
 	uint32_t							version;
@@ -22,6 +34,7 @@ struct lodge_plugin_desc
 	lodge_plugin_free_inplace_func_t	free_inplace;
 	lodge_plugin_update_func_t			update;
 	lodge_plugin_render_func_t			render; // TODO(TS): remove
+	struct lodge_static_mounts			static_mounts;
 };
 
 typedef struct lodge_plugin_desc		(*lodge_plugin_func_t)();
