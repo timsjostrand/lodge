@@ -46,7 +46,7 @@ void lodge_system_type_new_inplace(lodge_system_type_t system_type, void *dst, l
 	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->new_inplace) {
-		system_desc->new_inplace(dst, scene);
+		system_desc->new_inplace(dst, scene, system_desc->userdata);
 	}
 }
 
@@ -55,7 +55,7 @@ void lodge_system_type_free_inplace(lodge_system_type_t system_type, void *dst, 
 	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->free_inplace) {
-		system_desc->free_inplace(dst, scene);
+		system_desc->free_inplace(dst, scene, system_desc->userdata);
 	}
 }
 
@@ -71,7 +71,7 @@ void lodge_system_type_update(lodge_system_type_t system_type, void *system, lod
 	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->update) {
-		system_desc->update(system, system_type, scene, dt);
+		system_desc->update(system, system_type, scene, dt, system_desc->userdata);
 	}
 }
 
@@ -80,7 +80,7 @@ void lodge_system_type_render(lodge_system_type_t system_type, void *system, lod
 	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
 	if(system_desc && system_desc->render) {
-		system_desc->render(system, scene, render_params);
+		system_desc->render(system, scene, render_params, system_desc->userdata);
 	}
 }
 
@@ -100,9 +100,14 @@ struct lodge_properties* lodge_system_type_get_properties(lodge_system_type_t sy
 
 void* lodge_system_type_get_plugin(lodge_system_type_t system_type)
 {
+	return lodge_system_type_get_userdata(system_type);
+}
+
+void* lodge_system_type_get_userdata(lodge_system_type_t system_type)
+{
 	struct lodge_system_type_desc *system_desc = lodge_system_type_to_desc(system_type);
 	ASSERT(system_desc);
-	return system_desc ? system_desc->plugin : NULL;
+	return system_desc ? system_desc->userdata : NULL;
 }
 
 lodge_system_type_t lodge_system_type_find(strview_t name)

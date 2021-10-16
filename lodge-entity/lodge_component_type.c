@@ -123,7 +123,7 @@ void lodge_component_type_new_inplace(lodge_component_type_t component_type, voi
 	struct lodge_component_desc *desc = lodge_component_type_to_desc(component_type);
 	ASSERT(desc);
 	if(desc && desc->new_inplace) {
-		desc->new_inplace(dst);
+		desc->new_inplace(dst, desc->userdata);
 	}
 }
 
@@ -132,7 +132,7 @@ void lodge_component_type_free_inplace(lodge_component_type_t component_type, vo
 	struct lodge_component_desc *desc = lodge_component_type_to_desc(component_type);
 	ASSERT(desc);
 	if(desc && desc->free_inplace) {
-		desc->free_inplace(dst);
+		desc->free_inplace(dst, desc->userdata);
 	}
 }
 

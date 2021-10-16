@@ -11,8 +11,8 @@
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
 
-typedef void							(*lodge_component_new_inplace_func_t)(void *component);
-typedef void							(*lodge_component_free_inplace_func_t)(void *component);
+typedef void							(*lodge_component_new_inplace_func_t)(void *component, void *userdata);
+typedef void							(*lodge_component_free_inplace_func_t)(void *component, void *userdata);
 
 struct lodge_component_desc
 {
@@ -22,6 +22,7 @@ struct lodge_component_desc
 	lodge_component_new_inplace_func_t	new_inplace;
 	lodge_component_free_inplace_func_t	free_inplace;
 	struct lodge_properties				properties;
+	void								*userdata;
 };
 
 lodge_component_type_t					lodge_component_types_get_index(size_t index);
