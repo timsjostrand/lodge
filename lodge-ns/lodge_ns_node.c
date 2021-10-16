@@ -175,6 +175,20 @@ const struct lodge_variant* lodge_node_get_value(lodge_node_t node, lodge_pin_id
 	return &output_pin->data;
 }
 
+bool lodge_node_set_value_type(lodge_node_t node, lodge_pin_idx_t pin_index, lodge_type_t type, const void *src)
+{
+	ASSERT_OR(pin_index < node->outputs.count) { return false; }
+	struct lodge_output_pin *pin = &node->outputs.pins[pin_index];
+	ASSERT_OR(pin->config.type == type) { return false; }
+	lodge_variant_set_type(&pin->data, type, src);
+	return true;
+}
+
+const void* lodge_node_get_value_type(lodge_node_t node, lodge_pin_idx_t pin_index, lodge_type_t type)
+{
+	return lodge_variant_get_type(lodge_node_get_value(node, pin_index), type);
+}
+
 #define lodge_node_get_set_impl( UNION_FIELD, C_TYPE ) \
 	const C_TYPE * lodge_node_get_ ## UNION_FIELD(lodge_node_t node, lodge_pin_idx_t pin_index) \
 	{ \
