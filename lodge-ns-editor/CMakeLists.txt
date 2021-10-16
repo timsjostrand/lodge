@@ -18,6 +18,7 @@ target_link_libraries(lodge-ns-editor
 	PRIVATE
 		lodge-build-flags
 		lodge-gui
+		lodge-entity # NOTE(TS): for gui widget factory
 	PUBLIC
 		lodge-lib
 		lodge-ns

@@ -18,9 +18,4 @@ size_t						lodge_ns_editor_sizeof();
 
 void						lodge_ns_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, float dt);
 
-//
-// TODO(TS): this should be done in a plugin init
-//
-void						lodge_ns_editors_init();
-
 #endif

@@ -5,6 +5,8 @@
 #include "lodge_ns_graph.h"
 #include "lodge_ns_node.h"
 #include "lodge_ns_node_type.h"
+#include "lodge_gui_property_widget_factory.h"
+#include "lodge_properties.h"
 
 #include "lodge_json.h"
 #include "lodge_serialize_json.h"
@@ -42,40 +44,6 @@ struct lodge_ns_editor
 	}								node_pins[256];
 };
 
-typedef void (*node_editor_make_widget_func_t)(struct nk_context *ctx, lodge_graph_t graph, struct lodge_variant *value);
-
-static void node_editor_make_widget_boolean(struct nk_context *ctx, lodge_graph_t graph, struct lodge_variant *value)
-{
-	bool *config = (bool *)lodge_variant_get_boolean(value);
-
-	if(config) {
-		nk_bool tmp = *config;
-		if(nk_checkbox_label(ctx, "value", &tmp)) {
-			lodge_graph_unconfigure(graph);
-			*config = tmp;
-			lodge_graph_configure(graph);
-		}
-	} else {
-		nk_spacing(ctx, 1);
-	}
-}
-
-static void node_editor_make_widget_f32(struct nk_context *ctx, lodge_graph_t graph, struct lodge_variant *value)
-{
-	float *config = (float *)lodge_variant_get_f32(value);
-
-	if(config) {
-		float new_config = nk_propertyf(ctx, "#f32", -FLT_MAX, *config, FLT_MAX, 0.1f, 0.01f);
-		if(new_config != *config) {
-			lodge_graph_unconfigure(graph);
-			*config = new_config;
-			lodge_graph_configure(graph);
-		}
-	} else {
-		nk_spacing(ctx, 1);
-	}
-}
-
 static struct nk_color node_editor_pin_type_to_color(lodge_type_t type)
 {
 	if(type == LODGE_TYPE_BOOL) {
@@ -87,18 +55,6 @@ static struct nk_color node_editor_pin_type_to_color(lodge_type_t type)
 	}
 
 	return nk_rgba_hex("#ffffffff");
-}
-
-size_t LODGE_TYPE_FUNC_INDEX_MAKE_WIDGET = 0;
-
-static node_editor_make_widget_func_t node_editor_find_make_widget_func(lodge_type_t type)
-{
-	return lodge_type_get_func(type, LODGE_TYPE_FUNC_INDEX_MAKE_WIDGET);
-}
-
-static void node_editor_register_make_widget_func(lodge_type_t type, node_editor_make_widget_func_t make_widget_func)
-{
-	lodge_type_set_func(type, LODGE_TYPE_FUNC_INDEX_MAKE_WIDGET, make_widget_func);;
 }
 
 static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, float dt)
@@ -175,10 +131,25 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
 				// Inputs
 				//
 				if(pin_idx == 0 && node->inputs.count == 0 && lodge_variant_is_set(&node->config)) {
-					node_editor_make_widget_func_t make_widget_func = node_editor_find_make_widget_func(node->config.type);
+					lodge_make_property_widget_func_t make_widget_func = lodge_type_get_make_property_widget_func(node->config.type);
 
 					if(make_widget_func) {
-						make_widget_func(ctx, graph, &node->config);
+						struct lodge_property property = {
+							.offset = 0,
+							.type = node->config.type
+						};
+
+						if(make_widget_func(ctx, &property, lodge_variant_access_data_ptr(&node->config))) {
+							lodge_graph_unconfigure(graph);
+							//
+							// FIXME(TS): we may need to clone to value to stack and then call:
+							//
+							//		lodge_variant_set_type(node->config, node->config.type, tmp.value);
+							// 
+							// instead of applying to node->config directly...
+							//
+							lodge_graph_configure(graph);
+						}
 					} else {
 						nk_spacing(ctx, 1);
 					}
@@ -399,15 +370,6 @@ void lodge_ns_editor_free_inplace(struct lodge_ns_editor *editor)
 size_t lodge_ns_editor_sizeof()
 {
 	return sizeof(struct lodge_ns_editor);
-}
-
-void lodge_ns_editors_init()
-{
-	ASSERT(LODGE_TYPE_FUNC_INDEX_MAKE_WIDGET == 0);
-	LODGE_TYPE_FUNC_INDEX_MAKE_WIDGET = lodge_types_make_func_index();
-
-	node_editor_register_make_widget_func(LODGE_TYPE_BOOL, &node_editor_make_widget_boolean);
-	node_editor_register_make_widget_func(LODGE_TYPE_F32, &node_editor_make_widget_f32);
 }
 
 void lodge_ns_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, float dt)
