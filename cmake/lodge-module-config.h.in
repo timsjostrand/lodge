@@ -1,0 +1,6 @@
+#ifndef _LODGE_MODULE_CONFIG_H
+#define _LODGE_MODULE_CONFIG_H
+
+#define ASSETS_DIR "@TARGET_SOURCE_DIR@/@assets_dir@"
+
+#endif
