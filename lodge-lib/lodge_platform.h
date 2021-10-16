@@ -29,7 +29,12 @@
 
 #endif
 
-#define LODGE_ARRAYSIZE(a) ( sizeof(a) / sizeof(a[0]) )
+#if defined(_MSC_VER)
+	#define lodge_countof(a) (_countof(a))
+#else
+	#define lodge_countof(a) (sizeof(a) / sizeof(a[0]))
+#endif
+#define LODGE_ARRAYSIZE(a) lodge_countof(a)
 
 #define LODGE_BIT(n) 1 << (n-1)
 #define LODGE_IS_FLAG_SET(FIELD, FLAG) ((FIELD & FLAG) == FLAG)
