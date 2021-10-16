@@ -73,27 +73,6 @@ endif()
 add_subdirectory(${ENGINE_PATH}/lib/zlib ${CMAKE_BINARY_DIR}/lib/zlib)
 target_include_directories(${ZLIB_LIBRARY} PUBLIC "${ZLIB_INCLUDE_DIR}")
 
-# Library: libarchive.
-set(ENABLE_NETTLE OFF CACHE BOOL "Enable use of Nettle" FORCE)
-set(ENABLE_OPENSSL OFF CACHE BOOL "Enable use of OpenSSL" FORCE)
-set(ENABLE_TAR OFF CACHE BOOL "Enable tar building" FORCE)
-set(ENABLE_CPIO OFF CACHE BOOL "Enable cpio building" FORCE)
-set(ENABLE_XATTR OFF CACHE BOOL "Enable extended attribute support" FORCE)
-set(ENABLE_ACL OFF CACHE BOOL "Enable ACL support" FORCE)
-set(ENABLE_ICONV OFF CACHE BOOL "Enable iconv support" FORCE)
-set(ENABLE_TEST OFF CACHE BOOL "Enable unit and regression tests" FORCE)
-add_subdirectory(${ENGINE_PATH}/lib/libarchive ${CMAKE_BINARY_DIR}/lib/libarchive)
-if(ENABLE_SHARED)
-    set(LIBARCHIVE_LIBRARY archive)
-else()
-    # NOTE: Bug where LIBARCHIVE_STATIC is not applied for the
-    # archive_static target in Visual Studio. Force define here.
-    add_definitions(-DLIBARCHIVE_STATIC)
-    set(LIBARCHIVE_LIBRARY archive_static)
-endif()
-set(LIBARCHIVE_INCLUDE_DIR ${ENGINE_PATH}/lib/libarchive)
-target_include_directories(${LIBARCHIVE_LIBRARY} PUBLIC "${LIBARCHIVE_INCLUDE_DIR}")
-
 #
 # Find lodge-* modules.
 #
