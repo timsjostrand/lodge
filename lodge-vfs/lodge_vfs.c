@@ -234,10 +234,14 @@ void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t mount_point, strview_t dir
 	lodge_filewatch_add_dir(vfs->filewatch, strbuf_to_strview(path), true, &lodge_vfs_filewatch_event, vfs);
 
 	{
-		struct lodge_vfs_mount new_mount;
-		strbuf_set(strbuf_wrap(new_mount.point), mount_point);
-		strbuf_set(strbuf_wrap(new_mount.path), dir);
-		membuf_append(membuf_wrap(vfs->mounts), &vfs->mounts_count, &new_mount, sizeof(struct lodge_vfs_mount));
+		struct lodge_vfs_mount *new_mount = membuf_append_no_init(membuf_wrap(vfs->mounts), &vfs->mounts_count);
+		
+		strbuf_set(strbuf_wrap(new_mount->point), mount_point);
+		if(!strview_ends_with(mount_point, strview("/"))) {
+			strbuf_append(strbuf_wrap(new_mount->point), strview("/"));
+		}
+		
+		strbuf_set(strbuf_wrap(new_mount->path), dir);
 	}
 
 	// TODO(TS): we need to scan new mount and fire modify callbacks for all new files we have callbacks for,
