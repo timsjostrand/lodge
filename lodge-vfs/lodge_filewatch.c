@@ -22,9 +22,15 @@
 //		- When adding a dir to watch; check for any common parent with currently mounted
 //		  dirs. If they share a parent, mount that instead and use for both watches. This
 //		  will need some tweaking so that not all watches end up watching say the C:/ dir.
-//		  Use lodge_filewatch_entry::ref_count to track when it is safe to remove a watch. 
+//		  Use lodge_filewatch_entry::ref_count to track when it is safe to remove a watch.
+// 
 //		- Add support for watching individual files. This will add a dir watch internally,
 //		  but allows registering a separate callback for that individual file.
+//
+//		- Add event delayed + filter for file events. We are currently getting multiple CHANGE
+//		  events for files saved with Notepad for instance. We should record the events and
+//		  wait for a timeout, and then send an event with a bitfield of events fired.
+//
 
 #include <stdio.h>
 #include <windows.h>
@@ -78,8 +84,7 @@ static enum lodge_filewatch_reason lodge_filewatch_action_to_reason(DWORD action
 	case FILE_ACTION_RENAMED_OLD_NAME:
 	case FILE_ACTION_RENAMED_NEW_NAME:
 	default:
-		ASSERT_NOT_IMPLEMENTED();
-		return LODGE_FILEWATCH_REASON_MAX;
+		return LODGE_FILEWATCH_REASON_FILE_RENAMED;
 	}
 };
 

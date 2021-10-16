@@ -25,11 +25,25 @@ struct lodge_vfs_func
 	void							*userdata;
 };
 
-struct lodge_vfs_file_funcs
+struct lodge_vfs_funcs
+{
+	size_t							count;
+	size_t							capacity;
+	struct lodge_vfs_func			*elements;
+};
+
+struct lodge_vfs_file_entry
 {
 	char							virtual_path[LODGE_VFS_FILENAME_MAX];
 	uint32_t						virtual_path_hash;
-	struct lodge_vfs_func*			funcs;
+	struct lodge_vfs_funcs			funcs;
+};
+
+struct lodge_vfs_file_entries
+{
+	size_t							count;
+	size_t							capacity;
+	struct lodge_vfs_file_entry		*elements;
 };
 
 struct lodge_vfs
@@ -37,18 +51,21 @@ struct lodge_vfs
 	struct lodge_vfs_mount			mounts[LODGE_VFS_MOUNT_POINTS_MAX];
 	size_t							mounts_count;
 
-	struct lodge_vfs_file_funcs		funcs[LODGE_VFS_FILES_MAX];
-	size_t							funcs_count;
+	struct lodge_vfs_file_entries	file_entries;
+	struct lodge_vfs_funcs			global_funcs;
+
+	struct lodge_vfs_funcs			mount_added_funcs;
+	//struct lodge_vfs_funcs		mount_removed_funcs;
 
 	struct lodge_filewatch			*filewatch;
 };
 
-static struct lodge_vfs_file_funcs* lodge_vfs_get_func_entry(struct lodge_vfs *vfs, strview_t virtual_path)
+static struct lodge_vfs_file_entry* lodge_vfs_get_func_entry(struct lodge_vfs *vfs, strview_t virtual_path)
 {
 	uint32_t virtual_path_hash = strview_calc_hash(virtual_path);
 
-	for (size_t i = 0; i < vfs->funcs_count; i++) {
-		struct lodge_vfs_file_funcs *func_entry = &vfs->funcs[i];
+	for (size_t i = 0; i < vfs->file_entries.count; i++) {
+		struct lodge_vfs_file_entry *func_entry = &vfs->file_entries.elements[i];
 
 #if 0
 		if (strview_equals(virtual_path, strview_wrap(func_entry->virtual_path))) {
@@ -63,42 +80,55 @@ static struct lodge_vfs_file_funcs* lodge_vfs_get_func_entry(struct lodge_vfs *v
 	return NULL;
 }
 
-static void lodge_vfs_broadcast_file_funcs(struct lodge_vfs *vfs, struct lodge_vfs_file_funcs *file_funcs)
+static void lodge_vfs_funcs_broadcast(struct lodge_vfs_funcs *funcs, struct lodge_vfs *vfs, strview_t virtual_path)
 {
-	for(int i = 0, count = stb_arr_len(file_funcs->funcs); i < count; i++) {
-		struct lodge_vfs_func *func = &file_funcs->funcs[i];
-		func->fn(vfs, strview_wrap(file_funcs->virtual_path), func->userdata);
+	for(int i = 0, count = funcs->count; i < count; i++) {
+		struct lodge_vfs_func *func = &funcs->elements[i];
+		func->fn(vfs, virtual_path, func->userdata);
 	}
+}
+
+static void lodge_vfs_broadcast_file_funcs(struct lodge_vfs *vfs, struct lodge_vfs_file_entry *file_funcs)
+{
+	lodge_vfs_funcs_broadcast(&file_funcs->funcs, vfs, strview_wrap(file_funcs->virtual_path));
 }
 
 static void lodge_vfs_filewatch_event(strview_t path, enum lodge_filewatch_reason reason, struct lodge_vfs *vfs)
 {
-	struct lodge_vfs_file_funcs *file_funcs = lodge_vfs_get_func_entry(vfs, path);
-	if(!file_funcs) {
-		//ASSERT_FAIL("No callbacks for this file");
-		return;
+	for(size_t i = 0, count = vfs->global_funcs.count; i < count; i++) {
+		struct lodge_vfs_func *func = &vfs->global_funcs.elements[i];
+		if(func->fn) {
+			func->fn(vfs, path, func->userdata);
+		}
 	}
 
-	// TODO(TS): we are currently firing reload events for files reloaded in mounts with lower precedence;
-	// `path` should be a disk_path, and should reverse resolve into a virtual_path
-	// It currently works, because the listener needs to resolve in _read_file() anyways
-
-	lodge_vfs_broadcast_file_funcs(vfs, file_funcs);
+	struct lodge_vfs_file_entry *file_funcs = lodge_vfs_get_func_entry(vfs, path);
+	if(file_funcs) {
+		//
+		// TODO(TS): we are currently firing reload events for files reloaded in mounts with lower precedence;
+		// `path` should be a disk_path, and should reverse resolve into a virtual_path
+		// It currently works, because the listener needs to resolve in _read_file() anyways
+		//
+		lodge_vfs_broadcast_file_funcs(vfs, file_funcs);
+	}
 }
 
 void lodge_vfs_new_inplace(struct lodge_vfs *vfs)
 {
 	memset(vfs, 0, sizeof(struct lodge_vfs));
 	vfs->filewatch = lodge_filewatch_new();
+	dynbuf_new_inplace(dynbuf(vfs->file_entries), 1024);
 }
 
 void lodge_vfs_free_inplace(struct lodge_vfs *vfs)
 {
 	lodge_filewatch_free(vfs->filewatch);
 
-	for(int i = 0; i < vfs->funcs_count; i++) {
-		stb_arr_free(vfs->funcs[i].funcs);
+	for(int i = 0; i < vfs->file_entries.count; i++) {
+		struct lodge_vfs_file_entry *entry = &vfs->file_entries.elements[i];
+		dynbuf_free_inplace(dynbuf(entry->funcs));
 	}
+	dynbuf_free_inplace(dynbuf(vfs->file_entries));
 }
 
 void lodge_vfs_update(struct lodge_vfs *vfs, float delta_time)
@@ -113,14 +143,15 @@ size_t lodge_vfs_sizeof()
 
 void lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, lodge_vfs_func_t fn, void* userdata)
 {
+#if 0
 	int added = 0;
 
 	struct lodge_vfs_func cbck;
 	cbck.fn = fn;
 	cbck.userdata = userdata;
 
-	for(size_t i = 0; i < vfs->funcs_count; i++) {
-		struct lodge_vfs_file_funcs *func_entry = &vfs->funcs[i];
+	for(size_t i = 0; i < vfs->file_entries_count; i++) {
+		struct lodge_vfs_file_entry *func_entry = &vfs->file_entries[i];
 
 		for(int j = 0; j < stb_arr_len(func_entry->funcs); j++) {
 			struct lodge_vfs_func *callback = &func_entry->funcs[j];
@@ -131,61 +162,48 @@ void lodge_vfs_prune_callbacks(struct lodge_vfs *vfs, lodge_vfs_func_t fn, void*
 			}
 		}
 	}
+#else
+	ASSERT_NOT_IMPLEMENTED();
+#endif
 }
 
 void lodge_vfs_register_callback(struct lodge_vfs *vfs, strview_t virtual_path, lodge_vfs_func_t fn, void* userdata)
 {
-	struct lodge_vfs_file_funcs *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
-
+	struct lodge_vfs_file_entry *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
 	if(!func_entry) {
-		func_entry = membuf_append_no_init(membuf_wrap(vfs->funcs), &vfs->funcs_count);
-		func_entry->funcs = NULL;
+		func_entry = dynbuf_append_no_init(dynbuf(vfs->file_entries));
+
+		dynbuf_new_inplace(dynbuf(func_entry->funcs), 8);
 		strbuf_set(strbuf_wrap(func_entry->virtual_path), virtual_path);
 		func_entry->virtual_path_hash = strview_calc_hash(virtual_path);
 	}
 	ASSERT(func_entry);
 
-	struct lodge_vfs_func cbck = {
+	dynbuf_append(dynbuf(func_entry->funcs), &(struct lodge_vfs_func) {
 		.fn = fn,
 		.userdata = userdata,
-	};
-	stb_arr_push(func_entry->funcs, cbck);
+	}, sizeof(struct lodge_vfs_func));
 }
 
 bool lodge_vfs_remove_callback(struct lodge_vfs *vfs, strview_t virtual_path, lodge_vfs_func_t fn, void *userdata)
 {
-	struct lodge_vfs_file_funcs *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
+	struct lodge_vfs_file_entry *func_entry = lodge_vfs_get_func_entry(vfs, virtual_path);
 	if(!func_entry) {
 		return false;
 	}
 
-	for(size_t i = 0, funcs_count = stb_arr_len(func_entry->funcs); i < funcs_count; i++) {
-		struct lodge_vfs_func *func = &func_entry->funcs[i];
+	int64_t index = dynbuf_find(dynbuf(func_entry->funcs), &(struct lodge_vfs_func) {
+		.fn = fn,
+		.userdata = userdata,
+	}, sizeof(struct lodge_vfs_func));
 
-		if(func->fn == fn && func->userdata == userdata) {
-			stb_arr_delete(func_entry->funcs, i);
-			return true;
-		}
+	if(index >= 0) {
+		size_t removed = dynbuf_remove(dynbuf(func_entry->funcs), index, 1);
+		ASSERT(removed > 0);
+		return true;
 	}
 
 	return false;
-}
-
-bool lodge_vfs_reload_file(struct lodge_vfs *vfs, strview_t filename)
-{
-#if 0
-	struct lodge_vfs_file *f = vfs_get_file_entry(vfs, filename);
-
-	if(f == NULL) {
-		return false;
-	}
-
-	vfs_reload(vfs, f, 1);
-	return true;
-#else
-	ASSERT_NOT_IMPLEMENTED();
-	return false;
-#endif
 }
 
 void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t mount_point, strview_t dir)
@@ -231,14 +249,21 @@ void lodge_vfs_mount(struct lodge_vfs *vfs, strview_t mount_point, strview_t dir
 		const size_t filename_len = strlen(filenames[i]);
 		strview_t virtual_filename = strview_make(filenames[i] + strbuf_length(path) + 1, filename_len - strbuf_length(path));
 
-		struct lodge_vfs_file_funcs* file_funcs = lodge_vfs_get_func_entry(vfs, virtual_filename);
+		struct lodge_vfs_file_entry* file_funcs = lodge_vfs_get_func_entry(vfs, virtual_filename);
 		if(file_funcs) {
 			lodge_vfs_broadcast_file_funcs(vfs, file_funcs);
 		}
 	}
+
+	//
+	// Notify listeners that a new mount has been added.
+	//
+	for(size_t i = 0; i < vfs->mount_added_funcs.count; i++) {
+		lodge_vfs_funcs_broadcast(&vfs->mount_added_funcs, vfs, mount_point);
+	}
 }
 
-void* lodge_vfs_read_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t* out_num_bytes)
+void* lodge_vfs_read_file(struct lodge_vfs *vfs, strview_t virtual_path, size_t *out_num_bytes)
 {
 	char disk_path[LODGE_VFS_FILENAME_MAX];
 
@@ -357,4 +382,44 @@ bool lodge_vfs_iterate(struct lodge_vfs *vfs, strview_t path, strview_t mask, st
 	}
 
 	return true;
+}
+
+static void lodge_vfs_funcs_add(struct lodge_vfs_funcs *funcs, lodge_vfs_func_t func, void *userdata)
+{
+	dynbuf_append(dynbuf_ptr(funcs), &(struct lodge_vfs_func) {
+		.fn = func,
+		.userdata = userdata,
+	}, sizeof(struct lodge_vfs_func));
+}
+
+static void lodge_vfs_funcs_remove(struct lodge_vfs_funcs *funcs, lodge_vfs_func_t func, void *userdata)
+{
+	int64_t index = dynbuf_find(dynbuf_ptr(funcs), &(struct lodge_vfs_func) {
+		.fn = func,
+		.userdata = userdata,
+	}, sizeof(struct lodge_vfs_func));
+
+	ASSERT_OR(index >= 0) { return; }
+
+	dynbuf_remove(dynbuf_ptr(funcs), index, 1);
+}
+
+void lodge_vfs_add_global_callback(struct lodge_vfs *vfs, lodge_vfs_func_t func, void *userdata)
+{
+	lodge_vfs_funcs_add(&vfs->global_funcs, func, userdata);
+}
+
+void lodge_vfs_remove_global_callback(struct lodge_vfs *vfs, lodge_vfs_func_t func, void *userdata)
+{
+	lodge_vfs_funcs_remove(&vfs->global_funcs, func, userdata);
+}
+
+void lodge_vfs_add_on_mount_added_func(struct lodge_vfs *vfs, lodge_vfs_func_t func, void *userdata)
+{
+	lodge_vfs_funcs_add(&vfs->mount_added_funcs, func, userdata);
+}
+
+void lodge_vfs_remove_on_mount_added_func(struct lodge_vfs *vfs, lodge_vfs_func_t func, void *userdata)
+{
+	lodge_vfs_funcs_remove(&vfs->mount_added_funcs, func, userdata);
 }
