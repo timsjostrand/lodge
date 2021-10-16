@@ -128,8 +128,6 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 
 			// Move
 			{
-				struct lodge_camera_params camera_params = lodge_camera_params_make(scene, owner);
-
 				float speed = 1.0f;
 
 				if(lodge_input_is_key_down(input, LODGE_KEY_LEFT_SHIFT)) {
@@ -152,7 +150,8 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 					camera_delta.x += speed * dt;
 				}
 
-				lodge_editor_controller_component_move(component, &camera_params.view, camera_delta);
+				const mat4 view = lodge_camera_calc_view_matrix(scene, owner);
+				lodge_editor_controller_component_move(component, &view, camera_delta);
 			}
 		}
 

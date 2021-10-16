@@ -361,8 +361,9 @@ static uint32_t lodge_calc_texture_levels_max(struct vec2i size)
 
 struct render_size
 {
-	uint32_t width;
-	uint32_t height;
+	uint32_t	width;
+	uint32_t	height;
+	float		aspect_ratio;
 };
 
 static struct render_size lodge_scene_render_system_get_render_size(struct lodge_scene_render_system *system)
@@ -377,6 +378,7 @@ static struct render_size lodge_scene_render_system_get_render_size(struct lodge
 	}
 	tmp.width = max(tmp.width, 1);
 	tmp.height = max(tmp.height, 1);
+	tmp.aspect_ratio = tmp.width / (float)tmp.height;
 	return tmp;
 }
 
@@ -610,7 +612,9 @@ void lodge_scene_render_system_free_inplace(struct lodge_scene_render_system *sy
 //
 static void lodge_scene_render_system_update_shadow_map(struct lodge_scene_render_system *system, lodge_scene_t scene, float dt)
 {
-	struct lodge_camera_params camera_params = lodge_camera_params_make(scene, system->active_camera);
+	struct render_size render_size = lodge_scene_render_system_get_render_size(system);
+
+	struct lodge_camera_params camera_params = lodge_camera_params_make(scene, system->active_camera, render_size.aspect_ratio);
 	static struct lodge_shadow_map_debug shadow_map_debugs[3];
 	if(system->shadow_map_update) {
 		lodge_shadow_map_update(
@@ -984,7 +988,7 @@ static void lodge_scene_render_system_render(struct lodge_scene_render_system *s
 
 	struct render_size render_size = lodge_scene_render_system_get_render_size(system);
 
-	struct lodge_camera_params camera_params = lodge_camera_params_make(scene, system->active_camera);
+	struct lodge_camera_params camera_params = lodge_camera_params_make(scene, system->active_camera, render_size.aspect_ratio);
 
 	lodge_gfx_annotate_begin(strview("scene_render_system"));
 	lodge_pipeline_push(system->wireframe ? system->pipeline_wireframe : system->pipeline_default);

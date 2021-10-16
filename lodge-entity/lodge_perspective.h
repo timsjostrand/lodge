@@ -8,10 +8,8 @@ struct lodge_perspective
 	float	fov_degrees;
 	float	z_near;
 	float	z_far;
-	float	width;
-	float	height;
 };
 
-mat4 lodge_perspective_calc_projection(const struct lodge_perspective *perspective);
+mat4 lodge_perspective_calc_projection(const struct lodge_perspective *perspective, float aspect_ratio);
 
 #endif

@@ -13,21 +13,31 @@ void lodge_camera_component_new_inplace(struct lodge_camera_component *component
 	component->perspective.fov_degrees = 60.0f;
 	component->perspective.z_near = 0.1f;
 	component->perspective.z_far = 10000.0f;
-	component->perspective.width = 1920;
-	component->perspective.height = 1080;
 	component->use_default = false;
 }
 
-struct lodge_camera_params lodge_camera_params_make(lodge_scene_t scene, lodge_entity_t camera)
+static mat4 lodge_camera_calc_view_matrix_impl(vec3 camera_pos, vec3 camera_rot)
+{
+	const vec3 camera_pos_neg = vec3_negate(camera_pos);
+	return mat4_mult(lodge_rotation_to_matrix(camera_rot), mat4_translation(xyz_of(camera_pos_neg)));
+}
+
+mat4 lodge_camera_calc_view_matrix(lodge_scene_t scene, lodge_entity_t camera)
+{
+	const vec3 camera_pos = lodge_get_position(scene, camera);
+	const vec3 camera_rot = lodge_get_rotation(scene, camera);
+	return lodge_camera_calc_view_matrix_impl(camera_pos, camera_rot);
+}
+
+struct lodge_camera_params lodge_camera_params_make(lodge_scene_t scene, lodge_entity_t camera, float aspect_ratio)
 {
 	struct lodge_camera_component *component = lodge_scene_get_entity_component(scene, camera, LODGE_COMPONENT_TYPE_CAMERA);
 	ASSERT(component);
 
 	const vec3 camera_pos = lodge_get_position(scene, camera);
-	const vec3 camera_pos_neg = vec3_negate(camera_pos);
 	const vec3 camera_rot = lodge_get_rotation(scene, camera);
-	const mat4 view = mat4_mult(lodge_rotation_to_matrix(camera_rot), mat4_translation(xyz_of(camera_pos_neg)));
-	const mat4 projection = lodge_perspective_calc_projection(&component->perspective);
+	const mat4 view = lodge_camera_calc_view_matrix_impl(camera_pos, camera_rot);
+	const mat4 projection = lodge_perspective_calc_projection(&component->perspective, aspect_ratio);
 	const mat4 view_projection = mat4_mult(projection, view);
 
 	return (struct lodge_camera_params) {
@@ -51,22 +61,8 @@ lodge_component_type_t lodge_camera_component_type_register()
 			strview_static("perspective"),
 			sizeof(struct lodge_perspective),
 			&(struct lodge_properties) {
-				.count = 5,
+				.count = 3,
 				.elements = {
-					{
-						.name = strview_static("width"),
-						.type = LODGE_TYPE_F32,
-						.offset = offsetof(struct lodge_perspective, width),
-						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = NULL,
-					},
-					{
-						.name = strview_static("height"),
-						.type = LODGE_TYPE_F32,
-						.offset = offsetof(struct lodge_perspective, height),
-						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = NULL,
-					},
 					{
 						.name = strview_static("fov"),
 						.type = LODGE_TYPE_F32,

@@ -37,6 +37,7 @@ extern lodge_component_type_t	LODGE_COMPONENT_TYPE_CAMERA;
 
 lodge_component_type_t			lodge_camera_component_type_register();
 
-struct lodge_camera_params		lodge_camera_params_make(lodge_scene_t scene, lodge_entity_t camera);
+mat4							lodge_camera_calc_view_matrix(lodge_scene_t scene, lodge_entity_t camera);
+struct lodge_camera_params		lodge_camera_params_make(lodge_scene_t scene, lodge_entity_t camera, float aspect_ratio);
 
 #endif
