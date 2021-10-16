@@ -3,15 +3,6 @@
 
 #include "lodge_plugin.h"
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-SHARED_SYMBOL struct lodge_plugin_desc game_plugin();
-
-#ifdef __cplusplus
-}
-#endif
+struct lodge_plugin_desc game_plugin();
 
 #endif
