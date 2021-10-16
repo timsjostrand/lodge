@@ -2,6 +2,7 @@
 
 #include "str.h"
 #include "strview.h"
+#include "membuf.h"
 
 #include "lodge_window.h"
 #include "lodge_hash.h"
@@ -40,19 +41,41 @@ void lodge_argv_new_inplace(struct lodge_argv *dst, int argc, char **argv)
 			}
 		}
 
-		struct lodge_arg *arg = &dst->elements[dst->count++];
+		strview_t key = strview_make(arg_str, arg_str_len);
+		uint32_t key_hash = strview_calc_hash(key);
 
-		arg->type = type;
-		arg->key = strview_make(arg_str, arg_str_len);
-		arg->key_hash = strview_calc_hash(arg->key);
+		switch(type)
+		{
+		case LODGE_ARG_TYPE_FLAG:
+		case LODGE_ARG_TYPE_KEY_VALUE: {
+			struct lodge_arg *arg = &dst->elements[dst->count++];
 
-		if(type == LODGE_ARG_TYPE_KEY_VALUE) {
-			const char *value_str = argv[i+1];
-			const size_t value_str_len = strnlen(value_str, LODGE_ARGV_STR_MAX);
-			ASSERT(value_str_len);
-			arg->value = strview_make(value_str, value_str_len);
+			arg->type = type;
+			arg->key = key;
+			arg->key_hash = key_hash;
 
-			i++;
+			if(type == LODGE_ARG_TYPE_KEY_VALUE) {
+				const char *value_str = argv[i+1];
+				const size_t value_str_len = strnlen(value_str, LODGE_ARGV_STR_MAX);
+				ASSERT(value_str_len);
+				arg->value = strview_make(value_str, value_str_len);
+
+				i++;
+			}
+			break;
+		}
+		case LODGE_ARG_TYPE_POSITIONAL: {
+			membuf_append(
+				membuf_wrap(dst->positionals.elements),
+				&dst->positionals.count,
+				&(struct lodge_argv_positional) {
+					.key = key,
+					.key_hash = key_hash,
+				},
+				sizeof(struct lodge_argv_positional)
+			);
+			break;
+		}
 		}
 	}
 }
@@ -124,4 +147,20 @@ uint64_t lodge_argv_get_u64(const struct lodge_argv *argv, strview_t key, uint64
 		strview_to_u64(arg->value, &default_value);
 	} 
 	return default_value;
+}
+
+strview_t lodge_argv_get_positional(const struct lodge_argv *argv, uint32_t index, strview_t default_value)
+{
+	ASSERT_OR(argv && index < argv->positionals.count) { return default_value; }
+	return argv->positionals.elements[index].key;
+}
+
+const struct lodge_argv_positional* lodge_argv_positional_it_begin(const struct lodge_argv *argv)
+{
+	return argv->positionals.count > 0 ? &argv->positionals.elements[0] : NULL;
+}
+
+const struct lodge_argv_positional* lodge_argv_positional_it_next(const struct lodge_argv *argv, const struct lodge_argv_positional *it)
+{
+	return (it+1) < &argv->positionals.elements[argv->positionals.count] ? (it+1) : NULL;
 }
