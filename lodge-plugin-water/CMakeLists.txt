@@ -4,20 +4,20 @@ add_library(lodge-plugin-water STATIC "")
 
 target_sources(lodge-plugin-water
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/src/lodge_water_component.c"
-		"${CMAKE_CURRENT_LIST_DIR}/src/lodge_water_system.c"
-		"${CMAKE_CURRENT_LIST_DIR}/src/lodge_plugin_water.c"
+		"src/lodge_water_component.c"
+		"src/lodge_water_system.c"
+		"src/lodge_plugin_water.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/include/lodge_plugin_water.h"
-		"${CMAKE_CURRENT_LIST_DIR}/include/lodge_water_component.h"
-		"${CMAKE_CURRENT_LIST_DIR}/include/lodge_water_system.h"
+		"include/lodge_plugin_water.h"
+		"include/lodge_water_component.h"
+		"include/lodge_water_system.h"
 )
 
+lodge_add_module_config(lodge-plugin-water "assets")
+
 target_include_directories(lodge-plugin-water
-	PRIVATE
-		"${CMAKE_CURRENT_SOURCE_DIR}/src"
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}/include"
+		"include/"
 )
 
 target_link_libraries(lodge-plugin-water
