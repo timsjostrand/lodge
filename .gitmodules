@@ -1,8 +1,8 @@
 [submodule "lib/glfw"]
-	path = lib/glfw
+	path = lodge-window/lib/glfw
 	url = https://github.com/glfw/glfw.git
 [submodule "lib/glew"]
-	path = lib/glew
+	path = lodge-gfx/opengl/lib/glew
 	url = https://github.com/Perlmint/glew-cmake.git
 [submodule "lib/stb"]
 	path = lib/stb

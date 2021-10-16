@@ -1,45 +1,58 @@
+# Library: glew.
+if(ENABLE_SHARED)
+    set(GLEW_LIBRARY glew)
+else()
+    set(GLEW_LIBRARY glew_s)
+endif()
+set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
+add_subdirectory(opengl/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
+target_include_directories(${GLEW_LIBRARY}
+    PUBLIC
+        "opengl/lib/glew/include"
+)
+
 # lodge-gfx
 
 add_library(lodge-gfx STATIC "")
 
 target_sources(lodge-gfx
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_opengl.h"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_gfx_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_sampler_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_texture_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_framebuffer_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_shader_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_buffer_object_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_pipeline_opengl.c"
-		"${CMAKE_CURRENT_LIST_DIR}/opengl/lodge_drawable_opengl.c"
+		"opengl/lodge_opengl.h"
+		"opengl/lodge_gfx_opengl.c"
+		"opengl/lodge_sampler_opengl.c"
+		"opengl/lodge_texture_opengl.c"
+		"opengl/lodge_framebuffer_opengl.c"
+		"opengl/lodge_shader_opengl.c"
+		"opengl/lodge_buffer_object_opengl.c"
+		"opengl/lodge_pipeline_opengl.c"
+		"opengl/lodge_drawable_opengl.c"
 
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_debug_draw.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_static_mesh.c"
-		"${CMAKE_CURRENT_LIST_DIR}/drawable.c"
-		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.c"
-		"${CMAKE_CURRENT_LIST_DIR}/vertex.c"
+		"lodge_debug_draw.c"
+		"lodge_static_mesh.c"
+		"drawable.c"
+		"vertex_buffer.c"
+		"vertex.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_gfx.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_sampler.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_texture.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_framebuffer.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_shader.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_buffer_object.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_pipeline.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_drawable.h"
+		"lodge_gfx.h"
+		"lodge_sampler.h"
+		"lodge_texture.h"
+		"lodge_framebuffer.h"
+		"lodge_shader.h"
+		"lodge_buffer_object.h"
+		"lodge_pipeline.h"
+		"lodge_drawable.h"
 		
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_debug_draw.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_static_mesh.h"
-		"${CMAKE_CURRENT_LIST_DIR}/vertex_buffer.h"
-		"${CMAKE_CURRENT_LIST_DIR}/vertex.h" # FIXME(TS): vertex types should be more general than `lodge-gfx` but less general than `lodge-lib`
+		"lodge_debug_draw.h"
+		"lodge_static_mesh.h"
+		"vertex_buffer.h"
+		"vertex.h" # FIXME(TS): vertex types should be more general than `lodge-gfx` but less general than `lodge-lib`
 )
 
 target_include_directories(lodge-gfx
 	PRIVATE
-		"${CMAKE_CURRENT_SOURCE_DIR}/opengl/"
+		"opengl/"
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"./"
 )
 
 target_link_libraries(lodge-gfx

@@ -27,41 +27,6 @@ if(ENABLE_SHARED)
     set(BUILD_SHARED_LIBS On)
 endif()
 
-# Inform all modules that assets files are generated later.
-set(ASSETS_C assets.c)
-set(ASSETS_H assets.h)
-# Mark asset files as "generated" so cmake doesn't complain.
-#set_source_files_properties("${ASSETS_C}" PROPERTIES GENERATED TRUE)
-#set_source_files_properties("${ASSETS_H}" PROPERTIES GENERATED TRUE)
-
-# Library: GLFW.
-set(BUILD_SHARED_LIBS ${ENABLE_SHARED} CACHE BOOL "Build shared libraries" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "Build the GLFW test programs" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation" FORCE)
-set(GLFW_INSTALL OFF CACHE BOOL "Generate installation target" FORCE)
-set(GLFW_USE_RETINA OFF CACHE BOOL "Disable GLFW retina scaling" FORCE)
-add_subdirectory(${ENGINE_PATH}/lib/glfw ${CMAKE_BINARY_DIR}/lib/glfw)
-
-# Library: glew.
-if(ENABLE_SHARED)
-    set(GLEW_LIBRARY glew)
-else()
-    set(GLEW_LIBRARY glew_s)
-endif()
-set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
-add_subdirectory(${ENGINE_PATH}/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
-target_include_directories(${GLEW_LIBRARY}
-    PUBLIC
-        "${ENGINE_PATH}/lib/glew/include"
-)
-
-# Library: cJSON.
-set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
-add_subdirectory(${ENGINE_PATH}/lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
-set(CJSON_LIBRARY cjson)
-target_include_directories(${CJSON_LIBRARY} PUBLIC "${ENGINE_PATH}/lib")
-
 # Library: zlib.
 set(SKIP_INSTALL_ALL ON)
 set(ZLIB_INCLUDE_DIR "${ENGINE_PATH}/lib/zlib" "${CMAKE_BINARY_DIR}/lib/zlib")
