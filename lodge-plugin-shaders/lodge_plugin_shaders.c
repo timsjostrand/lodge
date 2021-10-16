@@ -86,11 +86,8 @@ static void lodge_shader_asset_free_inplace(struct lodge_assets2 *shaders, strvi
 	struct lodge_assets2 *shader_sources = lodge_assets2_get_userdata(shaders, USERDATA_SHADER_SOURCES);
 	ASSERT(shader_sources);
 
-	strbuf_t namebuf;
-	{
-		char tmp[SHADER_FILENAME_MAX];
-		namebuf = strbuf_wrap(tmp);
-	}
+	char tmp[SHADER_FILENAME_MAX];
+	strbuf_t namebuf = strbuf_wrap(tmp);
 
 	{
 		strbuf_setf(namebuf, STRVIEW_PRINTF_FMT ".vert", STRVIEW_PRINTF_ARG(name));

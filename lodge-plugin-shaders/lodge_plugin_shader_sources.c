@@ -220,7 +220,7 @@ static void lodge_shader_source_free_inplace(struct lodge_assets2 *sources, strv
 	txt_free(source->resolved);
 }
 
-static bool filte_filter_shader_sources(strview_t filename)
+static bool filter_filter_shader_sources(strview_t filename)
 {
 	return strview_ends_with(filename, strview(".fxh"))
 		|| strview_ends_with(filename, strview(".frag"))
@@ -248,7 +248,7 @@ static struct lodge_ret lodge_shader_sources_new_inplace(struct lodge_assets2 *s
 	//
 	// FIXME(TS): need to discover assets from VFS/Files asset manager...
 	//
-	lodge_plugin_files_add_file_discovery(files, sources, filte_filter_shader_sources);
+	lodge_plugin_files_add_file_discovery(files, sources, filter_filter_shader_sources);
 
 	return lodge_success();
 }
