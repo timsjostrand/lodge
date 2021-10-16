@@ -23,6 +23,7 @@ struct lodge_shader_stage
 	char								name[SHADER_FILENAME_MAX];
 	GLuint								shader;
 	strview_t							source;
+	char								*compile_info;
 };
 
 struct lodge_shader
@@ -33,83 +34,52 @@ struct lodge_shader
 	struct lodge_shader_stage			vertex_stage;
 	struct lodge_shader_stage			fragment_stage;
 	struct lodge_shader_stage			compute_stage;
+
+	char								*link_info;
 };
 
-static bool lodge_shader_program_log(GLuint program, const char* name)
+static bool lodge_shader_check_link_status(struct lodge_shader *shader)
 {
-	shader_debug("=== %s: program ===\n", name);
+	GLint shader_link_status = 0;
+	glGetProgramiv(shader->program, GL_LINK_STATUS, &shader_link_status);
 
-	GLint status = 0;
-	glGetProgramiv(program, GL_LINK_STATUS, &status);
-
-	if(status == GL_FALSE) {
-		shader_error("Link failed\n");
-	}
+	//
+	// NOTE(TS): get early notification that compilation failed.
+	//
+	ASSERT(shader_link_status != GL_FALSE);
 
 	GLint len = 0;
-	glGetProgramiv(program, GL_INFO_LOG_LENGTH, &len);
-
+	glGetProgramiv(shader->program, GL_INFO_LOG_LENGTH, &len);
 	if(len > 0) {
-		GLchar *msg = (GLchar *) malloc(len);
-		glGetProgramInfoLog(program, len, &len, msg);
-		/* TODO: readline() and output for each line */
-		if(status == GL_FALSE) {
-			shader_error("%s", msg);
-		} else {
-			shader_debug("%s", msg);
-		}
-		free(msg);
+		shader->link_info = malloc(len);
+		glGetProgramInfoLog(shader->program, len, &len, shader->link_info);
 	}
 
-	GLint uniforms = 0;
-	glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &uniforms);
-	shader_debug("%d active uniforms\n", uniforms);
+	return shader_link_status != GL_FALSE;
+}
 
-	if(status == GL_FALSE) {
+static bool lodge_shader_stage_check_compile_status(struct lodge_shader_stage *shader_stage)
+{
+	GLint shader_compile_status = 0;
+	glGetShaderiv(shader_stage->shader, GL_COMPILE_STATUS, &shader_compile_status);
+	
+	//
+	// NOTE(TS): get early notification that compilation failed.
+	//
+	ASSERT(shader_compile_status != GL_FALSE);
+
+	GLint len = 0;
+	glGetShaderiv(shader_stage->shader, GL_INFO_LOG_LENGTH, &len);
+	if(len > 0) {
+		shader_stage->compile_info = malloc(len);
+		glGetShaderInfoLog(shader_stage->shader, len, &len, shader_stage->compile_info);
+	}
+
+	if(shader_compile_status == GL_FALSE) {
+		glDeleteShader(shader_stage->shader);
 		return false;
 	}
 
-	return true;
-}
-
-static bool lodge_shader_log(GLuint shader, const char *name, const char* label)
-{
-	shader_debug("=== %s: %s ===\n", name, label);
-
-	GLint status = 0;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-
-	if(status == GL_FALSE) {
-		shader_error("Compilation of `%s` failed\n", name);
-	}
-
-	GLint len = 0;
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-
-	if(len > 0) {
-		GLchar *msg = (GLchar *) malloc(len);
-		glGetShaderInfoLog(shader, len, &len, msg);
-		/* TODO: readline() and output for each line */
-		if(status == GL_FALSE) {
-			shader_error("%s", msg);
-		} else {
-			shader_debug("%s", msg);
-		}
-		free(msg);
-	}
-
-	if(status == GL_FALSE) {
-		glDeleteShader(shader);
-		return false;
-	}
-
-	return true;
-}
-
-// FIXME(TS): remove this helper
-static bool lodge_shader_stage_set_source(lodge_shader_t shader, struct lodge_shader_stage *stage, strview_t source)
-{
-	stage->source = source;
 	return true;
 }
 
@@ -122,7 +92,7 @@ static bool lodge_shader_stage_compile(struct lodge_shader_stage *stage, GLenum 
 	const GLint source_length[1] = { stage->source.length }; 
 	glShaderSource(stage->shader, 1, &stage->source.s, source_length);
 	glCompileShader(stage->shader);
-	if(!lodge_shader_log(stage->shader, stage->name, "shader stage compile")) {
+	if(!lodge_shader_stage_check_compile_status(stage)) {
 		return false;
 	}
 
@@ -134,16 +104,20 @@ static void lodge_shader_stage_new_inplace(struct lodge_shader_stage *stage)
 	stage->name[0] = '\0';
 	stage->shader = 0;
 	stage->source = strview_static("");
+	stage->compile_info = NULL;
 }
 
 static void lodge_shader_stage_free_inplace(struct lodge_shader_stage *stage)
 {
+	if(stage->compile_info) {
+		free(stage->compile_info);
+	}
 	if(glIsShader(stage->shader) == GL_TRUE) {
 		glDeleteShader(stage->shader);
 	}
 }
 
-void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name)
+void lodge_shader_new_inplace(struct lodge_shader *shader, strview_t name)
 {
 	memset(shader, 0, sizeof(struct lodge_shader));
 
@@ -152,6 +126,8 @@ void lodge_shader_new_inplace(lodge_shader_t shader, strview_t name)
 	lodge_shader_stage_new_inplace(&shader->vertex_stage);
 	lodge_shader_stage_new_inplace(&shader->fragment_stage);
 	lodge_shader_stage_new_inplace(&shader->compute_stage);
+
+	shader->link_info = NULL;
 }
 
 void lodge_shader_free_inplace(lodge_shader_t shader)
@@ -164,6 +140,10 @@ void lodge_shader_free_inplace(lodge_shader_t shader)
 	lodge_shader_stage_free_inplace(&shader->compute_stage);
 	lodge_shader_stage_free_inplace(&shader->fragment_stage);
 	lodge_shader_stage_free_inplace(&shader->vertex_stage);
+
+	if(shader->link_info) {
+		free(shader->link_info);
+	}
 }
 
 size_t lodge_shader_sizeof()
@@ -174,27 +154,21 @@ size_t lodge_shader_sizeof()
 bool lodge_shader_set_vertex_source(lodge_shader_t shader, strview_t vertex_source)
 {
 	strbuf_setf(strbuf_wrap(shader->vertex_stage.name), "%s.vert", shader->name);
-	if(!lodge_shader_stage_set_source(shader, &shader->vertex_stage, vertex_source)) {
-		return false;
-	}
+	shader->vertex_stage.source = vertex_source;
 	return lodge_shader_stage_compile(&shader->vertex_stage, GL_VERTEX_SHADER);
 }
 
 bool lodge_shader_set_fragment_source(lodge_shader_t shader, strview_t fragment_source)
 {
 	strbuf_setf(strbuf_wrap(shader->fragment_stage.name), "%s.frag", shader->name);
-	if(!lodge_shader_stage_set_source(shader, &shader->fragment_stage, fragment_source)) {
-		return false;
-	}
+	shader->fragment_stage.source = fragment_source;
 	return lodge_shader_stage_compile(&shader->fragment_stage, GL_FRAGMENT_SHADER);
 }
 
 bool lodge_shader_set_compute_source(lodge_shader_t shader, strview_t compute_source)
 {
 	strbuf_setf(strbuf_wrap(shader->compute_stage.name), "%s.compute", shader->name);
-	if(!lodge_shader_stage_set_source(shader, &shader->compute_stage, compute_source)) {
-		return false;
-	}
+	shader->compute_stage.source = compute_source;
 	return lodge_shader_stage_compile(&shader->compute_stage, GL_COMPUTE_SHADER);
 }
 
@@ -211,24 +185,39 @@ bool lodge_shader_link(lodge_shader_t shader)
 		return false;
 	}
 
-	// Link shader program
-	shader->program = glCreateProgram();
+	//
+	// Set up shader stages
+	//
+	{
+		shader->program = glCreateProgram();
 
-	if(has_fragment_shader) {
-		glAttachShader(shader->program, shader->fragment_stage.shader);
-	}
-	if(has_vertex_shader) {
-		glAttachShader(shader->program, shader->vertex_stage.shader);
-	}
-	if(has_compute_shader) {
-		glAttachShader(shader->program, shader->compute_stage.shader);
+		int stages_count = 0;
+		if(has_fragment_shader) {
+			glAttachShader(shader->program, shader->fragment_stage.shader);
+			stages_count++;
+		}
+		if(has_vertex_shader) {
+			glAttachShader(shader->program, shader->vertex_stage.shader);
+			stages_count++;
+		}
+		if(has_compute_shader) {
+			glAttachShader(shader->program, shader->compute_stage.shader);
+			stages_count++;
+		}
+		ASSERT_OR(stages_count > 0) {
+			return false;
+		}
 	}
 
-	glLinkProgram(shader->program);
-	const bool link_ret = lodge_shader_program_log(shader->program, shader->name);
-	ASSERT(link_ret);
+	//
+	// Link the shader stages into a program
+	//
+	{
+		glLinkProgram(shader->program);
+	}
 
-	if(!link_ret) {
+	const bool link_ret = lodge_shader_check_link_status(shader);
+	ASSERT_OR(link_ret) {
 		return false;
 	}
 

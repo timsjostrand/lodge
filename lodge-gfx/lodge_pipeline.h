@@ -85,8 +85,6 @@ struct lodge_blend_state
 
 	enum lodge_blend_op					blend_op_rgb;
 	enum lodge_blend_op					blend_op_alpha;
-
-
 };
 
 enum lodge_rasterizer_cull_mode
