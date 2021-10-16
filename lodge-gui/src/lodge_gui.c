@@ -236,8 +236,12 @@ void lodge_gui_render(lodge_gui_t gui, lodge_shader_t shader)
 				nk_buffer_init_fixed(&ebuf, dev->elem_buffer, (size_t)dev->max_element_buffer);
 				nk_convert(&gui->ctx, &dev->cmds, &vbuf, &ebuf, &config);
 
-				lodge_buffer_object_set(dev->vertex_buffer, 0, dev->vert_buffer, vbuf.allocated);
-				lodge_buffer_object_set(dev->index_buffer, 0, dev->elem_buffer, ebuf.allocated);
+				if(vbuf.allocated > 0) {
+					lodge_buffer_object_set(dev->vertex_buffer, 0, dev->vert_buffer, vbuf.allocated);
+				}
+				if(ebuf.allocated > 0) {
+					lodge_buffer_object_set(dev->index_buffer, 0, dev->elem_buffer, ebuf.allocated);
+				}
 			}
 		}
 
