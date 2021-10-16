@@ -58,14 +58,15 @@ static bool make_property_widget_u32(struct nk_context *ctx, struct lodge_proper
 
 		if(property->hints.enable) {
 			min = property->hints.u32.min;
-			max = property->hints.u32.max;
+			max = min(INT32_MAX, property->hints.u32.max); // FIXME(TS): nk doesn't support UINT32_MAX
 			step = property->hints.u32.step;
 		}
 
 		int new_value = *value;
 		nk_property_int(ctx, "#u32", min, &new_value, max, step, step);
-		if(new_value != *value) {
-			lodge_property_set(property, object, &new_value);
+
+		if((uint32_t)new_value != *value) {
+			lodge_property_set(property, object, &(uint32_t){ new_value });
 			return true;
 		}
 	}
