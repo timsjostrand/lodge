@@ -412,13 +412,26 @@ struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 		cur += plugin->size;
 	}
 
-	struct lodge_plugin_find_ret find_default_ret = lodge_plugins_find_by_name(plugins, lodge_argv_get_str(plugins->args, strview("plugin"), strview("editor")));
-	if(!find_default_ret.success) {
-		return lodge_error("Failed to find default plugin");
-	}
-	struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, find_default_ret.index);
-	if(!init_default_ret.success) {
-		return init_default_ret;
+	if(plugins->args->positionals.count > 0) {
+		for(const struct lodge_argv_positional* it = lodge_argv_positional_it_begin(plugins->args); it; it = lodge_argv_positional_it_next(plugins->args, it)) {
+			struct lodge_plugin_find_ret find_default_ret = lodge_plugins_find_by_name(plugins, it->key);
+			if(!find_default_ret.success) {
+				return lodge_error("Failed to find default plugin");
+			}
+			struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, find_default_ret.index);
+			if(!init_default_ret.success) {
+				return init_default_ret;
+			}
+		}
+	} else {
+		struct lodge_plugin_find_ret find_default_ret = lodge_plugins_find_by_name(plugins, lodge_argv_get_str(plugins->args, strview("plugin"), strview("editor")));
+		if(!find_default_ret.success) {
+			return lodge_error("Failed to find default plugin");
+		}
+		struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, find_default_ret.index);
+		if(!init_default_ret.success) {
+			return init_default_ret;
+		}
 	}
 
 	/* TODO(TS): register reload callbacks (call init and free in correct order) */
