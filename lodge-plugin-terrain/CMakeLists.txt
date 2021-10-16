@@ -27,6 +27,7 @@ target_link_libraries(lodge-plugin-terrain
 		lodge-build-flags
 		lodge-gfx
         lodge-plugin-shaders
+        lodge-plugin-editor
 	PUBLIC
 		lodge-lib
 		lodge-entity

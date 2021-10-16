@@ -22,6 +22,7 @@ struct lodge_ret lodge_plugin_terrain_new_inplace(struct lodge_plugin_terrain *p
 
 	// FIXME(TS): support optional dependencies
 	plugin->plugin_debug_draw = lodge_plugins_depend(plugins, plugin, strview_static("debug_draw"));
+	plugin->plugin_editor = lodge_plugins_depend(plugins, plugin, strview_static("editor"));
 
 	struct texture_types texture_types = lodge_plugin_textures_get_types(plugin->textures);
 

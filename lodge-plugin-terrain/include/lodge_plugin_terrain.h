@@ -27,7 +27,9 @@ struct lodge_plugin_terrain
 	struct lodge_assets2			*shaders;
 	struct lodge_assets2			*textures;
 	void							*plugin_scene_renderer;
+	
 	struct lodge_plugin_debug_draw	*plugin_debug_draw;
+	struct lodge_editor				*plugin_editor;
 
 	struct lodge_terrain_types		types;
 };
