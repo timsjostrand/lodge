@@ -48,6 +48,6 @@ void					lodge_framebuffer_set_depth_layer(lodge_framebuffer_t framebuffer, lodg
 
 void					lodge_framebuffer_copy(lodge_framebuffer_t dst, lodge_framebuffer_t src, struct lodge_recti dst_rect, struct lodge_recti src_rect);
 
-vec4					lodge_framebuffer_read_pixel_rgba(uint32_t x, uint32_t y);
+vec4					lodge_framebuffer_read_pixel_rgba(uint32_t color_index, uint32_t x, uint32_t y);
 
 #endif // _FRAMEBUFFER_H
