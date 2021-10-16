@@ -17,6 +17,14 @@ struct lodge_image
 {
 	struct lodge_image_desc		desc;
 	uint8_t						*pixel_data;
+
+	//
+	// HACK(TS): the lodge_image API should be fixed. lodge_image
+	// should never own the `pixel_data` memory, but the API
+	// implies it (_new(), _free()), which has led to some confusion
+	// in the code.
+	//
+	bool						shared_pixel_data;
 };
 
 struct blob;

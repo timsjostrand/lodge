@@ -14,6 +14,7 @@ bool lodge_image_raw_new(struct lodge_image *image, const struct lodge_image_des
 
 	// FIXME(TS): constness and memory ownership, allocated vs inplace
 	image->pixel_data = (uint8_t*)data;
+	image->shared_pixel_data = true;
 
 	return true;
 }

@@ -79,6 +79,7 @@ struct lodge_ret lodge_image_new(struct lodge_image *image_out, const uint8_t *d
 	}
 
 	image_out->pixel_data = tmp;
+	image_out->shared_pixel_data = false;
 	
 	return lodge_success();
 }
@@ -91,7 +92,9 @@ struct lodge_ret lodge_image_new_from_blob(struct lodge_image *image_out, struct
 void lodge_image_free(struct lodge_image *image)
 {
 	// NOTE(TS): may need to keep track of allocator since `lodge_image_new_solid_color` uses malloc()
-	stbi_image_free(image->pixel_data);
+	if(!image->shared_pixel_data) {
+		stbi_image_free(image->pixel_data);
+	}
 	image->pixel_data = NULL;
 	image->desc.width = 0;
 	image->desc.height = 0;
