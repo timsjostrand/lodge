@@ -20,8 +20,8 @@ if(NOT APPLE)
     set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries" FORCE)
     # .lib-generation requires GNU 'sed' but MinGW usually ships with old version.
     set(ALSOFT_BUILD_IMPORT_LIB OFF CACHE BOOL "Build an import .lib using dlltool (requires sed)" FORCE)
-    add_subdirectory(${ENGINE_PATH}/lib/openal ${CMAKE_BINARY_DIR}/lib/openal)
-    set(OPENAL_INCLUDE_DIR ${ENGINE_PATH}/lib/openal/include/AL)
+    add_subdirectory(lib/openal ${CMAKE_BINARY_DIR}/lib/openal)
+    set(OPENAL_INCLUDE_DIR lib/openal/include/AL)
 
     # OpenAL has different names on different platforms.
     if(WIN32)
@@ -47,7 +47,7 @@ target_sources(lodge-sound
 
 target_include_directories(lodge-sound
     PRIVATE
-        "${ENGINE_PATH}/lib/"
+        "lib/"
         "${OPENAL_INCLUDE_DIR}"
     PUBLIC
         "${CMAKE_CURRENT_LIST_DIR}"

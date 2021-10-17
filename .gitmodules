@@ -8,7 +8,7 @@
 	path = lib/stb
 	url = https://github.com/timsjostrand/stb.git
 [submodule "lib/openal"]
-	path = lib/openal
+	path = lodge-sound/lib/openal
 	url = git://repo.or.cz/openal-soft.git
 [submodule "lib/cjson"]
 	path = lib/cjson
