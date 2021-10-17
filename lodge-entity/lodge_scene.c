@@ -25,6 +25,8 @@ struct lodge_component_set
 
 struct lodge_scene
 {
+	float							time;
+
 	sparse_set_t					entities;
 	size_t							entities_last_id;
 
@@ -101,6 +103,7 @@ static lodge_entity_t lodge_entity_desc_to_entity(struct lodge_entity_desc *enti
 
 void lodge_scene_new_inplace(lodge_scene_t scene)
 {
+	scene->time = 0.0f;
 	//scene->entities_count = 0;
 	scene->entities_last_id = 0;
 	scene->systems_count = 0;
@@ -142,6 +145,7 @@ size_t lodge_scene_sizeof()
 
 void lodge_scene_update(lodge_scene_t scene, float dt)
 {
+	scene->time += dt;
 	for(size_t i = 0, count = scene->systems_count; i < count; i++) {
 		struct lodge_system *system = &scene->systems[i];
 		lodge_system_type_update(system->type, system->data, scene, dt);
@@ -415,4 +419,9 @@ void lodge_scene_render(lodge_scene_t scene, struct lodge_system_render_params *
 void* lodge_system_get_plugin(lodge_system_t system)
 {
 	return system ? lodge_system_type_get_plugin(system->type) : NULL;
+}
+
+float lodge_scene_get_time(lodge_scene_t scene)
+{
+	return scene->time;
 }

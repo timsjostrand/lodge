@@ -33,6 +33,7 @@ target_include_directories(lodge-entity
 target_link_libraries(lodge-entity
 	PRIVATE
 		lodge-build-flags
+		lodge-assets # FIXME(TS): to provide editor widget for lodge_asset_t -- this should probably live in editor plugin
 	PUBLIC
 		lodge-lib
 		lodge-collections

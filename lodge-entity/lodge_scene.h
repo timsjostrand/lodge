@@ -80,6 +80,7 @@ struct lodge_system_it		lodge_scene_systems_begin(lodge_scene_t scene);
 struct lodge_system_it		lodge_scene_systems_next(lodge_scene_t scene, struct lodge_system_it current_system);
 
 void						lodge_scene_update(lodge_scene_t scene, float dt);
+float						lodge_scene_get_time(lodge_scene_t scene);
 
 void*						lodge_system_get_plugin(lodge_system_t system);
 

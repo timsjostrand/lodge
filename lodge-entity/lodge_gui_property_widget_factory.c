@@ -1,11 +1,14 @@
 #include "lodge_gui_property_widget_factory.h"
 
+#include "str.h"
 #include "math4.h"
 #include "color.h"
 #include "lodge_gui.h"
 #include "lodge_platform.h"
 #include "lodge_type.h"
 #include "lodge_properties.h"
+#include "lodge_assets2.h"
+#include "lodge_type_asset.h"
 
 #include "gruvbox.h"
 
@@ -320,6 +323,41 @@ static bool make_property_widget_properties(struct nk_context *ctx, struct lodge
 	return false;
 }
 
+static bool make_property_widget_asset_ref(struct nk_context *ctx, struct lodge_property *property, void *object)
+{
+	lodge_asset_t *value = (lodge_asset_t *)lodge_property_get(property, object);
+	ASSERT(value);
+
+	struct lodge_assets2 *assets = lodge_type_get_assets(property->type);
+	ASSERT(assets);
+
+	strview_t name = strview("(None)");
+	if(*value) {
+		name = lodge_assets2_get_name(assets, *value);
+	}
+
+	if(nk_combo_begin_text(ctx, name.s, name.length, nk_vec2(nk_widget_width(ctx), 200))) {
+		nk_layout_row_dynamic(ctx, 25, 1);
+
+		for(lodge_asset_t it = lodge_assets2_it_begin(assets); it; it = lodge_assets2_it_next(assets, it)) {
+			strview_t name = lodge_assets2_get_name(assets, it);
+			if(nk_combo_item_text(ctx, name.s, name.length, NK_TEXT_LEFT)) {
+				lodge_property_set(property, object, &it);
+			}
+		}
+
+		if(nk_combo_item_label(ctx, "New...", NK_TEXT_LEFT)) {
+			lodge_asset_t asset = lodge_assets2_make_default(assets);
+			ASSERT(asset);
+			lodge_property_set(property, object, &asset);
+		}
+
+		nk_combo_end(ctx);
+	}
+
+	return false;
+}
+
 lodge_make_property_widget_func_t lodge_type_get_make_property_widget_func(lodge_type_t type)
 {
 	ASSERT(LODGE_TYPE_FUNC_INDEX_MAKE_PROPERTY_WIDGET);
@@ -334,6 +372,10 @@ lodge_make_property_widget_func_t lodge_type_get_make_property_widget_func(lodge
 
 	if(lodge_type_get_properties(type)) {
 		return &make_property_widget_properties;
+	}
+
+	if(lodge_type_get_userdata(type, LODGE_TYPE_ASSET_DESC)) {
+		return &make_property_widget_asset_ref;
 	}
 
 	return lodge_type_get_func(type, LODGE_TYPE_FUNC_INDEX_MAKE_PROPERTY_WIDGET);
