@@ -1,5 +1,0 @@
-main
-build/**/
-*.swp
-*.exe
-cmake_user.txt
