@@ -6,6 +6,8 @@
 #include "lodge_properties.h"
 #include "lodge_json.h"
 #include "lodge_assert.h"
+#include "lodge_assets2.h"
+#include "lodge_type_asset.h"
 
 static bool lodge_json_read_type_func_f32(const lodge_json_t node, float *dst)
 {
@@ -271,6 +273,26 @@ static bool lodge_enum_from_json(lodge_json_t node, const struct lodge_enum_desc
 	return true;
 }
 
+static bool lodge_asset_type_from_json(const lodge_json_t node, struct lodge_assets2 *assets, lodge_asset_t *dst)
+{
+	strview_t tmp;
+	if(lodge_json_get_string(node, &tmp)) {
+		lodge_asset_t asset = lodge_assets2_find_by_name(assets, tmp);
+		if(!asset) {
+			asset = lodge_assets2_register(assets, tmp);
+		}
+		*dst = asset;
+		return true;
+	}
+	return false;
+}
+
+static lodge_json_t lodge_asset_type_to_json(struct lodge_assets2 *assets, lodge_asset_t src)
+{
+	strview_t name = lodge_assets2_get_name(assets, src);
+	return lodge_json_new_string(name);
+}
+
 lodge_json_t lodge_property_to_json(const struct lodge_property *property, const void *object)
 {
 	ASSERT_OR(property && object) {
@@ -296,6 +318,14 @@ lodge_json_t lodge_property_to_json(const struct lodge_property *property, const
 	struct lodge_properties *properties = lodge_type_get_properties(property->type);
 	if(properties) {
 		return lodge_properties_to_json(properties, property_data);
+	}
+
+	//
+	// Asset ref?
+	//
+	struct lodge_type_asset_desc *asset_type_desc = lodge_type_get_userdata(property->type, LODGE_TYPE_ASSET_DESC);
+	if(asset_type_desc) {
+		return lodge_asset_type_to_json(lodge_type_asset_desc_get_assets(asset_type_desc), *((lodge_asset_t*)property_data));
 	}
 
 	lodge_type_to_json_func_t to_json_func = lodge_type_get_to_json_func(property->type);
@@ -358,6 +388,14 @@ bool lodge_property_from_json(const lodge_json_t node, struct lodge_property *pr
 	struct lodge_properties *properties = lodge_type_get_properties(property->type);
 	if(properties) {
 		return lodge_properties_from_json(node, properties, property_data);
+	}
+
+	//
+	// Asset ref?
+	//
+	struct lodge_type_asset_desc *asset_type_desc = lodge_type_get_userdata(property->type, LODGE_TYPE_ASSET_DESC);
+	if(asset_type_desc) {
+		return lodge_asset_type_from_json(node, lodge_type_asset_desc_get_assets(asset_type_desc), property_data);
 	}
 
 	lodge_type_from_json_func_t from_json_func = lodge_type_get_from_json_func(property->type);

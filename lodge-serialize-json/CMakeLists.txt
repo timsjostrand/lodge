@@ -20,6 +20,7 @@ target_link_libraries(lodge-serialize-json
 	PRIVATE
 		lodge-build-flags
 		cjson
+		lodge-assets
 	PUBLIC
 		lodge-lib
 )
