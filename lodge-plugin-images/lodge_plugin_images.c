@@ -2,7 +2,7 @@
 
 #include "lodge_plugins.h"
 #include "lodge_plugin_files.h"
-#include "lodge_assets.h"
+#include "lodge_assets2.h"
 #include "lodge_image.h"
 #include "lodge_json.h"
 
@@ -10,25 +10,28 @@
 
 #define USERDATA_FILES 0
 
+//
+// TODO(TS): use property object api instead
+//
 static bool lodge_image_desc_from_json(lodge_json_t object, struct lodge_image_desc *desc_out)
 {
 	double tmp;
-	if(lodge_json_object_get_number(object, strview_static("width"), &tmp)) {
+	if(lodge_json_object_get_number(object, strview("width"), &tmp)) {
 		desc_out->width = (uint32_t)tmp;
 	} else {
 		return false;
 	}
-	if(lodge_json_object_get_number(object, strview_static("height"), &tmp)) {
+	if(lodge_json_object_get_number(object, strview("height"), &tmp)) {
 		desc_out->height = (uint32_t)tmp;
 	} else {
 		return false;
 	}
-	if(lodge_json_object_get_number(object, strview_static("channels"), &tmp)) {
+	if(lodge_json_object_get_number(object, strview("channels"), &tmp)) {
 		desc_out->channels = (uint8_t)tmp;
 	} else {
 		return false;
 	}
-	if(lodge_json_object_get_number(object, strview_static("bytes_per_channel"), &tmp)) {
+	if(lodge_json_object_get_number(object, strview("bytes_per_channel"), &tmp)) {
 		desc_out->bytes_per_channel = (uint8_t)tmp;
 	} else {
 		return false;
@@ -36,17 +39,20 @@ static bool lodge_image_desc_from_json(lodge_json_t object, struct lodge_image_d
 	return true;
 }
 
-static bool lodge_assets_image_new_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, void *lodge_image_ptr, size_t size)
+static bool lodge_image_asset_new_inplace(struct lodge_assets2 *images, strview_t name, lodge_asset_t image_asset, void *lodge_image_ptr)
 {
 	struct lodge_image *image = (struct lodge_image *)lodge_image_ptr;
 
-	struct lodge_assets *files = lodge_assets_get_userdata(assets, USERDATA_FILES);
+	struct lodge_assets2 *files = lodge_assets2_get_userdata(images, USERDATA_FILES);
 	ASSERT(files);
 
-	const struct lodge_asset_file *file = lodge_assets_get_depend(files, name, (struct lodge_asset_handle) {
-		.assets = assets,
-		.id = id,
-	});
+	lodge_asset_t file_asset = lodge_assets2_register(files, name);
+	if(!file_asset) {
+		return false;
+	}
+
+	lodge_assets2_add_listener(files, file_asset, images, image_asset);
+	const struct lodge_asset_file *file = lodge_assets2_get(files, file_asset);
 	if(!file) {
 		return false;
 	}
@@ -56,14 +62,17 @@ static bool lodge_assets_image_new_inplace(struct lodge_assets *assets, strview_
 	//
 	// FIXME(TS): Clean this code up
 	//
-	if(strview_equals(strview_substring_from_end(name, 4), strview_static(".raw"))) {
+	if(strview_ends_with(name, strview(".raw"))) {
 		char header_file_name[512];
 		strbuf_setf(strbuf_wrap(header_file_name), STRVIEW_PRINTF_FMT ".json", STRVIEW_PRINTF_ARG(name));
 
-		const struct lodge_asset_file *header_file = lodge_assets_get_depend(files, strview_wrap(header_file_name), (struct lodge_asset_handle) {
-			.assets = assets,
-			.id = id,
-		});
+		lodge_asset_t header_file_asset = lodge_assets2_register(files, strview_wrap(header_file_name));
+		if(!header_file_asset) {
+			return false;
+		}
+
+		lodge_assets2_add_listener(files, header_file_asset, images, image_asset);
+		const struct lodge_asset_file *header_file = lodge_assets2_get(files, header_file_asset);
 		if(!header_file) {
 			return false;
 		}
@@ -104,51 +113,51 @@ static bool lodge_assets_image_new_inplace(struct lodge_assets *assets, strview_
 	return false;
 }
 
-static void lodge_assets_image_free_inplace(struct lodge_assets *assets, strview_t name, lodge_asset_id_t id, struct lodge_image *image)
+static void lodge_image_asset_free_inplace(struct lodge_assets2 *images, strview_t name, lodge_asset_t image_asset, struct lodge_image *image)
 {
-	struct lodge_assets *files = lodge_assets_get_userdata(assets, USERDATA_FILES);
+	struct lodge_assets2 *files = lodge_assets2_get_userdata(images, USERDATA_FILES);
 	ASSERT(files);
 
-	lodge_assets_release_depend(files, name, (struct lodge_asset_handle) {
-		.assets = assets,
-		.id = id,
-	});
+	lodge_assets2_remove_listener_by_name(files, name, images, image_asset);
+	
+	//lodge_assets2_remove_listener_by_name(files, header_file_name);
+
 	lodge_image_free(image);
 }
 
-static struct lodge_ret lodge_plugin_image_new_inplace(struct lodge_assets *images, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_images_new_inplace(struct lodge_assets2 *images, struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	struct lodge_assets *files = lodge_plugins_depend(plugins, images, strview_static("files"));
+	struct lodge_assets *files = lodge_plugins_depend(plugins, images, strview("files"));
 	if(!files) {
 		return lodge_error("Failed to find plugin `files`");
 	}
 
-	lodge_assets_new_inplace(images, (struct lodge_assets_desc) {
-		.name = strview_static("images"),
+	lodge_assets2_new_inplace(images, &(struct lodge_assets2_desc) {
+		.name = strview("images"),
 		.size = sizeof(struct lodge_image),
-		.new_inplace = &lodge_assets_image_new_inplace,
+		.new_inplace = &lodge_image_asset_new_inplace,
 		.reload_inplace = NULL,
-		.free_inplace = &lodge_assets_image_free_inplace
+		.free_inplace = &lodge_image_asset_free_inplace
 	} );
 
-	lodge_assets_set_userdata(images, USERDATA_FILES, files);
+	lodge_assets2_set_userdata(images, USERDATA_FILES, files);
 
 	return lodge_success();
 }
 
-static void lodge_plugin_image_free_inplace(struct lodge_assets *images)
+static void lodge_images_free_inplace(struct lodge_assets2 *images)
 {
-	lodge_assets_free_inplace(images);
+	lodge_assets2_free_inplace(images);
 }
 
 struct lodge_plugin_desc lodge_plugin_images()
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_assets_sizeof(),
-		.name = strview_static("images"),
-		.new_inplace = &lodge_plugin_image_new_inplace,
-		.free_inplace = &lodge_plugin_image_free_inplace,
+		.size = lodge_assets2_sizeof(),
+		.name = strview("images"),
+		.new_inplace = &lodge_images_new_inplace,
+		.free_inplace = &lodge_images_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};
