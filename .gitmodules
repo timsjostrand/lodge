@@ -5,7 +5,7 @@
 	path = lodge-gfx/opengl/lib/glew
 	url = https://github.com/Perlmint/glew-cmake.git
 [submodule "lib/stb"]
-	path = lib/stb
+	path = lodge-stb/lib/stb
 	url = https://github.com/timsjostrand/stb.git
 [submodule "lib/openal"]
 	path = lodge-sound/lib/openal
