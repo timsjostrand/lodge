@@ -107,10 +107,12 @@ size_t lodge_assets_sizeof()
 
 static const void* lodge_assets_get_or_load_index(struct lodge_assets *assets, strview_t name, int64_t index)
 {
+#if 0
 	debugf("Assets", "Get: `" STRVIEW_PRINTF_FMT "`:`" STRVIEW_PRINTF_FMT "`\n",
 		STRVIEW_PRINTF_ARG(assets->desc.name),
 		STRVIEW_PRINTF_ARG(name)
 	);
+#endif
 
 	//
 	// TODO(TS): should use `data_index` to indicate whether data has been unloaded or not.
@@ -164,6 +166,12 @@ const void* lodge_assets_get(struct lodge_assets *assets, strview_t name)
 {
 	const int64_t index = lodge_assets_find_by_name(assets, name);
 	return lodge_assets_get_or_load_index(assets, name, index);
+}
+
+const void* lodge_assets_get_by_id(struct lodge_assets *assets, lodge_asset_id_t id)
+{
+	const int64_t index = lodge_assets_find_by_id(assets, id);
+	return lodge_assets_get_or_load_index(assets, strview_wrap(assets->names[index]), index);
 }
 
 static void lodge_assets_release_index(struct lodge_assets *assets, size_t index)
@@ -419,6 +427,16 @@ strview_t lodge_assets_id_to_name(struct lodge_assets *assets, lodge_asset_id_t 
 	return strview_static("n/a");
 }
 
+uint32_t lodge_assets_get_count(struct lodge_assets *assets)
+{
+	return assets->count;
+}
+
+strview_t lodge_assets_index_to_name(struct lodge_assets *assets, uint32_t index)
+{
+	return strview_wrap(assets->names[index]);
+}
+
 lodge_asset_id_t lodge_assets_name_to_id(struct lodge_assets *assets, strview_t name)
 {
 	for(size_t i = 0, count = assets->count; i < count; i++) {
@@ -434,32 +452,4 @@ lodge_asset_id_t lodge_assets_name_to_id(struct lodge_assets *assets, strview_t 
 strview_t lodge_asset_handle_find_name(struct lodge_asset_handle *handle)
 {
 	return lodge_assets_id_to_name(handle->assets, handle->id);
-}
-
-lodge_asset_id_t lodge_asset_id_make_invalid()
-{
-	return 0;
-}
-
-lodge_asset_id_t lodge_asset_id_make(uint32_t hash)
-{
-	return (uint64_t)LODGE_BIT(64) | (uint64_t)hash;
-}
-
-bool lodge_asset_id_is_valid(lodge_asset_id_t id)
-{
-	// Get 1st bit
-	return id >> 63;
-}
-
-uint32_t lodge_asset_id_get_hash(lodge_asset_id_t id)
-{
-	// Get lower 32 bits
-	return (uint32_t)id;
-}
-
-uint32_t lodge_asset_id_get_reserved_uint31(lodge_asset_id_t id)
-{
-	// Remove hash + valid bit
-	return (id >> 32) & 0x7FFFFFFF;
 }
