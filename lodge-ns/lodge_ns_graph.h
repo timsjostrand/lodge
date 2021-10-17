@@ -47,6 +47,7 @@ lodge_node_t	lodge_graph_add_node(lodge_graph_t graph, lodge_node_type_t type);
 bool			lodge_graph_remove_node(lodge_graph_t graph, lodge_node_id_t node_id);
 
 void*			lodge_graph_get_context(lodge_graph_t graph);
+void			lodge_graph_set_context(lodge_graph_t graph, void *context);
 bool			lodge_graph_is_configured(lodge_graph_t graph);
 
 size_t			lodge_graph_get_node_count(lodge_graph_t graph);

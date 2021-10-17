@@ -220,6 +220,11 @@ void* lodge_graph_get_context(lodge_graph_t graph)
 	return graph->context;
 }
 
+void lodge_graph_set_context(lodge_graph_t graph, void *context)
+{
+	graph->context = context;
+}
+
 bool lodge_graph_is_configured(lodge_graph_t graph)
 {
 	return graph->configured;
