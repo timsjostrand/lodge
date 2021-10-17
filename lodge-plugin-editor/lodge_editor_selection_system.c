@@ -34,7 +34,7 @@ static size_t lodge_entity_to_sparse_index(lodge_entity_t entity)
 	return (size_t)((uintptr_t)entity - 1);
 }
 
-lodge_system_type_t lodge_editor_selection_system_type_register(struct lodge_plugin_editor *plugin)
+lodge_system_type_t lodge_editor_selection_system_type_register(struct lodge_editor *plugin)
 {
 	if(!LODGE_SYSTEM_TYPE_EDITOR_SELECTION) {
 		LODGE_SYSTEM_TYPE_EDITOR_SELECTION = lodge_system_type_register((struct lodge_system_type_desc) {

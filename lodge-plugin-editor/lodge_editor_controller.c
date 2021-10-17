@@ -106,13 +106,13 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 
 		if(input) {
 			// Look
+			const vec2 mouse_pos = lodge_input_get_mouse_position(input);
 			if(lodge_input_is_mouse_button_position_valid(input)) {
-				const vec2 mouse_pos = lodge_input_get_mouse_position(input);
-
 				if(component->last_mouse_pos.x != -FLT_MAX)
 				{
 					const vec3 owner_rot = lodge_get_rotation(scene, owner);
-					const vec2 delta = vec2_sub(component->last_mouse_pos, mouse_pos);
+					//const vec2 delta = vec2_sub(component->last_mouse_pos, mouse_pos);
+					const vec2 delta = vec2_sub(mouse_pos, component->last_mouse_pos);
 					const vec3 delta_scaled = {
 						.v = {
 							[LODGE_ROTATION_INDEX_YAW] = 0.0f,
@@ -123,9 +123,8 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 					
 					lodge_set_rotation(scene, owner, vec3_sub(owner_rot, delta_scaled));
 				}
-
-				component->last_mouse_pos = mouse_pos;
 			}
+			component->last_mouse_pos = mouse_pos;
 
 			// Move
 			{
@@ -176,7 +175,7 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 	}
 }
 
-lodge_system_type_t lodge_editor_controller_system_type_register(struct lodge_plugin_editor *plugin)
+lodge_system_type_t lodge_editor_controller_system_type_register(struct lodge_editor *plugin)
 {
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview_static("editor_controller_system"),

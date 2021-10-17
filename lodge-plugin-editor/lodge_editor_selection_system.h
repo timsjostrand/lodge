@@ -8,7 +8,7 @@ typedef struct lodge_system_type* lodge_system_type_t;
 
 struct lodge_editor_selection_system;
 
-lodge_system_type_t	lodge_editor_selection_system_type_register(struct lodge_plugin_editor *plugin);
+lodge_system_type_t	lodge_editor_selection_system_type_register(struct lodge_editor *plugin);
 
 struct lodge_entity;
 typedef struct lodge_entity* lodge_entity_t;
