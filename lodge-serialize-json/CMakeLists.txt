@@ -1,17 +1,26 @@
+#
+# cJSON.
+#
+set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
+add_subdirectory(lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
+#target_include_directories(cjson PUBLIC "lib")
+
 # lodge-serialize-json
 
 add_library(lodge-serialize-json STATIC "")
 
 target_sources(lodge-serialize-json
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_json.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_serialize_json.c"
+		"lodge_json.c"
+		"lodge_serialize_json.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_json.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_serialize_json.h"
+		"lodge_json.h"
+		"lodge_serialize_json.h"
 )
 
 target_include_directories(lodge-serialize-json
+	PRIVATE
+		"lib/"
 	PUBLIC
 		"${CMAKE_CURRENT_SOURCE_DIR}"
 )

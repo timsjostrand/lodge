@@ -11,7 +11,7 @@
 	path = lodge-sound/lib/openal
 	url = git://repo.or.cz/openal-soft.git
 [submodule "lib/cjson"]
-	path = lib/cjson
+	path = lodge-serialize-json/lib/cjson
 	url = https://github.com/DaveGamble/cJSON.git
 [submodule "lib/libarchive"]
 	path = lib/libarchive
