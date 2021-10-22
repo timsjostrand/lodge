@@ -2,6 +2,7 @@
 #define _LODGE_SCENE_H
 
 #include "strview.h"
+#include "math4.h"
 
 #include <stdbool.h>
 
@@ -51,6 +52,27 @@ struct lodge_entity_desc
 	char					name[256];
 };
 
+struct lodge_scene_funcs
+{
+	struct  
+	{
+		bool				(*func)(void *object, lodge_entity_t entity);
+		void				*object;
+	}						is_entity_selected;
+
+	struct
+	{
+		void				(*func)(void *object, lodge_entity_t entity, bool selected);
+		void				*object;
+	}						set_entity_selected;
+
+	struct 
+	{
+		lodge_entity_t		(*func)(void *object, vec2 screen_pos);
+		void				*object;
+	}						get_entity_at_screen_pos;
+};
+
 void						lodge_scene_new_inplace(lodge_scene_t scene);
 void						lodge_scene_free_inplace(lodge_scene_t scene);
 size_t						lodge_scene_sizeof();
@@ -92,6 +114,11 @@ void*						lodge_system_get_plugin(lodge_system_t system);
 struct mvp;
 void						lodge_scene_render(lodge_scene_t scene, struct lodge_system_render_params *render_params);
 #endif
+
+void						lodge_scene_set_entity_selected(lodge_scene_t scene, lodge_entity_t entity, bool selected);
+bool						lodge_scene_is_entity_selected(lodge_scene_t scene, lodge_entity_t entity);
+
+struct lodge_scene_funcs*	lodge_scene_get_funcs(lodge_scene_t scene);
 
 #define						lodge_scene_entities_foreach(SCENE, IT) \
 	for(lodge_entity_t IT = lodge_scene_entities_begin(SCENE); IT; IT = lodge_scene_entities_next(SCENE, IT))

@@ -3,6 +3,7 @@
 #include "lodge_entity_type.h"
 #include "lodge_component_type.h"
 #include "lodge_system_type.h"
+#include "lodge_bound_func.h"
 
 #include "str.h"
 #include "membuf.h"
@@ -35,6 +36,8 @@ struct lodge_scene
 
 	struct lodge_system				systems[32];
 	size_t							systems_count;
+
+	struct lodge_scene_funcs		funcs;
 };
 
 #define COMPONENTS_COUNT_DEFAULT	(256)
@@ -428,4 +431,28 @@ void* lodge_system_get_plugin(lodge_system_t system)
 float lodge_scene_get_time(lodge_scene_t scene)
 {
 	return scene->time;
+}
+
+struct lodge_scene_funcs* lodge_scene_get_funcs(lodge_scene_t scene)
+{
+	return scene ? &scene->funcs : NULL;
+}
+
+void lodge_scene_set_entity_selected(lodge_scene_t scene, lodge_entity_t entity, bool selected)
+{
+	ASSERT_OR(scene && entity) { return; }
+	struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
+	ASSERT_OR(funcs) { return; }
+	if(lodge_bound_func_is_set(funcs->set_entity_selected)) {
+		lodge_bound_func_call(funcs->set_entity_selected, entity, selected);
+	}
+}
+
+bool lodge_scene_is_entity_selected(lodge_scene_t scene, lodge_entity_t entity)
+{
+	ASSERT_OR(scene && entity) { return false; }
+	struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
+	ASSERT_OR(funcs) { return false; }
+	if(!lodge_bound_func_is_set(funcs->set_entity_selected)) { return false; }
+	return lodge_bound_func_call(funcs->is_entity_selected, entity);
 }
