@@ -19,6 +19,8 @@ typedef struct lodge_drawable* lodge_drawable_t;
 struct lodge_buffer_object;
 typedef struct lodge_buffer_object* lodge_buffer_object_t;
 
+struct lodge_static_mesh;
+
 struct lodge_drawable_attrib
 {
 	strview_t						name;

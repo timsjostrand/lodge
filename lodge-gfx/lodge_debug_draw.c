@@ -80,7 +80,7 @@ static size_t lodge_debug_draw_calc_sphere_vertex_count(uint32_t sector_count, u
 //
 // Inspired by http://www.songho.ca/opengl/gl_sphere.html
 //
-static lodge_debug_draw_calc_sphere_vertices(const uint32_t sector_count, const uint32_t stack_count, float radius, membuf_t vertices, membuf_t normals, membuf_t tex_coords)
+static void lodge_debug_draw_calc_sphere_vertices(const uint32_t sector_count, const uint32_t stack_count, float radius, membuf_t vertices, membuf_t normals, membuf_t tex_coords)
 {
 	const float length_inv = 1.0f / radius;
 	const float sector_step = 2 * (float)M_PI / sector_count;
@@ -321,7 +321,7 @@ void lodge_debug_draw_textures_new_inplace(struct lodge_debug_draw_textures *tex
 
 	textures->buffer_object = lodge_buffer_object_make_static(vertex_data, sizeof(vertex_data));
 	textures->sampler = lodge_sampler_make((struct lodge_sampler_desc) {
-		.min_filter = MAG_FILTER_LINEAR,
+		.min_filter = MIN_FILTER_LINEAR,
 		.mag_filter = MAG_FILTER_LINEAR,
 		.wrap_x = WRAP_CLAMP_TO_EDGE,
 		.wrap_y = WRAP_CLAMP_TO_EDGE,
