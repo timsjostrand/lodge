@@ -8,6 +8,7 @@
 #include <stdbool.h>
 
 struct lodge_properties;
+struct nk_context;
 
 extern size_t						LODGE_TYPE_FUNC_INDEX_MAKE_PROPERTY_WIDGET;
 
