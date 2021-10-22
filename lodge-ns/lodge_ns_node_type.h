@@ -4,6 +4,8 @@
 #include "lodge_ns.h"
 #include "strview.h"
 
+struct lodge_variant;
+
 typedef bool		(*lodge_node_type_configure_func_t)(struct lodge_node *node);
 typedef bool		(*lodge_node_type_run_func_t)(struct lodge_node *node);
 

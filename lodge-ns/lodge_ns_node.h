@@ -82,7 +82,7 @@ void*							lodge_node_get_graph_context(lodge_node_t node);
 void							lodge_node_set_value(lodge_node_t node, lodge_pin_idx_t pin_index, const struct lodge_variant *value);
 const struct lodge_variant*		lodge_node_get_value(lodge_node_t node, lodge_pin_idx_t pin_index);
 
-void							lodge_node_set_value_type(lodge_node_t node, lodge_pin_idx_t pin_index, lodge_type_t type, const void *src);
+bool							lodge_node_set_value_type(lodge_node_t node, lodge_pin_idx_t pin_index, lodge_type_t type, const void *src);
 const void*						lodge_node_get_value_type(lodge_node_t node, lodge_pin_idx_t pin_index, lodge_type_t type);
 
 
