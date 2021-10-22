@@ -90,11 +90,8 @@ struct lodge_assets2*				lodge_scene_renderer_plugin_get_textures(struct lodge_s
 void								lodge_scene_add_render_pass_func(lodge_scene_t scene, enum lodge_scene_render_system_pass pass, lodge_scene_render_system_func_t func, void *userdata);
 void								lodge_scene_remove_render_pass_func(lodge_scene_t scene, enum lodge_scene_render_system_pass pass, lodge_scene_render_system_func_t func, void *userdata);
 
-//
-// TODO(TS): should this be passed as argument to _render() instead?
-//
 void								lodge_scene_set_active_camera(lodge_scene_t scene, lodge_entity_t camera_entity);
-lodge_entity_t						lodge_scene_get_entity_at_screen_pos(lodge_scene_t scene, vec2 screen_pos);
+lodge_entity_t						lodge_scene_renderer_get_entity_at_screen_pos(struct lodge_scene_render_system *renderer, vec2 screen_pos);
 
 LODGE_PLUGIN_DECL(lodge_scene_renderer_plugin);
 

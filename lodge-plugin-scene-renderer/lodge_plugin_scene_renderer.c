@@ -11,6 +11,7 @@
 #include "lodge_system_type.h"
 #include "lodge_assets2.h"
 #include "lodge_window.h"
+#include "lodge_bound_func.h"
 
 #include "lodge_static_mesh_component.h"
 #include "lodge_transform_component.h"
@@ -594,6 +595,11 @@ static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_syst
 	}
 
 	lodge_static_meshes_new_inplace(&system->static_meshes, scene, system->shaders, system->textures);
+
+	{
+		struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
+		lodge_bound_func_set(funcs->get_entity_at_screen_pos, system, &lodge_scene_renderer_get_entity_at_screen_pos);
+	}
 }
 
 void lodge_scene_render_system_free_inplace(struct lodge_scene_render_system *system)
@@ -1540,13 +1546,9 @@ void lodge_scene_set_active_camera(lodge_scene_t scene, lodge_entity_t camera_en
 	renderer->active_camera = camera_entity;
 }
 
-lodge_entity_t lodge_scene_get_entity_at_screen_pos(lodge_scene_t scene, vec2 screen_pos)
+lodge_entity_t lodge_scene_renderer_get_entity_at_screen_pos(struct lodge_scene_render_system *renderer, vec2 screen_pos)
 {
-	ASSERT(scene);
-	struct lodge_scene_render_system *renderer = lodge_scene_get_system(scene, LODGE_SYSTEM_TYPE_SCENE_RENDER);
-	if(!renderer) {
-		return NULL;
-	}
+	ASSERT_OR(renderer) { return NULL; }
 
 	//
 	// TODO(TS): use PBO instead
