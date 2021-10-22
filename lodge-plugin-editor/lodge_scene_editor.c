@@ -128,3 +128,38 @@ bool lodge_scene_editor_impostor_pre_modified(struct lodge_property *property, c
 
 	return false;
 }
+
+bool lodge_scene_editor_is_entity_selected(struct lodge_scene_editor *editor, lodge_entity_t entity)
+{
+	return membuf_find(
+		membuf_wrap(editor->selected),
+		editor->selected_count,
+		&entity,
+		sizeof(lodge_entity_t)
+	) >= 0;
+}
+
+void lodge_scene_editor_set_entity_selected(struct lodge_scene_editor *editor, lodge_entity_t entity, bool selected)
+{
+	int64_t index = membuf_find(
+		membuf_wrap(editor->selected),
+		editor->selected_count,
+		&entity,
+		sizeof(lodge_entity_t)
+	);
+
+	if(selected) {
+		if(index < 0) {
+			membuf_append(
+				membuf_wrap(editor->selected),
+				&editor->selected_count,
+				&entity,
+				sizeof(lodge_entity_t)
+			);
+		}
+	} else {
+		if(index >= 0) {
+			membuf_delete(membuf_wrap(editor->selected), &editor->selected_count, index, 1);
+		}
+	}
+}

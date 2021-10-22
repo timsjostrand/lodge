@@ -29,8 +29,6 @@ typedef void					(*lodge_editor_panel_func_t)(void *userdata, lodge_gui_t gui, s
 
 struct lodge_editor_types
 {
-	lodge_system_type_t			selection_system_type;
-
 	lodge_system_type_t			controller_system_type;
 	lodge_component_type_t		controller_component_type;
 };

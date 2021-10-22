@@ -1,5 +1,7 @@
 #include "lodge_editor_selection_system.h"
 
+#if 0
+
 #include "lodge_properties.h"
 #include "lodge_system_type.h"
 #include "lodge_scene.h"
@@ -63,6 +65,7 @@ lodge_system_type_t lodge_editor_selection_system_type_register(struct lodge_edi
 
 void lodge_scene_set_entity_selected(lodge_scene_t scene, lodge_entity_t entity, bool selected)
 {
+#if 0
 	ASSERT_OR(LODGE_SYSTEM_TYPE_EDITOR_SELECTION && scene && entity) { return; }
 
 	struct lodge_editor_selection_system *system = lodge_scene_get_system(scene, LODGE_SYSTEM_TYPE_EDITOR_SELECTION);
@@ -73,10 +76,17 @@ void lodge_scene_set_entity_selected(lodge_scene_t scene, lodge_entity_t entity,
 	//
 	const uint32_t index = lodge_entity_to_sparse_index(entity);
 	sparse_set_set(system->selected, index, &selected);
+#else
+	if(!scene || !entity) { return; }
+	struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
+	if(!funcs || !lodge_func_is_set(funcs->set_entity_selected)) { return; }
+	lodge_func_call(funcs->set_entity_selected, entity, selected);
+#endif
 }
 
 bool lodge_scene_is_entity_selected(lodge_scene_t scene, lodge_entity_t entity)
 {
+#if 0
 	ASSERT_OR(LODGE_SYSTEM_TYPE_EDITOR_SELECTION && scene && entity) { return false; }
 
 	struct lodge_editor_selection_system *system = lodge_scene_get_system(scene, LODGE_SYSTEM_TYPE_EDITOR_SELECTION);
@@ -85,6 +95,12 @@ bool lodge_scene_is_entity_selected(lodge_scene_t scene, lodge_entity_t entity)
 	const uint32_t index = lodge_entity_to_sparse_index(entity);
 	bool* selected = sparse_set_get(system->selected, index);
 	return selected ? *selected : false;
+#else
+	if(!scene || !entity) { return false; }
+	struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
+	if(!funcs || !lodge_func_is_set(funcs->is_entity_selected)) { return false; }
+	return lodge_func_call(funcs->is_entity_selected, entity);
+#endif
 }
 
 lodge_entity_t* lodge_scene_selected_it_begin(lodge_scene_t scene)
@@ -106,3 +122,5 @@ lodge_entity_t* lodge_scene_selected_it_next(lodge_scene_t scene, lodge_entity_t
 
 	return sparse_set_it_next(system->selected, it);
 }
+
+#endif

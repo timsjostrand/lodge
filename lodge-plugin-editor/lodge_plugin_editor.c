@@ -19,6 +19,7 @@
 #include "color.h"
 #include "lodge_input.h"
 #include "lodge_keys.h"
+#include "lodge_bound_func.h"
 
 #include "lodge_editor_plugins_panel.h"
 #include "lodge_editor_viewport_panel.h"
@@ -227,7 +228,6 @@ static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, st
 	}
 
 	editor->types = (struct lodge_editor_types) {
-		.selection_system_type = lodge_editor_selection_system_type_register(editor),
 		.controller_component_type = lodge_editor_controller_component_type_register(),
 		.controller_system_type = lodge_editor_controller_system_type_register(editor),
 	};
@@ -438,7 +438,24 @@ lodge_asset_t lodge_editor_get_current_scene_asset(struct lodge_editor *editor)
 
 void lodge_editor_set_current_scene(struct lodge_editor *editor, lodge_asset_t scene_asset)
 {
+	//
+	// Unregister
+	//
+	if(editor->scene) {
+		struct lodge_scene *current_scene = lodge_editor_get_current_scene(editor);
+		struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(current_scene);
+		lodge_bound_func_reset(funcs->is_entity_selected);
+		lodge_bound_func_reset(funcs->set_entity_selected);
+	}
+
 	editor->scene = scene_asset;
+
+	if(scene_asset) {
+		struct lodge_scene *scene = lodge_editor_get_current_scene(editor);
+		struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
+		lodge_bound_func_set(funcs->is_entity_selected, editor->scene_editor, &lodge_scene_editor_is_entity_selected);
+		lodge_bound_func_set(funcs->set_entity_selected, editor->scene_editor, &lodge_scene_editor_set_entity_selected);
+	}
 }
 
 struct lodge_assets2* lodge_editor_get_scenes(struct lodge_editor *editor)

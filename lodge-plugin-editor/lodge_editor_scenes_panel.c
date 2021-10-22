@@ -14,7 +14,7 @@ void lodge_editor_scenes_panel_update(struct lodge_scene_editor *panel, struct l
 	struct nk_context *ctx = lodge_gui_to_ctx(gui);
 
 	struct lodge_assets2 *scenes = lodge_editor_get_scenes(editor);
-	struct lodge_plugin_scenes_types types = lodge_plugin_scenes_get_asset_type(scenes);
+	struct lodge_scenes_types types = lodge_plugin_scenes_get_types(scenes);
 
 	//if(nk_begin(ctx, "Scenes", nk_rect(0, 0, 300, 100), NK_WINDOW_TITLE|NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE)) {
 	nk_layout_row_dynamic(ctx, 0, 2);

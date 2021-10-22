@@ -6,6 +6,7 @@
 #include "lodge_framebuffer.h"
 #include "lodge_scene.h"
 #include "lodge_system_type.h"
+#include "lodge_bound_func.h"
 
 #include "lodge_editor_selection_system.h"
 
@@ -103,7 +104,11 @@ void lodge_editor_viewport_panel_update(struct lodge_viewport_panel *panel, stru
 			if(nk_widget_is_mouse_clicked(ctx, NK_BUTTON_LEFT)) {
 				struct nk_vec2 mouse_pos = ctx->input.mouse.pos;
 
-				picked_entity = lodge_scene_get_entity_at_screen_pos(scene, vec2_make(mouse_pos.x - panel_rect.x, mouse_pos.y - panel_rect.y));
+				struct lodge_scene_funcs *scene_funcs = lodge_scene_get_funcs(scene);
+				if(lodge_bound_func_is_set(scene_funcs->get_entity_at_screen_pos)) {
+					picked_entity = lodge_bound_func_call(scene_funcs->get_entity_at_screen_pos, vec2_make(mouse_pos.x - panel_rect.x, mouse_pos.y - panel_rect.y));
+				}
+				
 				if(picked_entity) {
 					strview_t picked_entity_name = lodge_scene_get_entity_name(scene, picked_entity);
 					printf(STRVIEW_PRINTF_FMT "\n", STRVIEW_PRINTF_ARG(picked_entity_name));

@@ -1,6 +1,8 @@
 #ifndef _LODGE_EDITOR_SELECTION_SYSTEM_H
 #define _LODGE_EDITOR_SELECTION_SYSTEM_H
 
+#if 0
+
 #include <stdbool.h>
 
 struct lodge_system_type;
@@ -22,5 +24,7 @@ void				lodge_scene_set_entity_selected(lodge_scene_t scene, lodge_entity_t enti
 bool				lodge_scene_is_entity_selected(lodge_scene_t scene, lodge_entity_t entity);
 lodge_entity_t*		lodge_scene_selected_it_begin(lodge_scene_t scene);
 lodge_entity_t*		lodge_scene_selected_it_next(lodge_scene_t scene, lodge_entity_t *it);
+
+#endif
 
 #endif

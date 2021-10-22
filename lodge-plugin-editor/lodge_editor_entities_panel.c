@@ -46,22 +46,12 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 	//
 	{
 		struct nk_context *ctx = lodge_gui_to_ctx(gui);
-
 		const size_t prev_selected_count = panel->selected_count;
-		panel->selected_count = 0;
-
-		for(size_t i=0; i<prev_selected_count; i++) {
-			lodge_scene_set_entity_selected(scene, panel->selected[i], false);
-		}
-
-		//if(nk_begin(ctx, "Entities", nk_rect(0, 100, 300, 1080-300-100), NK_WINDOW_TITLE|NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE)) {
-
 		nk_layout_row_dynamic(ctx, 0, 2);
 
 		//
 		// Add entity popup
 		//
-		//if(nk_button_label(ctx, "Add entity...")) {
 		{
 			if(nk_combo_begin_label(ctx, "Add entity", nk_vec2(320, 240))) {
 				nk_layout_row_dynamic(ctx, 0, 1);
@@ -73,8 +63,7 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 					if(nk_combo_item_text(ctx, entity_type_name.s, entity_type_name.length, NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE)) {
 						lodge_entity_t added = lodge_scene_add_entity_from_type(scene, entity_type);
 						if(added) {
-							panel->selected_count = 1;
-							panel->selected[0] = added;
+							lodge_scene_editor_set_entity_selected(panel, added, true);
 						}
 
 						nk_combo_close(ctx);
@@ -88,7 +77,6 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 		//
 		// Add Component popup
 		//
-		//if(nk_button_label(ctx, "Add component...")) {
 		{
 			if(nk_combo_begin_label(ctx, "Add component", nk_vec2(320, 240))) {
 				nk_layout_row_dynamic(ctx, 0, 1);
@@ -142,15 +130,22 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 
 		if(nk_tree_push(ctx, NK_TREE_TAB, "Entities", NK_MAXIMIZED)) {
 			lodge_scene_entities_foreach(scene, entity) {
-				const bool was_selected = membuf_find(membuf_wrap(panel->selected), prev_selected_count, &entity, sizeof(lodge_entity_t)) >= 0;
-					
+				const bool was_selected = lodge_scene_editor_is_entity_selected(panel, entity);
+
 				if(was_selected) {
 					nk_style_push_color(ctx, &ctx->style.tab.text, nk_color_from_vec4(GRUVBOX_BRIGHT_YELLOW));
 				}
-
-				if(nk_tree_push_id(ctx, NK_TREE_NODE, lodge_scene_get_entity_name(scene, entity).s, NK_MINIMIZED, (int)entity)) {
-					membuf_append(membuf_wrap(panel->selected), &panel->selected_count, &entity, sizeof(lodge_entity_t));
+				
+				enum nk_collapse_states collapse_state = was_selected ? NK_MAXIMIZED : NK_MINIMIZED;
+				if(nk_tree_state_push(ctx, NK_TREE_NODE, lodge_scene_get_entity_name(scene, entity).s, &collapse_state)) {
+					if(!was_selected) {
+						lodge_scene_editor_set_entity_selected(panel, entity, true);
+					}
 					nk_tree_pop(ctx);
+				} else {
+					if(was_selected) {
+						lodge_scene_editor_set_entity_selected(panel, entity, false);
+					}
 				}
 
 				if(was_selected) {
@@ -160,8 +155,6 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 			nk_tree_pop(ctx);
 		}
 	}
-		//nk_end(ctx);
-	//}
 
 	//
 	// Update selected component union
@@ -207,9 +200,5 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 				impostor->userdata = panel;
 			}
 		}
-	}
-
-	for(size_t i=0; i<panel->selected_count; i++) {
-		lodge_scene_set_entity_selected(scene, panel->selected[i], true);
 	}
 }

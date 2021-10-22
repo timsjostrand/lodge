@@ -5,6 +5,7 @@
 #include "lodge_variant.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 
 struct lodge_scene_editor;
 
@@ -63,6 +64,9 @@ struct lodge_component_type_property	lodge_scene_editor_property_find_component_
 
 void									lodge_scene_editor_impostor_on_modified(struct lodge_property *property, const void *object);
 bool									lodge_scene_editor_impostor_pre_modified(struct lodge_property *property, const void *object, const void *dst, const void *src);
+
+bool									lodge_scene_editor_is_entity_selected(struct lodge_scene_editor *editor, lodge_entity_t entity);
+void									lodge_scene_editor_set_entity_selected(struct lodge_scene_editor *editor, lodge_entity_t entity, bool selected);
 
 //void	lodge_scene_editor_update(struct lodge_scene_editor *panel, lodge_gui_t gui, struct lodge_editor *editor, float dt);
 
