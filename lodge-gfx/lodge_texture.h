@@ -2,14 +2,7 @@
 #define _LODGE_TEXTURE_H
 
 #include "lodge_platform.h"
-
-enum lodge_texture_target
-{
-	LODGE_TEXTURE_TARGET_2D,
-	LODGE_TEXTURE_TARGET_2D_ARRAY,
-	LODGE_TEXTURE_TARGET_3D,
-	LODGE_TEXTURE_TARGET_CUBE_MAP,
-};
+#include "lodge_gfx_types.h"
 
 struct lodge_texture;
 typedef struct lodge_texture* lodge_texture_t;

@@ -3,6 +3,7 @@
 
 #include "strview.h"
 
+#include "lodge_gfx_types.h"
 #include "lodge_plugin.h"
 
 struct lodge_gfx;

@@ -34,6 +34,7 @@ target_sources(lodge-gfx
 		"vertex.c"
 	PUBLIC
 		"lodge_gfx.h"
+		"lodge_gfx_types.h"
 		"lodge_sampler.h"
 		"lodge_texture.h"
 		"lodge_framebuffer.h"
