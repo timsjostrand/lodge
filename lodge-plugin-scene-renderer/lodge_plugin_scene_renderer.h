@@ -2,6 +2,7 @@
 #define _LODGE_PLUGIN_SCENE_RENDERER_H
 
 #include "lodge_plugin.h"
+#include "lodge_camera_params.h"
 
 #include "math4.h"
 
@@ -36,24 +37,6 @@ enum lodge_scene_render_system_pass
 	LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW,
 	LODGE_SCENE_RENDER_SYSTEM_PASS_POST_PROCESS,
 	LODGE_SCENE_RENDER_SYSTEM_PASS_MAX,
-};
-
-//
-// TODO(TS): use alignas() instead of manual padding
-//
-struct lodge_camera_params
-{
-	vec3								pos;
-	float								_pad;
-	//vec3								dir;
-	mat4								view;
-	mat4								projection;
-	mat4								view_projection;
-	mat4								inv_view;
-	mat4								inv_projection;
-	mat4								inv_view_projection;
-	float								fov_y;
-	mat4								rotation;
 };
 
 struct lodge_scene_render_pass_params
@@ -93,7 +76,6 @@ struct lodge_scene_renderer_types
 	lodge_system_type_t				billboard_system;
 	lodge_component_type_t			billboard_component;
 
-	lodge_component_type_t			camera_component_type;
 	lodge_component_type_t			point_light_component_type;
 	lodge_component_type_t			directional_light_component_type;
 	lodge_component_type_t			static_mesh_component_type;

@@ -13,6 +13,7 @@ target_sources(lodge-entity
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_transform_component.c"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_gui_property_widget_factory.c"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_perspective.c"
+		"lodge_camera_component.c"
 	PUBLIC
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_entity_type.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_component_type.h"
@@ -23,6 +24,8 @@ target_sources(lodge-entity
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_transform_component.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_gui_property_widget_factory.h"
 		"${CMAKE_CURRENT_LIST_DIR}/lodge_perspective.h"
+		"lodge_camera_params.h"
+		"lodge_camera_component.h"
 )
 
 target_include_directories(lodge-entity

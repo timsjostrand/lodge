@@ -3,7 +3,9 @@
 
 #include "math4.h"
 #include "lodge_perspective.h"
-#include "lodge_plugin_scene_renderer.h" // FIXME(TS): only for camera_params
+#include "lodge_camera_params.h"
+
+#include <stdbool.h>
 
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;

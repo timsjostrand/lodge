@@ -3,7 +3,6 @@ add_library(lodge-plugin-scene-renderer STATIC "")
 target_sources(lodge-plugin-scene-renderer
 	PRIVATE
 		"lodge_static_mesh_component.c"
-		"lodge_camera_component.c"
 		"lodge_directional_light_component.c"
 		"lodge_point_light_component.c"
 		"lodge_plugin_scene_renderer.c"
@@ -15,7 +14,6 @@ target_sources(lodge-plugin-scene-renderer
 		"lodge_billboard_system.c"
 	PUBLIC
 		"lodge_static_mesh_component.h"
-		"lodge_camera_component.h"
 		"lodge_directional_light_component.h"
 		"lodge_point_light_component.h"
 		"lodge_plugin_scene_renderer.h"

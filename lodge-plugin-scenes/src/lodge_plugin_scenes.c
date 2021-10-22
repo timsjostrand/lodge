@@ -9,12 +9,14 @@
 #include "lodge_scene_serialize.h"
 #include "lodge_system_type.h"
 #include "lodge_transform_component.h"
+#include "lodge_camera_component.h"
 
 enum lodge_scenes_userdata
 {
 	USERDATA_FILES,
 	USERDATA_ASSET_TYPE,
 	USERDATA_COMPONENT_TYPE_TRANSFORM,
+	USERDATA_COMPONENT_TYPE_CAMERA,
 };
 
 static bool lodge_assets_scene_new_inplace(struct lodge_assets2 *scenes, strview_t name, lodge_asset_t id, struct lodge_scene *scene)
@@ -101,6 +103,9 @@ static struct lodge_ret lodge_plugin_scenes_new_inplace(struct lodge_assets2 *sc
 	if(!LODGE_COMPONENT_TYPE_TRANSFORM) {
 		lodge_assets2_set_userdata(scenes, USERDATA_COMPONENT_TYPE_TRANSFORM, lodge_transform_component_type_register());
 	}
+	if(!LODGE_COMPONENT_TYPE_CAMERA) {
+		lodge_assets2_set_userdata(scenes, USERDATA_COMPONENT_TYPE_CAMERA, lodge_camera_component_type_register());
+	}
 
 	return lodge_success();
 }
@@ -123,10 +128,11 @@ LODGE_PLUGIN_IMPL(lodge_plugin_scenes)
 	};
 }
 
-struct lodge_plugin_scenes_types lodge_plugin_scenes_get_asset_type(struct lodge_assets2 *scenes)
+struct lodge_scenes_types lodge_plugin_scenes_get_types(struct lodge_assets2 *scenes)
 {
-	return (struct lodge_plugin_scenes_types) {
+	return (struct lodge_scenes_types) {
 		.scene_asset_type = lodge_assets2_get_userdata(scenes, USERDATA_ASSET_TYPE),
 		.transform_component_type = lodge_assets2_get_userdata(scenes, USERDATA_COMPONENT_TYPE_TRANSFORM),
+		.camera_component_type = lodge_assets2_get_userdata(scenes, USERDATA_COMPONENT_TYPE_CAMERA),
 	};
 }

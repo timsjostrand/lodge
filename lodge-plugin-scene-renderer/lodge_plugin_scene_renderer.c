@@ -54,7 +54,6 @@ struct lodge_scene_renderer_plugin
 	lodge_component_type_t				billboard_component_type;
 	lodge_system_type_t					billboard_system_type;
 
-	lodge_component_type_t				camera_component_type;
 	lodge_component_type_t				point_light_component_type;
 	lodge_component_type_t				directional_light_component_type;
 	lodge_component_type_t				static_mesh_component_type;
@@ -1452,7 +1451,6 @@ struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_rend
 	plugin->billboard_component_type = lodge_billboard_component_type_register(texture_types.texture_asset_type);
 	plugin->billboard_system_type = lodge_billboard_system_type_register(plugin);
 
-	plugin->camera_component_type = lodge_camera_component_type_register();
 	plugin->point_light_component_type = lodge_point_light_component_type_register();
 	plugin->directional_light_component_type = lodge_directional_light_component_type_register();
 	plugin->static_mesh_component_type = lodge_static_mesh_component_type_register(fbx_types.fbx_asset_type, shader_types.shader_asset_type, texture_types.texture_asset_type);
@@ -1473,7 +1471,6 @@ struct lodge_scene_renderer_types lodge_scene_renderer_plugin_get_types(struct l
 		.scene_render_system = plugin->scene_render_system_type,
 		.billboard_system = plugin->billboard_system_type,
 		.billboard_component = plugin->billboard_component_type,
-		.camera_component_type = plugin->camera_component_type,
 		.point_light_component_type = plugin->point_light_component_type,
 		.directional_light_component_type = plugin->directional_light_component_type,
 		.static_mesh_component_type = plugin->static_mesh_component_type,

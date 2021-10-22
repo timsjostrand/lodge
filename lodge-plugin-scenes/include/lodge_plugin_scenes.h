@@ -11,13 +11,14 @@ typedef struct lodge_type* lodge_type_t;
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
 
-struct lodge_plugin_scenes_types
+struct lodge_scenes_types
 {
 	lodge_type_t					scene_asset_type;
 	lodge_component_type_t			transform_component_type;
+	lodge_component_type_t			camera_component_type;
 };
 
-struct lodge_plugin_scenes_types	lodge_plugin_scenes_get_asset_type(struct lodge_assets2 *scenes);
+struct lodge_scenes_types			lodge_plugin_scenes_get_types(struct lodge_assets2 *scenes);
 
 LODGE_PLUGIN_DECL(lodge_plugin_scenes);
 
