@@ -333,7 +333,7 @@ static void lodge_gui_clipboard_copy(nk_handle usr, const char *text, int len)
 	lodge_window_set_clipboard(gui->win, strview_make(text, len));
 }
 
-static lodge_gui_set_style(lodge_gui_t gui)
+static void lodge_gui_set_style(lodge_gui_t gui)
 {
     struct nk_color table[NK_COLOR_COUNT];
 
@@ -413,7 +413,7 @@ void lodge_gui_free_inplace(lodge_gui_t gui)
 	nk_font_atlas_clear(&gui->atlas);
 	nk_free(&gui->ctx);
 	lodge_gui_device_destroy(gui);
-	memset(&gui, 0, sizeof(struct lodge_gui));
+	memset(gui, 0, sizeof(struct lodge_gui));
 }
 
 size_t lodge_gui_sizeof()

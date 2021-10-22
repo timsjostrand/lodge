@@ -15,6 +15,9 @@ typedef struct lodge_texture* lodge_texture_t;
 struct lodge_gui;
 typedef struct lodge_gui* lodge_gui_t;
 
+struct nk_context;
+struct nk_font_atlas;
+
 void				lodge_gui_new_inplace(lodge_gui_t gui, lodge_window_t window, int max_vertex_buffer, int max_element_buffer);
 void				lodge_gui_free_inplace(lodge_gui_t gui);
 size_t				lodge_gui_sizeof();
