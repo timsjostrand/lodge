@@ -67,15 +67,11 @@ static struct lodge_vfs_file_entry* lodge_vfs_get_func_entry(struct lodge_vfs *v
 	for (size_t i = 0; i < vfs->file_entries.count; i++) {
 		struct lodge_vfs_file_entry *func_entry = &vfs->file_entries.elements[i];
 
-#if 0
-		if (strview_equals(virtual_path, strview_wrap(func_entry->virtual_path))) {
-			return func_entry;
-		}
-#else
 		if(func_entry->virtual_path_hash == virtual_path_hash) {
-			return func_entry;
+			if(strview_equals(virtual_path, strview_wrap(func_entry->virtual_path))) {
+				return func_entry;
+			}
 		}
-#endif
 	}
 	return NULL;
 }
