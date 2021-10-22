@@ -65,6 +65,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/frustum.h"
         "${CMAKE_CURRENT_LIST_DIR}/coordinate_systems.h"
         "include/lodge_static_call.h"
+        "include/lodge_bound_func.h"
 )
 
 check_function_exists(strnlen HAVE_STRNLEN)
