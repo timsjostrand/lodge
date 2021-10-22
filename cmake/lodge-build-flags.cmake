@@ -9,9 +9,13 @@ target_compile_features(lodge-build-flags
         c_variadic_macros
 )
 
-#
-# Clang build flags.
-#
+if(MSVC OR CMAKE_C_SIMULATE_ID STREQUAL "MSVC")
+    target_compile_definitions(lodge-build-flags
+        INTERFACE
+            "_CRT_SECURE_NO_WARNINGS"               # Disable "unsafe" functions that redirects to Microsoft-specific implementations.
+    )
+endif()
+
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(lodge-build-flags
         INTERFACE
@@ -33,11 +37,6 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
     #        -fsanitize=address
     #)
 elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    target_compile_definitions(lodge-build-flags
-        INTERFACE
-            "_CRT_SECURE_NO_WARNINGS"       # Disable "unsafe" functions that redirects to Microsoft-specific implementations.
-    )
-
     target_compile_options(lodge-build-flags
         INTERFACE
             "/W3"                           # More warnings.
