@@ -26,6 +26,10 @@ typedef struct lodge_entity* lodge_entity_t;
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
 
+struct lodge_system_render_params;
+
+struct lodge_entity_components_desc;
+
 struct lodge_component_it
 {
 	void					*value;
