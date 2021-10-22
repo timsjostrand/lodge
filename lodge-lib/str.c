@@ -430,7 +430,7 @@ int str_equals_ignore_case(const char *a, size_t a_len, const char *b, size_t b_
 		return 0;
 	}
 	/* a_len == b_len here. */
-#ifndef WIN32
+#ifndef _WIN32
 	return strncasecmp(a, b, a_len) == 0;
 #else
 	return _strnicmp(a, b, a_len) == 0;

@@ -6,6 +6,8 @@
 
 #include <stdbool.h>
 
+struct lodge_property;
+
 enum lodge_property_flag
 {
 	//
