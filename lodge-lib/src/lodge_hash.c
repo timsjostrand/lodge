@@ -1,6 +1,6 @@
 #include "lodge_hash.h"
 
-#include "lib/murmur3/murmur3.h"
+#include "murmur3.h"
 
 #define LODGE_HASH_SEED 0
 
