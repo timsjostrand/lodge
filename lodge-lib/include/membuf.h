@@ -32,7 +32,8 @@ struct membuf_swapret
 typedef int				(*membuf_cmp_func_t)(const void *lhs, const void *rhs);
 
 membuf_t				membuf_make(char *ptr, size_t size, size_t type_size);
-#define					membuf_wrap(buffer) membuf_make((char*)(buffer), sizeof((buffer)), sizeof(buffer[0]))
+#define					membuf(buffer) membuf_make((char*)(buffer), sizeof((buffer)), sizeof(buffer[0]))
+#define					membuf_wrap(buffer) membuf(buffer)
 #define					membuf_wrap_and(arr, func, ...) func(membuf_wrap(arr), __VA_ARGS__)
 
 size_t					membuf_size(const membuf_t buf);
