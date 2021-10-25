@@ -11,8 +11,6 @@ struct lodge_argv;
 struct lodge_plugin_desc;
 struct lodge_plugins;
 
-typedef void* lodge_plugin_data_t;
-
 struct lodge_plugins_frame_times
 {
 	int								frames;						/* Number of frames drawn since last_frame_report. */
@@ -28,9 +26,9 @@ struct lodge_plugins*				lodge_plugins_new();
 struct lodge_ret					lodge_plugins_find(struct lodge_plugins *plugins, const struct lodge_argv *args);
 void								lodge_plugins_free(struct lodge_plugins *plugins);
 
-lodge_plugin_data_t					lodge_plugins_depend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name);
-bool								lodge_plugins_undepend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name);
-bool								lodge_plugins_is_dependency(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name);
+void*								lodge_plugins_depend(struct lodge_plugins *plugins, void *dependee, strview_t name);
+bool								lodge_plugins_undepend(struct lodge_plugins *plugins, void *dependee, strview_t name);
+bool								lodge_plugins_is_dependency(struct lodge_plugins *plugins, void *dependee, strview_t name);
 
 struct lodge_ret					lodge_plugins_init(struct lodge_plugins *plugins);
 void								lodge_plugins_run(struct lodge_plugins *plugins);

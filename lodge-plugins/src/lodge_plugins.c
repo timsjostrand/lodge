@@ -14,22 +14,27 @@
 #define LODGE_PLUGINS_MAX				128
 #define LODGE_PLUGIN_DEPENDENCIES_MAX	32
 
-struct lodge_plugin_meta
+struct lodge_loaded_plugin
 {
-	struct lodge_plugin_desc			*deps[LODGE_PLUGIN_DEPENDENCIES_MAX];
+	struct lodge_plugin_desc			*desc;
+	bool								initialized;
+
+	char								*data;
+
+	struct lodge_loaded_plugin			*deps[LODGE_PLUGIN_DEPENDENCIES_MAX];
 	size_t								deps_count;
 };
 
 struct lodge_plugins
 {
 	bool								running;
-	struct lodge_plugin_desc			list[LODGE_PLUGINS_MAX];
-	struct lodge_plugin_meta			meta[LODGE_PLUGINS_MAX];
-	size_t								offsets[LODGE_PLUGINS_MAX];
-	bool								initialized[LODGE_PLUGINS_MAX];
-	uint32_t							count;
-	char								*data;
-	size_t								data_size;
+
+	struct lodge_plugin_desc			descriptions[LODGE_PLUGINS_MAX];
+	uint32_t							descriptions_count;
+	
+	struct lodge_loaded_plugin			loaded[LODGE_PLUGINS_MAX];
+	size_t								loaded_count;
+	
 	float								delta_time_factor;
 	struct lodge_plugins_frame_times	frame_times;
 	struct lodge_plugins_frame_times	last_frame_times;
@@ -37,120 +42,141 @@ struct lodge_plugins
 	const struct lodge_argv				*args;
 };
 
-static struct lodge_ret lodge_plugin_try_initialize(struct lodge_plugins *plugins, size_t index)
+static struct lodge_plugin_desc* lodge_plugins_find_desc_by_name(struct lodge_plugins *plugins, strview_t name)
 {
-	struct lodge_plugin_desc *desc = &plugins->list[index];
-	bool *initialized = &plugins->initialized[index];
-	void *plugin_data = plugins->data + plugins->offsets[index];
+	for(uint32_t i = 0; i < plugins->descriptions_count; i++) {
+		struct lodge_plugin_desc *desc = &plugins->descriptions[i];
+		if(strview_equals(desc->name, name)) {
+			return desc;
+		}
+	}
+	return NULL;
+}
 
-	if(!*initialized) {
-		memset(plugin_data, 0, desc->size);
+static struct lodge_loaded_plugin* lodge_plugins_find_by_name(struct lodge_plugins *plugins, strview_t name)
+{
+	for(uint32_t i = 0; i < plugins->loaded_count; i++) {
+		struct lodge_loaded_plugin *plugin = &plugins->loaded[i];
+		if(strview_equals(plugin->desc->name, name)) {
+			return plugin;
+		}
+	}
+	return NULL;
+}
+
+static struct lodge_ret lodge_plugin_try_initialize(struct lodge_plugins *plugins, struct lodge_plugin_desc *desc)
+{
+	struct lodge_loaded_plugin *plugin = lodge_plugins_find_by_name(plugins, desc->name);
+	if(!plugin) {
+		plugin = membuf_append_no_init(membuf(plugins->loaded), &plugins->loaded_count);
+
+		plugin->data = NULL;
+		plugin->deps_count = 0;
+		plugin->desc = desc;
+		plugin->initialized = false;
+	}
+
+	if(!plugin->initialized) {
+		plugin->data = calloc(1, plugin->desc->size);
 
 		//
 		// HACK(TS): all plugins depend on the "types" plugin to do static init correctly
 		//
-		void *types = lodge_plugins_depend(plugins, plugin_data, strview("types"));
+		void *types = lodge_plugins_depend(plugins, plugin->data, strview("types"));
 		ASSERT(types);
 
 		//
 		// Check if we need to mount the plugin directory from source tree.
 		//
-		for(size_t i=0, count=desc->static_mounts.count; i<count; i++) {
-			struct lodge_static_mount *mount = &desc->static_mounts.elements[i];
+		{
+			struct lodge_static_mounts *static_mounts = &plugin->desc->static_mounts;
+			for(size_t i=0, count=static_mounts->count; i<count; i++) {
+				struct lodge_static_mount *mount = &static_mounts->elements[i];
 		
-			struct lodge_vfs *vfs = lodge_plugins_depend(plugins, plugin_data, strview("vfs"));
-			ASSERT(vfs);
-			if(vfs) {
-				lodge_vfs_mount(vfs, mount->dst_point, mount->src_dir);
+				struct lodge_vfs *vfs = lodge_plugins_depend(plugins, plugin->data, strview("vfs"));
+				ASSERT(vfs);
+				if(vfs) {
+					lodge_vfs_mount(vfs, mount->dst_point, mount->src_dir);
+				}
 			}
 		}
 
-		if(desc->new_inplace) {
-			debugf("Plugins", "Initializing `" STRVIEW_PRINTF_FMT "`...\n", STRVIEW_PRINTF_ARG(desc->name));
-			struct lodge_ret init_ret = desc->new_inplace(plugin_data, plugins, plugins->args);
+		if(plugin->desc->new_inplace) {
+			debugf("Plugins", "Initializing `" STRVIEW_PRINTF_FMT "`...\n", STRVIEW_PRINTF_ARG(plugin->desc->name));
+			struct lodge_ret init_ret = plugin->desc->new_inplace(plugin->data, plugins, plugins->args);
 			if(!init_ret.success) {
 				errorf("Plugins", "Error when initializing plugin `" STRVIEW_PRINTF_FMT "`: " STRVIEW_PRINTF_FMT "\n",
-					STRVIEW_PRINTF_ARG(desc->name),
+					STRVIEW_PRINTF_ARG(plugin->desc->name),
 					STRVIEW_PRINTF_ARG(init_ret.message)
 				);
 				return init_ret;
 			}
 		}
-		*initialized = true;
+
+		plugin->initialized = true;
 	}
+
 	return lodge_success();
 }
 
-static void lodge_plugin_try_free(struct lodge_plugins *plugins, size_t plugin_index)
+static void lodge_plugin_try_free(struct lodge_plugins *plugins, struct lodge_loaded_plugin *plugin)
 {
-	bool *initialized = &plugins->initialized[plugin_index];
+	ASSERT_OR(plugins && plugin) { return; }
 
-	if(*initialized) {
-		struct lodge_plugin_desc *desc = &plugins->list[plugin_index];
-		char *data = &plugins->data[plugins->offsets[plugin_index]];
-		if(desc->free_inplace) {
-			debugf("Plugins", "Uninitializing `%s`...\n", desc->name.s);
-			desc->free_inplace(data);
+	if(plugin->initialized) {
+
+		// FIXME(TS): kind of brute force
+		for(int i=0; i<plugin->deps_count; i++) {
+			lodge_plugin_try_free(plugins, plugin->deps[i]);
 		}
-		memset(data, 0, desc->size);
 
-		*initialized = false;
+		debugf("Plugins", "Uninitializing `" STRVIEW_PRINTF_FMT "`...\n", STRVIEW_PRINTF_ARG(plugin->desc->name));
+		if(plugin->desc->free_inplace) {
+			plugin->desc->free_inplace(plugin->data);
+		}
+		free(plugin->data);
+		plugin->data = NULL;
+		plugin->initialized = false;
 	}
 }
 
-static struct lodge_plugin_desc* lodge_plugins_find_plugin_by_data(struct lodge_plugins *plugins, lodge_plugin_data_t data)
+static struct lodge_loaded_plugin* lodge_plugins_find_plugin_by_data(struct lodge_plugins *plugins, void *data)
 {
-	char *cur = plugins->data;
-	for(uint32_t i = 0; i < plugins->count; i++) {
-		struct lodge_plugin_desc *plugin = &plugins->list[i];
-		if(data == cur) {
+	for(uint32_t i = 0; i < plugins->loaded_count; i++) {
+		struct lodge_loaded_plugin *plugin = &plugins->loaded[i];
+		if(plugin->data == data) {
 			return plugin;
 		}
-		cur += plugin->size;
 	}
 	return NULL;
 }
 
-static void lodge_plugins_add_dependency(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin_desc *dependee)
+static void lodge_plugins_add_dependency(struct lodge_plugins *plugins, struct lodge_loaded_plugin *plugin, struct lodge_loaded_plugin *dependee)
 {
-	struct lodge_plugin_meta *meta = &plugins->meta[plugin_index];
-
-	for(size_t i = 0, count = meta->deps_count; i < count; i++) {
-		if(meta->deps[i] == dependee) {
+	for(size_t i = 0, count = plugin->deps_count; i < count; i++) {
+		if(plugin->deps[i] == dependee) {
 			return;
 		}
 	}
 
-	meta->deps[meta->deps_count++] = dependee;
+	plugin->deps[plugin->deps_count++] = dependee;
 
-	if(meta->deps_count == 1) {
-		struct lodge_ret init_ret = lodge_plugin_try_initialize(plugins, plugin_index);
+	if(plugin->deps_count == 1) {
+		struct lodge_ret init_ret = lodge_plugin_try_initialize(plugins, plugin->desc);
 		if(!init_ret.success) {
 			ASSERT_FAIL("API does not handle this");
 		}
-		//if(!plugins->initialized[plugin_index]) {
-		//	if(desc->new_inplace) {
-		//		debugf("Plugins", "Initializing `%s`...\n", desc->name.s);
-		//		struct lodge_ret ret = desc->new_inplace(data, plugins, plugins->args);
-		//		ASSERT_OR(ret.success) {
-		//			errorf("Plugins", STRVIEW_PRINTF_FMT, STRVIEW_PRINTF_ARG(ret.message));
-		//		}
-		//	}
-		//	plugins->initialized[plugin_index] = true;
-		//}
 	}
 }
 
-static bool lodge_plugins_remove_dependency(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin_desc *dependee)
+static bool lodge_plugins_remove_dependency(struct lodge_plugins *plugins, struct lodge_loaded_plugin *plugin, struct lodge_loaded_plugin *dependee)
 {
-	struct lodge_plugin_meta *meta = &plugins->meta[plugin_index];
+	for(size_t i = 0, count = plugin->deps_count; i < count; i++) {
+		if(plugin->deps[i] == dependee) {
+			membuf_delete_swap_tail(membuf_wrap(plugin->deps), &plugin->deps_count, i);
 
-	for(size_t i = 0, count = meta->deps_count; i < count; i++) {
-		if(meta->deps[i] == dependee) {
-			membuf_delete_swap_tail(membuf_wrap(meta->deps), &meta->deps_count, i);
-
-			if(meta->deps_count == 0) {
-				lodge_plugin_try_free(plugins, plugin_index);
+			if(plugin->deps_count == 0) {
+				lodge_plugin_try_free(plugins, plugin);
 			}
 
 			return true;
@@ -160,12 +186,10 @@ static bool lodge_plugins_remove_dependency(struct lodge_plugins *plugins, size_
 	return false;
 }
 
-static bool lodge_plugins_is_dependency_impl(struct lodge_plugins *plugins, size_t plugin_index, struct lodge_plugin_desc *dependee)
+static bool lodge_plugins_is_dependency_impl(struct lodge_plugins *plugins, struct lodge_loaded_plugin *plugin, struct lodge_loaded_plugin *dependee)
 {
-	struct lodge_plugin_meta *meta = &plugins->meta[plugin_index];
-
-	for(size_t i = 0, count = meta->deps_count; i < count; i++) {
-		if(meta->deps[i] == dependee) {
+	for(size_t i = 0, count = plugin->deps_count; i < count; i++) {
+		if(plugin->deps[i] == dependee) {
 			return true;
 		}
 	}
@@ -207,72 +231,41 @@ struct lodge_plugins* lodge_plugins_new()
 
 void lodge_plugins_free(struct lodge_plugins *plugins)
 {
-	for(int64_t i = plugins->count - 1; i >= 0; i--) {
-		struct lodge_plugin_desc *plugin = &plugins->list[i];
-
-		const size_t offset = plugins->offsets[i];
-		char *plugin_data = &plugins->data[offset];
-
-		debugf("Plugins", "Freeing plugin `" STRVIEW_PRINTF_FMT "`\n", STRVIEW_PRINTF_ARG(plugin->name));
-
-		const bool initialized = plugins->initialized[i];
-		if(initialized && plugin->free_inplace) {
-			plugin->free_inplace(plugin_data);
-		}
+	for(int64_t i = plugins->loaded_count - 1; i >= 0; i--) {
+		struct lodge_loaded_plugin *plugin = &plugins->loaded[i];
+		lodge_plugin_try_free(plugins, plugin);
 	}
-
-	free(plugins->data);
 	free(plugins);
 }
 
 uint32_t lodge_plugins_get_count(const struct lodge_plugins *plugins)
 {
-	return plugins->count;
+	return plugins->loaded_count;
 }
 
-struct lodge_plugin_find_ret
+void* lodge_plugins_depend(struct lodge_plugins *plugins, void *dependee, strview_t name)
 {
-	bool		success;
-	void		*data;
-	uint32_t	index;
-};
+	ASSERT_OR(plugins && dependee) { return NULL; }
 
-struct lodge_plugin_find_ret lodge_plugins_find_by_name(struct lodge_plugins *plugins, strview_t name)
-{
-	char *cur = plugins->data;
-	for(uint32_t i = 0; i < plugins->count; i++) {
-		struct lodge_plugin_desc *plugin = &plugins->list[i];
-		if(strview_equals(plugin->name, name)) {
-			return (struct lodge_plugin_find_ret) {
-				.success = true,
-				.data = cur,
-				.index = i,
-			};
-		}
-		cur += plugin->size;
-	}
-
-	return (struct lodge_plugin_find_ret) {
-		.success = false,
-		.data = NULL,
-		.index = 0,
-	};
-}
-
-lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name)
-{
-	ASSERT(plugins->data);
-
-	struct lodge_plugin_desc *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
+	struct lodge_loaded_plugin *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
 	if(!dependee_plugin) {
 		ASSERT_FAIL("Failed to find dependee");
 		return NULL;
 	}
 
-	struct lodge_plugin_find_ret find_ret = lodge_plugins_find_by_name(plugins, name);
-	if(find_ret.success) {
-		lodge_plugins_add_dependency(plugins, find_ret.index, dependee_plugin);
-		return find_ret.data;
+	struct lodge_loaded_plugin *plugin = lodge_plugins_find_by_name(plugins, name);
+	if(!plugin) {
+		struct lodge_plugin_desc *plugin_desc = lodge_plugins_find_desc_by_name(plugins, name);
+		ASSERT_OR(plugin_desc) { return NULL; }
+		struct lodge_ret plugin_init_ret = lodge_plugin_try_initialize(plugins, plugin_desc);
+		ASSERT_OR(plugin_init_ret.success) { return NULL; }
+		plugin = lodge_plugins_find_by_name(plugins, name);
+	}
+	if(plugin) {
+		if(plugin != dependee_plugin) {
+			lodge_plugins_add_dependency(plugins, plugin, dependee_plugin);
+		}
+		return plugin->data;
 	}
 
 	// TODO(TS): remove `dependee` from all plugins when unloaded
@@ -280,20 +273,18 @@ lodge_plugin_data_t lodge_plugins_depend(struct lodge_plugins *plugins, lodge_pl
 	return NULL;
 }
 
-bool lodge_plugins_undepend(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name)
+bool lodge_plugins_undepend(struct lodge_plugins *plugins, void *dependee, strview_t name)
 {
-	ASSERT_OR(plugins && plugins->data) {
-		return false;
-	}
+	ASSERT_OR(plugins && dependee) { return false; }
 
-	struct lodge_plugin_desc *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
+	struct lodge_loaded_plugin *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
 	ASSERT_OR(dependee_plugin) {
 		return false;
 	}
 
-	struct lodge_plugin_find_ret find_ret = lodge_plugins_find_by_name(plugins, name);
-	if(find_ret.success) {
-		if(lodge_plugins_remove_dependency(plugins, find_ret.index, dependee_plugin)) {
+	struct lodge_loaded_plugin *plugin = lodge_plugins_find_by_name(plugins, name);
+	if(plugin) {
+		if(lodge_plugins_remove_dependency(plugins, plugin, dependee_plugin)) {
 			return true;
 		}
 	}
@@ -301,16 +292,16 @@ bool lodge_plugins_undepend(struct lodge_plugins *plugins, lodge_plugin_data_t d
 	return false;
 }
 
-bool lodge_plugins_is_dependency(struct lodge_plugins *plugins, lodge_plugin_data_t dependee, strview_t name)
+bool lodge_plugins_is_dependency(struct lodge_plugins *plugins, void *dependee, strview_t name)
 {
-	struct lodge_plugin_desc *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
+	struct lodge_loaded_plugin *dependee_plugin = lodge_plugins_find_plugin_by_data(plugins, dependee);
 	if(!dependee_plugin) {
 		return false;
 	}
 
-	struct lodge_plugin_find_ret find_ret = lodge_plugins_find_by_name(plugins, name);
-	if(find_ret.success) {
-		if(lodge_plugins_is_dependency_impl(plugins, find_ret.index, dependee_plugin)) {
+	struct lodge_loaded_plugin *plugin = lodge_plugins_find_by_name(plugins, name);
+	if(plugin) {
+		if(lodge_plugins_is_dependency_impl(plugins, plugin, dependee_plugin)) {
 			return true;
 		}
 	}
@@ -320,18 +311,21 @@ bool lodge_plugins_is_dependency(struct lodge_plugins *plugins, lodge_plugin_dat
 
 struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
-	// TODO(TS): find plugins either by looking for dynamic libraries in filesystem or static list
+	//
+	// TODO(TS): also find plugins by looking for shared libs
+	//
 
 	plugins->args = args;
 
+	//
+	// Find statically compiled plugins.
+	//
 	for(uint32_t i = 0; i < lodge_plugin_registry_count; i++) {
-		plugins->list[plugins->count++] = lodge_plugin_registry[i]();
-	}
+		plugins->descriptions[plugins->descriptions_count++] = lodge_plugin_registry[i]();
 
-	for(uint32_t i = 0; i < plugins->count; i++) {
 		debugf("Plugins", "Found plugin: `" STRVIEW_PRINTF_FMT "` (%.1f kB)\n",
-			STRVIEW_PRINTF_ARG(plugins->list[i].name),
-			plugins->list[i].size / 1024.0f
+			STRVIEW_PRINTF_ARG(plugins->descriptions[i].name),
+			plugins->descriptions[i].size / 1024.0f
 		);
 	}
 
@@ -340,66 +334,28 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct 
 
 struct lodge_ret lodge_plugins_init(struct lodge_plugins *plugins)
 {
-	const uint32_t count = plugins->count;
-	
-	/* Preallocate plugins data */
-	plugins->data_size = 0;
-	for(uint32_t i = 0; i < count; i++) {
-		struct lodge_plugin_desc *plugin = &plugins->list[i];
-		plugins->data_size += plugin->size;
-	}
-
-	if(plugins->data_size > 0) {
-		plugins->data = malloc(plugins->data_size);
-		if(plugins->data) {
-			memset(plugins->data, 0, plugins->data_size);
-		} else {
-			return lodge_error("Out of memory");
-		}
-	}
-
-	/* Init plugins */
-	char *cur = plugins->data;
-
-	for(int i = 0; i < count; i++) {
-		struct lodge_plugin_desc *plugin = &plugins->list[i];
-
-		if(plugin->version != LODGE_PLUGIN_VERSION) {
-			errorf("Plugins", "Incorrect plugin version: %d (expected: %d)\n", plugin->version, LODGE_PLUGIN_VERSION);
-			return lodge_error("Incorrect plugin version");
-		}
-
-		/* Update offsets */ 
-		plugins->offsets[i] = (i == 0 ? 0 : plugins->offsets[i-1] + plugins->list[i-1].size);
-		plugins->initialized[i] = false;
-
-		memset(cur, 0, plugin->size);
-		cur += plugin->size;
-	}
-
 	if(plugins->args->positionals.count > 0) {
 		for(const struct lodge_argv_positional* it = lodge_argv_positional_it_begin(plugins->args); it; it = lodge_argv_positional_it_next(plugins->args, it)) {
-			struct lodge_plugin_find_ret find_default_ret = lodge_plugins_find_by_name(plugins, it->key);
-			if(!find_default_ret.success) {
+			struct lodge_plugin_desc *default_plugin = lodge_plugins_find_desc_by_name(plugins, it->key);
+			if(!default_plugin) {
 				return lodge_error("Failed to find default plugin");
 			}
-			struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, find_default_ret.index);
+			struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, default_plugin);
 			if(!init_default_ret.success) {
 				return init_default_ret;
 			}
 		}
 	} else {
-		struct lodge_plugin_find_ret find_default_ret = lodge_plugins_find_by_name(plugins, lodge_argv_get_str(plugins->args, strview("plugin"), strview("editor")));
-		if(!find_default_ret.success) {
+		struct lodge_plugin_desc *default_plugin = lodge_plugins_find_desc_by_name(plugins, lodge_argv_get_str(plugins->args, strview("plugin"), strview("editor")));
+		if(!default_plugin) {
 			return lodge_error("Failed to find default plugin");
 		}
-		struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, find_default_ret.index);
+		struct lodge_ret init_default_ret = lodge_plugin_try_initialize(plugins, default_plugin);
 		if(!init_default_ret.success) {
 			return init_default_ret;
 		}
 	}
 
-	/* TODO(TS): register reload callbacks (call init and free in correct order) */
 	return lodge_success();
 }
 
@@ -409,7 +365,7 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 
 	/* Main loop */
 	while(plugins->running) {
-		const int count = plugins->count;
+		const int count = plugins->loaded_count;
 		lodge_timestamp_t before = lodge_timestamp_get();
 
 		struct lodge_plugins_frame_times *frame_times = &plugins->frame_times;
@@ -423,34 +379,27 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 
 		/* Update plugins */
 		{
-			char *cur = plugins->data;
 			for(int i = 0; i < count; i++) {
-				struct lodge_plugin_desc *plugin = &plugins->list[i];
-				if(!plugins->initialized[i]) {
-					// TODO(TS): should use ->offset[i] instead
-	 				cur += plugin->size;
+				struct lodge_loaded_plugin *plugin = &plugins->loaded[i];
+				if(!plugin->initialized) {
 					continue;
 				}
-				if(plugin->update) {
-					plugin->update(cur, delta_time);
+				if(plugin->desc->update) {
+					plugin->desc->update(plugin->data, delta_time);
 				}
- 				cur += plugin->size;
 			}
 		}
 
 		/* Render plugins */
 		{
-			char *cur = plugins->data;
 			for(int i = 0; i < count; i++) {
-				struct lodge_plugin_desc *plugin = &plugins->list[i];
-				if(!plugins->initialized[i]) {
-					cur += plugin->size; // TODO(TS): use ->offsets
+				struct lodge_loaded_plugin *plugin = &plugins->loaded[i];
+				if(!plugin->initialized) {
 					continue;
 				}
-				if(plugin->render) {
-					plugin->render(cur);
+				if(plugin->desc->render) {
+					plugin->desc->render(plugin->data);
 				}
-				cur += plugin->size;
 			}
 		}
 
@@ -476,10 +425,10 @@ struct lodge_plugins_frame_times lodge_plugins_get_frame_times(struct lodge_plug
 
 const struct lodge_plugin_desc* lodge_plugins_get_desc(const struct lodge_plugins *plugins, size_t index)
 {
-	return (index >= 0 && index < plugins->count) ? &plugins->list[index] : NULL;
+	return (index >= 0 && index < plugins->descriptions_count) ? plugins->loaded[index].desc : NULL;
 }
 
 uint32_t lodge_plugins_get_dependencies_count(const struct lodge_plugins *plugins, size_t index)
 {
-	return (index >= 0 && index < plugins->count) ? plugins->meta[index].deps_count : 0;
+	return (index >= 0 && index < plugins->descriptions_count) ? plugins->loaded[index].deps_count : 0;
 }
