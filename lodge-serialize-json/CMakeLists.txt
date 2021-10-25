@@ -2,11 +2,12 @@
 # cJSON.
 #
 set(ENABLE_CJSON_TEST OFF CACHE BOOL "Enable building cJSON test" FORCE)
+set(ENABLE_CJSON_UNINSTALL OFF CACHE BOOL "Enable creating uninstall target" FORCE)
 add_subdirectory(lib/cjson ${CMAKE_BINARY_DIR}/lib/cjson)
-#target_include_directories(cjson PUBLIC "lib")
 
+#
 # lodge-serialize-json
-
+#
 add_library(lodge-serialize-json STATIC "")
 
 target_sources(lodge-serialize-json
