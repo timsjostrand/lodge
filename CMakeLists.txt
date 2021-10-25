@@ -28,9 +28,9 @@ endforeach()
 #
 # Minimal set of modules to base a typical project off.
 #
-add_library(lodge-modules-minimal STATIC "${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c")
+add_library(lodge-modules-minimal INTERFACE)
 target_link_libraries(lodge-modules-minimal
-    PUBLIC
+    INTERFACE
         lodge-main
         lodge-plugins
         lodge-plugin-types
