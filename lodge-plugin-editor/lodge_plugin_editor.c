@@ -438,8 +438,12 @@ lodge_asset_t lodge_editor_get_current_scene_asset(struct lodge_editor *editor)
 
 void lodge_editor_set_current_scene(struct lodge_editor *editor, lodge_asset_t scene_asset)
 {
+	if(editor->scene == scene_asset) {
+		return;
+	}
+
 	//
-	// Unregister
+	// Unregister scene bound funcs
 	//
 	if(editor->scene) {
 		struct lodge_scene *current_scene = lodge_editor_get_current_scene(editor);
@@ -448,8 +452,16 @@ void lodge_editor_set_current_scene(struct lodge_editor *editor, lodge_asset_t s
 		lodge_bound_func_reset(funcs->set_entity_selected);
 	}
 
+	//
+	// De-select old entities.
+	//
+	editor->scene_editor->selected_count = 0;
+
 	editor->scene = scene_asset;
 
+	//
+	// Register scene bound funcs
+	//
 	if(scene_asset) {
 		struct lodge_scene *scene = lodge_editor_get_current_scene(editor);
 		struct lodge_scene_funcs *funcs = lodge_scene_get_funcs(scene);
