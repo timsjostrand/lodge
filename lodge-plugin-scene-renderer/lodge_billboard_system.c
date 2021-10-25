@@ -89,7 +89,7 @@ static void lodge_billboard_system_render(lodge_scene_t scene, const struct lodg
 	}
 }
 
-static void lodge_billboard_system_new_inplace(struct lodge_billboard_system *system, lodge_scene_t scene)
+static void lodge_billboard_system_new_inplace(struct lodge_billboard_system *system, lodge_scene_t scene, struct lodge_scene_renderer_plugin *plugin)
 {
 	system->draw = true;
 
@@ -180,7 +180,7 @@ static void lodge_billboard_system_new_inplace(struct lodge_billboard_system *sy
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED, &lodge_billboard_system_render, system);
 }
 
-static void lodge_billboard_system_free_inplace(struct lodge_billboard_system *system, lodge_scene_t scene)
+static void lodge_billboard_system_free_inplace(struct lodge_billboard_system *system, lodge_scene_t scene, struct lodge_scene_renderer_plugin *plugin)
 {
 	dynbuf_free_inplace(dynbuf(system->render_datas));
 
@@ -191,13 +191,8 @@ static void lodge_billboard_system_free_inplace(struct lodge_billboard_system *s
 	lodge_drawable_reset(system->drawable);
 }
 
-static void lodge_billboard_system_update(struct lodge_billboard_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt)
+static void lodge_billboard_system_update(struct lodge_billboard_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt, struct lodge_scene_renderer_plugin *plugin)
 {
-	struct lodge_scene_renderer_plugin *plugin = lodge_system_type_get_plugin(type);
-	ASSERT_OR(plugin) {
-		return;
-	}
-
 	// FIXME(TS): hardcoded file paths
 
 	if(!system->shader) {
