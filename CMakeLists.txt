@@ -5,6 +5,7 @@ project(lodge VERSION 0.0.1 LANGUAGES C)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/lodge-build-flags.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/lodge-module.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/lodge-plugin.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/lodge-add-executable.cmake)
 
 # QUIRK: Surpress warning with cmake 3.0 on OSX.
 #set(CMAKE_MACOSX_RPATH 1)
@@ -72,24 +73,3 @@ target_link_libraries(lodge-editor-full
         lodge-modules-full
         lodge-plugin-editor
 )
-
-#
-# Add a game library.
-#
-function(add_game_library game_name)
-    # Create library.
-    add_executable(${game_name} ${ARGN})
-
-    # Compile with DEBUG flag?
-    target_compile_definitions(${game_name} PRIVATE $<$<CONFIG:Debug>:DEBUG>)
-
-    # Link libraries.
-    target_link_libraries(${game_name} lodge-build-flags)
-
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${game_name})
-
-    set_target_properties(${game_name} PROPERTIES
-    	VS_DEBUGGER_COMMAND_ARGUMENTS "--windowed"
-    	VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    )
-endfunction()
