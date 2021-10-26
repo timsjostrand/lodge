@@ -73,7 +73,14 @@ static void lodge_textures_free_inplace(struct lodge_assets2 *textures)
 	lodge_assets2_free_inplace(textures);
 }
 
-struct lodge_plugin_desc lodge_plugin_textures()
+struct texture_types lodge_plugin_textures_get_types(struct lodge_assets2 *textures)
+{
+	return (struct texture_types) {
+		.texture_asset_type = textures ? lodge_assets2_get_userdata(textures, USERDATA_ASSET_TYPE) : NULL,
+	};
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_textures)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -83,12 +90,5 @@ struct lodge_plugin_desc lodge_plugin_textures()
 		.free_inplace = &lodge_textures_free_inplace,
 		.update = NULL,
 		.render = NULL,
-	};
-}
-
-struct texture_types lodge_plugin_textures_get_types(struct lodge_assets2 *textures)
-{
-	return (struct texture_types) {
-		.texture_asset_type = textures ? lodge_assets2_get_userdata(textures, USERDATA_ASSET_TYPE) : NULL,
 	};
 }
