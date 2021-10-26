@@ -21,7 +21,49 @@ foreach(module ${ENGINE_MODULES_AVAILABLE})
     get_filename_component(module_name "${module}" NAME)
     message(STATUS "Found lodge module: ${module_name}")
     add_subdirectory(${module} ${CMAKE_BINARY_DIR}/module/${module_name})
+    list(APPEND ENGINE_MODULE_NAMES "${module_name}")
 endforeach()
+
+
+add_library(lodge-modules-minimal OBJECT ${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c)
+target_link_libraries(lodge-modules-minimal
+    INTERFACE
+        lodge-main
+        lodge-plugins
+        lodge-plugin-types
+        lodge-plugin-vfs
+)
+
+add_library(lodge-modules-full OBJECT ${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c)
+target_link_libraries(lodge-modules-full
+    INTERFACE
+        lodge-modules-minimal
+        ${ENGINE_MODULE_NAMES}
+)
+
+#
+# Editor executable (minimal dependencies).
+#
+add_executable(lodge-editor-minimal ${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c)
+target_link_libraries(lodge-editor-minimal
+    PRIVATE
+        lodge-build-flags
+    PUBLIC
+        lodge-modules-minimal
+        lodge-plugin-editor
+)
+
+#
+# Editor executable (all dependencies).
+#
+add_executable(lodge-editor-full ${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c)
+target_link_libraries(lodge-editor-full
+    PRIVATE
+        lodge-build-flags
+    PUBLIC
+        lodge-modules-full
+        lodge-plugin-editor
+)
 
 #
 # Add a game library.
