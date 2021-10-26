@@ -10,7 +10,7 @@ struct lodge_ret lodge_plugin_types_new_inplace(void *plugin, struct lodge_plugi
 	return lodge_success();
 }
 
-struct lodge_plugin_desc lodge_plugin_types()
+LODGE_PLUGIN_IMPL(lodge_plugin_types)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
