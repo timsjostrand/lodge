@@ -7,14 +7,10 @@ add_library(lodge-assets STATIC "")
 
 target_sources(lodge-assets
 	PRIVATE
-		"src/lodge_assets.c"
 		"src/lodge_assets2.c"
-		"src/lodge_asset_id.c"
 		"src/lodge_type_asset.c"
 	PUBLIC
-		"include/lodge_assets.h"
 		"include/lodge_assets2.h"
-		"include/lodge_asset_id.h"
 		"include/lodge_type_asset.h"
 )
 
