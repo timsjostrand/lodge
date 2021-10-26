@@ -16,8 +16,10 @@ target_link_libraries(lodge-plugin-scenes
 	PRIVATE
 		lodge-build-flags
 		lodge-assets
-		lodge-plugin-files
 	PUBLIC
 		lodge-plugins
 		lodge-entity
+		lodge-plugin-files
 )
+
+lodge_target_make_plugin(lodge-plugin-scenes "lodge_plugin_scenes.h" lodge_plugin_scenes)

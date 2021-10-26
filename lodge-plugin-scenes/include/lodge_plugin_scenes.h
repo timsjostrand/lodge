@@ -17,8 +17,8 @@ struct lodge_plugin_scenes_types
 	lodge_component_type_t			transform_component_type;
 };
 
-struct lodge_plugin_desc			lodge_plugin_scenes();
-
 struct lodge_plugin_scenes_types	lodge_plugin_scenes_get_asset_type(struct lodge_assets2 *scenes);
+
+LODGE_PLUGIN_DECL(lodge_plugin_scenes);
 
 #endif

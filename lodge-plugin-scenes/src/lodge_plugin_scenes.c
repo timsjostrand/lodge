@@ -110,7 +110,7 @@ static void lodge_plugin_scenes_free_inplace(struct lodge_assets2 *scenes)
 	lodge_assets2_free_inplace(scenes);
 }
 
-struct lodge_plugin_desc lodge_plugin_scenes()
+LODGE_PLUGIN_IMPL(lodge_plugin_scenes)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
