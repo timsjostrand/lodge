@@ -2,18 +2,18 @@ add_library(lodge-plugins STATIC "")
 
 target_sources(lodge-plugins
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugins.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_argv.c"
+		"src/lodge_plugins.c"
+		"src/lodge_argv.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugins.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_argv.h"
-		"${CMAKE_CURRENT_LIST_DIR}/game.h"				# FIXME(TS): hack
+		"include/lodge_plugin.h"
+		"include/lodge_plugins.h"
+		"include/lodge_argv.h"
+		"include/game.h"				# FIXME(TS): hack
 )
 
 target_include_directories(lodge-plugins
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"include/"
 )
 
 target_link_libraries(lodge-plugins
