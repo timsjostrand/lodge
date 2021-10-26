@@ -22,7 +22,6 @@ target_link_libraries(lodge-plugins
 
 		lodge-plugin-vfs					# FIXME(TS): not statically defined
 		lodge-plugin-types					# FIXME(TS): not statically defined
-		lodge-plugin-images					# FIXME(TS): not statically defined
 		lodge-plugin-fbx					# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
