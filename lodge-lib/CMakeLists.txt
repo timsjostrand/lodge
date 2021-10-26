@@ -64,6 +64,7 @@ target_sources(lodge-lib
         "${CMAKE_CURRENT_LIST_DIR}/dynbuf.h"
         "${CMAKE_CURRENT_LIST_DIR}/frustum.h"
         "${CMAKE_CURRENT_LIST_DIR}/coordinate_systems.h"
+        "include/lodge_static_call.h"
 )
 
 check_function_exists(strnlen HAVE_STRNLEN)
@@ -109,6 +110,7 @@ target_include_directories(lodge-lib
         "${CMAKE_CURRENT_SOURCE_DIR}/lib/perlin-noise/src"
     PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}"
+        "include/"
 )
 
 target_link_libraries(lodge-lib
