@@ -20,16 +20,17 @@ target_sources(lodge-window
 
 target_include_directories(lodge-window
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"./"
 )
 
 target_link_libraries(lodge-window
 	PRIVATE
 		lodge-build-flags
-		${GLEW_LIBRARY}
 		glfw
 	PUBLIC
 		lodge-lib
 		lodge-plugins		# FIXME(TS): should be separate module
 		lodge-gfx			# FIXME(TS): not sure about this dependency
 )
+
+lodge_target_make_plugin(lodge-window "lodge_window.h" lodge_plugin_windows)
