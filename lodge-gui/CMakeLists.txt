@@ -4,17 +4,17 @@ add_library(lodge-gui STATIC "")
 
 target_sources(lodge-gui
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/src/lodge_gui.c"
+		"src/lodge_gui.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/include/lodge_gui.h"
+		"include/lodge_gui.h"
 )
 
 target_include_directories(lodge-gui
 	PRIVATE
-		"${CMAKE_CURRENT_SOURCE_DIR}/src"
+		"src/"
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}/include"
-		"${CMAKE_CURRENT_SOURCE_DIR}/lib/nuklear"
+		"include/"
+		"lib/nuklear/"
 )
 
 target_link_libraries(lodge-gui
@@ -23,4 +23,5 @@ target_link_libraries(lodge-gui
 		lodge-gfx
 	PUBLIC
 		lodge-lib
+		lodge-window
 )
