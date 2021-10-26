@@ -1,5 +1,7 @@
 #include "lodge_assets.h"
 
+#if 0
+
 #include "array.h"
 #include "membuf.h"
 #include "str.h"
@@ -453,3 +455,5 @@ strview_t lodge_asset_handle_find_name(struct lodge_asset_handle *handle)
 {
 	return lodge_assets_id_to_name(handle->assets, handle->id);
 }
+
+#endif

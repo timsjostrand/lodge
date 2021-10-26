@@ -1,5 +1,7 @@
 #include "lodge_asset_id.h"
 
+#if 0
+
 #include "lodge_platform.h"
 
 lodge_asset_id_t lodge_asset_id_make_invalid()
@@ -29,3 +31,5 @@ uint32_t lodge_asset_id_get_reserved_uint31(lodge_asset_id_t id)
 	// Remove hash + valid bit
 	return (id >> 32) & 0x7FFFFFFF;
 }
+
+#endif

@@ -1,6 +1,8 @@
 #ifndef _LODGE_ASSETS_H
 #define _LODGE_ASSETS_H
 
+#if 0
+
 #include "strview.h"
 #include "lodge_asset_id.h"
 
@@ -51,5 +53,7 @@ uint32_t					lodge_assets_get_count(struct lodge_assets *assets);
 strview_t					lodge_assets_index_to_name(struct lodge_assets *assets, uint32_t index);
 
 strview_t					lodge_asset_handle_find_name(struct lodge_asset_handle *handle);
+
+#endif
 
 #endif

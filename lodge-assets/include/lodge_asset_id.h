@@ -1,6 +1,8 @@
 #ifndef _LODGE_ASSET_ID_H
 #define _LODGE_ASSET_ID_H
 
+#if 0
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -26,5 +28,7 @@ lodge_asset_id_t			lodge_asset_id_make(uint32_t hash);
 bool						lodge_asset_id_is_valid(lodge_asset_id_t id);
 uint32_t					lodge_asset_id_get_hash(lodge_asset_id_t id);
 uint32_t					lodge_asset_id_get_reserved_uint31(lodge_asset_id_t id);
+
+#endif
 
 #endif

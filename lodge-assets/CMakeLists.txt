@@ -7,20 +7,20 @@ add_library(lodge-assets STATIC "")
 
 target_sources(lodge-assets
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_assets.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_assets2.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_asset_id.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_type_asset.c"
+		"src/lodge_assets.c"
+		"src/lodge_assets2.c"
+		"src/lodge_asset_id.c"
+		"src/lodge_type_asset.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_assets.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_assets2.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_asset_id.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_type_asset.h"
+		"include/lodge_assets.h"
+		"include/lodge_assets2.h"
+		"include/lodge_asset_id.h"
+		"include/lodge_type_asset.h"
 )
 
 target_include_directories(lodge-assets
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"include/"
 )
 
 target_link_libraries(lodge-assets
