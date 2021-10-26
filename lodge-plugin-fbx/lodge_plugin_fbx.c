@@ -85,7 +85,14 @@ static void lodge_plugin_fbx_free_inplace(struct lodge_assets2 *fbx_assets)
 	lodge_assets2_free_inplace(fbx_assets);
 }
 
-struct lodge_plugin_desc lodge_plugin_fbx()
+struct fbx_types lodge_plugin_fbx_get_types(struct lodge_assets2 *fbx_assets)
+{
+	return (struct fbx_types) {
+		.fbx_asset_type = lodge_assets2_get_userdata(fbx_assets, USERDATA_ASSET_TYPE),
+	};
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_fbx)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -95,12 +102,5 @@ struct lodge_plugin_desc lodge_plugin_fbx()
 		.free_inplace = &lodge_plugin_fbx_free_inplace,
 		.update = NULL,
 		.render = NULL,
-	};
-}
-
-struct fbx_types lodge_plugin_fbx_get_types(struct lodge_assets2 *fbx_assets)
-{
-	return (struct fbx_types) {
-		.fbx_asset_type = lodge_assets2_get_userdata(fbx_assets, USERDATA_ASSET_TYPE),
 	};
 }
