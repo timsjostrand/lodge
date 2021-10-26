@@ -30,7 +30,6 @@ target_link_libraries(lodge-plugins
 		lodge-plugin-debug-draw				# FIXME(TS): not statically defined
 		lodge-plugin-terrain				# FIXME(TS): not statically defined
 		lodge-plugin-water					# FIXME(TS): not statically defined
-		lodge-plugin-editor					# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
 		lodge-window						# FIXME(TS): separate plugin module

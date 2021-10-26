@@ -25,7 +25,6 @@
 #include "lodge_plugin_debug_draw.h"
 #include "lodge_plugin_terrain.h"
 #include "lodge_plugin_water.h"
-#include "lodge_plugin_editor.h"
 
 #define LODGE_PLUGINS_MAX				128
 #define LODGE_PLUGIN_DEPENDENCIES_MAX	32
@@ -347,7 +346,6 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct 
 	lodge_plugin_registry_append(&lodge_plugin_debug_draw);
 	lodge_plugin_registry_append(&lodge_plugin_terrain);
 	lodge_plugin_registry_append(&lodge_plugin_water);
-	lodge_plugin_registry_append(&lodge_plugin_editor);
 
 	for(uint32_t i = 0; i < lodge_plugin_registry_count; i++) {
 		plugins->list[plugins->count++] = lodge_plugin_registry[i]();
