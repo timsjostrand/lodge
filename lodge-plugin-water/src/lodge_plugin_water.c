@@ -42,7 +42,12 @@ void lodge_plugin_water_free_inplace(struct lodge_plugin_water *plugin)
 	// TODO(TS): release dependencies
 }
 
-struct lodge_plugin_desc lodge_plugin_water()
+struct lodge_water_types lodge_plugin_water_get_types(struct lodge_plugin_water *plugin)
+{
+	return plugin ? plugin->types : (struct lodge_water_types) { 0 };
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_water)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -62,9 +67,4 @@ struct lodge_plugin_desc lodge_plugin_water()
 			}
 		},
 	};
-}
-
-struct lodge_water_types lodge_plugin_water_get_types(struct lodge_plugin_water *plugin)
-{
-	return plugin ? plugin->types : (struct lodge_water_types) { 0 };
 }

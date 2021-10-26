@@ -24,9 +24,11 @@ target_link_libraries(lodge-plugin-water
 	PRIVATE
 		lodge-build-flags
 		lodge-gfx
-        lodge-plugin-shaders
 	PUBLIC
 		lodge-lib
 		lodge-entity
+		lodge-plugin-shaders
 		lodge-plugin-scene-renderer
 )
+
+lodge_target_make_plugin(lodge-plugin-water "lodge_plugin_water.h" lodge_plugin_water)
