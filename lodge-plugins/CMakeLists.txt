@@ -4,6 +4,7 @@ target_sources(lodge-plugins
 	PRIVATE
 		"src/lodge_plugins.c"
 		"src/lodge_argv.c"
+		"src/lodge_plugin_registry.c"
 	PUBLIC
 		"include/lodge_plugin.h"
 		"include/lodge_plugins.h"
@@ -33,7 +34,6 @@ target_link_libraries(lodge-plugins
 		lodge-plugin-editor					# FIXME(TS): not statically defined
 		lodge-plugin-renderdoc				# FIXME(TS): not statically defined
 		lodge-plugin-script					# FIXME(TS): not statically defined
-		lodge-plugin-scenes					# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
 		lodge-window						# FIXME(TS): separate plugin module

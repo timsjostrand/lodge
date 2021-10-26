@@ -10,6 +10,7 @@
 #include <string.h>
 
 // FIXME(TS): Just for `_plugin()` funcs
+#include "lodge_plugin.h"
 #include "game.h"
 #include "lodge_window.h"
 #include "lodge_vfs.h"
@@ -28,7 +29,6 @@
 #include "lodge_plugin_editor.h"
 #include "lodge_plugin_renderdoc.h"
 #include "lodge_plugin_script.h"
-#include "lodge_plugin_scenes.h"
 
 #define LODGE_PLUGINS_MAX				128
 #define LODGE_PLUGIN_DEPENDENCIES_MAX	32
@@ -331,35 +331,33 @@ bool lodge_plugins_is_dependency(struct lodge_plugins *plugins, lodge_plugin_dat
 	return false;
 }
 
-void lodge_plugins_append(struct lodge_plugins *plugins, struct lodge_plugin_desc plugin)
-{
-	plugins->list[plugins->count++] = plugin;
-}
-
 struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct lodge_argv *args)
 {
 	// TODO(TS): find plugins either by looking for dynamic libraries in filesystem or static list
 
 	plugins->args = args;
 
-	lodge_plugins_append(plugins, lodge_plugin_types());
-	lodge_plugins_append(plugins, lodge_plugin_vfs());
-	lodge_plugins_append(plugins, lodge_plugin_windows());
-	lodge_plugins_append(plugins, lodge_plugin_files());
-	lodge_plugins_append(plugins, lodge_plugin_fbx());
-	lodge_plugins_append(plugins, lodge_plugin_images());
-	lodge_plugins_append(plugins, lodge_plugin_textures());
-	lodge_plugins_append(plugins, lodge_plugin_shader_sources());
-	lodge_plugins_append(plugins, lodge_plugin_shaders());
-	lodge_plugins_append(plugins, lodge_scene_renderer_plugin());
-	lodge_plugins_append(plugins, lodge_plugin_debug_draw());
-	lodge_plugins_append(plugins, lodge_plugin_terrain());
-	lodge_plugins_append(plugins, lodge_plugin_water());
-	lodge_plugins_append(plugins, lodge_plugin_editor());
-	lodge_plugins_append(plugins, lodge_plugin_renderdoc());
-	lodge_plugins_append(plugins, lodge_plugin_script());
-	lodge_plugins_append(plugins, lodge_plugin_scenes());
-	lodge_plugins_append(plugins, game_plugin());
+	lodge_plugin_registry_append(&lodge_plugin_types);
+	lodge_plugin_registry_append(&lodge_plugin_vfs);
+	lodge_plugin_registry_append(&lodge_plugin_windows);
+	lodge_plugin_registry_append(&lodge_plugin_files);
+	lodge_plugin_registry_append(&lodge_plugin_fbx);
+	lodge_plugin_registry_append(&lodge_plugin_images);
+	lodge_plugin_registry_append(&lodge_plugin_textures);
+	lodge_plugin_registry_append(&lodge_plugin_shader_sources);
+	lodge_plugin_registry_append(&lodge_plugin_shaders);
+	lodge_plugin_registry_append(&lodge_scene_renderer_plugin);
+	lodge_plugin_registry_append(&lodge_plugin_debug_draw);
+	lodge_plugin_registry_append(&lodge_plugin_terrain);
+	lodge_plugin_registry_append(&lodge_plugin_water);
+	lodge_plugin_registry_append(&lodge_plugin_editor);
+	lodge_plugin_registry_append(&lodge_plugin_renderdoc);
+	lodge_plugin_registry_append(&lodge_plugin_script);
+	lodge_plugin_registry_append(&game_plugin);
+
+	for(uint32_t i = 0; i < lodge_plugin_registry_count; i++) {
+		plugins->list[plugins->count++] = lodge_plugin_registry[i]();
+	}
 
 	for(uint32_t i = 0; i < plugins->count; i++) {
 		debugf("Plugins", "Found plugin: `" STRVIEW_PRINTF_FMT "` (%.1f kB)\n",

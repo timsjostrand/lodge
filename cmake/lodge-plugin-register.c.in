@@ -1,0 +1,8 @@
+#include "lodge_plugin.h"
+
+#include "@header_file@"
+
+LODGE_STATIC_CALL(@plugin_func@_register)
+{
+	lodge_plugin_registry_append(&@plugin_func@);
+}

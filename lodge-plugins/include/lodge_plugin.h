@@ -2,6 +2,7 @@
 #define _LODGE_PLUGIN_H
 
 #include "lodge.h"
+#include "lodge_static_call.h"
 
 #define LODGE_PLUGIN_VERSION 1
 
@@ -38,5 +39,18 @@ struct lodge_plugin_desc
 };
 
 typedef struct lodge_plugin_desc		(*lodge_plugin_func_t)();
+
+#define LODGE_PLUGIN_DECL(name) \
+	void name ## _register(); \
+	struct lodge_plugin_desc name()
+
+#define LODGE_PLUGIN_IMPL(name) \
+	struct lodge_plugin_desc name()
+
+extern lodge_plugin_func_t				*lodge_plugin_registry;
+extern size_t							lodge_plugin_registry_count;
+
+void									lodge_plugin_registry_append(lodge_plugin_func_t plugin_func);
+
 
 #endif
