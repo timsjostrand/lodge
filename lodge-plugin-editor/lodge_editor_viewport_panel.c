@@ -8,7 +8,6 @@
 #include "lodge_system_type.h"
 
 #include "lodge_editor_selection_system.h"
-#include "lodge_plugin_scene_renderer.h"
 
 struct lodge_viewport_panel
 {

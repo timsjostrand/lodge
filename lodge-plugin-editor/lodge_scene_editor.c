@@ -18,7 +18,6 @@
 #include "lodge_file_picker_widget.h"
 #include "lodge_window.h"
 
-#include "lodge_plugin_scene_renderer.h"
 #include "lodge_plugin_editor.h"
 #include "lodge_plugin_scenes.h"
 #include "lodge_editor_selection_system.h"

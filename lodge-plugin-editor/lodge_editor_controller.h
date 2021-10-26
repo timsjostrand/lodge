@@ -34,6 +34,8 @@ lodge_component_type_t			lodge_editor_controller_component_type_register();
 struct lodge_system_type;
 typedef struct lodge_system_type* lodge_system_type_t;
 
+struct lodge_editor;
+
 lodge_system_type_t				lodge_editor_controller_system_type_register(struct lodge_editor *plugin);
 
 #endif

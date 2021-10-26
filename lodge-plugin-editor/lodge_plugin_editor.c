@@ -1,6 +1,7 @@
 #include "lodge_plugin_editor.h"
 
 #include "dynbuf.h"
+#include "membuf.h"
 
 #include "lodge_plugins.h"
 #include "lodge_gfx.h"
@@ -11,7 +12,6 @@
 #include "lodge_editor_controller.h"
 #include "lodge_editor_selection_system.h"
 #include "lodge_assets2.h"
-#include "lodge_plugin_scene_renderer.h"
 #include "lodge_serialize_json.h"
 #include "lodge_system_type.h"
 #include "lodge_scene.h"
@@ -48,7 +48,7 @@ struct lodge_editor
 
 	struct lodge_plugins						*plugins;
 	struct lodge_windows						*windows;
-	struct lodge_scene_renderer_plugin			*scene_renderer;
+	//struct lodge_scene_renderer_plugin			*scene_renderer;
 	struct lodge_assets2						*shaders;
 	struct lodge_assets2						*scenes;
 
@@ -178,10 +178,12 @@ static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, st
 			return lodge_error("Failed to find `windows` plugin");
 		}
 
+#if 0
 		editor->scene_renderer = lodge_plugins_depend(plugins, editor, strview("scene_renderer"));
 		if(!editor->scene_renderer) {
 			return lodge_error("Failed to find `scene_renderer` plugin");
 		}
+#endif
 
 		editor->shaders = lodge_plugins_depend(plugins, editor, strview("shaders"));
 		if(!editor->shaders) {
@@ -391,7 +393,7 @@ static void lodge_editor_update(struct lodge_editor *editor, float dt)
 	}
 }
 
-struct lodge_plugin_desc lodge_plugin_editor()
+LODGE_PLUGIN_IMPL(lodge_plugin_editor)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,

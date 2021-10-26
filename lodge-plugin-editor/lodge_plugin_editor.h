@@ -23,6 +23,8 @@ typedef struct lodge_gui* lodge_gui_t;
 
 struct lodge_scene;
 
+struct lodge_editor_controller_component;
+
 typedef void					(*lodge_editor_panel_func_t)(void *userdata, lodge_gui_t gui, struct lodge_editor *editor, float dt);
 
 struct lodge_editor_types
@@ -44,8 +46,6 @@ struct lodge_editor_panel_desc
 	bool						hide_scrollbar;
 };
 
-struct lodge_plugin_desc		lodge_plugin_editor();
-
 struct lodge_editor_types		lodge_editor_get_types(struct lodge_editor *editor);
 
 void							lodge_editor_set_enabled(struct lodge_editor *editor, bool enabled);
@@ -61,5 +61,7 @@ struct lodge_assets2*			lodge_editor_get_scenes(struct lodge_editor *editor);
 lodge_window_t					lodge_editor_get_window(struct lodge_editor *editor);
 
 void							lodge_editor_set_controller(struct lodge_editor *editor, struct lodge_editor_controller_component *controller);
+
+LODGE_PLUGIN_DECL(lodge_plugin_editor);
 
 #endif
