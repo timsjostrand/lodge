@@ -22,5 +22,7 @@ target_include_directories(lodge-assets
 target_link_libraries(lodge-assets
 	PRIVATE
 		lodge-build-flags
+		lodge-lib
+		lodge-collections
 		lodge-plugins
 )
