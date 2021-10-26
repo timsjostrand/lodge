@@ -257,7 +257,12 @@ static void lodge_debug_draw_plugin_free_inplace(struct lodge_plugin_debug_draw 
 	//ASSERT_NOT_IMPLEMENTED();
 }
 
-struct lodge_plugin_desc lodge_plugin_debug_draw()
+struct lodge_debug_draw* lodge_debug_draw_system_get_batcher(struct lodge_debug_draw_system *system)
+{
+	return system ? system->debug_draw : NULL;
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_debug_draw)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -268,9 +273,4 @@ struct lodge_plugin_desc lodge_plugin_debug_draw()
 		.update = NULL,
 		.render = NULL,
 	};
-}
-
-struct lodge_debug_draw* lodge_debug_draw_system_get_batcher(struct lodge_debug_draw_system *system)
-{
-	return system ? system->debug_draw : NULL;
 }
