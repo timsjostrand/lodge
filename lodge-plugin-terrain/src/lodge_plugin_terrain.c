@@ -40,7 +40,12 @@ void lodge_plugin_terrain_free_inplace(struct lodge_plugin_terrain *plugin)
 	// TODO(TS): release dependencies
 }
 
-struct lodge_plugin_desc lodge_plugin_terrain()
+struct lodge_terrain_types lodge_plugin_terrain_get_types(struct lodge_plugin_terrain *terrain)
+{
+	return terrain ? terrain->types : (struct lodge_terrain_types) { 0 };
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_terrain)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -51,9 +56,4 @@ struct lodge_plugin_desc lodge_plugin_terrain()
 		.update = NULL,
 		.render = NULL,
 	};
-}
-
-struct lodge_terrain_types lodge_plugin_terrain_get_types(struct lodge_plugin_terrain *terrain)
-{
-	return terrain ? terrain->types : (struct lodge_terrain_types) { 0 };
 }

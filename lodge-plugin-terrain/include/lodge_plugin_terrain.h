@@ -34,7 +34,8 @@ struct lodge_plugin_terrain
 	struct lodge_terrain_types		types;
 };
 
-struct lodge_plugin_desc			lodge_plugin_terrain();
 struct lodge_terrain_types			lodge_plugin_terrain_get_types(struct lodge_plugin_terrain *terrain);
+
+LODGE_PLUGIN_DECL(lodge_plugin_terrain);
 
 #endif

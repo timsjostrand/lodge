@@ -35,6 +35,8 @@ typedef struct lodge_asset* lodge_asset_t;
 
 struct lodge_static_mesh;
 
+struct lodge_foliage_component;
+
 struct lodge_foliage_lods_desc
 {
 	size_t			count;
