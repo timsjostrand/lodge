@@ -20,10 +20,6 @@ target_link_libraries(lodge-plugins
 	PRIVATE
 		lodge-build-flags
 		lodge-vfs
-
-		lodge-plugin-vfs					# FIXME(TS): not statically defined
-		lodge-plugin-types					# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
-		lodge-gfx							# FIXME(TS): separate plugin module
 )

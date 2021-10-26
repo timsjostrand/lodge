@@ -6,14 +6,10 @@
 
 #include "lodge_time.h"
 #include "lodge_argv.h"
-
-#include <string.h>
-
-// FIXME(TS): Just for `_plugin()` funcs
 #include "lodge_plugin.h"
 #include "lodge_vfs.h"
-#include "lodge_plugin_vfs.h"
-#include "lodge_plugin_types.h"
+
+#include <string.h>
 
 #define LODGE_PLUGINS_MAX				128
 #define LODGE_PLUGIN_DEPENDENCIES_MAX	32
@@ -49,6 +45,12 @@ static struct lodge_ret lodge_plugin_try_initialize(struct lodge_plugins *plugin
 
 	if(!*initialized) {
 		memset(plugin_data, 0, desc->size);
+
+		//
+		// HACK(TS): all plugins depend on the "types" plugin to do static init correctly
+		//
+		void *types = lodge_plugins_depend(plugins, plugin_data, strview("types"));
+		ASSERT(types);
 
 		//
 		// Check if we need to mount the plugin directory from source tree.
@@ -321,9 +323,6 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct 
 	// TODO(TS): find plugins either by looking for dynamic libraries in filesystem or static list
 
 	plugins->args = args;
-
-	lodge_plugin_registry_append(&lodge_plugin_types);
-	lodge_plugin_registry_append(&lodge_plugin_vfs);
 
 	for(uint32_t i = 0; i < lodge_plugin_registry_count; i++) {
 		plugins->list[plugins->count++] = lodge_plugin_registry[i]();
