@@ -9,7 +9,7 @@
 #include "lodge_plugins.h"
 #include "lodge_assets2.h"
 
-//#include <ctype.h>
+#include "config.h"
 
 enum shader_sources_userdata
 {
@@ -268,6 +268,15 @@ struct lodge_plugin_desc lodge_plugin_shader_sources()
 		.free_inplace = &lodge_shader_sources_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.static_mounts = {
+			.count = 1,
+			.elements = {
+				{
+					.src_dir = strview(ASSETS_DIR),
+					.dst_point = strview("/")
+				}
+			}
+		}
 	};
 }
 
