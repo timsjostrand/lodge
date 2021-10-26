@@ -25,6 +25,5 @@ target_link_libraries(lodge-plugins
 		lodge-plugin-types					# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
-		lodge-window						# FIXME(TS): separate plugin module
 		lodge-gfx							# FIXME(TS): separate plugin module
 )

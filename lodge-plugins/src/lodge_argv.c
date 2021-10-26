@@ -4,7 +4,7 @@
 #include "strview.h"
 #include "membuf.h"
 
-#include "lodge_window.h"
+#include "lodge_assert.h"
 #include "lodge_hash.h"
 
 #include <stdlib.h>
