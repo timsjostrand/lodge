@@ -25,7 +25,6 @@ target_link_libraries(lodge-plugins
 		lodge-plugin-images					# FIXME(TS): not statically defined
 		lodge-plugin-textures				# FIXME(TS): not statically defined
 		lodge-plugin-fbx					# FIXME(TS): not statically defined
-		lodge-plugin-shaders				# FIXME(TS): not statically defined
 	PUBLIC
 		lodge-lib
 		lodge-window						# FIXME(TS): separate plugin module
