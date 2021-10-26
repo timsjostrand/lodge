@@ -34,3 +34,5 @@ target_link_libraries(lodge-plugin-script
 		lodge-ns-editor # FIXME(TS): ns-editor should hook into editor, not the other way around
 		lodge-plugin-editor # FIXME(TS): ns-editor should hook into editor, not the other way around
 )
+
+lodge_target_make_plugin(lodge-plugin-script "lodge_plugin_script.h" lodge_plugin_script)
