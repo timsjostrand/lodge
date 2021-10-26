@@ -55,7 +55,17 @@ static struct lodge_ret lodge_plugin_renderdoc_new_inplace(struct lodge_plugin_r
 	return lodge_success();
 }
 
-struct lodge_plugin_desc lodge_plugin_renderdoc()
+void lodge_plugin_renderdoc_start_frame_capture(struct lodge_plugin_renderdoc *plugin)
+{
+	plugin->api->StartFrameCapture(NULL, NULL);
+}
+
+bool lodge_plugin_renderdoc_stop_frame_capture(struct lodge_plugin_renderdoc *plugin)
+{
+	return plugin->api->EndFrameCapture(NULL, NULL);
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_renderdoc)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -66,14 +76,4 @@ struct lodge_plugin_desc lodge_plugin_renderdoc()
 		.update = NULL,
 		.render = NULL,
 	};
-}
-
-void lodge_plugin_renderdoc_start_frame_capture(struct lodge_plugin_renderdoc *plugin)
-{
-	plugin->api->StartFrameCapture(NULL, NULL);
-}
-
-bool lodge_plugin_renderdoc_stop_frame_capture(struct lodge_plugin_renderdoc *plugin)
-{
-	return plugin->api->EndFrameCapture(NULL, NULL);
 }
