@@ -7,8 +7,10 @@ struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodg
 {
 	lodge_vfs_new_inplace(vfs);
 
-	strview_t mount_dir = lodge_argv_get_str(args, strview_static("mount"), strview_static("assets/"));
-	lodge_vfs_mount(vfs, strview_static("/"), mount_dir);
+	if(lodge_argv_is_arg(args, strview("mount"))) {
+		strview_t mount_dir = lodge_argv_get_str(args, strview("mount"), strview("assets/"));
+		lodge_vfs_mount(vfs, strview("/"), mount_dir);
+	}
 
 	return lodge_success();
 }
@@ -18,7 +20,7 @@ struct lodge_plugin_desc lodge_plugin_vfs()
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
 		.size = lodge_vfs_sizeof(),
-		.name = strview_static("vfs"),
+		.name = strview("vfs"),
 		.new_inplace = &lodge_plugin_vfs_new_inplace,
 		.free_inplace = &lodge_vfs_free_inplace,
 		.update = &lodge_vfs_update,
