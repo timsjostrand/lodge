@@ -3,6 +3,6 @@
 
 #include "lodge_plugin.h"
 
-struct lodge_plugin_desc lodge_plugin_vfs();
+LODGE_PLUGIN_DECL(lodge_plugin_vfs);
 
-#endif //_LODGE_PLUGIN_VFS_H
+#endif

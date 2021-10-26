@@ -15,7 +15,7 @@ struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodg
 	return lodge_success();
 }
 
-struct lodge_plugin_desc lodge_plugin_vfs()
+LODGE_PLUGIN_IMPL(lodge_plugin_vfs)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,

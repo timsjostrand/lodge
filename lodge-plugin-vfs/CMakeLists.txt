@@ -4,14 +4,14 @@ add_library(lodge-plugin-vfs STATIC "")
 
 target_sources(lodge-plugin-vfs
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin_vfs.c"
+		"lodge_plugin_vfs.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin_vfs.h"
+		"lodge_plugin_vfs.h"
 )
 
 target_include_directories(lodge-plugin-vfs
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"./"
 )
 
 target_link_libraries(lodge-plugin-vfs
@@ -20,3 +20,5 @@ target_link_libraries(lodge-plugin-vfs
 		lodge-plugins
 		lodge-vfs
 )
+
+lodge_target_make_plugin(lodge-plugin-vfs "lodge_plugin_vfs.h" lodge_plugin_vfs)
