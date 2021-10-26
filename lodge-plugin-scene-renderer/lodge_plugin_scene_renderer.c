@@ -1467,22 +1467,6 @@ static void lodge_scene_renderer_plugin_free_inplace(struct lodge_scene_renderer
 	//lodge_plugin_release(plugins, plugin->fbxes);
 }
 
-struct lodge_plugin_desc lodge_scene_renderer_plugin()
-{
-	//
-	// TODO(TS): if the plugin is reloaded for any reason, the system_type and all instances must be unloaded.
-	//
-	return (struct lodge_plugin_desc) {
-		.version = LODGE_PLUGIN_VERSION,
-		.size = sizeof(struct lodge_scene_renderer_plugin),
-		.name = strview("scene_renderer"),
-		.new_inplace = lodge_scene_renderer_plugin_new_inplace,
-		.free_inplace = lodge_scene_renderer_plugin_free_inplace,
-		.update = NULL,
-		.render = NULL,
-	};
-}
-
 struct lodge_scene_renderer_types lodge_scene_renderer_plugin_get_types(struct lodge_scene_renderer_plugin *plugin)
 {
 	return (struct lodge_scene_renderer_types) {
@@ -1581,4 +1565,20 @@ lodge_entity_t lodge_scene_get_entity_at_screen_pos(lodge_scene_t scene, vec2 sc
 	}
 
 	return (lodge_entity_t)((uintptr_t)sample.r);
+}
+
+LODGE_PLUGIN_IMPL(lodge_scene_renderer_plugin)
+{
+	//
+	// TODO(TS): if the plugin is reloaded for any reason, the system_type and all instances must be unloaded.
+	//
+	return (struct lodge_plugin_desc) {
+		.version = LODGE_PLUGIN_VERSION,
+		.size = sizeof(struct lodge_scene_renderer_plugin),
+		.name = strview("scene_renderer"),
+		.new_inplace = lodge_scene_renderer_plugin_new_inplace,
+		.free_inplace = lodge_scene_renderer_plugin_free_inplace,
+		.update = NULL,
+		.render = NULL,
+	};
 }

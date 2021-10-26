@@ -101,7 +101,6 @@ struct lodge_scene_renderer_types
 
 typedef void						(*lodge_scene_render_system_func_t)(lodge_scene_t scene, const struct lodge_scene_render_pass_params *pass_params, void *userdata);
 
-struct lodge_plugin_desc			lodge_scene_renderer_plugin();
 struct lodge_scene_renderer_types	lodge_scene_renderer_plugin_get_types(struct lodge_scene_renderer_plugin *plugin);
 struct lodge_assets2*				lodge_scene_renderer_plugin_get_shaders(struct lodge_scene_renderer_plugin *plugin);
 struct lodge_assets2*				lodge_scene_renderer_plugin_get_textures(struct lodge_scene_renderer_plugin *plugin);
@@ -114,5 +113,7 @@ void								lodge_scene_remove_render_pass_func(lodge_scene_t scene, enum lodge_
 //
 void								lodge_scene_set_active_camera(lodge_scene_t scene, lodge_entity_t camera_entity);
 lodge_entity_t						lodge_scene_get_entity_at_screen_pos(lodge_scene_t scene, vec2 screen_pos);
+
+LODGE_PLUGIN_DECL(lodge_scene_renderer_plugin);
 
 #endif
