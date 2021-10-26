@@ -6,8 +6,8 @@
 
 struct lodge_shader_source;
 
-struct lodge_plugin_desc	lodge_plugin_shader_sources();
-
 strview_t					lodge_shader_source_get_source(struct lodge_shader_source *source);
+
+LODGE_PLUGIN_DECL(lodge_plugin_shader_sources);
 
 #endif

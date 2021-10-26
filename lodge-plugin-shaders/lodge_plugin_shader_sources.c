@@ -258,7 +258,12 @@ static void lodge_shader_sources_free_inplace(struct lodge_assets2 *sources)
 	lodge_assets2_free_inplace(sources);
 }
 
-struct lodge_plugin_desc lodge_plugin_shader_sources()
+strview_t lodge_shader_source_get_source(struct lodge_shader_source *source)
+{
+	return source ? txt_to_strview(source->resolved) : strview_static("");
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_shader_sources)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -278,9 +283,4 @@ struct lodge_plugin_desc lodge_plugin_shader_sources()
 			}
 		}
 	};
-}
-
-strview_t lodge_shader_source_get_source(struct lodge_shader_source *source)
-{
-	return source ? txt_to_strview(source->resolved) : strview_static("");
 }

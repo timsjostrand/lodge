@@ -25,3 +25,6 @@ target_link_libraries(lodge-plugin-shaders
 )
 
 lodge_add_module_config(lodge-plugin-shaders "assets")
+
+lodge_target_make_plugin(lodge-plugin-shaders "lodge_plugin_shaders.h" lodge_plugin_shaders)
+lodge_target_make_plugin(lodge-plugin-shaders "lodge_plugin_shader_sources.h" lodge_plugin_shader_sources)

@@ -131,7 +131,14 @@ static void lodge_shaders_free_inplace(struct lodge_assets2 *shaders)
 	lodge_assets2_free_inplace(shaders);
 }
 
-struct lodge_plugin_desc lodge_plugin_shaders()
+struct shader_types lodge_plugin_shaders_get_types(struct lodge_assets2 *shaders)
+{
+	return (struct shader_types) {
+		.shader_asset_type = shaders ? lodge_assets2_get_userdata(shaders, USERDATA_ASSET_TYPE) : NULL,
+	};
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_shaders)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
@@ -141,12 +148,5 @@ struct lodge_plugin_desc lodge_plugin_shaders()
 		.free_inplace = &lodge_shaders_free_inplace,
 		.update = NULL,
 		.render = NULL,
-	};
-}
-
-struct shader_types lodge_plugin_shaders_get_types(struct lodge_assets2 *shaders)
-{
-	return (struct shader_types) {
-		.shader_asset_type = shaders ? lodge_assets2_get_userdata(shaders, USERDATA_ASSET_TYPE) : NULL,
 	};
 }
