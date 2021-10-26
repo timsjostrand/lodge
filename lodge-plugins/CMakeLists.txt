@@ -23,7 +23,6 @@ target_link_libraries(lodge-plugins
 
 		lodge-plugin-vfs					# FIXME(TS): not statically defined
 		lodge-plugin-types					# FIXME(TS): not statically defined
-		lodge-plugin-files                  # FIXME(TS)
 	PUBLIC
 		lodge-lib
 		lodge-window						# FIXME(TS): separate plugin module
