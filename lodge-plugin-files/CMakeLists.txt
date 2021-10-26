@@ -2,14 +2,14 @@ add_library(lodge-plugin-files STATIC "")
 
 target_sources(lodge-plugin-files
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin_files.c"
+		"lodge_plugin_files.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_plugin_files.h"
+		"lodge_plugin_files.h"
 )
 
 target_include_directories(lodge-plugin-files
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"./"
 )
 
 target_link_libraries(lodge-plugin-files
@@ -20,3 +20,5 @@ target_link_libraries(lodge-plugin-files
 		lodge-plugins
 		lodge-vfs
 )
+
+lodge_target_make_plugin(lodge-plugin-files "lodge_plugin_files.h" lodge_plugin_files)

@@ -186,19 +186,6 @@ static void lodge_files_free_inplace(struct lodge_assets2 *files)
 	lodge_assets2_free_inplace(files);
 }
 
-struct lodge_plugin_desc lodge_plugin_files()
-{
-	return (struct lodge_plugin_desc) {
-		.version = LODGE_PLUGIN_VERSION,
-		.size = lodge_assets2_sizeof() + sizeof(struct lodge_file_discovery),
-		.name = strview("files"),
-		.new_inplace = &lodge_files_new_inplace,
-		.free_inplace = &lodge_files_free_inplace,
-		.update = NULL,
-		.render = NULL,
-	};
-}
-
 void lodge_plugin_files_add_file_discovery(struct lodge_assets2 *files, struct lodge_assets2 *populate, lodge_file_filter_func_t filter)
 {
 	struct lodge_file_discovery *file_discovery = lodge_file_discovery_get(files);
@@ -211,4 +198,17 @@ void lodge_plugin_files_add_file_discovery(struct lodge_assets2 *files, struct l
 	struct lodge_vfs *vfs = lodge_assets2_get_userdata(files, USERDATA_VFS);
 
 	lodge_file_discovery_scan_entry(file_discovery, vfs, strview("/"), callback);
+}
+
+LODGE_PLUGIN_IMPL(lodge_plugin_files)
+{
+	return (struct lodge_plugin_desc) {
+		.version = LODGE_PLUGIN_VERSION,
+		.size = lodge_assets2_sizeof() + sizeof(struct lodge_file_discovery),
+		.name = strview("files"),
+		.new_inplace = &lodge_files_new_inplace,
+		.free_inplace = &lodge_files_free_inplace,
+		.update = NULL,
+		.render = NULL,
+	};
 }
