@@ -28,6 +28,8 @@
 #include "lodge_editor_properties_panel.h"
 #include "lodge_scene_editor.h"
 
+#include "config.h"
+
 struct lodge_editor_panels
 {
 	size_t										count;
@@ -192,7 +194,7 @@ static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, st
 		}
 	}
 
-	editor->gui_shader_asset = lodge_assets2_register(editor->shaders, strview("lodge_gui"));
+	editor->gui_shader_asset = lodge_assets2_register(editor->shaders, strview("editor/gui"));
 
 	dynbuf_new_inplace(dynbuf(editor->panels), 32);
 
@@ -399,6 +401,15 @@ struct lodge_plugin_desc lodge_plugin_editor()
 		.free_inplace = NULL, // &lodge_editor_free_inplace,
 		.update = &lodge_editor_update,
 		.render = &lodge_editor_render,
+		.static_mounts = {
+			.count = 1,
+			.elements = {
+				{
+					.src_dir = strview(ASSETS_DIR),
+					.dst_point = strview("/editor"),
+				}
+			}
+		},
 	};
 }
 

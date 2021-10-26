@@ -42,3 +42,5 @@ target_link_libraries(lodge-plugin-editor
 		lodge-plugin-scene-renderer
 		lodge-plugin-scenes
 )
+
+lodge_add_module_config(lodge-plugin-editor "assets")
