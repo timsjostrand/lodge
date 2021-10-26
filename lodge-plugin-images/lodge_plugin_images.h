@@ -3,6 +3,6 @@
 
 #include "lodge_plugin.h"
 
-struct lodge_plugin_desc lodge_plugin_images();
+LODGE_PLUGIN_DECL(lodge_plugin_images);
 
 #endif

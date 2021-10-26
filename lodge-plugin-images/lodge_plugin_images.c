@@ -150,7 +150,7 @@ static void lodge_images_free_inplace(struct lodge_assets2 *images)
 	lodge_assets2_free_inplace(images);
 }
 
-struct lodge_plugin_desc lodge_plugin_images()
+LODGE_PLUGIN_IMPL(lodge_plugin_images)
 {
 	return (struct lodge_plugin_desc) {
 		.version = LODGE_PLUGIN_VERSION,
