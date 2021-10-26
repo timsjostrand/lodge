@@ -9,7 +9,6 @@ target_sources(lodge-plugins
 		"include/lodge_plugin.h"
 		"include/lodge_plugins.h"
 		"include/lodge_argv.h"
-		"include/game.h"				# FIXME(TS): hack
 )
 
 target_include_directories(lodge-plugins

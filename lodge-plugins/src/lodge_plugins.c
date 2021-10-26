@@ -11,7 +11,6 @@
 
 // FIXME(TS): Just for `_plugin()` funcs
 #include "lodge_plugin.h"
-#include "game.h"
 #include "lodge_window.h"
 #include "lodge_vfs.h"
 #include "lodge_plugin_vfs.h"
@@ -353,7 +352,6 @@ struct lodge_ret lodge_plugins_find(struct lodge_plugins *plugins, const struct 
 	lodge_plugin_registry_append(&lodge_plugin_editor);
 	lodge_plugin_registry_append(&lodge_plugin_renderdoc);
 	lodge_plugin_registry_append(&lodge_plugin_script);
-	lodge_plugin_registry_append(&game_plugin);
 
 	for(uint32_t i = 0; i < lodge_plugin_registry_count; i++) {
 		plugins->list[plugins->count++] = lodge_plugin_registry[i]();
