@@ -1,6 +1,6 @@
 # lodge-lib
 
-add_library(lodge-lib STATIC "")
+add_library(lodge-lib OBJECT "")
 
 target_sources(lodge-lib
     PRIVATE
