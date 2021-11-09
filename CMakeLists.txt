@@ -51,7 +51,10 @@ target_link_libraries(lodge-modules-full
 #
 # Editor executable (minimal dependencies).
 #
-add_executable(lodge-editor-minimal "${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c")
+add_executable(lodge-editor-minimal
+    "${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c"
+    $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/cmake/lodge-editor.rc>
+)
 target_link_libraries(lodge-editor-minimal
     PRIVATE
         lodge-build-flags
@@ -65,7 +68,10 @@ target_link_libraries(lodge-editor-minimal
 #
 # Editor executable (all dependencies).
 #
-add_executable(lodge-editor-full "${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c")
+add_executable(lodge-editor-full
+    "${CMAKE_CURRENT_LIST_DIR}/cmake/dummy.c"
+    $<$<PLATFORM_ID:Windows>:${CMAKE_CURRENT_LIST_DIR}/cmake/lodge-editor.rc>
+)
 target_link_libraries(lodge-editor-full
     PRIVATE
         lodge-build-flags
