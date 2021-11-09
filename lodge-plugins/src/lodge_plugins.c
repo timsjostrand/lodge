@@ -84,6 +84,7 @@ static struct lodge_ret lodge_plugin_try_initialize(struct lodge_plugins *plugin
 		//
 		void *types = lodge_plugins_depend(plugins, plugin->data, strview("types"));
 		ASSERT(types);
+		LODGE_UNUSED(types);
 
 		//
 		// Check if we need to mount the plugin directory from source tree.
@@ -372,9 +373,9 @@ void lodge_plugins_run(struct lodge_plugins *plugins)
 
 		/* Delta-time. */
 		float delta_time = 0;
-		if(frame_times->last_frame != 0) {
+		//if(frame_times->last_frame != 0) {
 			delta_time = lodge_timestamp_elapsed_ms(frame_times->last_frame) * plugins->delta_time_factor;
-		}
+		//}
 		frame_times->last_frame = before;
 
 		/* Update plugins */
