@@ -17,6 +17,7 @@ target_include_directories(lodge-plugin-shaders
 
 target_link_libraries(lodge-plugin-shaders
 	PRIVATE
+		lodge-build-flags
 		lodge-plugins
 		lodge-gfx
     PUBLIC

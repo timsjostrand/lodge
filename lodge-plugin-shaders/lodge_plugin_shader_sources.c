@@ -11,6 +11,8 @@
 
 #include "config.h"
 
+#include <ctype.h>
+
 enum shader_sources_userdata
 {
 	USERDATA_FILES,
