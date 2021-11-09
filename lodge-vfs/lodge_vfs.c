@@ -11,7 +11,7 @@
 #include "lodge_platform.h"
 #include "lodge_filewatch.h"
 
-#include "stb/stb.h"
+#include "stb/deprecated/stb.h"
 
 struct lodge_vfs_mount
 {

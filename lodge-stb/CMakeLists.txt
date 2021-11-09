@@ -10,7 +10,7 @@ target_sources(lodge-stb
         "lib/stb/stb_vorbis.c"
         "stb_image.c"
     PUBLIC
-        "lib/stb/stb.h"
+        "lib/stb/deprecated/stb.h"
         "stb_vorbis.h"
         "lib/stb/stb_image.h"
 )

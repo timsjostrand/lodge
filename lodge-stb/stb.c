@@ -1,2 +1,2 @@
 #define STB_DEFINE
-#include "stb/stb.h"
+#include "stb/deprecated/stb.h"
