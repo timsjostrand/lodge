@@ -48,7 +48,7 @@ struct sphere
 	float	r;
 };
 
-static struct ray ray_make(const vec3 origin, const vec3 dir)
+inline struct ray ray_make(const vec3 origin, const vec3 dir)
 {
 	return (struct ray) {
 		.origin = origin,
