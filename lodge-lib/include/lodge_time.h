@@ -1,7 +1,12 @@
 #ifndef _LODGE_TIME_H
 #define _LODGE_TIME_H
 
+#ifdef _WIN32
 typedef long long lodge_timestamp_t;
+#else
+#include <time.h>
+typedef struct timespec lodge_timestamp_t;
+#endif
 
 lodge_timestamp_t	lodge_timestamp_get();
 double				lodge_timestamp_elapsed_us(lodge_timestamp_t before);
