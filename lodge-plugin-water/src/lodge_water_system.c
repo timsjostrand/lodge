@@ -175,7 +175,7 @@ static void lodge_water_system_new_inplace(struct lodge_water_system *system, lo
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_FORWARD_TRANSPARENT, &lodge_water_system_render, system);
 }
 
-static void lodge_water_system_free_inplace(struct lodge_water_system *system, struct lodge_plugin_water *plugin)
+static void lodge_water_system_free_inplace(struct lodge_water_system *system, lodge_scene_t scene, struct lodge_plugin_water *plugin)
 {
 	//lodge_scene_render_system_remove_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_FORWARD_TRANSPARENT, lodge_water_system_render, system);
 }
@@ -220,10 +220,10 @@ lodge_system_type_t lodge_water_system_type_register(struct lodge_plugin_water *
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview("water_system"),
 		.size = sizeof(struct lodge_water_system),
-		.new_inplace = lodge_water_system_new_inplace,
-		.free_inplace = NULL,
-		.update = lodge_water_system_update,
-		.plugin = plugin,
+		.new_inplace = &lodge_water_system_new_inplace,
+		.free_inplace = &lodge_water_system_free_inplace,
+		.update = &lodge_water_system_update,
+		.userdata = plugin,
 		.properties = {
 			.count = 3,
 			.elements = {

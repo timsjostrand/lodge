@@ -53,10 +53,8 @@ LODGE_PLUGIN_IMPL(lodge_plugin_water)
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_plugin_water),
 		.name = strview("water"),
-		.new_inplace = lodge_plugin_water_new_inplace,
-		.free_inplace = lodge_plugin_water_free_inplace,
-		.update = NULL,
-		.render = NULL,
+		.new_inplace = &lodge_plugin_water_new_inplace,
+		.free_inplace = &lodge_plugin_water_free_inplace,
 		.static_mounts = {
 			.count = 1,
 			.elements = {

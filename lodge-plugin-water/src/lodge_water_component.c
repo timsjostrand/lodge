@@ -29,8 +29,8 @@ lodge_component_type_t lodge_water_component_type_register(struct lodge_plugin_w
 		LODGE_COMPONENT_TYPE_WATER = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview("water"),
 			.description = strview("A water plane."),
-			.new_inplace = lodge_water_component_new_inplace,
-			.free_inplace = lodge_water_component_free_inplace,
+			.new_inplace = &lodge_water_component_new_inplace,
+			.free_inplace = &lodge_water_component_free_inplace,
 			.size = sizeof(struct lodge_water_component),
 			.userdata = plugin,
 			.properties = {
