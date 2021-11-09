@@ -45,7 +45,7 @@ static void lodge_graph_asset_edit(struct lodge_assets2 *graphs, lodge_asset_t a
 		.panel = graph_editor,
 		.pos = vec2_make(0, 0),
 		.size = vec2_make(640, 480),
-		.update = node_editor_update_glue,
+		.update = &node_editor_update_glue,
 		.hide_scrollbar = true,
 		.allow_instances = true,
 	});
@@ -93,8 +93,8 @@ LODGE_PLUGIN_IMPL(lodge_plugin_script)
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_plugin_script),
 		.name = strview_static("script"),
-		.new_inplace = lodge_plugin_script_new_inplace,
-		.free_inplace = lodge_plugin_script_free_inplace,
+		.new_inplace = &lodge_plugin_script_new_inplace,
+		.free_inplace = &lodge_plugin_script_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};

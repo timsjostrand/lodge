@@ -90,12 +90,12 @@ static bool lodge_assets_graph_new_default_inplace(struct lodge_assets2 *graphs,
 {
 	lodge_graph_new_inplace(graph, NULL);
 
-	lodge_node_type_t type_const_i32 = lodge_node_type_find(strview("const::i32"));
+	//lodge_node_type_t type_const_i32 = lodge_node_type_find(strview("const::i32"));
 	lodge_node_type_t type_const_f32 = lodge_node_type_find(strview("const::f32"));
-	lodge_node_type_t type_conv_f32_to_i32 = lodge_node_type_find(strview("conv::f32_to_i32"));
-	lodge_node_type_t type_math_add_i32 = lodge_node_type_find(strview("math::add::i32"));
+	//lodge_node_type_t type_conv_f32_to_i32 = lodge_node_type_find(strview("conv::f32_to_i32"));
+	//lodge_node_type_t type_math_add_i32 = lodge_node_type_find(strview("math::add::i32"));
 	lodge_node_type_t type_math_mul_f32 = lodge_node_type_find(strview("math::mul::f32"));
-	lodge_node_type_t type_math_sin_f32 = lodge_node_type_find(strview("math::sin::f32"));
+	//lodge_node_type_t type_math_sin_f32 = lodge_node_type_find(strview("math::sin::f32"));
 
 	lodge_node_type_t type_scene_time_ms = lodge_node_type_find(strview("scene::time::ms"));
 	if(!type_scene_time_ms) {

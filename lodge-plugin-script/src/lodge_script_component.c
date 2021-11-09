@@ -3,6 +3,8 @@
 #include "lodge_component_type.h"
 #include "lodge_ns_graph.h"
 
+struct lodge_plugin_script;
+
 void lodge_script_component_new_inplace(struct lodge_script_component *component, struct lodge_plugin_script *plugin)
 {
 	component->enabled = true;
@@ -21,8 +23,8 @@ lodge_component_type_t lodge_script_component_type_register(lodge_type_t lodge_t
 	return lodge_component_type_register((struct lodge_component_desc) {
 		.name = strview_static("script"),
 		.description = strview_static("Visual script."),
-		.new_inplace = lodge_script_component_new_inplace,
-		.free_inplace = lodge_script_component_free_inplace,
+		.new_inplace = &lodge_script_component_new_inplace,
+		.free_inplace = &lodge_script_component_free_inplace,
 		.size = sizeof(struct lodge_script_component),
 		.properties = {
 			.count = 2,
@@ -31,8 +33,6 @@ lodge_component_type_t lodge_script_component_type_register(lodge_type_t lodge_t
 					.name = strview_static("enabled"),
 					.type = LODGE_TYPE_BOOL,
 					.offset = offsetof(struct lodge_script_component, enabled),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = NULL,
 				},
 				{
 					.name = strview_static("graph"),

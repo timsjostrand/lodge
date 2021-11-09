@@ -7,6 +7,7 @@
 #include "lodge_type_asset.h"
 
 #include "lodge_platform.h"
+#include "lodge_time.h"
 #include "lodge_type.h"
 #include "lodge_scene.h"
 #include "lodge_system_type.h"
@@ -160,10 +161,10 @@ lodge_system_type_t lodge_script_system_type_register(struct lodge_plugin_script
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview_static("script_system"),
 		.size = sizeof(struct lodge_script_system),
-		.new_inplace = lodge_script_system_new_inplace,
-		.free_inplace = lodge_script_system_free_inplace,
-		.update = lodge_script_system_update,
-		.plugin = plugin,
+		.new_inplace = &lodge_script_system_new_inplace,
+		.free_inplace = &lodge_script_system_free_inplace,
+		.update = &lodge_script_system_update,
+		.userdata = plugin,
 		.properties = {
 			.count = 2,
 			.elements = {
