@@ -353,8 +353,8 @@ bool lodge_vfs_iterate(struct lodge_vfs *vfs, strview_t path, strview_t mask, st
 			{
 				char **mount_files = stb_readdir_recursive(mount->path, (char*)mask.s);
 				size_t mount_files_count = stb_arr_len(mount_files);
-				for(size_t i = 0; i < mount_files_count; i++) {
-					const char *mount_file = mount_files[i];
+				for(size_t j = 0; j < mount_files_count; j++) {
+					const char *mount_file = mount_files[j];
 
 					struct lodge_vfs_entry *entry = dynbuf_append_no_init(dynbuf_wrap(out));
 					entry->dir = false;
