@@ -168,8 +168,8 @@ lodge_component_type_t lodge_foliage_component_type_register()
 		LODGE_COMPONENT_TYPE_FOLIAGE = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("foliage"),
 			.description = strview_static("Adds parametric foliage to terrain."),
-			.new_inplace = lodge_foliage_component_new_inplace,
-			.free_inplace = lodge_foliage_component_free_inplace,
+			.new_inplace = &lodge_foliage_component_new_inplace,
+			.free_inplace = &lodge_foliage_component_free_inplace,
 			.size = sizeof(struct lodge_foliage_component),
 			.properties = {
 				.count = 3,
@@ -186,14 +186,14 @@ lodge_component_type_t lodge_foliage_component_type_register()
 						.type = LODGE_TYPE_F32,
 						.offset = offsetof(struct lodge_foliage_component, threshold),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_instances_count,
+						.on_modified = &on_modified_instances_count,
 					},
 					{
 						.name = strview_static("axis_divisor"),
 						.type = LODGE_TYPE_F32,
 						.offset = offsetof(struct lodge_foliage_component, axis_divisor),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_instances_count,
+						.on_modified = &on_modified_instances_count,
 					},
 				}
 			}

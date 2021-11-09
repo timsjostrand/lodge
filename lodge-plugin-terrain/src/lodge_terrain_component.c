@@ -48,8 +48,8 @@ lodge_component_type_t lodge_terrain_component_type_register(lodge_type_t textur
 		LODGE_COMPONENT_TYPE_TERRAIN = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("terrain"),
 			.description = strview_static("Render terrain from a height field."),
-			.new_inplace = lodge_terrain_component_new_inplace,
-			.free_inplace = lodge_terrain_component_free_inplace,
+			.new_inplace = &lodge_terrain_component_new_inplace,
+			.free_inplace = &lodge_terrain_component_free_inplace,
 			.size = sizeof(struct lodge_terrain_component),
 			.properties = {
 				.count = 3,
@@ -59,14 +59,12 @@ lodge_component_type_t lodge_terrain_component_type_register(lodge_type_t textur
 						.type = LODGE_TYPE_U32,
 						.offset = offsetof(struct lodge_terrain_component, chunks_x),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = NULL,
 					},
 					{
 						.name = strview_static("chunks_y"),
 						.type = LODGE_TYPE_U32,
 						.offset = offsetof(struct lodge_terrain_component, chunks_y),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = NULL,
 					},
 					{
 						.name = strview_static("heightmap"),

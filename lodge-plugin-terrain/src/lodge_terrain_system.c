@@ -320,7 +320,7 @@ static void lodge_terrain_system_new_inplace(struct lodge_terrain_system *system
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW, &lodge_terrain_system_render, system);
 }
 
-static void lodge_terrain_system_free_inplace(struct lodge_terrain_system *system)
+static void lodge_terrain_system_free_inplace(struct lodge_terrain_system *system, lodge_scene_t scene, struct lodge_plugin_terrain *plugin)
 {
 	//lodge_scene_render_system_remove_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED, lodge_terrain_system_render, system);
 	//lodge_scene_render_system_remove_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW, lodge_terrain_system_render, system);
@@ -434,10 +434,10 @@ lodge_system_type_t lodge_terrain_system_type_register(struct lodge_plugin_terra
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview("terrain_system"),
 		.size = sizeof(struct lodge_terrain_system),
-		.new_inplace = lodge_terrain_system_new_inplace,
-		.free_inplace = NULL,
-		.update = lodge_terrain_system_update,
-		.plugin = plugin,
+		.new_inplace = &lodge_terrain_system_new_inplace,
+		.free_inplace = &lodge_terrain_system_free_inplace,
+		.update = &lodge_terrain_system_update,
+		.userdata = plugin,
 		.properties = {
 			.count = 7,
 			.elements = {
@@ -445,50 +445,38 @@ lodge_system_type_t lodge_terrain_system_type_register(struct lodge_plugin_terra
 					.name = strview("draw"),
 					.type = LODGE_TYPE_BOOL,
 					.offset = offsetof(struct lodge_terrain_system, draw),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = NULL,
 				},
 				{
 					.name = strview("update_lod_cull"),
 					.type = LODGE_TYPE_BOOL,
 					.offset = offsetof(struct lodge_terrain_system, update_lod_cull),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = NULL,
 				},
 				{
 					.name = strview("tesselated_plane"),
 					.type = LODGE_TYPE_BOOL,
 					.offset = offsetof(struct lodge_terrain_system, tesselated_plane),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = NULL,
 				},
 				{
 					.name = strview("debug"),
 					.type = LODGE_TYPE_BOOL,
 					.offset = offsetof(struct lodge_terrain_system, debug),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = NULL,
 				},
 				{
 					.name = strview("lod_level_min"),
 					.type = lodge_type_enum_terrain_lod_level,
 					.offset = offsetof(struct lodge_terrain_system, lod_level_min),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = on_modified_lod_level,
+					.on_modified = &on_modified_lod_level,
 				},
 				{
 					.name = strview("lod_level_max"),
 					.type = lodge_type_enum_terrain_lod_level,
 					.offset = offsetof(struct lodge_terrain_system, lod_level_max),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = on_modified_lod_level,
+					.on_modified = &on_modified_lod_level,
 				},
 				{
 					.name = strview("lod_switch_threshold"),
 					.type = LODGE_TYPE_F32,
 					.offset = offsetof(struct lodge_terrain_system, lod_switch_threshold),
-					.flags = LODGE_PROPERTY_FLAG_NONE,
-					.on_modified = NULL,
 				},
 			}
 		}

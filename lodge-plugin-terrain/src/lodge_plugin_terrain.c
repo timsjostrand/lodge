@@ -51,9 +51,7 @@ LODGE_PLUGIN_IMPL(lodge_plugin_terrain)
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_plugin_terrain),
 		.name = strview_static("terrain"),
-		.new_inplace = lodge_plugin_terrain_new_inplace,
-		.free_inplace = lodge_plugin_terrain_free_inplace,
-		.update = NULL,
-		.render = NULL,
+		.new_inplace = &lodge_plugin_terrain_new_inplace,
+		.free_inplace = &lodge_plugin_terrain_free_inplace,
 	};
 }
