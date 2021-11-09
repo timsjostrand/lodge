@@ -120,7 +120,7 @@ void lodge_editor_viewport_panel_update(struct lodge_viewport_panel *panel, stru
 		}
 	}
 
-	struct lodge_scene *scene = lodge_editor_get_current_scene(editor);
+	//struct lodge_scene *scene = lodge_editor_get_current_scene(editor);
 	nk_image(ctx, nk_image_ptr(panel->texture));
 
 	//	nk_end(ctx);

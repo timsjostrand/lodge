@@ -28,14 +28,28 @@ static void lodge_editor_controller_component_new_inplace(struct lodge_editor_co
 
 static void lodge_editor_controller_component_move(struct lodge_editor_controller_component *component, const mat4 *view, vec3 delta_pos)
 {
-	const vec3 forward = mat4_view_forward(view);
-	const vec3 strafe = mat4_view_strafe(view);
+	const vec3 forward = mat4_view_get_forward_vector(view);
+	const vec3 strafe = mat4_view_get_strafe_vector(view);
+	const vec3 up = mat4_view_get_up_vector(view);
 
 	vec3 delta_pos_scaled = vec3_mult_scalar(delta_pos, component->move_speed);
 	vec3 delta = vec3_mult_scalar(forward, delta_pos_scaled.z);
 	delta = vec3_add(delta, vec3_mult_scalar(strafe, delta_pos_scaled.x));
+	delta = vec3_add(delta, vec3_mult_scalar(up, delta_pos_scaled.y));
 
 	component->target_pos = vec3_add(component->target_pos, delta);
+}
+
+static void lodge_editor_controller_component_snap_to_target_pos(lodge_scene_t scene, struct lodge_editor_controller_component *component)
+{
+	lodge_entity_t owner = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_EDITOR_CONTROLLER, component);
+
+	struct lodge_transform_component *owner_transform = lodge_scene_get_entity_component(scene, owner, LODGE_COMPONENT_TYPE_TRANSFORM);
+	ASSERT(owner_transform);
+		
+	if(owner_transform) {
+		owner_transform->translation = component->target_pos;
+	}
 }
 
 lodge_component_type_t lodge_editor_controller_component_type_register()
@@ -107,11 +121,31 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 		struct lodge_input *input = component->input;
 
 		if(input) {
-			// Look
 			const vec2 mouse_pos = lodge_input_get_mouse_position(input);
-			if(lodge_input_is_mouse_button_position_valid(input)) {
-				if(component->last_mouse_pos.x != -FLT_MAX)
-				{
+			const bool last_mouse_pos_valid = (component->last_mouse_pos.x != -FLT_MAX);
+			const bool input_mouse_pos_valid = lodge_input_is_mouse_button_position_valid(input);
+			const bool right_mouse_down = lodge_input_is_mouse_button_down(input, LODGE_MOUSE_BUTTON_RIGHT);
+			const bool left_mouse_down = lodge_input_is_mouse_button_down(input, LODGE_MOUSE_BUTTON_LEFT);
+
+			if(input_mouse_pos_valid && last_mouse_pos_valid) {
+				if(right_mouse_down && left_mouse_down) {
+					//
+					// Mouse move
+					//
+					const vec2 delta = vec2_sub(mouse_pos, component->last_mouse_pos);
+					const vec3 delta_scaled = {
+						.x = delta.x,
+						.y = delta.y,
+						.z = 0.0f,
+					};
+
+					const mat4 view = lodge_camera_calc_view_matrix(scene, owner);
+					lodge_editor_controller_component_move(component, &view, delta_scaled);
+					lodge_editor_controller_component_snap_to_target_pos(scene, component);
+				} else if(right_mouse_down) {
+					//
+					// Mouse look
+					//
 					const vec3 owner_rot = lodge_get_rotation(scene, owner);
 					//const vec2 delta = vec2_sub(component->last_mouse_pos, mouse_pos);
 					const vec2 delta = vec2_sub(mouse_pos, component->last_mouse_pos);
@@ -128,7 +162,13 @@ static void lodge_editor_controller_system_update(struct lodge_editor_controller
 			}
 			component->last_mouse_pos = mouse_pos;
 
-			// Move
+			//
+			// TODO(TS): Scroll to modify move speed
+			//
+
+			//
+			// WASD movement
+			//
 			{
 				float speed = 1.0f;
 
