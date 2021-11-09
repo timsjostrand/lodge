@@ -15,7 +15,7 @@
 char* lodge_graph_to_text(lodge_graph_t graph, size_t *size_out)
 {
 	lodge_json_t root = lodge_json_new_object();
-	lodge_json_t root_version = lodge_json_object_set_number(root, strview_static("version"), 0);
+	/*lodge_json_t root_version =*/ lodge_json_object_set_number(root, strview_static("version"), 0);
 	lodge_json_t root_nodes = lodge_json_object_set_new_array(root, strview_static("nodes"));
 
 	for(size_t node_index = 0, nodes_count = graph->nodes_count; node_index < nodes_count; node_index++) {
