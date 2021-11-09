@@ -20,14 +20,14 @@ lodge_system_type_t lodge_system_type_register(struct lodge_system_type_desc des
 	ASSERT(desc.plugin);
 	ASSERT(!strview_empty(desc.name));
 
-	for(size_t i = 0, count = desc.properties.count; i < count; i++) {
+	for(size_t i = 0, i_count = desc.properties.count; i < i_count; i++) {
 		struct lodge_property *property = &desc.properties.elements[i];
 		ASSERT(property->type);
 		ASSERT(property->offset < desc.size);
 		ASSERT((property->offset + lodge_type_get_size(property->type)) <= desc.size);
 		ASSERT(!strview_empty(property->name));
 
-		for(size_t j = 0, count = desc.properties.count; j < count; j++) {
+		for(size_t j = 0, j_count = desc.properties.count; j < j_count; j++) {
 			if(i == j) {
 				continue;;
 			}

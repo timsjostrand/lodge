@@ -9,7 +9,7 @@
 lodge_component_type_t LODGE_COMPONENT_TYPE_TRANSFORM = NULL;
 lodge_type_t LODGE_TYPE_ENUM_TRANSFORM_SPACE = NULL;
 
-static void lodge_transform_component_new_inplace(struct lodge_transform_component *component)
+static void lodge_transform_component_new_inplace(struct lodge_transform_component *component, void *userdata)
 {
 	*component = (struct lodge_transform_component) {
 		.space = LODGE_TRANSFORM_SPACE_LOCAL,

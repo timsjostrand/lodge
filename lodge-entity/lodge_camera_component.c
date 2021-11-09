@@ -8,7 +8,7 @@
 lodge_type_t LODGE_TYPE_PERSPECTIVE = NULL;
 lodge_component_type_t LODGE_COMPONENT_TYPE_CAMERA = NULL;
 
-void lodge_camera_component_new_inplace(struct lodge_camera_component *component)
+void lodge_camera_component_new_inplace(struct lodge_camera_component *component, void *userdata)
 {
 	component->perspective.fov_degrees = 60.0f;
 	component->perspective.z_near = 0.1f;

@@ -108,12 +108,7 @@ struct lodge_system_it		lodge_scene_systems_next(lodge_scene_t scene, struct lod
 void						lodge_scene_update(lodge_scene_t scene, float dt);
 float						lodge_scene_get_time(lodge_scene_t scene);
 
-void*						lodge_system_get_plugin(lodge_system_t system);
-
-#if 1
-struct mvp;
 void						lodge_scene_render(lodge_scene_t scene, struct lodge_system_render_params *render_params);
-#endif
 
 void						lodge_scene_set_entity_selected(lodge_scene_t scene, lodge_entity_t entity, bool selected);
 bool						lodge_scene_is_entity_selected(lodge_scene_t scene, lodge_entity_t entity);

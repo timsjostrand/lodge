@@ -423,11 +423,6 @@ void lodge_scene_render(lodge_scene_t scene, struct lodge_system_render_params *
 	}
 }
 
-void* lodge_system_get_plugin(lodge_system_t system)
-{
-	return system ? lodge_system_type_get_plugin(system->type) : NULL;
-}
-
 float lodge_scene_get_time(lodge_scene_t scene)
 {
 	return scene->time;

@@ -332,6 +332,12 @@ static bool make_property_widget_enum(struct nk_context *ctx, struct lodge_prope
 	return false;
 }
 
+static int lodge_property_to_gui_id(struct lodge_property *property, void *object)
+{
+	// FIXME(TS): bogus ids
+	return (int)((intptr_t)property + (intptr_t)object);
+}
+
 static bool make_property_widget_properties(struct nk_context *ctx, struct lodge_property *property, void *object)
 {
 	const void *value = lodge_property_get(property, object);
@@ -343,8 +349,7 @@ static bool make_property_widget_properties(struct nk_context *ctx, struct lodge
 		return false;
 	}
 
-	// FIXME(TS): bogus ids
-	int node_id = (int)object + (int)property->type;
+	int node_id = lodge_property_to_gui_id(property, object);
 	if(lodge_gui_property_widget_factory_make_tree(ctx, lodge_type_get_name(property->type), node_id, (char*)object + property->offset, subproperties)) {
 		if(property->on_modified) {
 			property->on_modified(property, object);
@@ -395,8 +400,8 @@ static bool make_property_widget_asset_ref(struct nk_context *ctx, struct lodge_
 		}
 
 		for(lodge_asset_t it = lodge_assets2_it_begin(assets); it; it = lodge_assets2_it_next(assets, it)) {
-			strview_t name = lodge_assets2_get_name(assets, it);
-			if(nk_combo_item_text(ctx, name.s, name.length, NK_TEXT_LEFT)) {
+			strview_t it_name = lodge_assets2_get_name(assets, it);
+			if(nk_combo_item_text(ctx, it_name.s, it_name.length, NK_TEXT_LEFT)) {
 				lodge_property_set(property, object, &it);
 				modified = true;
 			}
