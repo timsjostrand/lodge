@@ -43,7 +43,7 @@ struct lodge_plugin_debug_draw
 	lodge_component_type_t	sphere_component_type;
 };
 
-static void lodge_debug_sphere_component_new_inplace(struct lodge_debug_sphere *component)
+static void lodge_debug_sphere_component_new_inplace(struct lodge_debug_sphere *component, void *userdata)
 {
 	*component = (struct lodge_debug_sphere) {
 		.sphere = {
@@ -54,14 +54,12 @@ static void lodge_debug_sphere_component_new_inplace(struct lodge_debug_sphere *
 	};
 }
 
-static void lodge_debug_draw_system_update(struct lodge_debug_draw_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt)
+static void lodge_debug_draw_system_update(struct lodge_debug_draw_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt, struct lodge_plugin_debug_draw *plugin)
 {
 	//
 	// Load shaders?
 	//
 	{
-		struct lodge_plugin_debug_draw *plugin = lodge_system_type_get_plugin(type);
-
 		if(!system->shaders[0]) {
 			lodge_asset_t debug_draw_shader_asset = lodge_assets2_register(plugin->shaders, strview("debug_draw"));
 			system->shaders[0] = lodge_assets2_get(plugin->shaders, debug_draw_shader_asset);
@@ -141,7 +139,7 @@ static void lodge_debug_draw_system_render(lodge_scene_t scene, const struct lod
 	lodge_debug_draw_render(system->debug_draw, system->shaders, mvp);
 }
 
-static void lodge_debug_draw_system_new_inplace(struct lodge_debug_draw_system *system, lodge_scene_t scene)
+static void lodge_debug_draw_system_new_inplace(struct lodge_debug_draw_system *system, lodge_scene_t scene, struct lodge_plugin_debug_draw *plugin)
 {
 	system->debug_draw = (struct lodge_debug_draw *) malloc(lodge_debug_draw_sizeof());
 	lodge_debug_draw_new_inplace(system->debug_draw);
@@ -210,7 +208,7 @@ static lodge_system_type_t lodge_debug_draw_system_type_register(struct lodge_pl
 		.free_inplace = NULL,
 		.update = lodge_debug_draw_system_update,
 		.render = NULL,
-		.plugin = plugin,
+		.userdata = plugin,
 		.properties = {
 			.count = 1,
 			.elements = {
