@@ -196,6 +196,7 @@ bool lodge_vfs_remove_callback(struct lodge_vfs *vfs, strview_t virtual_path, lo
 	if(index >= 0) {
 		size_t removed = dynbuf_remove(dynbuf(func_entry->funcs), index, 1);
 		ASSERT(removed > 0);
+		LODGE_UNUSED(removed);
 		return true;
 	}
 
@@ -341,8 +342,6 @@ bool lodge_vfs_iterate(struct lodge_vfs *vfs, strview_t path, strview_t mask, st
 	}
 	ASSERT_NULL_TERMINATED(path);
 	ASSERT_NULL_TERMINATED(mask);
-
-	struct lodge_vfs_iterate_dynbuf ret = { 0 };
 
 	for(size_t i = 0, count = vfs->mounts_count; i < count; i++) {
 		struct lodge_vfs_mount *mount = &vfs->mounts[i];
