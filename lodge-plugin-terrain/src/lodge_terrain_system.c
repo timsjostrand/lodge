@@ -331,11 +331,8 @@ static void lodge_terrain_system_free_inplace(struct lodge_terrain_system *syste
 	}
 }
 
-static void lodge_terrain_system_update(struct lodge_terrain_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt)
+static void lodge_terrain_system_update(struct lodge_terrain_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt, struct lodge_plugin_terrain *plugin)
 {
-	struct lodge_plugin_terrain *plugin = lodge_system_type_get_plugin(type);
-	ASSERT(plugin);
-
 	if(system->terrain_shader_asset) {
 		system->render_datas.terrain_shader = lodge_assets2_get(plugin->shaders, system->terrain_shader_asset);
 	}

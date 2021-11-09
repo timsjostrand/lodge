@@ -97,7 +97,7 @@ static void lodge_foliage_lod_new_inplace(struct lodge_foliage_lod *lod, uint32_
 	lodge_foliage_lod_set_static_mesh(lod, NULL);
 }
 
-void lodge_foliage_component_new_inplace(struct lodge_foliage_component *foliage)
+void lodge_foliage_component_new_inplace(struct lodge_foliage_component *foliage, void *userdata)
 {
 	foliage->axis_divisor = 100.0f;
 	foliage->threshold = 1.0f;
@@ -111,7 +111,7 @@ void lodge_foliage_component_new_inplace(struct lodge_foliage_component *foliage
 	}
 }
 
-void lodge_foliage_component_free_inplace(struct lodge_foliage_component *foliage)
+void lodge_foliage_component_free_inplace(struct lodge_foliage_component *foliage, void *userdata)
 {
 	for(int lod_idx = 0; lod_idx < LODGE_FOLIAGE_LODS_MAX; lod_idx++) {
 		lodge_foliage_lod_free_inplace(&foliage->lods[lod_idx]);

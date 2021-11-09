@@ -4,7 +4,7 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_TERRAIN = NULL;
 
-void lodge_terrain_component_new_inplace(struct lodge_terrain_component *terrain)
+void lodge_terrain_component_new_inplace(struct lodge_terrain_component *terrain, void *userdata)
 {
 	terrain->chunks_x = 16;
 	terrain->chunks_y = 16;
@@ -35,7 +35,7 @@ void lodge_terrain_component_new_inplace(struct lodge_terrain_component *terrain
 	};
 }
 
-void lodge_terrain_component_free_inplace(struct lodge_terrain_component *terrain)
+void lodge_terrain_component_free_inplace(struct lodge_terrain_component *terrain, void *userdata)
 {
 	free(terrain->chunks);
 }
