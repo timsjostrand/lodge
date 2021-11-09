@@ -6,7 +6,7 @@
 #include "lodge_plugin_scenes.h"
 
 #include "lodge_properties.h"
-#include "lodge_gui_property_widget_factory.h"
+#include "lodge_gui_property_widgets.h"
 #include "lodge_scene_serialize.h"
 
 void lodge_editor_scenes_panel_update(struct lodge_scene_editor *panel, struct lodge_gui *gui, struct lodge_editor *editor, float dt)

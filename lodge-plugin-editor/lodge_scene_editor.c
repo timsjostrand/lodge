@@ -5,7 +5,7 @@
 #include "membuf.h"
 
 #include "lodge_gui.h"
-#include "lodge_gui_property_widget_factory.h"
+#include "lodge_gui_property_widgets.h"
 #include "lodge_scene.h"
 #include "lodge_scene_serialize.h"
 #include "lodge_serialize_json.h"

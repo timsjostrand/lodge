@@ -1,4 +1,4 @@
-#include "lodge_gui_property_widget_factory.h"
+#include "lodge_gui_property_widgets.h"
 
 #include "str.h"
 #include "math4.h"

@@ -5,10 +5,10 @@ add_library(lodge-gui STATIC "")
 target_sources(lodge-gui
 	PRIVATE
 		"src/lodge_gui.c"
-		"src/lodge_gui_property_widget_factory.c"
+		"src/lodge_gui_property_widgets.c"
 	PUBLIC
 		"include/lodge_gui.h"
-		"include/lodge_gui_property_widget_factory.h"
+		"include/lodge_gui_property_widgets.h"
 )
 
 target_include_directories(lodge-gui

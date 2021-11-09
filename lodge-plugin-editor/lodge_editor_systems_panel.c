@@ -2,7 +2,7 @@
 
 #include "lodge_scene_editor.h"
 #include "lodge_gui.h"
-#include "lodge_gui_property_widget_factory.h"
+#include "lodge_gui_property_widgets.h"
 #include "lodge_plugin_editor.h"
 #include "lodge_system_type.h"
 #include "lodge_scene.h"

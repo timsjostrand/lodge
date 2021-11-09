@@ -5,7 +5,7 @@
 #include "lodge_ns_graph.h"
 #include "lodge_ns_node.h"
 #include "lodge_ns_node_type.h"
-#include "lodge_gui_property_widget_factory.h"
+#include "lodge_gui_property_widgets.h"
 #include "lodge_properties.h"
 
 #include "lodge_json.h"
