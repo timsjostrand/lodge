@@ -97,7 +97,7 @@ static bool lodge_image_asset_new_inplace(struct lodge_assets2 *images, strview_
 			return false;
 		}
 
-		if(lodge_image_raw_new(image, &raw_desc, file->data, file->size)) {
+		if(lodge_image_raw_new(image, &raw_desc, (const uint8_t*)file->data, file->size)) {
 			free(header_file_data);
 			lodge_json_free(header);
 			return true;
@@ -105,7 +105,7 @@ static bool lodge_image_asset_new_inplace(struct lodge_assets2 *images, strview_
 		free(header_file_data);
 		lodge_json_free(header);
 	} else {
-		struct lodge_ret ret = lodge_image_new(image, file->data, file->size);
+		struct lodge_ret ret = lodge_image_new(image, (const uint8_t*)file->data, file->size);
 		if(ret.success) {
 			return true;
 		}
