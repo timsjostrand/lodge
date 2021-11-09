@@ -11,6 +11,8 @@
 #include "lodge_transform_component.h"
 #include "lodge_camera_component.h"
 
+#include <stdio.h>
+
 lodge_component_type_t LODGE_COMPONENT_TYPE_EDITOR_CONTROLLER = NULL;
 
 static void lodge_editor_controller_component_new_inplace(struct lodge_editor_controller_component *component, void *userdata)
@@ -44,7 +46,7 @@ lodge_component_type_t lodge_editor_controller_component_type_register()
 		LODGE_COMPONENT_TYPE_EDITOR_CONTROLLER = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("editor_controller"),
 			.description = strview_static("Controller used for flying around the world."),
-			.new_inplace = lodge_editor_controller_component_new_inplace,
+			.new_inplace = &lodge_editor_controller_component_new_inplace,
 			.free_inplace = NULL,
 			.size = sizeof(struct lodge_editor_controller_component),
 			.properties = {
@@ -179,10 +181,10 @@ lodge_system_type_t lodge_editor_controller_system_type_register(struct lodge_ed
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview_static("editor_controller_system"),
 		.size = sizeof(struct lodge_editor_controller_system),
-		.new_inplace = lodge_editor_controller_system_new_inplace,
+		.new_inplace = &lodge_editor_controller_system_new_inplace,
 		.free_inplace = NULL,
-		.update = lodge_editor_controller_system_update,
-		.plugin = plugin,
+		.update = &lodge_editor_controller_system_update,
+		.userdata = plugin,
 		.properties = {
 			.count = 0,
 			.elements = { 0 }

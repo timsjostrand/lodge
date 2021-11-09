@@ -119,6 +119,7 @@ static vec2 lodge_editor_calc_panels_rect(struct lodge_editor *editor)
 	return tmp;
 }
 
+#if 0
 static vec2 lodge_editor_get_window_size(struct lodge_editor *editor)
 {
 	int window_width = 0;
@@ -126,6 +127,7 @@ static vec2 lodge_editor_get_window_size(struct lodge_editor *editor)
 	lodge_window_get_size(editor->window, &window_width, &window_height);
 	return vec2_make((float)window_width, (float)window_height);
 }
+#endif
 
 static void lodge_editor_on_resize(lodge_window_t window, int width, int height, struct lodge_editor *editor)
 {
@@ -210,7 +212,7 @@ static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, st
 			return lodge_error("Failed to create window");
 		}
 		lodge_window_set_vsync_enabled(editor->window, 0);
-		lodge_window_set_resize_callback(editor->window, lodge_editor_on_resize, editor);
+		lodge_window_set_resize_callback(editor->window, &lodge_editor_on_resize, editor);
 	}
 
 	// GFX -- is this really necessary?
@@ -315,7 +317,7 @@ static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, st
 	return lodge_success();
 }
 
-static void lodge_editor_free_inplace(struct lodge_editor *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static void lodge_editor_free_inplace(struct lodge_editor *plugin)
 {
 	ASSERT_OR(plugin) { return; }
 
@@ -400,7 +402,7 @@ LODGE_PLUGIN_IMPL(lodge_plugin_editor)
 		.size = sizeof(struct lodge_editor),
 		.name = strview("editor"),
 		.new_inplace = &lodge_editor_new_inplace,
-		.free_inplace = NULL, // &lodge_editor_free_inplace,
+		.free_inplace = &lodge_editor_free_inplace,
 		.update = &lodge_editor_update,
 		.render = &lodge_editor_render,
 		.static_mounts = {
@@ -419,6 +421,7 @@ void lodge_editor_add_panel(struct lodge_editor *editor, struct lodge_editor_pan
 {
 	struct lodge_editor_panel *tmp = dynbuf_append(dynbuf(editor->panels), panel_desc, sizeof(struct lodge_editor_panel_desc));
 	ASSERT(tmp);
+	LODGE_UNUSED(tmp);
 }
 
 void lodge_editor_remove_panel(struct lodge_editor *editor, strview_t name)

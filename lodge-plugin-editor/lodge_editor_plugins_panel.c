@@ -42,9 +42,11 @@ void lodge_plugins_panel_update(struct lodge_plugins_panel *panel, lodge_gui_t g
 			if(!is_dependency) {
 				const bool ret = lodge_plugins_undepend(panel->plugins, editor, desc->name);
 				ASSERT(ret);
+				LODGE_UNUSED(ret);
 			} else {
 				const bool ret = lodge_plugins_depend(panel->plugins, editor, desc->name);
 				ASSERT(ret);
+				LODGE_UNUSED(ret);
 			}
 		}
 

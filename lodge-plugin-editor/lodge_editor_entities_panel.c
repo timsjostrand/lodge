@@ -124,6 +124,7 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 				if(!strview_empty(clipboard)) {
 					lodge_entity_t entity = lodge_scene_entity_from_text(scene, clipboard);
 					ASSERT(entity);
+					LODGE_UNUSED(entity);
 				}
 			}
 		}
