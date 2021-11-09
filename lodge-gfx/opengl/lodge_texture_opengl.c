@@ -53,7 +53,7 @@ static enum lodge_pixel_format lodge_pixel_format_from_image(const struct lodge_
 	}
 }
 
-static enum lodge_pixel_format lodge_pixel_type_from_image(const struct lodge_image *image)
+static enum lodge_pixel_data_type lodge_pixel_type_from_image(const struct lodge_image *image)
 {
 	switch(image->desc.bytes_per_channel)
 	{
@@ -124,7 +124,7 @@ static GLenum lodge_pixel_format_to_gl(enum lodge_pixel_format pixel_format)
 	}
 }
 
-static GLenum lodge_pixel_type_to_gl(enum lodge_pixel_type pixel_type)
+static GLenum lodge_pixel_type_to_gl(enum lodge_pixel_data_type pixel_type)
 {
 	switch(pixel_type)
 	{
@@ -184,6 +184,7 @@ lodge_texture_t lodge_texture_2d_make_from_data(struct lodge_texture_2d_desc *de
 
 	const bool ret = lodge_texture_2d_set_data(texture, desc, data_desc, true);
 	ASSERT(ret);
+	LODGE_UNUSED(ret);
 
 	return texture;
 }
@@ -258,6 +259,7 @@ struct lodge_texture_2d_desc lodge_texture_2d_desc_make_from_image(const struct 
 static bool lodge_texture_cubemap_load_side(GLuint texture, GLenum side, const struct lodge_texture_2d_desc desc, struct lodge_texture_data_desc data)
 {
 	ASSERT(lodge_texture_is_power_of_2(desc.width, desc.height));
+	LODGE_UNUSED(lodge_texture_is_power_of_2);
 
 	// copy image data into 'target' side of cube map
 	//glTexImage2D(side, 0, format.internal_format, image->desc.width, image->desc.height, 0, format.pixel_format, format.channel_type, image->pixel_data);
@@ -275,7 +277,7 @@ lodge_texture_t lodge_texture_2d_array_make(struct lodge_texture_2d_array_desc *
 
 	const uint32_t levels_count = desc->mipmaps_count != 0 ? desc->mipmaps_count : lodge_texture_calc_num_levels(desc->width, desc->height, 1);
 
-	glTextureStorage3D(texture, desc->mipmaps_count, lodge_texture_format_to_gl(desc->texture_format), desc->width, desc->height, desc->depth);
+	glTextureStorage3D(texture, levels_count, lodge_texture_format_to_gl(desc->texture_format), desc->width, desc->height, desc->depth);
 	GL_OK_OR_GOTO(fail);
 
 	return lodge_texture_from_gl(texture);

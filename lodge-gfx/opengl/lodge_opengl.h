@@ -47,67 +47,67 @@ typedef struct lodge_framebuffer* lodge_framebuffer_t;
 		} \
 	}
 
-static GLuint lodge_texture_to_gl(lodge_texture_t tex)
+static inline GLuint lodge_texture_to_gl(lodge_texture_t tex)
 {
 	ASSERT(tex > 0);
 	return (GLuint)((uintptr_t)tex);
 }
 
-static lodge_texture_t lodge_texture_from_gl(GLuint gl_tex)
+static inline lodge_texture_t lodge_texture_from_gl(GLuint gl_tex)
 {
 	return (lodge_texture_t)((uintptr_t)gl_tex);
 }
 
-static GLuint lodge_sampler_to_gl(lodge_sampler_t sampler)
+static inline GLuint lodge_sampler_to_gl(lodge_sampler_t sampler)
 {
 	ASSERT(sampler != NULL);
 	return (GLuint)((uintptr_t)sampler);
 }
 
-static lodge_sampler_t lodge_sampler_from_gl(GLuint name)
+static inline lodge_sampler_t lodge_sampler_from_gl(GLuint name)
 {
 	return (lodge_sampler_t)((uintptr_t)name);
 }
 
-static GLuint lodge_drawable_to_gl(const lodge_drawable_t drawable)
+static inline GLuint lodge_drawable_to_gl(const lodge_drawable_t drawable)
 {
 	ASSERT(drawable != NULL);
 	return (GLuint)((uintptr_t)drawable);
 }
 
-static lodge_drawable_t lodge_drawable_from_gl(GLuint drawable)
+static inline lodge_drawable_t lodge_drawable_from_gl(GLuint drawable)
 {
 	ASSERT(drawable > 0);
 	return (lodge_drawable_t)((uintptr_t)drawable);
 }
 
-static lodge_buffer_object_t lodge_buffer_object_from_gl(const GLuint buffer_object)
+static inline lodge_buffer_object_t lodge_buffer_object_from_gl(const GLuint buffer_object)
 {
 	ASSERT(buffer_object > 0);
 	return (lodge_buffer_object_t)((uintptr_t)buffer_object);
 }
 
-static GLuint lodge_buffer_object_to_gl(const lodge_buffer_object_t buffer_object)
+static inline GLuint lodge_buffer_object_to_gl(const lodge_buffer_object_t buffer_object)
 {
 	ASSERT(buffer_object != NULL);
 	return (GLuint)((uintptr_t)buffer_object);
 }
 
-static lodge_framebuffer_t lodge_framebuffer_from_gl(const GLuint framebuffer)
+static inline lodge_framebuffer_t lodge_framebuffer_from_gl(const GLuint framebuffer)
 {
 	// Framebuffer 0 <=> default fb
 	//ASSERT(framebuffer > 0);
 	return (lodge_framebuffer_t)((uintptr_t)(framebuffer + 1));
 }
 
-static GLuint lodge_framebuffer_to_gl(const lodge_framebuffer_t framebuffer)
+static inline GLuint lodge_framebuffer_to_gl(const lodge_framebuffer_t framebuffer)
 {
 	// Framebuffer 0 <=> default fb
 	ASSERT(framebuffer != NULL);
 	return (GLuint)((uintptr_t)(framebuffer) - 1);
 }
 
-static GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
+static inline GLenum lodge_texture_target_to_gl(enum lodge_texture_target target)
 {
 	switch(target)
 	{

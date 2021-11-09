@@ -109,6 +109,7 @@ static void drawable_set_vbo_xyzuv(GLfloat *vertices, GLuint vertex_count, GLuin
 	GL_OK_OR_RETURN();
 }
 
+#if 0
 /**
  * Obtain a matrix of vertices (xyzuv) for a circle with the given segments.
  *
@@ -148,6 +149,7 @@ static void drawable_get_vertices_circle(GLfloat *dst, float cx, float cy, float
 		y = s * t + c * y;
 	}
 }
+#endif
 
 /**
  * Produces a matrix of vertices (xyzuv) for a rectangle of the given

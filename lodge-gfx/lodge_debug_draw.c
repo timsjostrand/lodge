@@ -72,10 +72,12 @@ struct lodge_debug_draw
 	struct lodge_debug_draw_textures	textures;
 };
 
+#if 0
 static size_t lodge_debug_draw_calc_sphere_vertex_count(uint32_t sector_count, uint32_t stack_count)
 {
 	return (stack_count + 1) * (sector_count + 1);
 }
+#endif
 
 //
 // Inspired by http://www.songho.ca/opengl/gl_sphere.html
