@@ -48,6 +48,11 @@
 #define LODGE_ALLOCA _alloca
 #endif
 
+#ifdef linux
+#include <alloca.h>
+#define LODGE_ALLOCA alloca
+#endif
+
 //
 // LODGE_DEPRECATED marks a function as deprecated using compiler hints where available.
 // 
