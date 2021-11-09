@@ -2,6 +2,7 @@
 #define _SPARSE_SET_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 struct sparse_set;
 typedef struct sparse_set* sparse_set_t;

@@ -23,6 +23,7 @@
 
 #include "rqueue.h"
 
+#if 0
 static int rqueue_grow(struct rqueue *rqueue)
 {
 	if(rqueue == NULL) {
@@ -33,6 +34,7 @@ static int rqueue_grow(struct rqueue *rqueue)
 	}
 	return 0;
 }
+#endif
 
 static void rqueue_inc_back(struct rqueue *rqueue)
 {
