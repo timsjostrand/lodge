@@ -86,8 +86,8 @@ void lodge_editor_entities_panel_update(struct lodge_scene_editor *panel, lodge_
 					strview_t component_type_name = lodge_component_type_get_name(component_type);
 
 					if(nk_combo_item_text(ctx, component_type_name.s, component_type_name.length, NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE)) {
-						for(size_t i = 0; i < prev_selected_count; i++) {
-							lodge_entity_t selected = panel->selected[i];
+						for(size_t j = 0; j < prev_selected_count; j++) {
+							lodge_entity_t selected = panel->selected[j];
 							lodge_scene_add_entity_component(scene, selected, component_type);
 						}
 

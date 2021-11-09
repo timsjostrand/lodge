@@ -7,6 +7,11 @@
 #include "lodge_system_type.h"
 #include "lodge_scene.h"
 
+static int lodge_system_type_to_gui_id(lodge_system_type_t system_type)
+{
+	return (int)((intptr_t)system_type);
+}
+
 void lodge_editor_systems_panel_update(struct lodge_scene_editor *panel, struct lodge_gui *gui, struct lodge_editor *editor, float dt)
 {
 	struct lodge_scene *scene = lodge_editor_get_current_scene(editor);
@@ -33,7 +38,7 @@ void lodge_editor_systems_panel_update(struct lodge_scene_editor *panel, struct 
 	lodge_scene_systems_foreach(scene, it) {
 		strview_t type_name = lodge_system_type_get_name(it.type);
 		// FIXME(TS): bogus ids
-		const int system_id = (int)it.type;
+		const int system_id = lodge_system_type_to_gui_id(it.type);
 		lodge_gui_property_widget_factory_make_tree(ctx, type_name, system_id, it.value, lodge_system_type_get_properties(it.type));
 	}
 	//}

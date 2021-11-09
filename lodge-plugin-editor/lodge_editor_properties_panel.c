@@ -8,6 +8,11 @@
 
 #include "lodge_component_type.h"
 
+static int lodge_component_type_to_gui_id(lodge_component_type_t component_type)
+{
+	return (int)((intptr_t)component_type);
+}
+
 void lodge_editor_properties_panel_update(struct lodge_scene_editor *panel, lodge_gui_t gui, struct lodge_editor *editor, float dt)
 {
 	lodge_scene_t scene = lodge_editor_get_current_scene(editor);
@@ -28,7 +33,7 @@ void lodge_editor_properties_panel_update(struct lodge_scene_editor *panel, lodg
 
 		strview_t type_name = lodge_component_type_get_name(component_type);
 		// FIXME(TS): bogus ids
-		const int component_id = (int)component_type;
+		const int component_id = lodge_component_type_to_gui_id(component_type);
 		void* component = lodge_scene_get_entity_component(scene, panel->selected[0], component_type);
 
 		lodge_gui_property_widget_factory_make_tree(ctx, type_name, component_id, component, &panel->component_union.impostors[i]);

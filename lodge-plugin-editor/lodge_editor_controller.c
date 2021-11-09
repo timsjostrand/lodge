@@ -13,7 +13,7 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_EDITOR_CONTROLLER = NULL;
 
-static void lodge_editor_controller_component_new_inplace(struct lodge_editor_controller_component *component)
+static void lodge_editor_controller_component_new_inplace(struct lodge_editor_controller_component *component, void *userdata)
 {
 	*component = (struct lodge_editor_controller_component) {
 		.target_pos = vec3_zero(),
@@ -91,12 +91,12 @@ struct lodge_editor_controller_system
 	vec2 last_mouse_pos;
 };
 
-static void lodge_editor_controller_system_new_inplace(struct lodge_editor_controller_system *system, lodge_scene_t scene)
+static void lodge_editor_controller_system_new_inplace(struct lodge_editor_controller_system *system, lodge_scene_t scene, struct lodge_editor *plugin)
 {
 	system->last_mouse_pos = vec2_make(-FLT_MAX, -FLT_MAX);
 }
 
-static void lodge_editor_controller_system_update(struct lodge_editor_controller_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt)
+static void lodge_editor_controller_system_update(struct lodge_editor_controller_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt, struct lodge_editor *plugin)
 {
 	lodge_scene_components_foreach(scene, struct lodge_editor_controller_component*, component, LODGE_COMPONENT_TYPE_EDITOR_CONTROLLER) {
 		lodge_entity_t owner = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_EDITOR_CONTROLLER, component);
