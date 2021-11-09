@@ -41,6 +41,8 @@
 
 #define sizeof_member(type, member) sizeof(((type *)0)->member)
 
+#define LODGE_UNUSED(x) ((void)(x))
+
 #ifdef _WIN32
 #include <malloc.h>
 #define LODGE_ALLOCA _alloca
