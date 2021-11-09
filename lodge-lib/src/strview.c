@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <errno.h>
 
 strview_t strview_make(const char *s, size_t length)
 {
@@ -79,6 +80,7 @@ strview_t strview_substring_from_end(strview_t str, size_t offset)
 	return strview_make(str.s + str.length - offset, offset);
 }
 
+#if 0
 static inline bool strview_to_lu(const strview_t str, unsigned long *out)
 {
 	char *end_ptr = NULL;
@@ -92,6 +94,7 @@ static inline bool strview_to_lu(const strview_t str, unsigned long *out)
 	*out = tmp;
 	return true;
 }
+#endif
 
 static inline bool strview_to_umax(const strview_t str, uintmax_t max_value, uintmax_t *out)
 {

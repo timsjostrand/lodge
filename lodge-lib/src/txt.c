@@ -15,12 +15,14 @@
  * Author: Tim Sjöstrand <tim.sjostrand@gmail.com>
  */
 
-#include <string.h>
-#include <assert.h>
+#include "lodge_assert.h"
+#include "lodge_platform.h"
 
 #include "txt.h"
 #include "str.h"
 #include "math4.h"
+
+#include <string.h>
 
 struct txt
 {
@@ -50,10 +52,12 @@ static char* txt_tail(txt_t handle)
 	return handle + txt_length(handle);
 }
 
+#if 0
 static strbuf_t txt_to_strbuf(txt_t handle, struct txt *txt)
 {
 	return strbuf_make(handle, txt->size);
 }
+#endif
 
 txt_t txt_new(const strview_t str)
 {
@@ -65,7 +69,8 @@ txt_t txt_new(const strview_t str)
 
 	txt_t handle = txt_to_handle(txt);
 	int excluded = str_set(handle, txt_size, str);
-	assert(excluded == 0);
+	ASSERT(excluded == 0);
+	LODGE_UNUSED(excluded);
 
 	return handle;
 }
@@ -121,7 +126,7 @@ void txt_delete(txt_t handle, size_t index, size_t count)
 {
 	struct txt *txt = txt_from_handle(handle);
 	if(!str_delete(handle, txt->size, index, count)) {
-		assert(0);
+		ASSERT(0);
 	}
 	txt_fix_length(txt); // TODO: smart check: if deleted at end of string, middle of string, ...
 }
@@ -151,7 +156,7 @@ void txt_trim(txt_t handle)
 {
 	struct txt *txt = txt_from_handle(handle);
 	txt->length = str_trim(handle, txt->length);
-	assert(txt->length == strnlen(handle, txt->size));
+	ASSERT(txt->length == strnlen(handle, txt->size));
 }
 
 int txt_begins_with(txt_t handle, const strview_t sub)

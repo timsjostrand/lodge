@@ -123,6 +123,12 @@ void lodge_type_set_func(lodge_type_t type, size_t func_index, void *func)
 	}
 }
 
+enum dummy
+{
+	DUMMY,
+	DUMMY_MAX,
+};
+
 lodge_type_t lodge_type_register_enum(strview_t name, struct lodge_enum_desc desc)
 {
 	return lodge_type_register_with_userdata(name, sizeof(enum dummy), LODGE_TYPE_ENUM_DESC, &desc);

@@ -6,10 +6,12 @@
 
 #include <string.h>
 
+#if 0
 static inline void* membuf_tail(membuf_t buf)
 {
 	return buf.ptr + buf.size;
 }
+#endif
 
 membuf_t membuf_make(char *ptr, size_t size, size_t type_size)
 {
@@ -207,7 +209,7 @@ void* membuf_get(membuf_t buf, size_t index)
 void* membuf_set(membuf_t buf, size_t index, const void *src, size_t src_size)
 {
 	ASSERT(buf.type_size == src_size);
-	if(!buf.type_size == src_size) {
+	if(buf.type_size != src_size) {
 		return NULL;
 	}
 

@@ -552,6 +552,7 @@ int vsnprintf(char * const outBuf, size_t const size, const char * const format,
 #endif
 #endif
 
+#if 0
 #ifndef HAVE_SNPRINTF
 int snprintf(char *outBuf, size_t size, const char *format, ...)
 {
@@ -564,4 +565,5 @@ int snprintf(char *outBuf, size_t size, const char *format, ...)
 
 	return count;
 }
+#endif
 #endif
