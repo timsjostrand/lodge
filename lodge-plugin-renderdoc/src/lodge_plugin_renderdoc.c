@@ -4,6 +4,7 @@
 
 #include "lodge_platform.h"
 #include "lodge_argv.h"
+#include "lodge_dynamic_lib.h"
 
 struct lodge_plugin_renderdoc
 {
@@ -15,8 +16,9 @@ static void lodge_plugin_renderdoc_free_inplace(struct lodge_plugin_renderdoc *p
 {
 	if(plugin && plugin->lib) {
 		plugin->api->Shutdown();
-		int ret = lodge_lib_free(plugin->lib);
+		int ret = lodge_dynamic_lib_free(plugin->lib);
 		ASSERT(ret);
+		LODGE_UNUSED(ret);
 	}
 }
 
@@ -25,20 +27,20 @@ static struct lodge_ret lodge_plugin_renderdoc_new_inplace(struct lodge_plugin_r
 	strview_t renderdoc_lib_path_default = strview_static("C:/Program Files/RenderDoc/renderdoc.dll");
 	strview_t renderdoc_lib_path = lodge_argv_get_str(args, strview_static("renderdoc_path"), renderdoc_lib_path_default);
 
-	void *lib = lodge_lib_load(renderdoc_lib_path.s);
+	void *lib = lodge_dynamic_lib_load(renderdoc_lib_path.s);
 	ASSERT_OR(lib) {
 		return lodge_error("Failed to load renderdoc.dll");
 	}
 	
-	pRENDERDOC_GetAPI RENDERDOC_GetAPI = lodge_lib_get_symbol(lib, "RENDERDOC_GetAPI");
+	pRENDERDOC_GetAPI RENDERDOC_GetAPI = lodge_dynamic_lib_get_symbol(lib, "RENDERDOC_GetAPI");
 	ASSERT_OR(RENDERDOC_GetAPI) {
-		lodge_lib_free(lib);
+		lodge_dynamic_lib_free(lib);
 		return lodge_error("Failed to load RENDERDOC_GetAPI symbol");
 	}
 
 	bool ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_0_0, (void**)&plugin->api);
 	ASSERT_OR(ret) {
-		lodge_lib_free(lib);
+		lodge_dynamic_lib_free(lib);
 		return lodge_error("Failed to load eRENDERDOC_API_Version_1_0_0");
 	}
 
