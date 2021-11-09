@@ -9,7 +9,7 @@
 	{ \
 		lodge_node_set_outputs(node, 1, (struct lodge_pin[]) { \
 			{ \
-				.name = strview_static("out"), \
+				.name = strview("out"), \
 				.type = NS_TYPE, \
 			} \
 		}); \
@@ -30,16 +30,22 @@
 	static bool node_unary_ ## TYPE ## _configure(struct lodge_node *node) \
 	{ \
 		lodge_node_set_pins(node, \
-			1, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static("in"), \
-					.type = LODGE_TYPE, \
+			&(struct lodge_pins) { \
+				.count = 1,\
+				.pins = { \
+					{ \
+						.name = strview("in"), \
+						.type = LODGE_TYPE, \
+					}, \
 				}, \
 			}, \
-			1, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static("out"), \
-					.type = LODGE_TYPE \
+			&(struct lodge_pins) { \
+				.count = 1, \
+				.pins = { \
+					{ \
+						.name = strview("out"), \
+						.type = LODGE_TYPE \
+					}, \
 				} \
 			} \
 		); \
@@ -82,21 +88,27 @@
 	static bool node_binary_ ## TYPE ## _configure(struct lodge_node *node) \
 	{ \
 		lodge_node_set_pins(node, \
-			2, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static("lhs"), \
-					.type = LODGE_TYPE, \
+			&(struct lodge_pins) { \
+				.count = 2, \
+				.pins = { \
+					{ \
+						.name = strview("lhs"), \
+						.type = LODGE_TYPE, \
+					}, \
+					{ \
+						.name = strview("rhs"), \
+						.type = LODGE_TYPE, \
+					} \
 				}, \
-				{ \
-					.name = strview_static("rhs"), \
-					.type = LODGE_TYPE, \
-				} \
 			}, \
-			1, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static("out"), \
-					.type = LODGE_TYPE \
-				} \
+			&(struct lodge_pins) { \
+				.count = 1, \
+				.pins = { \
+					{ \
+						.name = strview("out"), \
+						.type = LODGE_TYPE \
+					} \
+				}, \
 			} \
 		); \
 		return true; \
@@ -127,20 +139,26 @@
 	static bool node_binary_ ## TYPE ## _configure(struct lodge_node *node) \
 	{ \
 		lodge_node_set_pins(node, \
-			2, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static("lhs"), \
-					.type = LODGE_TYPE, \
+			&(struct lodge_pins) { \
+				.count = 2, \
+				.pins = { \
+					{ \
+						.name = strview("lhs"), \
+						.type = LODGE_TYPE, \
+					}, \
+					{ \
+						.name = strview("rhs"), \
+						.type = LODGE_TYPE, \
+					} \
 				}, \
-				{ \
-					.name = strview_static("rhs"), \
-					.type = LODGE_TYPE, \
-				} \
 			}, \
-			1, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static("out"), \
-					.type = LODGE_TYPE \
+			&(struct lodge_pins) { \
+				.count = 1, \
+				.pins = { \
+					{ \
+						.name = strview("out"), \
+						.type = LODGE_TYPE \
+					} \
 				} \
 			} \
 		); \
@@ -189,13 +207,13 @@
 		lodge_node_set_pins(node, \
 			1, (struct lodge_pin[]) { \
 				{ \
-					.name = strview_static("in"), \
+					.name = strview("in"), \
 					.type = NS_TYPE ## , \
 				}, \
 			}, \
 			1, (struct lodge_pin[]) { \
 				{ \
-					.name = strview_static("out"), \
+					.name = strview("out"), \
 					.type = NS_TYPE ## , \
 				} \
 			} \

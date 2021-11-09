@@ -106,16 +106,22 @@ lodge_ns_node_binary_func_impl(mod, f64, double)	{ return fmod(lhs, rhs); }
 	static bool node_conv_ ## FROM_TYPE ## _to_ ## TO_TYPE ## _configure(struct lodge_node *node) \
 	{ \
 		lodge_node_set_pins(node, \
-			1, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static( #FROM_TYPE ), \
-					.type = FROM_LODGE_TYPE, \
+			&(struct lodge_pins) { \
+				.count = 1, \
+				.pins = { \
+					{ \
+						.name = strview( #FROM_TYPE ), \
+						.type = FROM_LODGE_TYPE, \
+					} \
 				}, \
 			}, \
-			1, (struct lodge_pin[]) { \
-				{ \
-					.name = strview_static( #TO_TYPE ), \
-					.type = TO_LODGE_TYPE, \
+			&(struct lodge_pins) { \
+				.count = 1, \
+				.pins = { \
+					{ \
+						.name = strview( #TO_TYPE ), \
+						.type = TO_LODGE_TYPE, \
+					}, \
 				} \
 			} \
 		); \
@@ -140,24 +146,30 @@ lodge_ns_node_cast_conv_impl(f32, float, LODGE_TYPE_F32, f64, double, LODGE_TYPE
 static bool node_math_lerp_f32_configure(struct lodge_node *node)
 {
 	lodge_node_set_pins(node,
-		3, (struct lodge_pin[]) {
-			{
-				.name = strview_static("min"),
-				.type = LODGE_TYPE_F32,
+		&(struct lodge_pins) {
+			.count = 3,
+			.pins = {
+				{
+					.name = strview("min"),
+					.type = LODGE_TYPE_F32,
+				},
+				{
+					.name = strview("max"),
+					.type = LODGE_TYPE_F32,
+				},
+				{
+					.name = strview("t"),
+					.type = LODGE_TYPE_F32,
+				}
 			},
-			{
-				.name = strview_static("max"),
-				.type = LODGE_TYPE_F32,
-			},
-			{
-				.name = strview_static("t"),
-				.type = LODGE_TYPE_F32,
-			}
 		},
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("out"),
-				.type = LODGE_TYPE_F32
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins =  {
+				{
+					.name = strview("out"),
+					.type = LODGE_TYPE_F32
+				}
 			}
 		}
 	);
@@ -187,7 +199,7 @@ static bool node_util_print_i32_configure(struct lodge_node *node)
 {
 	lodge_node_set_inputs(node, 1, (struct lodge_pin[]) {
 		{
-			.name = strview_static("i32"),
+			.name = strview("i32"),
 			.type = LODGE_TYPE_I32,
 		}
 	});
@@ -212,7 +224,7 @@ static bool node_util_print_f32_configure(struct lodge_node *node)
 {
 	lodge_node_set_inputs(node, 1, (struct lodge_pin[]) {
 		{
-			.name = strview_static("f32"),
+			.name = strview("f32"),
 			.type = LODGE_TYPE_F32,
 		}
 	});
@@ -236,24 +248,30 @@ static bool node_util_print_f32_run(struct lodge_node *node)
 static bool node_vec3_make_configure(struct lodge_node* node)
 {
 	lodge_node_set_pins(node,
-		3, (struct lodge_pin[]) {
-			{
-				.name = strview_static("x"),
-				.type = LODGE_TYPE_F32,
-			},
-			{
-				.name = strview_static("y"),
-				.type = LODGE_TYPE_F32,
-			},
-			{
-				.name = strview_static("z"),
-				.type = LODGE_TYPE_F32,
-			},
+		&(struct lodge_pins) {
+			.count = 3,
+			.pins = {
+				{
+					.name = strview("x"),
+					.type = LODGE_TYPE_F32,
+				},
+				{
+					.name = strview("y"),
+					.type = LODGE_TYPE_F32,
+				},
+				{
+					.name = strview("z"),
+					.type = LODGE_TYPE_F32,
+				},
+			}
 		},
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("vec3"),
-				.type = LODGE_TYPE_VEC3,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("vec3"),
+					.type = LODGE_TYPE_VEC3,
+				}
 			}
 		}
 	);
@@ -284,16 +302,22 @@ static bool node_vec3_make_run(struct lodge_node* node)
 static bool node_vec3_get_x_configure(struct lodge_node* node)
 {
 	lodge_node_set_pins(node,
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("vec3"),
-				.type = LODGE_TYPE_VEC3,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("vec3"),
+					.type = LODGE_TYPE_VEC3,
+				}
 			}
 		},
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("x"),
-				.type = LODGE_TYPE_F32,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("x"),
+					.type = LODGE_TYPE_F32,
+				}
 			}
 		}
 	);
@@ -313,24 +337,30 @@ static bool node_vec3_get_x_run(struct lodge_node* node)
 static bool node_vec3_break_configure(struct lodge_node* node)
 {
 	lodge_node_set_pins(node,
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("vec3"),
-				.type = LODGE_TYPE_VEC3,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("vec3"),
+					.type = LODGE_TYPE_VEC3,
+				}
 			}
 		},
-		3, (struct lodge_pin[]) {
-			{
-				.name = strview_static("x"),
-				.type = LODGE_TYPE_F32,
-			},
-			{
-				.name = strview_static("y"),
-				.type = LODGE_TYPE_F32,
-			},
-			{
-				.name = strview_static("z"),
-				.type = LODGE_TYPE_F32,
+		&(struct lodge_pins) {
+			.count = 3,
+			.pins = {
+				{
+					.name = strview("x"),
+					.type = LODGE_TYPE_F32,
+				},
+				{
+					.name = strview("y"),
+					.type = LODGE_TYPE_F32,
+				},
+				{
+					.name = strview("z"),
+					.type = LODGE_TYPE_F32,
+				}
 			}
 		}
 	);
@@ -352,16 +382,22 @@ static bool node_vec3_break_run(struct lodge_node* node)
 static bool node_vec3_get_y_configure(struct lodge_node* node)
 {
 	lodge_node_set_pins(node,
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("vec3"),
-				.type = LODGE_TYPE_VEC3,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("vec3"),
+					.type = LODGE_TYPE_VEC3,
+				}
 			}
 		},
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("y"),
-				.type = LODGE_TYPE_F32,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("y"),
+					.type = LODGE_TYPE_F32,
+				}
 			}
 		}
 	);
@@ -381,16 +417,22 @@ static bool node_vec3_get_y_run(struct lodge_node* node)
 static bool node_vec3_get_z_configure(struct lodge_node* node)
 {
 	lodge_node_set_pins(node,
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("vec3"),
-				.type = LODGE_TYPE_VEC3,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("vec3"),
+					.type = LODGE_TYPE_VEC3,
+				}
 			}
 		},
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("z"),
-				.type = LODGE_TYPE_F32,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("z"),
+					.type = LODGE_TYPE_F32,
+				}
 			}
 		}
 	);

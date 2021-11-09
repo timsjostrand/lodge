@@ -35,16 +35,22 @@ struct lodge_script_system
 static bool lodge_node_editor_controller_state_configure(lodge_node_t node)
 {
 	lodge_node_set_pins(node,
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("key"),
-				.type = LODGE_TYPE_I32,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("key"),
+					.type = LODGE_TYPE_I32,
+				}
 			}
 		},
-		1, (struct lodge_pin[]) {
-			{
-				.name = strview_static("down"),
-				.type = LODGE_TYPE_BOOL,
+		&(struct lodge_pins) {
+			.count = 1,
+			.pins = {
+				{
+					.name = strview("down"),
+					.type = LODGE_TYPE_BOOL,
+				}
 			}
 		}
 	);
@@ -85,7 +91,7 @@ static bool lodge_node_entity_get_component_configure(lodge_node_t node)
 	lodge_node_set_pins(node,
 		1, (struct lodge_pin[]) {
 			{
-				.name = strview_static("type"),
+				.name = strview("type"),
 				.type = LODGE_TYPE_COMPONENT_TYPE,
 			}
 		},
@@ -159,7 +165,7 @@ static void lodge_script_system_update(struct lodge_script_system *system, lodge
 lodge_system_type_t lodge_script_system_type_register(struct lodge_plugin_script *plugin)
 {
 	return lodge_system_type_register((struct lodge_system_type_desc) {
-		.name = strview_static("script_system"),
+		.name = strview("script_system"),
 		.size = sizeof(struct lodge_script_system),
 		.new_inplace = &lodge_script_system_new_inplace,
 		.free_inplace = &lodge_script_system_free_inplace,
@@ -169,13 +175,13 @@ lodge_system_type_t lodge_script_system_type_register(struct lodge_plugin_script
 			.count = 2,
 			.elements = {
 				{
-					.name = strview_static("enabled"),
+					.name = strview("enabled"),
 					.type = LODGE_TYPE_BOOL,
 					.offset = offsetof(struct lodge_script_system, enabled),
 					.flags = LODGE_PROPERTY_FLAG_NONE,
 				},
 				{
-					.name = strview_static("elapsed"),
+					.name = strview("elapsed"),
 					.type = LODGE_TYPE_F32,
 					.offset = offsetof(struct lodge_script_system, elapsed),
 					.flags = LODGE_PROPERTY_FLAG_READ_ONLY,

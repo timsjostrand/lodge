@@ -57,12 +57,24 @@ struct lodge_node
 	struct lodge_variant		config;
 };
 
+struct lodge_pins
+{
+	lodge_pin_idx_t				count;
+
+	// "pins" and "elements" are aliased.
+	union
+	{
+		struct lodge_pin		pins[];
+		struct lodge_pin		elements[];
+	};
+};
+
 void							lodge_node_reset(lodge_node_t node);
 
 void							lodge_node_set_config(lodge_node_t node, struct lodge_variant *config);
 struct lodge_variant*			lodge_node_get_config(lodge_node_t node);
 
-void							lodge_node_set_pins(lodge_node_t node, lodge_pin_idx_t inputs_count, struct lodge_pin input_pins[], lodge_pin_idx_t outputs_count, struct lodge_pin output_pins[]);
+void							lodge_node_set_pins(lodge_node_t node, struct lodge_pins *inputs, struct lodge_pins *outputs);
 void							lodge_node_set_inputs(lodge_node_t node, const lodge_pin_idx_t count, struct lodge_pin pins[]);
 void							lodge_node_set_outputs(lodge_node_t node, const lodge_pin_idx_t count, struct lodge_pin pins[]);
 

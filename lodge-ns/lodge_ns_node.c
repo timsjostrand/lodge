@@ -67,10 +67,15 @@ struct lodge_variant* lodge_node_get_config(lodge_node_t node)
 	return &node->config;
 }
 
-void lodge_node_set_pins(lodge_node_t node, lodge_pin_idx_t inputs_count, struct lodge_pin input_pins[], lodge_pin_idx_t outputs_count, struct lodge_pin output_pins[])
+void lodge_node_set_pins(lodge_node_t node, struct lodge_pins *inputs, struct lodge_pins *outputs)
 {
-	lodge_node_set_inputs(node, inputs_count, input_pins);
-	lodge_node_set_outputs(node, outputs_count, output_pins);
+	ASSERT_OR(inputs || outputs) { return; }
+	if(inputs) {
+		lodge_node_set_inputs(node, inputs->count, inputs->pins);
+	}
+	if(outputs) {
+		lodge_node_set_outputs(node, outputs->count, outputs->pins);
+	}
 }
 
 void lodge_node_set_outputs(lodge_node_t node, const lodge_pin_idx_t count, struct lodge_pin pins[])
