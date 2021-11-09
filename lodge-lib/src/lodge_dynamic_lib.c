@@ -9,7 +9,7 @@
 #include <dlfcn.h>
 #endif
 
-void* lodge_lib_load(const char *filename)
+void* lodge_dynamic_lib_load(const char *filename)
 {
 	void *library = 0;
 
@@ -48,10 +48,10 @@ void* lodge_lib_load_copy(const char *filename, size_t size, void *data)
 	fwrite(data, sizeof(char), size, fp);
 	fclose(fp);
 
-	return lodge_lib_load(name);
+	return lodge_dynamic_lib_load(name);
 }
 
-void* lodge_lib_get_symbol(void *library, const char *symbol_name)
+void* lodge_dynamic_lib_get_symbol(void *library, const char *symbol_name)
 {
 	void *symbol = 0;
 
@@ -68,7 +68,7 @@ void* lodge_lib_get_symbol(void *library, const char *symbol_name)
 	return symbol;
 }
 
-int lodge_lib_free(void *library)
+int lodge_dynamic_lib_free(void *library)
 {
 #ifdef _WIN32
 	return FreeLibrary((HINSTANCE)library);

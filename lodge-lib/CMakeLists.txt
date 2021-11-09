@@ -6,7 +6,7 @@ target_sources(lodge-lib
     PRIVATE
         "src/lodge.c"
         "src/lodge_time.c"
-        "src/lodge_lib.c"
+        "src/lodge_dynamic_lib.c"
         "src/lodge_hash.c"
         "src/lodge_type.c"
         "src/lodge_variant.c"
@@ -39,7 +39,7 @@ target_sources(lodge-lib
         "include/lodge_time.h"
         "include/lodge_assert.h"
         "include/lodge_platform.h"
-        "include/lodge_lib.h"
+        "include/lodge_dynamic_lib.h"
         "include/lodge_hash.h"
         "include/lodge_type.h"
         "include/lodge_variant.h"
