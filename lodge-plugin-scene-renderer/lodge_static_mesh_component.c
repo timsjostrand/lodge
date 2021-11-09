@@ -13,12 +13,12 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_STATIC_MESH = NULL;
 
-static void lodge_static_mesh_component_new_inplace(struct lodge_static_mesh_component *component)
+static void lodge_static_mesh_component_new_inplace(struct lodge_static_mesh_component *component, void *userdata)
 {
 	*component = (struct lodge_static_mesh_component) { 0 };
 }
 
-static void lodge_static_mesh_component_free_inplace(struct lodge_static_mesh_component *component)
+static void lodge_static_mesh_component_free_inplace(struct lodge_static_mesh_component *component, void *userdata)
 {
 #if 0
 	// TODO(TS): these should live in resource managers instead

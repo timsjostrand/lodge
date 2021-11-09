@@ -4,7 +4,7 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_DIRECTIONAL_LIGHT;
 
-static void lodge_directional_light_component_new_inplace(struct lodge_directional_light_component *directional_light)
+static void lodge_directional_light_component_new_inplace(struct lodge_directional_light_component *directional_light, void *userdata)
 {
 	directional_light->dir = vec3_make(0.0f, 0.0f, -1.0f);
 	directional_light->intensities = vec3_ones();

@@ -4,7 +4,7 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_POINT_LIGHT;
 
-static void lodge_point_light_component_new_inplace(struct lodge_point_light_component *point_light)
+static void lodge_point_light_component_new_inplace(struct lodge_point_light_component *point_light, void *userdata)
 {
 	point_light->intensities = vec3_ones();
 	point_light->attenuation = 0.01f;

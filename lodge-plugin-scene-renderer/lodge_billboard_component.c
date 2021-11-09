@@ -2,7 +2,7 @@
 
 #include "lodge_component_type.h"
 
-static void lodge_billboard_component_new_inplace(struct lodge_billboard_component *billboard)
+static void lodge_billboard_component_new_inplace(struct lodge_billboard_component *billboard, void *userdata)
 {
 	billboard->size = vec2_make(32.0f, 32.0f);
 	billboard->editor_only = true;

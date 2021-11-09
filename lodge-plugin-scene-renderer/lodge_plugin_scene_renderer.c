@@ -401,7 +401,7 @@ static void lodge_scene_render_system_hdr_resize(struct lodge_hdr *hdr, uint32_t
 		.mipmaps_count = hdr->bloom_samples_count,
 		.texture_format = LODGE_TEXTURE_FORMAT_RGBA16F,
 	});
-	for(int i=0; i<hdr->bloom_samples_count; i++) {
+	for(uint32_t i=0; i<hdr->bloom_samples_count; i++) {
 		lodge_texture_reset(hdr->bloom_downsample_texture_levels[i]);
 		hdr->bloom_downsample_texture_levels[i] = lodge_texture_view_make(hdr->bloom_downsample_texture, LODGE_TEXTURE_TARGET_2D, LODGE_TEXTURE_FORMAT_RGBA16F, i, 1, 0, 1);
 
@@ -463,7 +463,7 @@ static void lodge_scene_render_system_offscreen_resized(struct lodge_scene_rende
 	});
 }
 
-static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_system *system, lodge_scene_t scene)
+static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_system *system, lodge_scene_t scene, struct lodge_scene_renderer_plugin *plugin)
 {
 	system->render_width = 1920;
 	system->render_height = 1080;
@@ -538,9 +538,6 @@ static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_syst
 		//system->shadow_map_draw_debug = false;
 	}
 
-	struct lodge_scene_renderer_plugin *plugin = lodge_system_type_get_plugin(LODGE_SYSTEM_TYPE_SCENE_RENDER);
-	ASSERT(plugin);
-
 	system->shaders = plugin->shaders;
 	system->textures = plugin->textures;
 
@@ -602,7 +599,7 @@ static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_syst
 	}
 }
 
-void lodge_scene_render_system_free_inplace(struct lodge_scene_render_system *system)
+void lodge_scene_render_system_free_inplace(struct lodge_scene_render_system *system, struct lodge_scene_renderer_plugin *plugin)
 {
 	lodge_post_process_free_inplace(&system->post_process);
 	lodge_static_meshes_free_inplace(&system->static_meshes);
@@ -667,14 +664,12 @@ static void lodge_scene_render_system_update_shadow_map(struct lodge_scene_rende
 #endif
 }
 
-static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge_system_type_t type, lodge_scene_t scene, float dt)
+static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge_system_type_t type, lodge_scene_t scene, float dt, struct lodge_scene_renderer_plugin *plugin)
 {
 	// TODO(TS):
 	//		- do we want to collect all static_meshes of the same {drawable,material,shader} and instance them?
 	//		- maybe separate draw calls is enough?
 	//		- maybe we want to just batch them together to make it easier for the driver?
-	struct lodge_scene_renderer_plugin *plugin = lodge_system_type_get_plugin(type);
-	ASSERT(plugin);
 
 	//
 	// Static meshes
@@ -739,14 +734,14 @@ static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge
 	}
 }
 
-static void lodge_scene_render_system_update(struct lodge_scene_render_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt)
+static void lodge_scene_render_system_update(struct lodge_scene_render_system *system, lodge_system_type_t type, lodge_scene_t scene, float dt, struct lodge_scene_renderer_plugin *plugin)
 {
 	system->time += dt;
 
 	//
 	// Static meshes -- TODO(TS): move to separate system
 	//
-	lodge_static_meshes_update(&system->static_meshes, type, scene, dt);
+	lodge_static_meshes_update(&system->static_meshes, type, scene, dt, plugin);
 
 	//
 	// Directional and point lights 
@@ -971,7 +966,7 @@ static void on_modified_hdr_resolve(struct lodge_property *property, struct lodg
 	lodge_buffer_object_set(system->hdr.hdr_resolve_buffer_object, 0, &system->hdr.hdr_resolve, sizeof(struct lodge_hdr_resolve));
 }
 
-static void lodge_scene_render_system_render(struct lodge_scene_render_system *system, lodge_scene_t scene, struct lodge_system_render_params *render_params)
+static void lodge_scene_render_system_render(struct lodge_scene_render_system *system, lodge_scene_t scene, struct lodge_system_render_params *render_params, struct lodge_scene_renderer_plugin *plugin)
 {
 	if(!system->active_camera) {
 		return;
@@ -1123,7 +1118,7 @@ static void lodge_scene_render_system_render(struct lodge_scene_render_system *s
 			{
 				lodge_shader_t bloom_downsample_shader = lodge_assets2_get(system->shaders, hdr->bloom_downsample_shader);
 				lodge_gfx_bind_shader(bloom_downsample_shader);
-				for(int dst_mip = 1; dst_mip < hdr->bloom_samples_count; dst_mip++) {
+				for(uint32_t dst_mip = 1; dst_mip < hdr->bloom_samples_count; dst_mip++) {
 					const uint32_t src_mip = dst_mip - 1;
 
 					struct vec2i level_size_src = lodge_calc_texture_level_size(render_size_v2i, src_mip);
@@ -1417,7 +1412,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 					}
 				}
 			},
-			.plugin = plugin,
+			.userdata = plugin,
 		});	
 	}
 
