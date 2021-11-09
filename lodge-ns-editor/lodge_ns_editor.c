@@ -20,6 +20,18 @@
 #include <float.h>
 #include <string.h>
 
+struct lodge_ns_editor_pin
+{
+	vec2						pos;
+	lodge_type_t				type;
+};
+
+struct lodge_ns_editor_pins
+{
+	struct lodge_ns_editor_pin	inputs[8];
+	struct lodge_ns_editor_pin	outputs[8];
+};
+
 struct lodge_ns_editor
 {
 	lodge_graph_t					graph;
@@ -31,17 +43,7 @@ struct lodge_ns_editor
 
 	struct nk_rect					node_bounds[256];
 
-	struct lodge_ns_editor_pin
-	{
-		vec2						pos;
-		lodge_type_t				type;
-	};
-
-	struct lodge_ns_editor_pins
-	{
-		struct lodge_ns_editor_pin	inputs[8];
-		struct lodge_ns_editor_pin	outputs[8];
-	}								node_pins[256];
+	struct lodge_ns_editor_pins		node_pins[256];
 };
 
 static struct nk_color node_editor_pin_type_to_color(lodge_type_t type)
@@ -74,6 +76,7 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
 
 		lodge_graph_t new_graph = lodge_graph_from_text(strview_make(text, text_size - 1), graph_context);
 		ASSERT(new_graph);
+		LODGE_UNUSED(new_graph);
 
 		if(text) {
 			free(text);

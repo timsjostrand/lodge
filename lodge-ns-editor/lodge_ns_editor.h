@@ -1,6 +1,8 @@
 #ifndef _LODGE_NS_EDITOR_H
 #define _LODGE_NS_EDITOR_H
 
+#include <stddef.h>
+
 struct lodge_gui;
 typedef struct lodge_gui* lodge_gui_t;
 
