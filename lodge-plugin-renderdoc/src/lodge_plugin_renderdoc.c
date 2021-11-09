@@ -11,7 +11,7 @@ struct lodge_plugin_renderdoc
 	RENDERDOC_API_1_0_0		*api;
 };
 
-static void lodge_plugin_renderdoc_free_inplace(struct lodge_plugin_renderdoc *plugin, struct lodge_plugins *plugins)
+static void lodge_plugin_renderdoc_free_inplace(struct lodge_plugin_renderdoc *plugin)
 {
 	if(plugin && plugin->lib) {
 		plugin->api->Shutdown();
