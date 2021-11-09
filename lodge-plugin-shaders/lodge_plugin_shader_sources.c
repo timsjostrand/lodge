@@ -258,7 +258,7 @@ static void lodge_shader_sources_free_inplace(struct lodge_assets2 *sources)
 	lodge_assets2_free_inplace(sources);
 }
 
-strview_t lodge_shader_source_get_source(struct lodge_shader_source *source)
+strview_t lodge_shader_source_get_source(const struct lodge_shader_source *source)
 {
 	return source ? txt_to_strview(source->resolved) : strview_static("");
 }
