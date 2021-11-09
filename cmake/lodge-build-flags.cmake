@@ -27,15 +27,14 @@ if(CMAKE_COMPILER_IS_GNUCC)
 			-Wno-missing-braces						# Missing braces warning is bugged when nested type has { 0 }
     )
 elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-    # DEBUG: Bounds checking.
-    #target_compile_options(lodge-build-flags
-    #    INTERFACE
-    #        -fsanitize=address
-    #)
-    #target_link_options(lodge-build-flags
-    #    INTERFACE
-    #        -fsanitize=address
-    #)
+    target_compile_options(lodge-build-flags
+        INTERFACE
+            "-Wall"
+            "-Werror"
+            "-Wno-missing-braces"
+            "-Wno-incompatible-function-pointer-types"
+#            "-Wno-incompatible-pointer-types"
+    )
 elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(lodge-build-flags
         INTERFACE
