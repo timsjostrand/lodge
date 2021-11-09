@@ -86,7 +86,7 @@ struct lodge_ret lodge_image_new(struct lodge_image *image_out, const uint8_t *d
 
 struct lodge_ret lodge_image_new_from_blob(struct lodge_image *image_out, struct blob *blob)
 {
-	return lodge_image_new(image_out, blob_data(blob), blob_size(blob));
+	return lodge_image_new(image_out, (const uint8_t*)blob_data(blob), blob_size(blob));
 }
 
 void lodge_image_free(struct lodge_image *image)
