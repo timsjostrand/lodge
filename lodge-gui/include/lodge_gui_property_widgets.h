@@ -2,13 +2,16 @@
 #define _LODGE_GUI_PROPERTY_WIDGET_FACTORY_H
 
 #include "strview.h"
-#include "lodge_type.h"
 
 #include <stdint.h>
 #include <stdbool.h>
 
+struct lodge_property;
 struct lodge_properties;
 struct nk_context;
+
+struct lodge_type;
+typedef struct lodge_type* lodge_type_t;
 
 extern size_t						LODGE_TYPE_FUNC_INDEX_MAKE_PROPERTY_WIDGET;
 

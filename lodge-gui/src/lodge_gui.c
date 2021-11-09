@@ -9,6 +9,7 @@
 #include "lodge_shader.h"
 #include "lodge_gfx.h"
 #include "lodge_sampler.h"
+#include "lodge_time.h"
 
 #include "lodge_keys.h"
 #include "lodge_window.h"
@@ -303,7 +304,7 @@ void lodge_gui_mouse_button_callback(lodge_window_t window, int button, int acti
 	if(action == LODGE_PRESS) {
 		const double click_delta_time = lodge_timestamp_elapsed_ms(gui->last_button_click);
 		if(click_delta_time >= NK_GLFW_DOUBLE_CLICK_LO && click_delta_time <= NK_GLFW_DOUBLE_CLICK_HI) {
-			if(abs(gui->last_click_pos.x - x) < double_click_pos_tolerance && abs(gui->last_click_pos.y - y) < double_click_pos_tolerance) {
+			if(fabs(gui->last_click_pos.x - x) < double_click_pos_tolerance && fabs(gui->last_click_pos.y - y) < double_click_pos_tolerance) {
 				gui->is_double_click_down = nk_true;
 				gui->double_click_pos = nk_vec2(x, y);
 			}
@@ -388,7 +389,7 @@ void lodge_gui_new_inplace(lodge_gui_t gui, lodge_window_t win, int max_vertex_b
 	gui->ctx.clip.copy = lodge_gui_clipboard_copy;
 	gui->ctx.clip.paste = lodge_gui_clipboard_paste;
 	gui->ctx.clip.userdata = nk_handle_ptr(gui);
-	gui->last_button_click = 0;
+	gui->last_button_click = (lodge_timestamp_t){ 0 };
 
 	{
 		struct lodge_gui_device *dev = &gui->dev;

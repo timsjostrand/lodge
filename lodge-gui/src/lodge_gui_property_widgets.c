@@ -148,7 +148,7 @@ static void make_property_widget_vec4_color(struct nk_context *ctx, struct lodge
 		}
 
 		if(new_color.r != value.r || new_color.g != value.g || new_color.b != value.b || new_color.a != value.a) {
-			lodge_property_set(property, object, &(vec4) { new_color.r, new_color.g, new_color.b, new_color.a });
+			lodge_property_set(property, object, &(vec4) { .v = { new_color.r, new_color.g, new_color.b, new_color.a } });
 			*modified = true;
 		}
 
@@ -342,6 +342,7 @@ static bool make_property_widget_properties(struct nk_context *ctx, struct lodge
 {
 	const void *value = lodge_property_get(property, object);
 	ASSERT(value);
+	LODGE_UNUSED(value);
 
 	struct lodge_properties *subproperties = lodge_type_get_properties(property->type);
 	ASSERT(subproperties);
