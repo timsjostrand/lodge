@@ -39,22 +39,49 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
 elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(lodge-build-flags
         INTERFACE
-            "/W3"                           # More warnings.
-            "/we4020"                       # 'function': too many actual parameters
-            "/we4022"                       # 'function' : pointer mismatch for actual parameter 'number'
-            "/we4098"                       # 'function': 'void' function returning a value
-            "/we4047"                       # "differs in levels of indirection" (trying to pass ptr** instead of ptr*)
-            "/we4024"                       # 'function' : different types for formal and actual parameter 'number'
-            "/we4029"                       # declared formal parameter list different from declaration
-            "/we4715"                       # 'function' : not all control paths return a value
-            "/we4716"                       # 'function': must return a value
-            "/we4028"                       # formal parameter 1 different from declaration
-            "/we4090"                       # 'initializing': different 'const' qualifiers
-            #"/we4244"                       # 'function': conversion from 'int' to 'const float', possible loss of data
-            "/we4013"                       # 'symbol' undefined; assuming extern returning int
-            "/we4133"                       # 'initializing|function': incompatible types - from '<type> *' to '<other_type> *'
-            "/we4101"                       # 'identifier' : unreferenced local variable
-            "/we4477"                       # 'printf' : format string '%.*s' requires an argument of type 'int', but variadic argument 1 has type 'uintptr_t'
-            "/we4473"                       # not enough arguments passed for format string
+            "/W3"           # Warning Level 3
+            "/WX"           # Warnings as errors
+            "/wd4244"       # '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+            "/wd4267"       # '=': conversion from 'size_t' to 'uint32_t', possible loss of data
+            "/wd4116"       # unnamed type definition in parentheses
+            "/wd4305"       # 'function': truncation from 'double' to 'const float'
+            "/wd5105"       #  macro expansion producing 'defined' has undefined behavior
+            "/wd4005"       #  'x': macro redefinition
+    )
+endif()
+
+#
+# Utility function to silence build warnings for a single source file.
+#
+function(lodge_set_source_silent_build_flags target)
+    if(CMAKE_COMPILER_IS_GNUCC)
+        set_source_files_properties(${target} PROPERTIES COMPILE_FLAGS "-w" )
+    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        set_source_files_properties(${target} PROPERTIES COMPILE_FLAGS "-Wno-everything" )
+    elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+        set_source_files_properties(${target} PROPERTIES COMPILE_FLAGS "/w" )
+    endif()
+endfunction()
+
+#
+# Target to silence build warnings -- only used for third party targets
+# that we have no control over.
+#
+add_library(lodge-silent-build-flags INTERFACE)
+
+if(CMAKE_COMPILER_IS_GNUCC)
+    target_compile_options(lodge-silent-build-flags
+        INTERFACE
+            "-w"
+    )
+elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    target_compile_options(lodge-silent-build-flags
+        INTERFACE
+            "-Wno-everything"
+    )
+elseif(CMAKE_C_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(lodge-silent-build-flags
+        INTERFACE
+            "/w"
     )
 endif()
