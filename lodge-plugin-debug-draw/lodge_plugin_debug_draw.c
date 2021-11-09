@@ -158,7 +158,7 @@ static lodge_component_type_t lodge_debug_sphere_component_type_register()
 		LODGE_COMPONENT_TYPE_DEBUG_SPHERE = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("debug_sphere"),
 			.description = strview_static("Draws a debug sphere."),
-			.new_inplace = lodge_debug_sphere_component_new_inplace,
+			.new_inplace = &lodge_debug_sphere_component_new_inplace,
 			.free_inplace = NULL,
 			.size = sizeof(struct lodge_debug_sphere),
 			.properties = {
@@ -204,9 +204,9 @@ static lodge_system_type_t lodge_debug_draw_system_type_register(struct lodge_pl
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview_static("debug_draw"),
 		.size = sizeof(struct lodge_debug_draw_system),
-		.new_inplace = lodge_debug_draw_system_new_inplace,
+		.new_inplace = &lodge_debug_draw_system_new_inplace,
 		.free_inplace = NULL,
-		.update = lodge_debug_draw_system_update,
+		.update = &lodge_debug_draw_system_update,
 		.render = NULL,
 		.userdata = plugin,
 		.properties = {
@@ -266,8 +266,8 @@ LODGE_PLUGIN_IMPL(lodge_plugin_debug_draw)
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_plugin_debug_draw),
 		.name = strview_static("debug_draw"),
-		.new_inplace = lodge_debug_draw_plugin_new_inplace,
-		.free_inplace = lodge_debug_draw_plugin_free_inplace,
+		.new_inplace = &lodge_debug_draw_plugin_new_inplace,
+		.free_inplace = &lodge_debug_draw_plugin_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};
