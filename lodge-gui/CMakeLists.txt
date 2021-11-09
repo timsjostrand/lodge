@@ -25,3 +25,5 @@ target_link_libraries(lodge-gui
 		lodge-lib
 		lodge-window
 )
+
+lodge_set_source_silent_build_flags("lib/nuklear.h")
