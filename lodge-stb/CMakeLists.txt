@@ -21,16 +21,7 @@ target_include_directories(lodge-stb
         "./"
 )
 
-#
-# Silence warnings from compiling stb.
-#
-if(CMAKE_COMPILER_IS_GNUCC)
-    target_compile_options(lodge-stb
-        PRIVATE
-            "-Wno-maybe-uninitialized"
-            "-Wno-strict-aliasing"
-            "-Wno-unused-but-set-variable"
-            "-Wno-unused-value"
-            "-Wno-unused-function"
-    )
-endif()
+target_link_libraries(lodge-stb
+    PRIVATE
+        lodge-silent-build-flags
+)
