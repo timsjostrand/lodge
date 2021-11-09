@@ -4,31 +4,31 @@ add_library(lodge-entity STATIC "")
 
 target_sources(lodge-entity
 	PRIVATE
-		"lodge_entity_type.c"
-		"lodge_component_type.c"
-		"lodge_system_type.c"
-		"lodge_scene.c"
-		"lodge_scene_serialize.c"
-		"lodge_transform_component.c"
-		"lodge_gui_property_widget_factory.c"
-		"lodge_perspective.c"
-		"lodge_camera_component.c"
+		"src/lodge_entity_type.c"
+		"src/lodge_component_type.c"
+		"src/lodge_system_type.c"
+		"src/lodge_scene.c"
+		"src/lodge_scene_serialize.c"
+		"src/lodge_transform_component.c"
+		"src/lodge_gui_property_widget_factory.c"
+		"src/lodge_perspective.c"
+		"src/lodge_camera_component.c"
 	PUBLIC
-		"lodge_entity_type.h"
-		"lodge_component_type.h"
-		"lodge_system_type.h"
-		"lodge_scene.h"
-		"lodge_scene_serialize.h"
-		"lodge_transform_component.h"
-		"lodge_gui_property_widget_factory.h"
-		"lodge_perspective.h"
-		"lodge_camera_params.h"
-		"lodge_camera_component.h"
+		"include/lodge_entity_type.h"
+		"include/lodge_component_type.h"
+		"include/lodge_system_type.h"
+		"include/lodge_scene.h"
+		"include/lodge_scene_serialize.h"
+		"include/lodge_transform_component.h"
+		"include/lodge_gui_property_widget_factory.h"
+		"include/lodge_perspective.h"
+		"include/lodge_camera_params.h"
+		"include/lodge_camera_component.h"
 )
 
 target_include_directories(lodge-entity
 	PUBLIC
-		"./"
+		"include/"
 )
 
 target_link_libraries(lodge-entity
