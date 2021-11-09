@@ -179,6 +179,7 @@ lodge_entity_t lodge_scene_add_entity_from_desc(lodge_scene_t scene, const struc
 		for(size_t i = 0, count = components_desc->count; i < count; i++) {
 			lodge_component_t component = lodge_scene_add_component_internal(scene, tmp->id, components_desc->elements[i]);
 			ASSERT(component);
+			LODGE_UNUSED(component);
 		}
 	}
 
@@ -198,7 +199,7 @@ lodge_entity_t lodge_scene_add_entity_from_type(lodge_scene_t scene, lodge_entit
 
 	struct lodge_entity_desc entity_desc = {
 		.id = scene->entities_last_id + 1,
-		.name = '\0',
+		.name = { 0 },
 		.parent = NULL,
 	};
 
@@ -369,8 +370,6 @@ struct lodge_component_it lodge_scene_entity_components_next(lodge_scene_t scene
 {
 	struct lodge_entity_desc *entity_desc = lodge_entity_desc_from_entity(scene, entity);
 
-	bool return_next = false;
-
 	for(size_t i = previous.index + 1, count = scene->component_sets_count; i < count; i++) {
 		struct lodge_component_set *component_set = &scene->component_sets[i];
 
@@ -389,8 +388,7 @@ struct lodge_component_it lodge_scene_entity_components_next(lodge_scene_t scene
 
 struct lodge_system_it lodge_scene_systems_begin(lodge_scene_t scene)
 {
-	ASSERT(scene);
-	return (scene->systems_count > 0)
+	return (scene && scene->systems_count > 0)
 		? (struct lodge_system_it) { .value = scene->systems[0].data, .type = scene->systems[0].type }
 		: (struct lodge_system_it) { .value = NULL, .type = NULL };
 }

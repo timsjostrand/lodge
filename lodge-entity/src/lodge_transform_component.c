@@ -198,7 +198,7 @@ lodge_component_type_t lodge_transform_component_type_register()
 		LODGE_COMPONENT_TYPE_TRANSFORM = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("transform"),
 			.description = strview_static("Contains translation, rotation and scale components for an entity."),
-			.new_inplace = lodge_transform_component_new_inplace,
+			.new_inplace = &lodge_transform_component_new_inplace,
 			.free_inplace = NULL,
 			.size = sizeof(struct lodge_transform_component),
 			.properties = {

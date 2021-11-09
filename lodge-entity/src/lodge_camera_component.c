@@ -95,7 +95,7 @@ lodge_component_type_t lodge_camera_component_type_register()
 		LODGE_COMPONENT_TYPE_CAMERA = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("camera"),
 			.description = strview_static("A camera that can be used for rendering the scene."),
-			.new_inplace = lodge_camera_component_new_inplace,
+			.new_inplace = &lodge_camera_component_new_inplace,
 			.free_inplace = NULL,
 			.size = sizeof(struct lodge_camera_component),
 			.properties = {

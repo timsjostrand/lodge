@@ -26,6 +26,7 @@ lodge_system_type_t lodge_system_type_register(struct lodge_system_type_desc des
 		ASSERT(property->offset < desc.size);
 		ASSERT((property->offset + lodge_type_get_size(property->type)) <= desc.size);
 		ASSERT(!strview_empty(property->name));
+		LODGE_UNUSED(property);
 
 		for(size_t j = 0, j_count = desc.properties.count; j < j_count; j++) {
 			if(i == j) {
@@ -35,6 +36,8 @@ lodge_system_type_t lodge_system_type_register(struct lodge_system_type_desc des
 			struct lodge_property *rhs = &desc.properties.elements[j];
 			ASSERT(!strview_equals(lhs->name, rhs->name));
 			ASSERT(lhs->offset != rhs->offset);
+			LODGE_UNUSED(lhs);
+			LODGE_UNUSED(rhs);
 		}
 	}
 

@@ -69,7 +69,7 @@ static lodge_entity_t lodge_scene_entity_from_json(lodge_scene_t scene, uint64_t
 
 	struct lodge_entity_desc entity_desc = {
 		.id = entity_id,
-		.name = '\0',
+		.name = { 0 },
 		.parent = NULL, // FIXME(TS): support serializing parent
 	};
 	strbuf_set(strbuf_wrap(entity_desc.name), entity_name);
@@ -159,7 +159,9 @@ char* lodge_scene_to_text(lodge_scene_t scene, size_t *size_out)
 	}
 
 	lodge_json_t root = lodge_json_new_object();
-	lodge_json_t root_version = lodge_json_object_set_number(root, strview_static("version"), (double)LODGE_SCENE_VERSION);
+	
+	// Version
+	lodge_json_object_set_number(root, strview_static("version"), (double)LODGE_SCENE_VERSION);
 
 	// Systems
 	{
@@ -205,7 +207,7 @@ static void* lodge_scene_get_or_add_system_data(lodge_scene_t scene, lodge_syste
 {
 	void *system_data = lodge_scene_get_system(scene, system_type);
 	if(!system_data) {
-		lodge_system_t system = lodge_scene_add_system(scene, system_type);
+		/*lodge_system_t system =*/ lodge_scene_add_system(scene, system_type);
 		system_data = lodge_scene_get_system(scene, system_type);
 	}
 	return system_data;
