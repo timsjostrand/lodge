@@ -123,8 +123,9 @@ mat4	mat4_inverse(const mat4 matrix, int* is_invertible);
 //mat4	mat4_adjugate(const mat4 a);
 //float	mat4_determinant(const mat4 m);
 
-vec3	mat4_view_forward(const mat4 *view);
-vec3	mat4_view_strafe(const mat4 *view);
+vec3	mat4_view_get_forward_vector(const mat4 *view);
+vec3	mat4_view_get_strafe_vector(const mat4 *view);
+vec3	mat4_view_get_up_vector(const mat4 *view);
 
 vec2	vec2_make(const float x, const float y);
 vec2	vec2_zero();

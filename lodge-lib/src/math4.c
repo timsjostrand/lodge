@@ -534,12 +534,27 @@ mat4 mat4_inverse(const mat4 matrix, int* is_invertable)
 
 vec3 mat4_view_forward(const mat4 *view)
 {
-	return (vec3) { view->m02, view->m12, view->m22 };
+	return mat4_view_get_forward_vector(view);
 }
 
 vec3 mat4_view_strafe(const mat4 *view)
 {
+	return mat4_view_get_strafe_vector(view);
+}
+
+vec3 mat4_view_get_forward_vector(const mat4 *view)
+{
+	return (vec3) { view->m02, view->m12, view->m22 };
+}
+
+vec3 mat4_view_get_strafe_vector(const mat4 *view)
+{
 	return (vec3) { view->m00, view->m10, view->m20 };
+}
+
+vec3 mat4_view_get_up_vector(const mat4 *view)
+{
+	return (vec3) { view->m01, view->m11, view->m21 };
 }
 
 
