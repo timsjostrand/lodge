@@ -105,6 +105,8 @@ if(MSVC)
     )
 endif()
 
+lodge_set_source_silent_build_flags("lib/perlin-noise/src/simplexnoise1234.c")
+lodge_set_source_silent_build_flags("lib/murmur3/murmur3.c")
 
 target_include_directories(lodge-lib
 	PRIVATE
