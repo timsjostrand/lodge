@@ -146,6 +146,7 @@ static enum fbx_polygon_type fbx_polygon_type_from_index_buffer(const int32_t *i
 	}
 }
 
+#if 0
 //
 // https://www.khronos.org/opengl/wiki/Calculating_a_Surface_Normal
 //
@@ -159,6 +160,7 @@ static vec3 triangle_calc_surface_normal(const struct triangle *triangle)
 		.z = u.x * v.y - u.y * v.x
 	};
 }
+#endif
 
 struct fbx_layer_element
 {
@@ -726,7 +728,7 @@ static void fbx_mesh_new_inplace(struct fbx_mesh *mesh, struct fbx_doc *doc)
 		&(struct fbx_layer_element) {
 			.data = doc->geometry.vertices_array,
 			.data_count = doc->geometry.vertices_array_count,
-			.indices = mesh->indices,
+			.indices = (const int32_t*)mesh->indices,
 			.indices_count = mesh->indices_count,
 			.mapping_type = FBX_MAPPING_TYPE_BY_POLYGON_VERTEX,
 			.ref_type = FBX_REF_TYPE_INDEX_TO_DIRECT,
