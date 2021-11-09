@@ -270,7 +270,7 @@ void lodge_assets2_set(struct lodge_assets2 *assets, lodge_asset_t asset, const 
 {
 	ASSERT_OR(assets && asset && src) { return; }
 	const uint32_t index = lodge_asset_to_index(asset);
-	void *data = sparse_set_set(assets->set, index, src);
+	/*void *data =*/ sparse_set_set(assets->set, index, src);
 	lodge_assets2_invalidate_listeners(assets, lodge_assets2_get_info_by_index(assets, index));
 }
 
@@ -307,6 +307,7 @@ void lodge_assets2_remove_listener(struct lodge_assets2 *assets, lodge_asset_t a
 
 	bool removed = dynbuf_remove(dynbuf(info->listeners), index, 1) > 0;
 	ASSERT(removed);
+	LODGE_UNUSED(removed);
 }
 
 #include "log.h"
