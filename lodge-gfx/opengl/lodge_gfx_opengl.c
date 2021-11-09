@@ -160,9 +160,9 @@ struct lodge_ret lodge_gfx_attach(struct lodge_gfx *gfx)
 {
 	/* Init GLEW. */
 	glewExperimental = GL_TRUE;
-	GLenum err = glewInit();
-	if (err != GLEW_OK) {
-		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	GLenum glew_err = glewInit();
+	if (glew_err != GLEW_OK) {
+		fprintf(stderr, "Error: %s\n", glewGetErrorString(glew_err));
 		return lodge_error("Failed to initialize GLEW");
 	}
 
