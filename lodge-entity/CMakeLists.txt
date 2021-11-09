@@ -10,7 +10,6 @@ target_sources(lodge-entity
 		"src/lodge_scene.c"
 		"src/lodge_scene_serialize.c"
 		"src/lodge_transform_component.c"
-		"src/lodge_gui_property_widget_factory.c"
 		"src/lodge_perspective.c"
 		"src/lodge_camera_component.c"
 	PUBLIC
@@ -20,7 +19,6 @@ target_sources(lodge-entity
 		"include/lodge_scene.h"
 		"include/lodge_scene_serialize.h"
 		"include/lodge_transform_component.h"
-		"include/lodge_gui_property_widget_factory.h"
 		"include/lodge_perspective.h"
 		"include/lodge_camera_params.h"
 		"include/lodge_camera_component.h"

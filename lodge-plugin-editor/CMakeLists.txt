@@ -37,6 +37,7 @@ target_link_libraries(lodge-plugin-editor
 	PRIVATE
 		lodge-build-flags
 	PUBLIC
+		lodge-gui
 		lodge-entity
 		lodge-assets
 		lodge-plugins
