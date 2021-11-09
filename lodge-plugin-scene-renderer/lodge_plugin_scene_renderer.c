@@ -575,7 +575,7 @@ static void lodge_scene_render_system_new_inplace(struct lodge_scene_render_syst
 		{
 			system->shader_deferred_light = lodge_assets2_register(plugin->shaders, strview("deferred_light"));
 			ASSERT(system->shader_deferred_light);
-			lodge_post_process_add_func(&system->post_process, lodge_scene_render_system_post_process_light, system);
+			lodge_post_process_add_func(&system->post_process, &lodge_scene_render_system_post_process_light, system);
 		}
 	}
 
@@ -1291,10 +1291,10 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 		LODGE_SYSTEM_TYPE_SCENE_RENDER = lodge_system_type_register((struct lodge_system_type_desc) {
 			.name = strview("scene_renderer"),
 			.size = sizeof(struct lodge_scene_render_system),
-			.new_inplace = lodge_scene_render_system_new_inplace,
+			.new_inplace = &lodge_scene_render_system_new_inplace,
 			.free_inplace = NULL,
-			.update = lodge_scene_render_system_update,
-			.render = lodge_scene_render_system_render,
+			.update = &lodge_scene_render_system_update,
+			.render = &lodge_scene_render_system_render,
 			.properties = {
 				.count = 14,
 				.elements = {
@@ -1315,7 +1315,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 						.type = LODGE_TYPE_U32,
 						.offset = offsetof(struct lodge_scene_render_system, render_width),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_render_size,
+						.on_modified = &on_modified_render_size,
 						.hints = {
 							.enable = true,
 							.u32 = {
@@ -1330,7 +1330,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 						.type = LODGE_TYPE_U32,
 						.offset = offsetof(struct lodge_scene_render_system, render_height),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_render_size,
+						.on_modified = &on_modified_render_size,
 						.hints = {
 							.enable = true,
 							.u32 = {
@@ -1344,7 +1344,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 						.name = strview("window_is_render_size"),
 						.type = LODGE_TYPE_BOOL,
 						.offset = offsetof(struct lodge_scene_render_system, window_is_render_size),
-						.on_modified = on_modified_render_size,
+						.on_modified = &on_modified_render_size,
 					},
 					{
 						.name = strview("window_width"),
@@ -1369,7 +1369,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 						.type = lodge_type_distance_fog,
 						.offset = offsetof(struct lodge_scene_render_system, distance_fog),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_distance_fog,
+						.on_modified = &on_modified_distance_fog,
 					},
 					{
 						.name = strview("static_meshes"),
@@ -1393,7 +1393,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 						.name = strview("bloom_samples_count"),
 						.type = LODGE_TYPE_U32,
 						.offset = offsetof(struct lodge_scene_render_system, hdr) + offsetof(struct lodge_hdr, desired_bloom_samples_count),
-						.on_modified = on_modified_bloom_levels,
+						.on_modified = &on_modified_bloom_levels,
 						.hints = {
 							.enable = true,
 							.u32 = {
@@ -1408,7 +1408,7 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 						.type = lodge_type_hdr_resolve,
 						.offset = offsetof(struct lodge_scene_render_system, hdr) + offsetof(struct lodge_hdr, hdr_resolve),
 						.flags = LODGE_PROPERTY_FLAG_NONE,
-						.on_modified = on_modified_hdr_resolve
+						.on_modified = &on_modified_hdr_resolve
 					}
 				}
 			},
@@ -1570,8 +1570,8 @@ LODGE_PLUGIN_IMPL(lodge_scene_renderer_plugin)
 		.version = LODGE_PLUGIN_VERSION,
 		.size = sizeof(struct lodge_scene_renderer_plugin),
 		.name = strview("scene_renderer"),
-		.new_inplace = lodge_scene_renderer_plugin_new_inplace,
-		.free_inplace = lodge_scene_renderer_plugin_free_inplace,
+		.new_inplace = &lodge_scene_renderer_plugin_new_inplace,
+		.free_inplace = &lodge_scene_renderer_plugin_free_inplace,
 		.update = NULL,
 		.render = NULL,
 	};

@@ -16,7 +16,7 @@ lodge_component_type_t lodge_billboard_component_type_register(lodge_type_t text
 		.name = strview_static("billboard"),
 		.description = strview_static("Sprite that is always facing the camera."),
 		.size = sizeof(struct lodge_billboard_component),
-		.new_inplace = lodge_billboard_component_new_inplace,
+		.new_inplace = &lodge_billboard_component_new_inplace,
 		.free_inplace = NULL,
 		.properties = {
 			.count = 4,

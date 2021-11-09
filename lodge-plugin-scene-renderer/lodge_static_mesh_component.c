@@ -36,8 +36,8 @@ lodge_component_type_t lodge_static_mesh_component_type_register(lodge_type_t st
 		LODGE_COMPONENT_TYPE_STATIC_MESH = lodge_component_type_register((struct lodge_component_desc) {
 			.name = strview_static("static_mesh"),
 			.description = strview_static("Adds a static mesh (without animation) that can be rendered in scene_render_system."),
-			.new_inplace = lodge_static_mesh_component_new_inplace,
-			.free_inplace = lodge_static_mesh_component_free_inplace,
+			.new_inplace = &lodge_static_mesh_component_new_inplace,
+			.free_inplace = &lodge_static_mesh_component_free_inplace,
 			.size = sizeof(struct lodge_static_mesh_component),
 			.properties = {
 				.count = 3,

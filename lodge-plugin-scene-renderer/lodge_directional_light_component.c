@@ -21,7 +21,7 @@ lodge_component_type_t lodge_directional_light_component_type_register()
 			.name = strview_static("directional_light"),
 			.description = strview_static("A directional light that will light the scene (only 1 supported at the moment)."),
 			.size = sizeof(struct lodge_directional_light_component),
-			.new_inplace = lodge_directional_light_component_new_inplace,
+			.new_inplace = &lodge_directional_light_component_new_inplace,
 			.free_inplace = NULL,
 			.properties = {
 				.count = 2,

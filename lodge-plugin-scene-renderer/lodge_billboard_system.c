@@ -143,7 +143,7 @@ static void lodge_billboard_system_new_inplace(struct lodge_billboard_system *sy
 	}
 
 	system->sampler = lodge_sampler_make((struct lodge_sampler_desc) {
-		.min_filter = MAG_FILTER_LINEAR,
+		.min_filter = MIN_FILTER_LINEAR,
 		.mag_filter = MAG_FILTER_LINEAR,
 		.wrap_x = WRAP_CLAMP_TO_EDGE,
 		.wrap_y = WRAP_CLAMP_TO_EDGE,
@@ -184,7 +184,7 @@ static void lodge_billboard_system_free_inplace(struct lodge_billboard_system *s
 {
 	dynbuf_free_inplace(dynbuf(system->render_datas));
 
-	lodge_scene_remove_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED, lodge_billboard_system_render, system);
+	lodge_scene_remove_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED, &lodge_billboard_system_render, system);
 
 	lodge_buffer_object_reset(system->pos_uv_buffer_object);
 	lodge_sampler_reset(&system->sampler);
@@ -243,9 +243,9 @@ lodge_system_type_t lodge_billboard_system_type_register(struct lodge_scene_rend
 	return lodge_system_type_register((struct lodge_system_type_desc) {
 		.name = strview("billboard_system"),
 		.size = sizeof(struct lodge_billboard_system),
-		.new_inplace = lodge_billboard_system_new_inplace,
-		.free_inplace = lodge_billboard_system_free_inplace,
-		.update = lodge_billboard_system_update,
+		.new_inplace = &lodge_billboard_system_new_inplace,
+		.free_inplace = &lodge_billboard_system_free_inplace,
+		.update = &lodge_billboard_system_update,
 		.plugin = plugin,
 		.properties = {
 			.count = 1,

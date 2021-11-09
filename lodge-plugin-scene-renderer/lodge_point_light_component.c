@@ -22,7 +22,7 @@ lodge_component_type_t lodge_point_light_component_type_register()
 			.name = strview_static("point_light"),
 			.description = strview_static("A point light that will light the scene."),
 			.size = sizeof(struct lodge_point_light_component),
-			.new_inplace = lodge_point_light_component_new_inplace,
+			.new_inplace = &lodge_point_light_component_new_inplace,
 			.free_inplace = NULL,
 			.properties = {
 				.count = 5,
