@@ -41,6 +41,7 @@ static void lodge_file_discovery_scan_entry(struct lodge_file_discovery *file_di
 
 	bool ret = lodge_vfs_iterate(vfs, path, strview("*"), &vfs_ret);
 	ASSERT(ret);
+	LODGE_UNUSED(ret);
 
 	for(size_t i = 0, count = vfs_ret.count; i < count; i++) {
 		if(!vfs_ret.elements[i].dir) {
@@ -132,6 +133,7 @@ static int lodge_asset_file_free_inplace(struct lodge_assets2 *files, strview_t 
 	if(data->vfs_callback) {
 		const bool callback_removed = lodge_vfs_remove_callback(vfs, name, &lodge_asset_file_on_modified, files);
 		ASSERT(callback_removed);
+		LODGE_UNUSED(callback_removed);
 	}
 
 	return true;
