@@ -64,8 +64,8 @@ struct lodge_pins
 	// "pins" and "elements" are aliased.
 	union
 	{
-		struct lodge_pin		pins[];
-		struct lodge_pin		elements[];
+		struct lodge_pin		pins[8];
+		struct lodge_pin		elements[8];
 	};
 };
 

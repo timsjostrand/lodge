@@ -108,57 +108,6 @@
 						.name = strview("out"), \
 						.type = LODGE_TYPE \
 					} \
-				}, \
-			} \
-		); \
-		return true; \
-	} \
-	\
-	typedef C_TYPE (*node_binary_ ## TYPE ## _run_func_t)(const C_TYPE lhs, const C_TYPE rhs); \
-	\
-	static bool node_binary_ ## TYPE ## _run(struct lodge_node *node, node_binary_ ## TYPE ## _run_func_t func) \
-	{ \
-		const C_TYPE *lhs = lodge_node_get_ ## TYPE (node, 0); \
-		if(!lhs) { \
-			return false; \
-		} \
-		const C_TYPE *rhs = lodge_node_get_ ## TYPE (node, 1); \
-		if(!rhs) { \
-			return false; \
-		} \
-		\
-		lodge_node_set_ ## TYPE (node, 0, func(*lhs, *rhs)); \
-		return true; \
-	}
-
-
-//
-// Must be called once per type, before any `lodge_ns_node_binary_func_impl`, to set up helpers.
-//
-#define lodge_ns_node_binary_func_decl( TYPE, C_TYPE, LODGE_TYPE ) \
-	static bool node_binary_ ## TYPE ## _configure(struct lodge_node *node) \
-	{ \
-		lodge_node_set_pins(node, \
-			&(struct lodge_pins) { \
-				.count = 2, \
-				.pins = { \
-					{ \
-						.name = strview("lhs"), \
-						.type = LODGE_TYPE, \
-					}, \
-					{ \
-						.name = strview("rhs"), \
-						.type = LODGE_TYPE, \
-					} \
-				}, \
-			}, \
-			&(struct lodge_pins) { \
-				.count = 1, \
-				.pins = { \
-					{ \
-						.name = strview("out"), \
-						.type = LODGE_TYPE \
-					} \
 				} \
 			} \
 		); \
