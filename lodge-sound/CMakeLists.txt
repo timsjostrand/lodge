@@ -22,16 +22,9 @@ if(NOT APPLE)
     set(ALSOFT_BUILD_IMPORT_LIB OFF CACHE BOOL "Build an import .lib using dlltool (requires sed)" FORCE)
     add_subdirectory(lib/openal ${CMAKE_BINARY_DIR}/lib/openal)
     set(OPENAL_INCLUDE_DIR lib/openal/include/AL)
-
-    # OpenAL has different names on different platforms.
-    if(WIN32)
-        set(OPENAL_LIBRARY OpenAL)
-    else()
-        set(OPENAL_LIBRARY openal)
-    endif()
 else()
     # Use the OS X OpenAL framework.
-    find_library(OPENAL_LIBRARY OpenAL)
+    find_library(OpenAL OpenAL)
     find_path(OPENAL_INCLUDE_DIR al.h)
 endif()
 
@@ -56,7 +49,7 @@ target_include_directories(lodge-sound
 target_link_libraries(lodge-sound
     PRIVATE
         lodge-build-flags
-        ${OPENAL_LIBRARY}
+        OpenAL
         lodge-stb
     PUBLIC
         lodge-collections
