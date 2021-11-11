@@ -89,3 +89,11 @@
 		#define SHARED_SYMBOL
 	#endif
 #endif
+
+#ifndef min
+	#define min(x, y) ((x) < (y) ? (x) : (y))
+#endif
+
+#ifndef max
+	#define max(x, y) ((x) > (y) ? (x) : (y))
+#endif

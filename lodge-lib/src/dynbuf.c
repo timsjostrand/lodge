@@ -3,6 +3,7 @@
 #include "membuf.h"
 
 #include "lodge_assert.h"
+#include "lodge_platform.h"
 
 #include <string.h>
 #include <stdlib.h>
