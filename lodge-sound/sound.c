@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <limits.h>
 #include <math.h>
-#define AL_LIBTYPE_STATIC
 #ifndef EMSCRIPTEN
 #include <al.h>
 #include <alc.h>
