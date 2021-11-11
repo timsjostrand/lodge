@@ -5,6 +5,7 @@
 //
 // Numeric data type helpers (size_t, uint{8,16,32,64}_t, FLT_{MIN,MAX}).
 //
+#include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <float.h>
