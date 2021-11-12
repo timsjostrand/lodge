@@ -36,7 +36,7 @@ bool		strview_to_u64(const strview_t str, uint64_t *out);
 
 uint32_t	strview_calc_hash(const strview_t str);
 
-inline bool	strview_is_null_terminated(const strview_t str)
+static inline bool strview_is_null_terminated(const strview_t str)
 {
 	return str.s ? (str.s[str.length] == '\0') : false;
 }
