@@ -53,7 +53,7 @@ extern lodge_component_type_t		LODGE_COMPONENT_TYPE_TERRAIN;
 
 lodge_component_type_t				lodge_terrain_component_type_register(lodge_type_t texture_asset_type);
 
-inline struct lodge_terrain_chunk*	lodge_terrain_component_get_chunk(struct lodge_terrain_component *terrain, uint32_t x, uint32_t y)
+static inline struct lodge_terrain_chunk* lodge_terrain_component_get_chunk(struct lodge_terrain_component *terrain, uint32_t x, uint32_t y)
 {
 	return &terrain->chunks[y * terrain->chunks_y + x];
 }
