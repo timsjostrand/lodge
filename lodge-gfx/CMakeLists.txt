@@ -1,15 +1,15 @@
 # Library: glew.
 if(ENABLE_SHARED)
-    set(GLEW_LIBRARY glew)
+    set(GLEW_LIBRARY libglew_shared)
 else()
-    set(GLEW_LIBRARY glew_s)
+    set(GLEW_LIBRARY libglew_static)
 endif()
-set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
-add_subdirectory(opengl/lib/glew/build/cmake ${CMAKE_BINARY_DIR}/lib/glew)
-target_include_directories(${GLEW_LIBRARY}
-    PUBLIC
-        "opengl/lib/glew/include"
-)
+#set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
+#target_include_directories(${GLEW_LIBRARY}
+#    PUBLIC
+#        "opengl/lib/glew/include"
+#)
+add_subdirectory(opengl/lib/glew ${CMAKE_BINARY_DIR}/lib/glew)
 
 # lodge-gfx
 
