@@ -22,7 +22,6 @@
 
 typedef unsigned int sound_buf_t;
 typedef unsigned int sound_src_t;
-typedef struct ALCcontext ALCcontext;
 typedef short ALshort;
 typedef char ALboolean;
 
@@ -35,7 +34,7 @@ struct sound_emitter {
 };
 
 struct sound {
-	ALCcontext				*context;							/* OpenAL context. */
+	void    				*context;							/* OpenAL context. */
 	struct alist			*emitters;							/* Emitters in ascending order of creation time (0 is oldest). */
 	struct sound_emitter	emitters_mem[SOUND_EMITTERS_MAX];	/* Static memory used to hold emitter data. */
 };
