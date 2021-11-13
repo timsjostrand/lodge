@@ -1,6 +1,8 @@
 #ifndef _GEOMETRY_H
 #define _GEOMETRY_H
 
+#include "math4.h"
+
 //
 // FIXME(TS): should use min/max instead
 //
