@@ -60,12 +60,13 @@
 //
 // Stack dynamic allocations.
 //
-#ifdef _WIN32
+#if defined(_WIN32)
 	#include <malloc.h>
 	#define LODGE_ALLOCA _alloca
-#endif
-
-#ifdef linux
+#elif __APPLE__
+	#include <alloca.h>
+	#define LODGE_ALLOCA alloca
+#elif __linux__
 	#include <alloca.h>
 	#define LODGE_ALLOCA alloca
 #endif
