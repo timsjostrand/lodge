@@ -4,18 +4,10 @@
 #include "lodge_texture.h"
 #include "lodge_sampler.h"
 #include "color.h"
-#include "drawable.h"
-
-// TODO(TS): this should be shared between all renderers/contexts
-struct unit_drawables
-{
-	struct drawable			rect;
-};
 
 struct lodge_gfx
 {
 	strview_t				library;
-	struct unit_drawables	unit_drawables;
 };
 
 static const char* loc_opengl_debug_type(GLenum type)
@@ -128,18 +120,6 @@ static void graphics_frames_register(struct frames *f, float delta_time)
 }
 #endif
 
-static struct lodge_ret unit_drawables_init(struct unit_drawables *ud)
-{
-	// TODO(TS): should be able to return lodge_ret
-	drawable_new_rect_solidf(&ud->rect, -0.5f, -0.5f, 1.0f, 1.0f );
-	return lodge_success();
-}
-
-static void unit_drawables_reset(struct unit_drawables *ud)
-{
-	drawable_reset(&ud->rect);
-}
-
 struct lodge_gfx* lodge_gfx_new()
 {
 	struct lodge_gfx *gfx = (struct lodge_gfx *) calloc(1, sizeof(struct lodge_gfx));
@@ -177,27 +157,16 @@ struct lodge_ret lodge_gfx_attach(struct lodge_gfx *gfx)
 	glDebugMessageCallback((GLDEBUGPROC)&loc_opengl_debug_message_callback, 0);
 	GL_OK_OR_RETURN(lodge_error("Failed call glDebugMessageCallback`"));
 
-	struct lodge_ret unit_drawables_ret = unit_drawables_init(&gfx->unit_drawables);
-	if(!unit_drawables_ret.success) {
-		return unit_drawables_ret;
-	}
-
 	return lodge_success();
 }
 
 void lodge_gfx_detach(struct lodge_gfx *gfx)
 {
-	unit_drawables_reset(&gfx->unit_drawables);
 }
 
 strview_t lodge_gfx_get_library(struct lodge_gfx *gfx)
 {
 	return gfx->library;
-}
-
-struct drawable* lodge_gfx_get_unit_rect(struct lodge_gfx *gfx)
-{
-	return &gfx->unit_drawables.rect;
 }
 
 void lodge_gfx_bind_texture(int slot, const lodge_texture_t texture, enum lodge_texture_target target)

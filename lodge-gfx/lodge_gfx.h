@@ -79,8 +79,6 @@ struct lodge_ret						lodge_gfx_attach(struct lodge_gfx *gfx);
 
 strview_t								lodge_gfx_get_library(struct lodge_gfx *gfx);
 
-struct drawable*						lodge_gfx_get_unit_rect(struct lodge_gfx *gfx);
-
 void									lodge_gfx_bind_shader(lodge_shader_t shader);
 void									lodge_gfx_bind_texture_unit(int slot, const lodge_texture_t texture, const lodge_sampler_t sampler, enum lodge_texture_target target);
 void									lodge_gfx_bind_sampler(int slot, const lodge_sampler_t sampler);

@@ -1,18 +1,16 @@
-# Library: glew.
+#
+# External library: glew.
+#
 if(ENABLE_SHARED)
     set(GLEW_LIBRARY libglew_shared)
 else()
     set(GLEW_LIBRARY libglew_static)
 endif()
-#set(BUILD_UTILS OFF CACHE BOOL "Skip glew executables" FORCE)
-#target_include_directories(${GLEW_LIBRARY}
-#    PUBLIC
-#        "opengl/lib/glew/include"
-#)
 add_subdirectory(opengl/lib/glew ${CMAKE_BINARY_DIR}/lib/glew)
 
+#
 # lodge-gfx
-
+#
 add_library(lodge-gfx STATIC "")
 
 target_sources(lodge-gfx
@@ -22,14 +20,14 @@ target_sources(lodge-gfx
 		"opengl/lodge_sampler_opengl.c"
 		"opengl/lodge_texture_opengl.c"
 		"opengl/lodge_framebuffer_opengl.c"
-		"opengl/lodge_shader_opengl.c"
+		"opengl/lodge_shader_opengl.c" 
 		"opengl/lodge_buffer_object_opengl.c"
 		"opengl/lodge_pipeline_opengl.c"
 		"opengl/lodge_drawable_opengl.c"
+		"lodge_parametric_drawable.c"
 
 		"lodge_debug_draw.c"
 		"lodge_static_mesh.c"
-		"drawable.c"
 		"vertex_buffer.c"
 		"vertex.c"
 	PUBLIC
@@ -42,6 +40,7 @@ target_sources(lodge-gfx
 		"lodge_buffer_object.h"
 		"lodge_pipeline.h"
 		"lodge_drawable.h"
+		"lodge_parametric_drawable.h"
 		
 		"lodge_debug_draw.h"
 		"lodge_static_mesh.h"
@@ -65,5 +64,4 @@ target_link_libraries(lodge-gfx
 		lodge-image
 		lodge-collections
 		lodge-plugins			# FIXME(TS): should be separate module `lodge-plugin-gfx`
-		#lodge-vfs				# FIXME(TS): only for shader.{h,c}
 )

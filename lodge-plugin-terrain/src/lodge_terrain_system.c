@@ -8,6 +8,9 @@
 #include "lodge_sampler.h"
 #include "lodge_debug_draw.h"
 #include "lodge_buffer_object.h"
+#include "lodge_shader.h"
+#include "lodge_drawable.h"
+#include "lodge_parametric_drawable.h"
 
 #include "lodge_terrain_component.h"
 #include "lodge_foliage_component.h"
@@ -18,8 +21,6 @@
 #include "lodge_plugin_terrain.h"
 #include "lodge_plugin_scene_renderer.h"
 #include "lodge_plugin_debug_draw.h"
-
-#include "drawable.h" // FIXME(TS): port to lodge_drawable
 
 #include "dynbuf.h"
 #include "geometry.h"
@@ -59,8 +60,10 @@ struct lodge_terrain_system
 	enum lodge_terrain_lod_level	lod_level_max;
 	float							lod_switch_threshold; // if size in clip space >= threshold, switch to higher res lod
 
-	struct drawable					lod_meshes[LODGE_TERRAIN_LOD_LEVEL_MAX];
-	struct drawable					centered_lod_meshes[LODGE_TERRAIN_LOD_LEVEL_MAX];
+	lodge_drawable_t				lod_meshes[LODGE_TERRAIN_LOD_LEVEL_MAX];
+	uint32_t						lod_mesh_triangle_counts[LODGE_TERRAIN_LOD_LEVEL_MAX];
+	lodge_drawable_t				centered_lod_meshes[LODGE_TERRAIN_LOD_LEVEL_MAX];
+	uint32_t						centered_lod_mesh_triangle_counts[LODGE_TERRAIN_LOD_LEVEL_MAX];
 
 	lodge_asset_t					terrain_shader_asset;
 	lodge_asset_t					foliage_shader_asset;
@@ -233,9 +236,9 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 
 						int lod_level = (int)chunk->lod;
 						ASSERT(lod_level >= LODGE_TERRAIN_LOD_LEVEL_128 && lod_level < LODGE_TERRAIN_LOD_LEVEL_MAX);
-						struct drawable *chunk_lod = &system->lod_meshes[lod_level];
+						lodge_drawable_t chunk_lod = system->lod_meshes[lod_level];
 
-						drawable_render(chunk_lod);
+						lodge_drawable_render_triangles(chunk_lod, 0, system->lod_mesh_triangle_counts[lod_level]);
 					}
 				}
 			} else {
@@ -249,8 +252,8 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 					lodge_shader_set_constant_float(terrain_shader, strview("chunk_level"), (float)it->lod);
 
 					ASSERT(it->lod >= 0 && it->lod < LODGE_TERRAIN_LOD_LEVEL_MAX);
-					struct drawable *chunk_lod = &system->centered_lod_meshes[it->lod];
-					drawable_render(chunk_lod);
+					lodge_drawable_t chunk_lod = system->centered_lod_meshes[it->lod];
+					lodge_drawable_render_triangles(chunk_lod, 0, system->centered_lod_mesh_triangle_counts[it->lod]);
 				}
 			}
 
@@ -312,8 +315,10 @@ static void lodge_terrain_system_new_inplace(struct lodge_terrain_system *system
 	//
 	for(int i=0; i<LODGE_TERRAIN_LOD_LEVEL_MAX; i++) {
 		int subdivisions = lod_level_to_subdivisions[i];
-		system->lod_meshes[i] = drawable_make_plane_subdivided_vertex(vec2_make(0.0f, 0.0f), vec2_make(1.0f, 1.0f), subdivisions, subdivisions);
-		system->centered_lod_meshes[i] = drawable_make_plane_subdivided_vertex(vec2_make(-0.5f,-0.5f), vec2_make(1.0f,1.0f), subdivisions, subdivisions);
+		system->lod_meshes[i] = lodge_drawable_make_plane_subdivided(vec2_make(0.0f, 0.0f), vec2_make(1.0f, 1.0f), subdivisions, subdivisions);
+		system->centered_lod_meshes[i] = lodge_drawable_make_plane_subdivided(vec2_make(-0.5f,-0.5f), vec2_make(1.0f,1.0f), subdivisions, subdivisions);
+
+		system->lod_mesh_triangle_counts[i] = system->centered_lod_mesh_triangle_counts[i] = 6 * subdivisions * subdivisions;
 	}
 
 	lodge_scene_add_render_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_DEFERRED, &lodge_terrain_system_render, system);
@@ -326,8 +331,8 @@ static void lodge_terrain_system_free_inplace(struct lodge_terrain_system *syste
 	//lodge_scene_render_system_remove_pass_func(scene, LODGE_SCENE_RENDER_SYSTEM_PASS_SHADOW, lodge_terrain_system_render, system);
 	
 	for(int i=0; i<LODGE_TERRAIN_LOD_LEVEL_MAX; i++) {
-		drawable_reset(&system->lod_meshes[i]);
-		drawable_reset(&system->centered_lod_meshes[i]);
+		lodge_drawable_reset(system->lod_meshes[i]);
+		lodge_drawable_reset(system->centered_lod_meshes[i]);
 	}
 }
 

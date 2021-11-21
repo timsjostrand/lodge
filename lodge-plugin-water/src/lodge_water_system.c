@@ -6,6 +6,10 @@
 #include "lodge_gfx.h"
 #include "lodge_assets2.h"
 #include "lodge_sampler.h"
+#include "lodge_shader.h"
+#include "lodge_drawable.h"
+#include "lodge_parametric_drawable.h"
+#include "lodge_buffer_object.h"
 
 #include "lodge_water_component.h"
 #include "lodge_transform_component.h"
@@ -14,8 +18,6 @@
 
 #include "lodge_plugin_water.h"
 #include "lodge_plugin_scene_renderer.h"
-
-#include "drawable.h"
 
 #include "geometry.h"
 #include "frustum.h"
@@ -34,7 +36,7 @@ struct lodge_water_system
 	bool					draw;
 	vec3					terrain_scale;
 
-	struct drawable			drawable;
+	lodge_drawable_t		drawable;
 
 	struct lodge_assets2	*shaders;
 	struct lodge_assets2	*textures;
@@ -133,7 +135,7 @@ static void lodge_water_system_render(lodge_scene_t scene, const struct lodge_sc
 
 		lodge_shader_set_constant_mvp(shader, &mvp);
 
-		drawable_render(&system->drawable);
+		lodge_drawable_render_triangles(system->drawable, 0, 6);
 
 		lodge_gfx_annotate_end();
 	}
@@ -149,9 +151,11 @@ static void lodge_water_system_new_inplace(struct lodge_water_system *system, lo
 	// entity hierarchy maybe?
 	system->terrain_scale = vec3_make(2000.0f, 2000.0f, 300.0f);
 
-	const vec2 origin = { -0.5f, -0.5f };
-	const vec2 size = { 1.0f, 1.0f };
-	system->drawable = drawable_make_plane_subdivided(origin, size, 1, 1);
+	{
+		const vec2 origin = { -0.5f, -0.5f };
+		const vec2 size = { 1.0f, 1.0f };
+		system->drawable = lodge_drawable_make_plane_subdivided(origin, size, 1, 1);
+	}
 
 	system->sampler_linear_repeat = lodge_sampler_make((struct lodge_sampler_desc) {
 		.min_filter = MIN_FILTER_LINEAR,
