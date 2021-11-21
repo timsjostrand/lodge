@@ -10,7 +10,6 @@
 #include "str.h"
 #include "strview.h"
 #include "blob.h"
-#include "array.h"
 #include "lodge_opengl.h"
 
 #define SHADER_INCLUDES_MAX			255

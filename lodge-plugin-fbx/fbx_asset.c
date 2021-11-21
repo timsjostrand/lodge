@@ -3,7 +3,6 @@
 #include "fbx.h"
 #include "math4.h"
 #include "str.h"
-#include "array.h"
 #include "geometry.h"
 
 #include "lodge_platform.h"

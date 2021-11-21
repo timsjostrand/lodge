@@ -3,7 +3,6 @@
 #include "strview.h"
 #include "txt.h"
 #include "strbuf.h"
-#include "array.h"
 
 #include "lodge_assets2.h"
 #include "lodge_shader.h"
