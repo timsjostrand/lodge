@@ -20,15 +20,14 @@ target_sources(lodge-gfx
 		"opengl/lodge_sampler_opengl.c"
 		"opengl/lodge_texture_opengl.c"
 		"opengl/lodge_framebuffer_opengl.c"
-		"opengl/lodge_shader_opengl.c" 
+		"opengl/lodge_shader_opengl.c"
 		"opengl/lodge_buffer_object_opengl.c"
 		"opengl/lodge_pipeline_opengl.c"
 		"opengl/lodge_drawable_opengl.c"
-		"lodge_parametric_drawable.c"
 
+		"lodge_parametric_drawable.c"
 		"lodge_debug_draw.c"
 		"lodge_static_mesh.c"
-		"vertex_buffer.c"
 		"vertex.c"
 	PUBLIC
 		"lodge_gfx.h"
@@ -40,11 +39,10 @@ target_sources(lodge-gfx
 		"lodge_buffer_object.h"
 		"lodge_pipeline.h"
 		"lodge_drawable.h"
+
 		"lodge_parametric_drawable.h"
-		
 		"lodge_debug_draw.h"
 		"lodge_static_mesh.h"
-		"vertex_buffer.h"
 		"vertex.h" # FIXME(TS): vertex types should be more general than `lodge-gfx` but less general than `lodge-lib`
 )
 
