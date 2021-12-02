@@ -21,20 +21,20 @@ static inline void lodge_parametric_append_plane_quads(struct lodge_parametric_m
 	static const vec3 n = { 0.0f, 0.0f, 1.0f };
 
 	if (mirror) {
-		lodge_parametric_append(dst, vec3_make(x, y + h, 0.0f),		n, vec2_make(0.0f, 0.0f));		/* Top-left */
-		lodge_parametric_append(dst, vec3_make(x, y, 0.0f),			n, vec2_make(0.0f, 1.0f));			/* Bottom-Left */
-		lodge_parametric_append(dst, vec3_make(x + w, y, 0.0f),		n, vec2_make(1.0f, 1.0f));		/* Bottom-right */
-		lodge_parametric_append(dst, vec3_make(x + w, y + h, 0.0f),	n, vec2_make(1.0f, 0.0f));	/* Top-right */
-		lodge_parametric_append(dst, vec3_make(x, y + h, 0.0f),		n, vec2_make(0.0f, 0.0f));		/* Top-left */
-		lodge_parametric_append(dst, vec3_make(x + w, y, 0.0f),		n, vec2_make(1.0f, 1.0f));		/* Bottom-right */
+		lodge_parametric_append(dst, vec3_make(x, y + h, 0.0f),		n, vec2_make(0.0f, 0.0f)); /* Top-left */
+		lodge_parametric_append(dst, vec3_make(x, y, 0.0f),			n, vec2_make(0.0f, 1.0f)); /* Bottom-Left */
+		lodge_parametric_append(dst, vec3_make(x + w, y, 0.0f),		n, vec2_make(1.0f, 1.0f)); /* Bottom-right */
+		lodge_parametric_append(dst, vec3_make(x + w, y + h, 0.0f),	n, vec2_make(1.0f, 0.0f)); /* Top-right */
+		lodge_parametric_append(dst, vec3_make(x, y + h, 0.0f),		n, vec2_make(0.0f, 0.0f)); /* Top-left */
+		lodge_parametric_append(dst, vec3_make(x + w, y, 0.0f),		n, vec2_make(1.0f, 1.0f)); /* Bottom-right */
 	}
 	else {
-		lodge_parametric_append(dst, vec3_make(x, y + h, 0.0f),		n, vec2_make(0.0f, 0.0f));		/* Top-left */
-		lodge_parametric_append(dst, vec3_make(x, y, 0.0f),			n, vec2_make(0.0f, 1.0f));			/* Bottom-Left */
-		lodge_parametric_append(dst, vec3_make(x + w, y + h, 0.0f),	n, vec2_make(1.0f, 0.0f));	/* Top-right */
-		lodge_parametric_append(dst, vec3_make(x + w, y + h, 0.0f),	n, vec2_make(1.0f, 0.0f));	/* Top-right */
-		lodge_parametric_append(dst, vec3_make(x, y, 0.0f),			n, vec2_make(0.0f, 1.0f));			/* Bottom-left */
-		lodge_parametric_append(dst, vec3_make(x + w, y, 0.0f),		n, vec2_make(1.0f, 1.0f));		/* Bottom-right */
+		lodge_parametric_append(dst, vec3_make(x, y + h, 0.0f),		n, vec2_make(0.0f, 0.0f)); /* Top-left */
+		lodge_parametric_append(dst, vec3_make(x, y, 0.0f),			n, vec2_make(0.0f, 1.0f)); /* Bottom-Left */
+		lodge_parametric_append(dst, vec3_make(x + w, y + h, 0.0f),	n, vec2_make(1.0f, 0.0f)); /* Top-right */
+		lodge_parametric_append(dst, vec3_make(x + w, y + h, 0.0f),	n, vec2_make(1.0f, 0.0f)); /* Top-right */
+		lodge_parametric_append(dst, vec3_make(x, y, 0.0f),			n, vec2_make(0.0f, 1.0f)); /* Bottom-left */
+		lodge_parametric_append(dst, vec3_make(x + w, y, 0.0f),		n, vec2_make(1.0f, 1.0f)); /* Bottom-right */
 	}
 }
 
