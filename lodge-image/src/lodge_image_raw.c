@@ -1,4 +1,4 @@
-#include "raw_image.h"
+#include "lodge_image_raw.h"
 
 #include "log.h"
 

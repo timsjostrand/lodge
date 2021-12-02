@@ -6,7 +6,7 @@
 #include "lodge_image.h"
 #include "lodge_json.h"
 
-#include "raw_image.h"
+#include "lodge_image_raw.h"
 
 #define USERDATA_FILES 0
 
