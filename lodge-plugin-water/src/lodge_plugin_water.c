@@ -12,19 +12,21 @@
 
 #include "config.h"
 
-struct lodge_ret lodge_plugin_water_new_inplace(struct lodge_plugin_water *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
+enum lodge_plugin_idx
 {
-	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview("shaders"));
-	ASSERT(plugin->shaders);
+	PLUGIN_IDX_SHADERS,
+	PLUGIN_IDX_TEXTURES,
+	PLUGIN_IDX_IMAGES,
+	PLUGIN_IDX_SCENE_RENDERER,
+	PLUGIN_IDX_MAX,
+};
 
-	plugin->textures = lodge_plugins_depend(plugins, plugin, strview("textures"));
-	ASSERT(plugin->textures);
-
-	plugin->images = lodge_plugins_depend(plugins, plugin, strview("images"));
-	ASSERT(plugin->images);
-
-	plugin->scene_renderer = lodge_plugins_depend(plugins, plugin, strview("scene_renderer"));
-	ASSERT(plugin->scene_renderer);
+struct lodge_ret lodge_plugin_water_new_inplace(struct lodge_plugin_water *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
+{
+	plugin->shaders = dependencies[PLUGIN_IDX_SHADERS];
+	plugin->textures = dependencies[PLUGIN_IDX_TEXTURES];
+	plugin->images = dependencies[PLUGIN_IDX_IMAGES];
+	plugin->scene_renderer = dependencies[PLUGIN_IDX_SCENE_RENDERER];
 
 	struct shader_types shader_types = lodge_plugin_shaders_get_types(plugin->shaders);
 	struct texture_types texture_types = lodge_plugin_textures_get_types(plugin->textures);
@@ -64,5 +66,22 @@ LODGE_PLUGIN_IMPL(lodge_plugin_water)
 				}
 			}
 		},
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_SHADERS] = {
+					.name = strview("shaders"),
+				},
+				[PLUGIN_IDX_TEXTURES] = {
+					.name = strview("textures"),
+				},
+				[PLUGIN_IDX_IMAGES] = {
+					.name = strview("images"),
+				},
+				[PLUGIN_IDX_SCENE_RENDERER] = {
+					.name = strview("scene_renderer"),
+				},
+			}
+		}
 	};
 }

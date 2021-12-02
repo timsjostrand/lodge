@@ -12,6 +12,12 @@ enum textures_userdata
 	USERDATA_ASSET_TYPE
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_IMAGES,
+	PLUGIN_IDX_MAX,
+};
+
 //
 // TODO(TS): implement reload_inplace() to reuse tex id
 //
@@ -47,12 +53,9 @@ static void lodge_assets_texture_free_inplace(struct lodge_assets2 *textures, st
 	lodge_texture_reset(*texture);
 }
 
-static struct lodge_ret lodge_textures_new_inplace(struct lodge_assets2 *textures, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_textures_new_inplace(struct lodge_assets2 *textures, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	struct lodge_assets2 *images = lodge_plugins_depend(plugins, textures, strview("images"));
-	if(!images) {
-		return lodge_error("Failed to find plugin `images`");
-	}
+	struct lodge_assets2 *images = dependencies[PLUGIN_IDX_IMAGES];
 
 	lodge_assets2_new_inplace(textures, &(struct lodge_assets2_desc) {
 		.name = strview("textures"),
@@ -90,5 +93,13 @@ LODGE_PLUGIN_IMPL(lodge_plugin_textures)
 		.free_inplace = &lodge_textures_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_IMAGES] = {
+					.name = strview("images"),
+				}
+			}
+		}
 	};
 }

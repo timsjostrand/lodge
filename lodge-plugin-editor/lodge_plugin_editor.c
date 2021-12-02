@@ -38,6 +38,14 @@ struct lodge_editor_panels
 	struct lodge_editor_panel_desc				*elements;
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_WINDOWS = 0,
+	PLUGIN_IDX_SHADERS,
+	PLUGIN_IDX_SCENES,
+	PLUGIN_IDX_MAX,
+};
+
 //
 // TODO(TS): separate editor-state and editor-app into separate plugins; we should be able to
 // run a game and open an editor overlay easily.
@@ -49,7 +57,6 @@ struct lodge_editor
 
 	struct lodge_plugins						*plugins;
 	struct lodge_windows						*windows;
-	//struct lodge_scene_renderer_plugin			*scene_renderer;
 	struct lodge_assets2						*shaders;
 	struct lodge_assets2						*scenes;
 
@@ -155,7 +162,7 @@ static void lodge_editor_on_resize(lodge_window_t window, int width, int height,
 	}
 }
 
-static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
 	editor->gui_enabled = true;
 	editor->scene = NULL;
@@ -170,33 +177,9 @@ static struct lodge_ret lodge_editor_new_inplace(struct lodge_editor *editor, st
 	// Plugins
 	{
 		editor->plugins = plugins;
-
-		void *types_plugin = lodge_plugins_depend(plugins, editor, strview("types"));
-		if(!types_plugin) {
-			return lodge_error("Failed to find `types` plugin");
-		}
-
-		editor->windows = lodge_plugins_depend(plugins, editor, strview("windows"));
-		if(!editor->windows) {
-			return lodge_error("Failed to find `windows` plugin");
-		}
-
-#if 0
-		editor->scene_renderer = lodge_plugins_depend(plugins, editor, strview("scene_renderer"));
-		if(!editor->scene_renderer) {
-			return lodge_error("Failed to find `scene_renderer` plugin");
-		}
-#endif
-
-		editor->shaders = lodge_plugins_depend(plugins, editor, strview("shaders"));
-		if(!editor->shaders) {
-			return lodge_error("Failed to find `shaders` plugin");
-		}
-
-		editor->scenes = lodge_plugins_depend(plugins, editor, strview("scenes"));
-		if(!editor->scenes) {
-			return lodge_error("Failed to find `scenes` plugin");
-		}
+		editor->windows = dependencies[PLUGIN_IDX_WINDOWS];
+		editor->shaders = dependencies[PLUGIN_IDX_SHADERS];
+		editor->scenes = dependencies[PLUGIN_IDX_SCENES];
 	}
 
 	editor->gui_shader_asset = lodge_assets2_register(editor->shaders, strview("editor/gui"));
@@ -414,6 +397,20 @@ LODGE_PLUGIN_IMPL(lodge_plugin_editor)
 				}
 			}
 		},
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_WINDOWS] = {
+					.name = strview("windows"),
+				},
+				[PLUGIN_IDX_SHADERS] = {
+					.name = strview("shaders"),
+				},
+				[PLUGIN_IDX_SCENES] = {
+					.name = strview("scenes"),
+				}
+			}
+		}
 	};
 }
 

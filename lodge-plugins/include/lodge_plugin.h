@@ -9,7 +9,7 @@
 struct lodge_plugins;
 struct lodge_argv;
 
-typedef struct lodge_ret				(*lodge_plugin_new_inplace_func_t)(void *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args);
+typedef struct lodge_ret				(*lodge_plugin_new_inplace_func_t)(void *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies);
 typedef void							(*lodge_plugin_update_func_t)(void *plugin, float delta_time);
 typedef void							(*lodge_plugin_render_func_t)(void *plugin);
 typedef void							(*lodge_plugin_free_inplace_func_t)(void *plugin);
@@ -26,6 +26,18 @@ struct lodge_static_mounts
 	struct lodge_static_mount			elements[8];
 };
 
+struct lodge_plugin_dependency
+{
+	strview_t							name;
+	bool								optional;
+};
+
+struct lodge_plugin_dependencies
+{
+	size_t								count;
+	struct lodge_plugin_dependency		elements[32];
+};
+
 struct lodge_plugin_desc
 {
 	uint32_t							version;
@@ -36,6 +48,7 @@ struct lodge_plugin_desc
 	lodge_plugin_update_func_t			update;
 	lodge_plugin_render_func_t			render; // TODO(TS): remove
 	struct lodge_static_mounts			static_mounts;
+	struct lodge_plugin_dependencies	dependencies;
 };
 
 typedef struct lodge_plugin_desc		(*lodge_plugin_func_t)();

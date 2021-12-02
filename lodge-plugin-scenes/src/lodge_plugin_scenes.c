@@ -19,6 +19,12 @@ enum lodge_scenes_userdata
 	USERDATA_COMPONENT_TYPE_CAMERA,
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_FILES = 0,
+	PLUGIN_IDX_MAX,
+};
+
 static bool lodge_assets_scene_new_inplace(struct lodge_assets2 *scenes, strview_t name, lodge_asset_t id, struct lodge_scene *scene)
 {
 	struct lodge_assets2 *files = lodge_assets2_get_userdata(scenes, USERDATA_FILES);
@@ -74,12 +80,9 @@ static void lodge_assets_scene_free_inplace(struct lodge_assets2 *scenes, strvie
 	lodge_scene_free_inplace(scene);
 }
 
-static struct lodge_ret lodge_plugin_scenes_new_inplace(struct lodge_assets2 *scenes, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_plugin_scenes_new_inplace(struct lodge_assets2 *scenes, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	struct lodge_assets2 *files = lodge_plugins_depend(plugins, scenes, strview("files"));
-	if(!files) {
-		return lodge_error("Failed to find plugin `files`");
-	}
+	struct lodge_assets2 *files = dependencies[PLUGIN_IDX_FILES];
 
 	lodge_assets2_new_inplace(scenes, &(struct lodge_assets2_desc) {
 		.name = strview("scenes"),
@@ -125,6 +128,14 @@ LODGE_PLUGIN_IMPL(lodge_plugin_scenes)
 		.free_inplace = &lodge_plugin_scenes_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_FILES] = {
+					.name = strview("files"),
+				}
+			}
+		}
 	};
 }
 

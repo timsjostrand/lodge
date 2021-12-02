@@ -22,7 +22,7 @@ static void lodge_plugin_renderdoc_free_inplace(struct lodge_plugin_renderdoc *p
 	}
 }
 
-static struct lodge_ret lodge_plugin_renderdoc_new_inplace(struct lodge_plugin_renderdoc *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_plugin_renderdoc_new_inplace(struct lodge_plugin_renderdoc *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
 	strview_t renderdoc_lib_path_default = strview_static("C:/Program Files/RenderDoc/renderdoc.dll");
 	strview_t renderdoc_lib_path = lodge_argv_get_str(args, strview_static("renderdoc_path"), renderdoc_lib_path_default);

@@ -113,7 +113,7 @@ static void glfw_resize_callback(GLFWwindow *window, int width, int height)
 	}
 }
 
-static struct lodge_ret lodge_windows_new_inplace(struct lodge_windows *windows, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_windows_new_inplace(struct lodge_windows *windows, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
 	windows->library = strview_static("glfw");
 

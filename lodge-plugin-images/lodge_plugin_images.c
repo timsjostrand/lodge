@@ -10,6 +10,12 @@
 
 #define USERDATA_FILES 0
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_FILES = 0,
+	PLUGIN_IDX_MAX
+};
+
 //
 // TODO(TS): use property object api instead
 //
@@ -125,12 +131,9 @@ static void lodge_image_asset_free_inplace(struct lodge_assets2 *images, strview
 	lodge_image_free(image);
 }
 
-static struct lodge_ret lodge_images_new_inplace(struct lodge_assets2 *images, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_images_new_inplace(struct lodge_assets2 *images, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	struct lodge_assets *files = lodge_plugins_depend(plugins, images, strview("files"));
-	if(!files) {
-		return lodge_error("Failed to find plugin `files`");
-	}
+	struct lodge_assets *files = dependencies[PLUGIN_IDX_FILES];
 
 	lodge_assets2_new_inplace(images, &(struct lodge_assets2_desc) {
 		.name = strview("images"),
@@ -160,5 +163,13 @@ LODGE_PLUGIN_IMPL(lodge_plugin_images)
 		.free_inplace = &lodge_images_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies ={
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_FILES] = {
+					.name = strview("files")
+				}
+			}
+		}
 	};
 }

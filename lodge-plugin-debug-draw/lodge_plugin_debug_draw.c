@@ -22,6 +22,12 @@
 
 lodge_component_type_t LODGE_COMPONENT_TYPE_DEBUG_SPHERE = NULL;
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_SHADERS,
+	PLUGIN_IDX_MAX,
+};
+
 struct lodge_debug_sphere
 {
 	struct sphere			sphere;
@@ -236,10 +242,9 @@ lodge_component_type_t lodge_plugin_debug_draw_get_sphere_component_type(struct 
 	return plugin ? plugin->sphere_component_type : NULL;
 }
 
-struct lodge_ret lodge_debug_draw_plugin_new_inplace(struct lodge_plugin_debug_draw *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
+struct lodge_ret lodge_debug_draw_plugin_new_inplace(struct lodge_plugin_debug_draw *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview_static("shaders"));
-	ASSERT(plugin->shaders);
+	plugin->shaders = dependencies[PLUGIN_IDX_SHADERS];
 
 	plugin->system_type = lodge_debug_draw_system_type_register(plugin);
 	ASSERT(plugin->system_type);
@@ -270,5 +275,13 @@ LODGE_PLUGIN_IMPL(lodge_plugin_debug_draw)
 		.free_inplace = &lodge_debug_draw_plugin_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies ={
+			.count = 1,
+			.elements = {
+				[PLUGIN_IDX_SHADERS] = {
+					.name = strview("shaders"),
+				}
+			}
+		}
 	};
 }

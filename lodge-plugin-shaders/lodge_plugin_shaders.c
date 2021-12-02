@@ -16,6 +16,12 @@ enum lodge_shaders_userdata
 	USERDATA_ASSET_TYPE,
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_SHADER_SOURCES,
+	PLUGIN_IDX_MAX,
+};
+
 static bool lodge_shader_asset_new_inplace(struct lodge_assets2 *shaders, strview_t name, lodge_asset_t asset, lodge_shader_t shader)
 {
 	struct lodge_assets2 *shader_sources = lodge_assets2_get_userdata(shaders, USERDATA_SHADER_SOURCES);
@@ -104,12 +110,9 @@ static void lodge_shader_asset_free_inplace(struct lodge_assets2 *shaders, strvi
 	lodge_shader_free_inplace(shader);
 }
 
-static struct lodge_ret lodge_shaders_new_inplace(struct lodge_assets2 *shaders, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_shaders_new_inplace(struct lodge_assets2 *shaders, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	struct lodge_assets2 *shader_sources = lodge_plugins_depend(plugins, shaders, strview_static("shader_sources"));
-	if(!shader_sources) {
-		return lodge_error("Failed to find plugin `shader_sources`");
-	}
+	struct lodge_assets2 *shader_sources = dependencies[PLUGIN_IDX_SHADER_SOURCES];
 
 	lodge_assets2_new_inplace(shaders, &(struct lodge_assets2_desc) {
 		.name = strview_static("shaders"),
@@ -147,5 +150,13 @@ LODGE_PLUGIN_IMPL(lodge_plugin_shaders)
 		.free_inplace = &lodge_shaders_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies ={
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_SHADER_SOURCES] = {
+					.name = strview("shader_sources"),
+				}
+			}
+		}
 	};
 }

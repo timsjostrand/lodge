@@ -4,8 +4,7 @@
 #include "str.h"
 
 #include "lodge_time.h"
-
-#include <stdbool.h>
+#include "lodge_platform.h"
 
 struct lodge_argv;
 struct lodge_plugin_desc;

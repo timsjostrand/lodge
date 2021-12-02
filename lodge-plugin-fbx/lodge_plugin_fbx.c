@@ -14,6 +14,12 @@ enum lodge_assets_fbx_userdata
 	USERDATA_ASSET_TYPE,
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_FILES,
+	PLUGIN_IDX_MAX,
+};
+
 static bool lodge_asset_fbx_new_inplace(struct lodge_assets2 *fbx_assets, strview_t name, lodge_asset_t asset, void *fbx_asset_ptr)
 {
 	struct fbx_asset *fbx_asset = (struct fbx_asset *)fbx_asset_ptr;
@@ -56,12 +62,9 @@ static void lodge_asset_fbx_free_inplace(struct lodge_assets2 *fbx_assets, strvi
 	fbx_asset_reset(fbx_asset);
 }
 
-static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets2 *fbx_assets, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_plugin_fbx_new_inplace(struct lodge_assets2 *fbx_assets, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	struct lodge_assets2 *files = lodge_plugins_depend(plugins, fbx_assets, strview("files"));
-	if(!files) {
-		return lodge_error("FBX failed to find `files` plugin");
-	}
+	struct lodge_assets2 *files = dependencies[PLUGIN_IDX_FILES];
 
 	lodge_assets2_new_inplace(fbx_assets, &(struct lodge_assets2_desc) {
 		.name = strview("fbx"),
@@ -102,5 +105,13 @@ LODGE_PLUGIN_IMPL(lodge_plugin_fbx)
 		.free_inplace = &lodge_plugin_fbx_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_FILES] = {
+					.name = strview("files"),
+				}
+			}
+		}
 	};
 }

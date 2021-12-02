@@ -11,6 +11,12 @@ enum files_userdata
 	USERDATA_VFS,
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_VFS,
+	PLUGIN_IDX_MAX,
+};
+
 struct lodge_assets_callback
 {
 	struct lodge_assets2			*assets;
@@ -149,13 +155,10 @@ static void lodge_files_on_mount_added(struct lodge_vfs *vfs, strview_t virtual_
 	}
 }
 
-static struct lodge_ret lodge_files_new_inplace(struct lodge_assets2 *files, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_files_new_inplace(struct lodge_assets2 *files, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
 	{
-		struct lodge_vfs *vfs = lodge_plugins_depend(plugins, files, strview("vfs"));
-		if(!vfs) {
-			return lodge_error("Files failed to find VFS");
-		}
+		struct lodge_vfs *vfs = dependencies[PLUGIN_IDX_VFS];
 
 		lodge_assets2_set_userdata(files, USERDATA_VFS, vfs);
 
@@ -212,5 +215,13 @@ LODGE_PLUGIN_IMPL(lodge_plugin_files)
 		.free_inplace = &lodge_files_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies ={
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_VFS] = {
+					.name = strview("vfs"),
+				}
+			}
+		}
 	};
 }

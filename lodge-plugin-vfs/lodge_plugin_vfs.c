@@ -3,7 +3,7 @@
 #include "lodge_vfs.h"
 #include "lodge_argv.h"
 
-struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodge_plugins *plugins, const struct lodge_argv *args)
+struct lodge_ret lodge_plugin_vfs_new_inplace(struct lodge_vfs *vfs, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
 	lodge_vfs_new_inplace(vfs);
 

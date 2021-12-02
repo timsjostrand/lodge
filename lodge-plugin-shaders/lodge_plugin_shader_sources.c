@@ -18,6 +18,12 @@ enum shader_sources_userdata
 	USERDATA_FILES,
 };
 
+enum shader_plugin_idx
+{
+	PLUGIN_IDX_FILES,
+	PLUGIN_IDX_MAX,
+};
+
 struct lodge_shader_source_include
 {
 	char								name[256];
@@ -230,12 +236,9 @@ static bool filter_filter_shader_sources(strview_t filename)
 		|| strview_ends_with(filename, strview(".compute"));
 }
 
-static struct lodge_ret lodge_shader_sources_new_inplace(struct lodge_assets2 *sources, struct lodge_plugins *plugins, const struct lodge_argv *args)
+static struct lodge_ret lodge_shader_sources_new_inplace(struct lodge_assets2 *sources, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	struct lodge_assets2 *files = lodge_plugins_depend(plugins, sources, strview_static("files"));
-	if(!files) {
-		return lodge_error("Failed to find plugin `files`");
-	}
+	struct lodge_assets2 *files = dependencies[PLUGIN_IDX_FILES];
 
 	lodge_assets2_new_inplace(sources, &(struct lodge_assets2_desc) {
 		.name = strview_static("shader_sources"),
@@ -281,6 +284,14 @@ LODGE_PLUGIN_IMPL(lodge_plugin_shader_sources)
 				{
 					.src_dir = strview(ASSETS_DIR),
 					.dst_point = strview("/")
+				}
+			}
+		},
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_FILES] = {
+					.name = strview("files"),
 				}
 			}
 		}

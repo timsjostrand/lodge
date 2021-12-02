@@ -44,6 +44,14 @@
 #include <stdio.h>
 #define alignas _Alignas
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_SHADERS,
+	PLUGIN_IDX_TEXTURES,
+	PLUGIN_IDX_FBX,
+	PLUGIN_IDX_MAX,
+};
+
 struct lodge_scene_renderer_plugin
 {
 	struct lodge_assets2				*fbx_assets;
@@ -1419,25 +1427,11 @@ static lodge_system_type_t lodge_scene_render_system_type_register(struct lodge_
 	return LODGE_SYSTEM_TYPE_SCENE_RENDER;
 }
 
-struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_renderer_plugin *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
+struct lodge_ret lodge_scene_renderer_plugin_new_inplace(struct lodge_scene_renderer_plugin *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
-	plugin->shaders = lodge_plugins_depend(plugins, plugin, strview("shaders"));
-	ASSERT(plugin->shaders);
-	if(!plugin->shaders) {
-		return lodge_error("Failed to load `shaders` plugin");
-	}
-
-	plugin->textures = lodge_plugins_depend(plugins, plugin, strview("textures"));
-	ASSERT(plugin->textures);
-	if(!plugin->textures) {
-		return lodge_error("Failed to load `textures` plugin");
-	}
-
-	plugin->fbx_assets = lodge_plugins_depend(plugins, plugin, strview("fbx"));
-	ASSERT(plugin->fbx_assets);
-	if(!plugin->fbx_assets) {
-		return lodge_error("Failed to load `fbx` plugin");
-	}
+	plugin->shaders = dependencies[PLUGIN_IDX_SHADERS];
+	plugin->textures = dependencies[PLUGIN_IDX_TEXTURES];
+	plugin->fbx_assets = dependencies[PLUGIN_IDX_FBX];
 
 	plugin->scene_render_system_type = lodge_scene_render_system_type_register(plugin);
 	ASSERT(plugin->scene_render_system_type);
@@ -1574,5 +1568,19 @@ LODGE_PLUGIN_IMPL(lodge_scene_renderer_plugin)
 		.free_inplace = &lodge_scene_renderer_plugin_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies = {
+			.count = PLUGIN_IDX_MAX,
+			.elements = {
+				[PLUGIN_IDX_SHADERS] = {
+					.name = strview("shaders"),
+				},
+				[PLUGIN_IDX_TEXTURES] = {
+					.name = strview("textures"),
+				},
+				[PLUGIN_IDX_FBX] = {
+					.name = strview("fbx"),
+				},
+			}
+		}
 	};
 }

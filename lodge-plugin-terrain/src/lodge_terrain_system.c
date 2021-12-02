@@ -367,7 +367,7 @@ static void lodge_terrain_system_update(struct lodge_terrain_system *system, lod
 
 		const vec3 scale = lodge_get_scale(scene, owner);
 
-		lodge_texture_t *heightmap = lodge_assets2_get(textures, component->heightmap);
+ 		lodge_texture_t *heightmap = lodge_assets2_get(textures, component->heightmap);
 		lodge_texture_t *albedo = lodge_assets2_get(textures, component->material.albedo);
 		lodge_texture_t *displacement = lodge_assets2_get(textures, component->material.displacement);
 		lodge_texture_t *normal = lodge_assets2_get(textures, component->material.normal);

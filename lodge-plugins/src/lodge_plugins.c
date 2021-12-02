@@ -102,9 +102,26 @@ static struct lodge_ret lodge_plugin_try_initialize(struct lodge_plugins *plugin
 			}
 		}
 
+		//
+		// Load statically declared dependencies.
+		//
+		void *dependencies[32];
+		ASSERT(desc->dependencies.count < lodge_countof(dependencies));
+		for(size_t i=0, count=desc->dependencies.count; i<count; i++) {
+			struct lodge_plugin_dependency *dependency = &desc->dependencies.elements[i];
+
+			dependencies[i] = lodge_plugins_depend(plugins, plugin->data, dependency->name);
+
+			if(!dependency->optional) {
+				ASSERT_OR(dependencies[i]) {
+					return lodge_error("Failed to initialize plugin dependency");
+				}
+			}
+		}
+
 		if(plugin->desc->new_inplace) {
 			debugf("Plugins", "Initializing `" STRVIEW_PRINTF_FMT "`...\n", STRVIEW_PRINTF_ARG(plugin->desc->name));
-			struct lodge_ret init_ret = plugin->desc->new_inplace(plugin->data, plugins, plugins->args);
+			struct lodge_ret init_ret = plugin->desc->new_inplace(plugin->data, plugins, plugins->args, dependencies);
 			if(!init_ret.success) {
 				errorf("Plugins", "Error when initializing plugin `" STRVIEW_PRINTF_FMT "`: " STRVIEW_PRINTF_FMT "\n",
 					STRVIEW_PRINTF_ARG(plugin->desc->name),

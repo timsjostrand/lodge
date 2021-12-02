@@ -25,6 +25,12 @@ enum userdata
 	USERDATA_EDITOR,
 };
 
+enum lodge_plugin_idx
+{
+	PLUGIN_IDX_EDITOR,
+	PLUGIN_IDX_MAX,
+};
+
 static void node_editor_update_glue(struct lodge_ns_editor *ns_editor, lodge_gui_t gui, struct lodge_editor *editor, float dt)
 {
 	lodge_ns_editor_update(ns_editor, gui, dt);
@@ -51,23 +57,21 @@ static void lodge_graph_asset_edit(struct lodge_assets2 *graphs, lodge_asset_t a
 	});
 }
 
-struct lodge_ret lodge_plugin_script_new_inplace(struct lodge_plugin_script *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args)
+struct lodge_ret lodge_plugin_script_new_inplace(struct lodge_plugin_script *plugin, struct lodge_plugins *plugins, const struct lodge_argv *args, void **dependencies)
 {
 	lodge_node_types_default_register();
 
-	{
-		struct lodge_editor *editor = lodge_plugins_depend(plugins, plugin, strview_static("editor"));
-		if(!editor) {
-			return lodge_error("Failed to find plugin `editor`");
-		}
+	plugin->graphs = calloc(1, lodge_assets2_sizeof());
+	lodge_graphs_new_inplace(plugin->graphs);
 
-		plugin->graphs = calloc(1, lodge_assets2_sizeof());
-		lodge_graphs_new_inplace(plugin->graphs);
+	plugin->types.graph_asset_type = lodge_type_register_asset(strview_static("graph_asset"), plugin->graphs);
 
+	//
+	// Optionally enable graph editing.
+	//
+	struct lodge_editor *editor = dependencies[PLUGIN_IDX_EDITOR];
+	if(editor) {
 		lodge_assets2_set_userdata(plugin->graphs, USERDATA_EDITOR, editor);
-
-		plugin->types.graph_asset_type = lodge_type_register_asset(strview_static("graph_asset"), plugin->graphs);
-
 		lodge_type_asset_set_edit_func(plugin->types.graph_asset_type, &lodge_graph_asset_edit);
 	}
 
@@ -97,6 +101,15 @@ LODGE_PLUGIN_IMPL(lodge_plugin_script)
 		.free_inplace = &lodge_plugin_script_free_inplace,
 		.update = NULL,
 		.render = NULL,
+		.dependencies ={
+			.count = 1,
+			.elements = {
+				[PLUGIN_IDX_EDITOR] = {
+					.name = strview("editor"),
+					.optional = true,
+				}
+			}
+		}
 	};
 }
 
