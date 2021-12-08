@@ -684,7 +684,7 @@ static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge
 	//
 	system->count = 0;
 	if(system->draw) {
-		lodge_scene_components_foreach(scene, struct lodge_static_mesh_component*, static_mesh, LODGE_COMPONENT_TYPE_STATIC_MESH) {
+		lodge_scene_components_foreach(scene, struct lodge_static_mesh_component*, static_mesh, plugin->static_mesh_component_type) {
 			// TODO: static_mesh->drawable
 
 			// Load FBX?
@@ -716,7 +716,7 @@ static void lodge_static_meshes_update(struct lodge_static_meshes *system, lodge
 			if(fbx_asset
 				&& static_mesh->shader_asset
 				&& static_mesh->texture_asset) {
-				lodge_entity_t entity = lodge_scene_get_component_entity(scene, LODGE_COMPONENT_TYPE_STATIC_MESH, static_mesh);
+				lodge_entity_t entity = lodge_scene_get_component_entity(scene, plugin->static_mesh_component_type, static_mesh);
 				ASSERT(entity);
 				if(entity) {
 					//

@@ -5,24 +5,11 @@
 #include "lodge_drawable.h"
 #include "lodge_static_mesh.h"
 
-// LODGE_STATIC_MESH_REF.h
-
 struct lodge_type_t;
 typedef struct lodge_type* lodge_type_t;
 
 struct lodge_asset;
 typedef struct lodge_asset* lodge_asset_t;
-
-// TODO(TS): separate header for _ref
-struct lodge_static_mesh_ref
-{
-	char name[256];
-};
-
-extern lodge_type_t LODGE_TYPE_STATIC_MESH_REF;
-
-
-///////////////
 
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
@@ -37,13 +24,11 @@ struct fbx_asset;
 
 struct lodge_static_mesh_component
 {
-	lodge_asset_t					fbx_asset;
-	lodge_asset_t					shader_asset;
-	lodge_asset_t					shader_entity_id_asset;
-	lodge_asset_t					texture_asset;
+	lodge_asset_t				fbx_asset;
+	lodge_asset_t				shader_asset;
+	lodge_asset_t				shader_entity_id_asset;
+	lodge_asset_t				texture_asset;
 };
-
-extern lodge_component_type_t	LODGE_COMPONENT_TYPE_STATIC_MESH;
 
 lodge_component_type_t			lodge_static_mesh_component_type_register(lodge_type_t static_mesh_asset_type, lodge_type_t shader_asset_type, lodge_type_t texture_asset_type);
 
