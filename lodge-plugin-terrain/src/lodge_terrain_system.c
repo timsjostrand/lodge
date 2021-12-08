@@ -259,7 +259,7 @@ static void lodge_terrain_system_render(lodge_scene_t scene, const struct lodge_
 
 			struct lodge_foliage_component *foliage = lodge_scene_get_entity_component(scene, owner, LODGE_COMPONENT_TYPE_FOLIAGE);
 			if(foliage) {
-				lodge_foliage_system_render(foliage, pass_params, foliage_shader, system->heightfield_sampler, component, owner, render_data->scale);
+				lodge_foliage_component_render(foliage, pass_params, foliage_shader, system->heightfield_sampler, render_data->heightmap, component, owner, render_data->scale);
 			}
 		}
 

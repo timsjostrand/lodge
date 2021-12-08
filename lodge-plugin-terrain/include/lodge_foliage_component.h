@@ -30,6 +30,9 @@ typedef struct lodge_shader* lodge_shader_t;
 struct lodge_sampler;
 typedef struct lodge_sampler* lodge_sampler_t;
 
+struct lodge_texture;
+typedef struct lodge_texture* lodge_texture_t;
+
 struct lodge_asset;
 typedef struct lodge_asset* lodge_asset_t;
 
@@ -37,14 +40,16 @@ struct lodge_static_mesh;
 
 struct lodge_foliage_component;
 
+struct lodge_assets2;
+
 struct lodge_foliage_lods_desc
 {
 	size_t			count;
 	lodge_asset_t	elements[LODGE_FOLIAGE_LODS_MAX];
 };
 
-void				lodge_foliage_system_render(struct lodge_foliage_component *foliage, const struct lodge_scene_render_pass_params *pass_params, lodge_shader_t shader, lodge_sampler_t heightfield_sampler, struct lodge_terrain_component *terrain, lodge_entity_t owner, vec3 terrain_scale);
+void				lodge_foliage_component_render(struct lodge_foliage_component *foliage, const struct lodge_scene_render_pass_params *pass_params, lodge_shader_t shader, lodge_sampler_t heightfield_sampler, lodge_texture_t heightfield, struct lodge_terrain_component *terrain, lodge_entity_t owner, vec3 terrain_scale);
 
-void				lodge_foliage_set_lods_desc(struct lodge_foliage_component *foliage, struct lodge_foliage_lods_desc *lods_desc);
+void				lodge_foliage_component_set_lods_desc(struct lodge_foliage_component *foliage, struct lodge_assets2 *mesh_assets, struct lodge_foliage_lods_desc *lods_desc);
 
 #endif

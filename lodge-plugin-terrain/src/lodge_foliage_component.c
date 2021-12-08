@@ -8,6 +8,8 @@
 #include "lodge_buffer_object.h"
 #include "lodge_drawable.h"
 #include "lodge_noise.h"
+#include "fbx_asset.h"
+#include "lodge_assets2.h"
 
 #include <string.h>
 
@@ -21,9 +23,10 @@ struct lodge_foliage_instances
 struct lodge_foliage_lod
 {
 	struct lodge_foliage_instances	instances;
-	lodge_asset_t					static_mesh;
+	lodge_asset_t					mesh_asset;
 	lodge_buffer_object_t			buffer_object;
 	lodge_drawable_t				drawable;
+	uint32_t						drawable_indices_count;
 };
 
 struct lodge_foliage_component
@@ -47,16 +50,19 @@ static void lodge_foliage_lod_free_inplace(struct lodge_foliage_lod *lod)
 {
 	lodge_drawable_reset(lod->drawable);
 	lodge_buffer_object_reset(lod->buffer_object);
-	dynbuf_free_inplace(dynbuf_wrap_stack(lod->instances));
+	dynbuf_free_inplace(dynbuf(lod->instances));
 }
 
-static void lodge_foliage_lod_set_static_mesh(struct lodge_foliage_lod *lod, lodge_asset_t static_mesh)
+static void lodge_foliage_lod_set_mesh_asset(struct lodge_foliage_lod *lod, struct lodge_assets2 *mesh_assets, lodge_asset_t mesh_asset)
 {
-#if 0
-	lod->static_mesh = static_mesh;
+	if(lod->mesh_asset == mesh_asset) {
+		return;
+	}
 
-	if(lod->static_mesh && lod->buffer_object) {
-		struct lodge_drawable_desc drawble_desc = lodge_drawable_desc_make_from_static_mesh(lod->static_mesh);
+	struct fbx_asset *static_mesh = lodge_assets2_get(mesh_assets, mesh_asset);
+
+	if(static_mesh && lod->buffer_object) {
+		struct lodge_drawable_desc drawble_desc = lodge_drawable_desc_make_from_static_mesh(&static_mesh->static_mesh);
 
 		drawble_desc.attribs[drawble_desc.attribs_count++] = (struct lodge_drawable_attrib) {
 			.name = strview_static("instances"),
@@ -70,31 +76,30 @@ static void lodge_foliage_lod_set_static_mesh(struct lodge_foliage_lod *lod, lod
 		if(lod->drawable) {
 			lodge_drawable_reset(lod->drawable);
 		}
-
 		lod->drawable = lodge_drawable_make(drawble_desc);
+		lod->drawable_indices_count = static_mesh->static_mesh.indices_count;
+
+		lod->mesh_asset = mesh_asset;
 	}
-#endif
 }
 
 static void lodge_foliage_lod_set_instances_max(struct lodge_foliage_lod *lod, uint32_t instances_max)
 {
-	dynbuf_free_inplace(dynbuf_wrap_stack(lod->instances));
-	dynbuf_new_inplace(dynbuf_wrap_stack(lod->instances), instances_max);
+	dynbuf_free_inplace(dynbuf(lod->instances));
+	dynbuf_new_inplace(dynbuf(lod->instances), instances_max);
 
-	if(lod->buffer_object) {
-		lodge_buffer_object_reset(lod->buffer_object);
+	if(!lod->buffer_object) {
+		lod->buffer_object = lodge_buffer_object_make_dynamic(sizeof(vec4) * instances_max);
+	} else {
+		lodge_buffer_object_remake_dynamic(lod->buffer_object, sizeof(vec4) * instances_max);
 	}
-
-	lod->buffer_object = lodge_buffer_object_make_dynamic(sizeof(vec4) * instances_max);
-
-	lodge_foliage_lod_set_static_mesh(lod, lod->static_mesh);
 }
 
 static void lodge_foliage_lod_new_inplace(struct lodge_foliage_lod *lod, uint32_t instances_max)
 {
 	memset(lod, 0, sizeof(struct lodge_foliage_lod));
 	lodge_foliage_lod_set_instances_max(lod, instances_max);
-	lodge_foliage_lod_set_static_mesh(lod, NULL);
+	lodge_foliage_lod_set_mesh_asset(lod, NULL, NULL);
 }
 
 void lodge_foliage_component_new_inplace(struct lodge_foliage_component *foliage, void *userdata)
@@ -104,7 +109,7 @@ void lodge_foliage_component_new_inplace(struct lodge_foliage_component *foliage
 	foliage->lods_count = 0;
 
 	foliage->instances_count = 64;
-	dynbuf_new_inplace(dynbuf_wrap_stack(foliage->instances), foliage->instances_count);
+	dynbuf_new_inplace(dynbuf(foliage->instances), foliage->instances_count);
 
 	for(int lod_idx = 0; lod_idx < LODGE_FOLIAGE_LODS_MAX; lod_idx++) {
 		lodge_foliage_lod_new_inplace(&foliage->lods[lod_idx], foliage->instances_count);
@@ -116,12 +121,12 @@ void lodge_foliage_component_free_inplace(struct lodge_foliage_component *foliag
 	for(int lod_idx = 0; lod_idx < LODGE_FOLIAGE_LODS_MAX; lod_idx++) {
 		lodge_foliage_lod_free_inplace(&foliage->lods[lod_idx]);
 	}
-	dynbuf_free_inplace(dynbuf_wrap_stack(foliage->instances));
+	dynbuf_free_inplace(dynbuf(foliage->instances));
 }
 
 static void on_modified_instances_count(struct lodge_property *property, struct lodge_foliage_component *foliage)
 {
-	dynbuf_t instances = dynbuf_wrap_stack(foliage->instances);
+	dynbuf_t instances = dynbuf(foliage->instances);
 
 	dynbuf_clear(instances);
 #if 0
@@ -212,38 +217,33 @@ lodge_component_type_t lodge_foliage_component_type_register()
 #include "lodge_terrain_component.h"
 #include "lodge_transform_component.h"
 
-void lodge_foliage_system_render(struct lodge_foliage_component *foliage, const struct lodge_scene_render_pass_params *pass_params, lodge_shader_t shader, lodge_sampler_t heightfield_sampler, struct lodge_terrain_component *terrain, lodge_entity_t owner, vec3 terrain_scale)
+void lodge_foliage_component_render(struct lodge_foliage_component *foliage, const struct lodge_scene_render_pass_params *pass_params, lodge_shader_t shader, lodge_sampler_t heightfield_sampler, lodge_texture_t heightfield, struct lodge_terrain_component *terrain, lodge_entity_t owner, vec3 terrain_scale)
 {
-#if 0
-	ASSERT_OR(shader) {
+	ASSERT_OR(shader && foliage) {
 		return;
 	}
 
-	ASSERT_OR(foliage) {
-		return;
-	}
-
-	lodge_gfx_annotate_begin(strview_static("foliage"));
+	lodge_gfx_annotate_begin(strview("foliage"));
 	{
 		lodge_gfx_bind_shader(shader);
 
-		lodge_shader_set_constant_float(shader, strview_static("time"), pass_params->time);
-		lodge_shader_set_constant_vec3(shader, strview_static("terrain_scale"), terrain_scale);
-		lodge_gfx_bind_texture_unit_2d(0, terrain->heightmap, heightfield_sampler);
+		lodge_shader_set_constant_float(shader, strview("time"), pass_params->time);
+		lodge_shader_set_constant_vec3(shader, strview("terrain_scale"), terrain_scale);
+		lodge_gfx_bind_texture_unit_2d(0, heightfield, heightfield_sampler);
 
 		//
 		// FIXME(TS): debugging, puts all instances into LOD 0
 		//
 		if(foliage->lods_count > 0) {
-			dynbuf_clear(dynbuf_wrap_stack(foliage->lods[0].instances));
-			dynbuf_append_range(dynbuf_wrap_stack(foliage->lods[0].instances), foliage->instances.elements, sizeof(vec4), foliage->instances.count);
+			dynbuf_clear(dynbuf(foliage->lods[0].instances));
+			dynbuf_append_range(dynbuf(foliage->lods[0].instances), foliage->instances.elements, sizeof(vec4), foliage->instances.count);
 		}
 
 		for(size_t lod_idx = 0; lod_idx < foliage->lods_count; lod_idx++) {
 			struct lodge_foliage_lod *lod = &foliage->lods[lod_idx];
 
 			if(lod->instances.count > 0) {
-				if(lod->drawable && lod->static_mesh) {
+				if(lod->drawable) {
 					lodge_buffer_object_set(
 						lod->buffer_object,
 						0,
@@ -253,7 +253,7 @@ void lodge_foliage_system_render(struct lodge_foliage_component *foliage, const 
 
 					lodge_drawable_render_indexed_instanced(
 						lod->drawable,
-						lod->static_mesh->indices_count,
+						lod->drawable_indices_count,
 						lod->instances.count
 					);
 				}
@@ -261,16 +261,13 @@ void lodge_foliage_system_render(struct lodge_foliage_component *foliage, const 
 		}
 	}
 	lodge_gfx_annotate_end();
-#endif
 }
 
-void lodge_foliage_set_lods_desc(struct lodge_foliage_component *foliage, struct lodge_foliage_lods_desc *lods_desc)
+void lodge_foliage_component_set_lods_desc(struct lodge_foliage_component *foliage, struct lodge_assets2 *mesh_assets, struct lodge_foliage_lods_desc *lods_desc)
 {
-#if 0
 	foliage->lods_count = lods_desc->count;
 
 	for(uint32_t i = 0; i < lods_desc->count; i++) {
-		lodge_foliage_lod_set_static_mesh(&foliage->lods[i], lods_desc->elements[i]);
+		lodge_foliage_lod_set_mesh_asset(&foliage->lods[i], mesh_assets, lods_desc->elements[i]);
 	}
-#endif
 }
