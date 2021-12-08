@@ -44,6 +44,21 @@ fail:
 	return 0;
 }
 
+void lodge_buffer_object_remake_dynamic(lodge_buffer_object_t buffer_object, size_t max_size)
+{
+	ASSERT_OR(buffer_object) { return; }
+
+	GLuint buffer_object_gl =  lodge_buffer_object_to_gl(buffer_object);
+
+	glNamedBufferData(buffer_object_gl, max_size, NULL, GL_DYNAMIC_DRAW);
+	GL_OK_OR_GOTO(fail);
+
+	return;
+
+fail:
+	ASSERT_FAIL("Failed to make dynamic buffer object");
+}
+
 void lodge_buffer_object_reset(lodge_buffer_object_t buffer_object)
 {
 	if(buffer_object) {
