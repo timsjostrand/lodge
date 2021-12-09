@@ -4,26 +4,25 @@ add_library(lodge-ns STATIC "")
 
 target_sources(lodge-ns
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_graph_types.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_graph.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_graph_serialize.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node_type.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node_types_default.c"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node.c"
+		"src/lodge_ns.c"
+		"src/lodge_ns_graph.c"
+		"src/lodge_ns_graph_serialize.c"
+		"src/lodge_ns_node_type.c"
+		"src/lodge_ns_node_types_default.c"
+		"src/lodge_ns_node.c"
 	PUBLIC
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_graph.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_graph_serialize.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node_type.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node_types_helpers.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node_types_default.h"
-		"${CMAKE_CURRENT_LIST_DIR}/lodge_ns_node.h"
+		"include/lodge_ns.h"
+		"include/lodge_ns_graph.h"
+		"include/lodge_ns_graph_serialize.h"
+		"include/lodge_ns_node_type.h"
+		"include/lodge_ns_node_types_helpers.h"
+		"include/lodge_ns_node_types_default.h"
+		"include/lodge_ns_node.h"
 )
 
 target_include_directories(lodge-ns
 	PUBLIC
-		"${CMAKE_CURRENT_SOURCE_DIR}"
+		"include/"
 )
 
 target_link_libraries(lodge-ns
