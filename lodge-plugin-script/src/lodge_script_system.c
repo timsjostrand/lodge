@@ -64,10 +64,14 @@ static bool lodge_node_editor_controller_state_run(lodge_node_t node)
 		return false;
 	}
 
+	//
+	// TODO(TS): should do this at configure node type time
+	//
 	lodge_component_type_t editor_controller_component_type = lodge_component_types_find(strview("editor_controller"));
 	if(!editor_controller_component_type) {
 		return false;
 	}
+
 	struct lodge_editor_controller_component *controller = lodge_scene_get_entity_component(ctx->scene, ctx->entity, editor_controller_component_type);
 	if(!controller) {
 		return false;

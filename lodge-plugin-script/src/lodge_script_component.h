@@ -1,13 +1,9 @@
-#ifndef _LODGE_TERRAIN_COMPONENT_H
-#define _LODGE_TERRAIN_COMPONENT_H
+#pragma once
 
 #include <stdbool.h>
 
 struct lodge_component_type;
 typedef struct lodge_component_type* lodge_component_type_t;
-
-struct lodge_graph;
-typedef struct lodge_graph* lodge_graph_t;
 
 struct lodge_type;
 typedef struct lodge_type* lodge_type_t;
@@ -22,5 +18,3 @@ struct lodge_script_component
 };
 
 lodge_component_type_t		lodge_script_component_type_register(lodge_type_t lodge_type_graph_asset);
-
-#endif

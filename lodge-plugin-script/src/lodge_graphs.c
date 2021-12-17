@@ -22,7 +22,7 @@ static bool lodge_node_scene_time_configure(lodge_node_t node)
 {
 	lodge_node_set_outputs(node, 1, (struct lodge_pin[]) {
 		{
-			.name = strview_static("time"),
+			.name = strview("time"),
 			.type = LODGE_TYPE_F32,
 		}
 	});
@@ -53,7 +53,7 @@ static bool lodge_node_scene_set_sun_configure(lodge_node_t node)
 {
 	lodge_node_set_inputs(node, 1, (struct lodge_pin[]) {
 		{
-			.name = strview_static("t"),
+			.name = strview("t"),
 			.type = LODGE_TYPE_F32,
 		}
 	});

@@ -1,5 +1,4 @@
-#ifndef _LODGE_SCRIPT_CTX_H
-#define _LODGE_SCRIPT_CTX_H
+#pragma once
 
 struct lodge_scene;
 
@@ -14,5 +13,3 @@ struct lodge_script_ctx
 	lodge_entity_t					entity;
 	struct lodge_script_component	*component;
 };
-
-#endif
