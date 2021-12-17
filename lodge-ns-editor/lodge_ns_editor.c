@@ -35,6 +35,7 @@ struct lodge_ns_editor_pins
 struct lodge_ns_editor
 {
 	lodge_graph_t					graph;
+	bool							modified;
 
 	struct lodge_pin_connection		editing_link;
 
@@ -44,6 +45,9 @@ struct lodge_ns_editor
 	struct nk_rect					node_bounds[256];
 
 	struct lodge_ns_editor_pins		node_pins[256];
+
+	void							*userdata;
+	lodge_ns_editor_on_save_func_t	on_save;
 };
 
 static struct nk_color node_editor_pin_type_to_color(lodge_type_t type)
@@ -61,6 +65,8 @@ static struct nk_color node_editor_pin_type_to_color(lodge_type_t type)
 
 static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, float dt)
 {
+	ASSERT_OR(editor && gui) { return; }
+
 	struct nk_context *ctx = lodge_gui_to_ctx(gui);
 	lodge_graph_t graph = editor->graph;
 	void* graph_context = lodge_graph_get_context(graph);
@@ -69,17 +75,23 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
     struct nk_rect total_space = nk_window_get_content_region(ctx);
 	const size_t nodes_count = lodge_graph_get_node_count(graph);
 
-	nk_layout_row_dynamic(ctx, 30, 1);
-	if(nk_button_label(ctx, "Save")) {
-		size_t text_size;
-		char* text = lodge_graph_to_text(graph, &text_size);
-
-		lodge_graph_t new_graph = lodge_graph_from_text(strview_make(text, text_size - 1), graph_context);
-		ASSERT(new_graph);
-		LODGE_UNUSED(new_graph);
-
-		if(text) {
-			free(text);
+	if(editor->on_save) {
+		nk_layout_row_dynamic(ctx, 30, 1);
+		if(nk_button_label(ctx, "Save")) {
+			//size_t text_size;
+			//char* text = lodge_graph_to_text(graph, &text_size);
+	
+			//lodge_graph_t new_graph = lodge_graph_from_text(strview_make(text, text_size - 1), graph_context);
+			//ASSERT(new_graph);
+			//LODGE_UNUSED(new_graph);
+	
+			//if(text) {
+			//	free(text);
+			//}
+	
+			if(editor->on_save(editor, graph, editor->userdata)) {
+				editor->modified = false;
+			}
 		}
 	}
 
@@ -332,13 +344,13 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
 }
 
 
-struct lodge_ns_editor* lodge_ns_editor_new(lodge_graph_t graph)
+struct lodge_ns_editor* lodge_ns_editor_new(lodge_graph_t graph, lodge_ns_editor_on_save_func_t on_save, void *userdata)
 {
 	struct lodge_ns_editor *editor = calloc(1, lodge_ns_editor_sizeof());
 	if(!editor) {
 		return NULL;
 	}
-	lodge_ns_editor_new_inplace(editor, graph);
+	lodge_ns_editor_new_inplace(editor, graph, on_save, userdata);
 	return editor;
 }
 
@@ -349,12 +361,15 @@ void lodge_ns_editor_free(struct lodge_ns_editor *editor)
 	free(editor);
 }
 
-void lodge_ns_editor_new_inplace(struct lodge_ns_editor *editor, lodge_graph_t graph)
+void lodge_ns_editor_new_inplace(struct lodge_ns_editor *editor, lodge_graph_t graph, lodge_ns_editor_on_save_func_t on_save, void *userdata)
 {
 	ASSERT(editor);
 	ASSERT(graph);
 
+	editor->modified = false;
 	editor->graph = graph;
+	editor->on_save = on_save;
+	editor->userdata = userdata;
 
 	for(size_t i = 0, count = LODGE_ARRAYSIZE(editor->node_bounds); i < count; i++) {
 		editor->node_bounds[i] = (struct nk_rect) {
