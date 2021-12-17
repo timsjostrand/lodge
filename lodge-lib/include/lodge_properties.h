@@ -57,6 +57,12 @@ struct lodge_property_hints
 			uint32_t					max;
 			uint32_t					step;
 		}								u32;
+		struct
+		{
+			int32_t						min;
+			int32_t						max;
+			int32_t						step;
+		}								i32;
 		struct 
 		{
 			bool						color;
