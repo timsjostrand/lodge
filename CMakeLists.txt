@@ -63,6 +63,7 @@ target_link_libraries(lodge-editor-minimal
         lodge-plugin-scenes
         lodge-plugin-files
         lodge-plugin-editor
+        lodge-plugin-stdio-log
 )
 
 #
