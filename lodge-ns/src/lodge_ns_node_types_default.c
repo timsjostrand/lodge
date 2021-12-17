@@ -1,5 +1,7 @@
 #include "lodge_ns_node_types_default.h"
 
+#include "lodge_ns_node_types_select.c"
+
 #include "lodge_ns_node_types_helpers.h"
 #include "lodge_variant.h"
 #include "lodge_ns_node_type.h"
@@ -505,4 +507,6 @@ void lodge_node_types_default_register()
 	
 	lodge_node_type_register(strview("util::print::i32"), node_util_print_i32_configure, node_util_print_i32_run);
 	lodge_node_type_register(strview("util::print::f32"), node_util_print_f32_configure, node_util_print_f32_run);
+
+	lodge_ns_node_types_select_register();
 }

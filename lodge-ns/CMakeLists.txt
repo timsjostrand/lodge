@@ -9,6 +9,7 @@ target_sources(lodge-ns
 		"src/lodge_ns_graph_serialize.c"
 		"src/lodge_ns_node_type.c"
 		"src/lodge_ns_node_types_default.c"
+		"src/lodge_ns_node_types_select.c"
 		"src/lodge_ns_node.c"
 	PUBLIC
 		"include/lodge_ns.h"
