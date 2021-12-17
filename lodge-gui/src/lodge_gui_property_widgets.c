@@ -74,6 +74,36 @@ static bool make_property_widget_u32(struct nk_context *ctx, struct lodge_proper
 	return false;
 }
 
+static bool make_property_widget_i32(struct nk_context *ctx, struct lodge_property *property, void *object)
+{
+	const int32_t *value = lodge_property_get(property, object);
+	ASSERT(value);
+
+	if(LODGE_IS_FLAG_SET(property->flags, LODGE_PROPERTY_FLAG_READ_ONLY)) {
+		nk_labelf(ctx, NK_TEXT_ALIGN_LEFT | NK_TEXT_ALIGN_MIDDLE, "%d", *value);
+	} else {
+		int32_t min = -INT32_MAX;
+		int32_t max = INT32_MAX;
+		int32_t step = 1;
+
+		if(property->hints.enable) {
+			min = max(-INT32_MAX, property->hints.i32.min);
+			max = min(INT32_MAX, property->hints.i32.max);
+			step = property->hints.i32.step;
+		}
+
+		int new_value = *value;
+		nk_property_int(ctx, "#i32", min, &new_value, max, step, step);
+
+		if((int32_t)new_value != *value) {
+			lodge_property_set(property, object, &(int32_t){ new_value });
+			return true;
+		}
+	}
+	
+	return false;
+}
+
 static bool make_property_widget_vec3(struct nk_context *ctx, struct lodge_property *property, void *object)
 {
 	bool modified = false;
@@ -450,6 +480,7 @@ void lodge_gui_property_widget_factory_init()
 
 	lodge_type_set_make_property_widget_func(LODGE_TYPE_F32, &make_property_widget_f32);
 	lodge_type_set_make_property_widget_func(LODGE_TYPE_U32, &make_property_widget_u32);
+	lodge_type_set_make_property_widget_func(LODGE_TYPE_I32, &make_property_widget_i32);
 	lodge_type_set_make_property_widget_func(LODGE_TYPE_BOOL, &make_property_widget_boolean);
 	lodge_type_set_make_property_widget_func(LODGE_TYPE_VEC4, &make_property_widget_vec4);
 	lodge_type_set_make_property_widget_func(LODGE_TYPE_VEC3, &make_property_widget_vec3);
