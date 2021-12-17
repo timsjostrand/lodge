@@ -332,6 +332,9 @@ static void lodge_editor_gui_update(struct lodge_editor *editor, float dt)
 		);
 
 		enum nk_panel_flags panel_flags = NK_WINDOW_TITLE | NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_SCALABLE;
+		if(panel_desc->on_close) {
+			panel_flags |= NK_WINDOW_CLOSABLE;
+		}
 		if(panel_desc->hide_scrollbar) {
 			panel_flags |= NK_WINDOW_NO_SCROLLBAR;
 		}
@@ -352,6 +355,16 @@ static void lodge_editor_gui_update(struct lodge_editor *editor, float dt)
 			if(panel_desc->update) {
 				panel_desc->update(panel_desc->panel, editor->gui, editor, dt);
 			}
+		} else {
+			if(panel_desc->on_close) {
+				panel_desc->on_close(panel_desc->panel, editor->gui, editor);
+			}
+
+			//
+			// Remove entry from panels list
+			//
+			dynbuf_remove(dynbuf(editor->panels), i, 1);
+			//i--;
 		}
 		nk_end(ctx);
 	}
