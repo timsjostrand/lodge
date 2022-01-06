@@ -15,9 +15,6 @@
 #define SOUND_SAMPLE_MAX	SHRT_MAX
 #define SOUND_EMITTERS_MAX	32
 
-#define sound_debug(...) debugf("Sound", __VA_ARGS__)
-#define sound_error(...) errorf("Sound", __VA_ARGS__)
-
 #define AL_TEST(msg) if(al_test(msg) != SOUND_OK) { return SOUND_ERROR; }
 
 typedef unsigned int sound_buf_t;

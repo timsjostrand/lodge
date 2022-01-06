@@ -25,6 +25,12 @@
 #include "alist.h"
 #include "math4.h"
 
+#define sound_debug(fmt) lodge_log(LODGE_LOG_LEVEL_DEBUG, strview("Sound"), strview(fmt))
+#define sound_error(fmt) lodge_log(LODGE_LOG_LEVEL_ERROR, strview("Sound"), strview(fmt))
+
+#define sound_debugf(fmt, ...) debugf("Sound", fmt, __VA_ARGS__)
+#define sound_errorf(fmt, ...) errorf("Sound", fmt, __VA_ARGS__)
+
 static size_t sound_buf_read_file(stb_vorbis *header, stb_vorbis_info *info,
 		ALshort *buf, size_t len);
 static struct sound_emitter* sound_emitter_get(struct sound *s);
@@ -33,7 +39,7 @@ static int al_test(const char *msg)
 {
 	ALCenum error = alGetError();
 	if(error != AL_NO_ERROR) {
-		sound_error("%s [%d]\n", msg, error);
+		sound_errorf("%s [%d]\n", msg, error);
 		return SOUND_ERROR;
 	}
 	return SOUND_OK;
@@ -61,7 +67,7 @@ static void sound_list_devices(const ALCchar *devices)
 	sound_debug("Devices list:\n");
 	sound_debug("----------\n");
 	while(device && *device != '\0' && next && *next != '\0') {
-		sound_debug("%s\n", device);
+		sound_debugf("%s\n", device);
 		len = strlen(device);
 		device += (len + 1);
 		next += (len + 2);
@@ -96,7 +102,7 @@ int sound_init(struct sound *s, vec3 listener_pos, float max_distance)
 	}
 
 	/* Dump the opened device to stdout. */
-	sound_debug("Device: %s\n", alcGetString(device, ALC_DEVICE_SPECIFIER));
+	sound_debugf("Device: %s\n", alcGetString(device, ALC_DEVICE_SPECIFIER));
 	alGetError();
 
 	/* Create the context for the audio scene. */
@@ -563,7 +569,7 @@ static struct sound_emitter* sound_emitter_get(struct sound *s)
 		sound_error("All emitters busy and non-interruptable\n");
 		return NULL;
 	}
-	sound_debug("All emitters busy: terminating %u...\n", emitter->src);
+	sound_debugf("All emitters busy: terminating %u...\n", emitter->src);
 	sound_emitter_stop(emitter);
 	emitter->available = 0;
 	return emitter;
