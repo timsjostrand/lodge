@@ -12,8 +12,8 @@ struct lodge_stdio_log
 
 static const char *lodge_level_labels[LODGE_LOG_LEVEL_MAX] ={
 	[LODGE_LOG_LEVEL_DEBUG]		= "DEBUG",
-	[LODGE_LOG_LEVEL_INFO]		= "INFO",
-	[LODGE_LOG_LEVEL_WARNING]	= "WARN",
+	[LODGE_LOG_LEVEL_INFO]		= "INFO ",
+	[LODGE_LOG_LEVEL_WARNING]	= "WARN ",
 	[LODGE_LOG_LEVEL_ERROR]		= "ERROR",
 };
 
@@ -25,10 +25,10 @@ static void lodge_stdio_log_callback(enum lodge_log_level level, strview_t src, 
 		return;
 	}
 	
-	fprintf(plugin->output, lodge_level_labels[level]);
-	fprintf(plugin->output, " @ ");
+	fprintf(plugin->output, STRVIEW_PRINTF_FMT, 5, lodge_level_labels[level]);
+	fprintf(plugin->output, STRVIEW_PRINTF_FMT, 3, " @ ");
 	fprintf(plugin->output, STRVIEW_PRINTF_FMT, STRVIEW_PRINTF_ARG(src));
-	fprintf(plugin->output, ": ");
+	fprintf(plugin->output, STRVIEW_PRINTF_FMT, 2, ": ");
 	fprintf(plugin->output, STRVIEW_PRINTF_FMT, STRVIEW_PRINTF_ARG(message));
 
 	const bool trailing_new_line = (message.length > 0 && message.s[message.length-1] == '\n');
