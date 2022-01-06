@@ -69,7 +69,7 @@ static void node_editor_update(struct lodge_ns_editor *editor, lodge_gui_t gui, 
 
 	struct nk_context *ctx = lodge_gui_to_ctx(gui);
 	lodge_graph_t graph = editor->graph;
-	void* graph_context = lodge_graph_get_context(graph);
+	//void* graph_context = lodge_graph_get_context(graph);
 
     struct nk_command_buffer *canvas = nk_window_get_canvas(ctx);
     struct nk_rect total_space = nk_window_get_content_region(ctx);
