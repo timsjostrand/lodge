@@ -4,7 +4,6 @@ add_library(lodge-ns STATIC "")
 
 target_sources(lodge-ns
 	PRIVATE
-		"src/lodge_ns.c"
 		"src/lodge_ns_graph.c"
 		"src/lodge_ns_graph_serialize.c"
 		"src/lodge_ns_node_type.c"
