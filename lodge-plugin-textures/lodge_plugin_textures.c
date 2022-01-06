@@ -63,7 +63,7 @@ static struct lodge_ret lodge_textures_new_inplace(struct lodge_assets2 *texture
 		.new_inplace = &lodge_assets_texture_new_inplace,
 		.reload_inplace = NULL,
 		.free_inplace = &lodge_assets_texture_free_inplace
-	} );
+	});
 
 	lodge_assets2_set_userdata(textures, USERDATA_IMAGES, images);
 	lodge_assets2_set_userdata(textures, USERDATA_ASSET_TYPE, lodge_type_register_asset(strview("texture"), textures));
